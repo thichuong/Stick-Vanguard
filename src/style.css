@@ -1074,6 +1074,77 @@ html, body {
   color: #fff;
 }
 
+/* Sell Confirmation Box */
+.confirm-sell-box {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeInSell 0.15s ease-in-out;
+}
+
+@keyframes fadeInSell {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.confirm-sell-msg {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fca5a5;
+  text-align: center;
+}
+
+.confirm-sell-refund {
+  font-size: 11px;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.confirm-sell-refund .gold-text {
+  color: #facc15;
+}
+
+.confirm-sell-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.confirm-sell-btn {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #fff;
+  border: 1px solid #ef4444;
+  font-weight: 700;
+  flex: 1.2;
+}
+
+.confirm-sell-btn:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.cancel-sell-btn {
+  background-color: #334155;
+  color: #cbd5e1;
+  border: 1px solid #475569;
+  flex: 0.8;
+}
+
+.cancel-sell-btn:hover {
+  background-color: #475569;
+  color: #fff;
+}
+
 /* Soldier Mode Switcher */
 .soldier-mode-section {
   background-color: #141e33;

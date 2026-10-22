@@ -26,6 +26,7 @@ export class UIManager {
   private sidePanel: SideDetailPanel;
   private lastRenderKey: string = '';
   private bannerState: 'NONE' | 'GAME_OVER' | 'VICTORY' = 'NONE';
+  private confirmingSellTowerId: string | null = null;
 
   constructor(
     private state: GameState,
@@ -640,7 +641,11 @@ export class UIManager {
     const tower = this.state.getSelectedTower();
     const buildPt = this.state.selectedBuildPoint;
 
-    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${Math.floor(this.state.gold / 25)}`;
+    if (this.confirmingSellTowerId && (!tower || tower.id !== this.confirmingSellTowerId)) {
+      this.confirmingSellTowerId = null;
+    }
+
+    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${Math.floor(this.state.gold / 25)}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -840,14 +845,34 @@ export class UIManager {
         ${elementPickerHtml}
         ${upgradeHtml}
 
-        <div class="button-row">
-          ${
-            isBarracks
-              ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
-              : ''
-          }
-          <button id="btn-sell" class="action-btn sell-btn">💰 Bán (+${refund} 🪙)</button>
-        </div>
+        ${
+          this.confirmingSellTowerId === tower.id
+            ? `
+              ${
+                isBarracks
+                  ? `<div class="button-row"><button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button></div>`
+                  : ''
+              }
+              <div class="confirm-sell-box">
+                <div class="confirm-sell-msg">⚠️ Bạn có chắc muốn bán công trình này?</div>
+                <div class="confirm-sell-refund">Nhận lại: <b class="gold-text">🪙 +${refund} Vàng</b> (70% đã đầu tư)</div>
+                <div class="confirm-sell-actions">
+                  <button id="btn-confirm-sell" class="action-btn confirm-sell-btn">✔️ Xác Nhận Bán</button>
+                  <button id="btn-cancel-sell" class="action-btn cancel-sell-btn">✖️ Hủy</button>
+                </div>
+              </div>
+            `
+            : `
+              <div class="button-row">
+                ${
+                  isBarracks
+                    ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
+                    : ''
+                }
+                <button id="btn-sell" class="action-btn sell-btn">💰 Bán (+${refund} 🪙)</button>
+              </div>
+            `
+        }
       `;
 
       document.getElementById('btn-open-tree')?.addEventListener('click', () => {
@@ -856,30 +881,35 @@ export class UIManager {
       });
 
       document.getElementById('btn-upgrade')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.upgradeTower(tower.id);
         this.lastRenderKey = '';
         this.renderInspector();
       });
 
       document.getElementById('btn-branch-a')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.upgradeTower(tower.id, 'A');
         this.lastRenderKey = '';
         this.renderInspector();
       });
 
       document.getElementById('btn-branch-b')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.upgradeTower(tower.id, 'B');
         this.lastRenderKey = '';
         this.renderInspector();
       });
 
       document.getElementById('btn-mode-melee')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.setBarracksSoldierMode(tower.id, 'MELEE');
         this.lastRenderKey = '';
         this.renderInspector();
       });
 
       document.getElementById('btn-mode-ranged')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.setBarracksSoldierMode(tower.id, 'RANGED');
         this.lastRenderKey = '';
         this.renderInspector();
@@ -887,6 +917,7 @@ export class UIManager {
 
       this.inspectorContentEl.querySelectorAll('.elem-btn').forEach((btn) => {
         btn.addEventListener('click', (e) => {
+          this.confirmingSellTowerId = null;
           const target = e.currentTarget as HTMLElement;
           const elem = target.getAttribute('data-elem') as MagicalElementType;
           const slotIndex = (parseInt(target.getAttribute('data-slot') || '1', 10) as 1 | 2);
@@ -899,13 +930,28 @@ export class UIManager {
       });
 
       document.getElementById('btn-rally')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.state.isSettingRallyPoint = true;
         this.lastRenderKey = '';
         this.renderInspector();
       });
 
       document.getElementById('btn-sell')?.addEventListener('click', () => {
-        this.state.sellTower(tower.id);
+        this.confirmingSellTowerId = tower.id;
+        this.lastRenderKey = '';
+        this.renderInspector();
+      });
+
+      document.getElementById('btn-confirm-sell')?.addEventListener('click', () => {
+        const targetId = tower.id;
+        this.confirmingSellTowerId = null;
+        this.state.sellTower(targetId);
+        this.lastRenderKey = '';
+        this.renderInspector();
+      });
+
+      document.getElementById('btn-cancel-sell')?.addEventListener('click', () => {
+        this.confirmingSellTowerId = null;
         this.lastRenderKey = '';
         this.renderInspector();
       });
