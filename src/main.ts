@@ -29,7 +29,7 @@ class GameApp {
     this.ctx = this.canvas.getContext('2d')!;
     this.state = new GameState();
     this.navSystem = new NavigationSystem(this.state.currentMap);
-    this.waveSystem = new WaveSystem(this.state.currentMap);
+    this.waveSystem = new WaveSystem(this.state.currentMap, this.state.customTotalWaves);
 
     this.uiManager = new UIManager(
       this.state,
@@ -47,9 +47,19 @@ class GameApp {
     const found = MAPS_CONFIG.find((m) => m.id === mapId);
     if (!found) return;
 
+    const keepWaves = this.state.customTotalWaves;
+    const keepGoldMult = this.state.goldMultiplier;
+    const keepDmgMult = this.state.damageMultiplier;
+
     this.state.setMap(mapId);
+    this.state.customTotalWaves = keepWaves;
+    this.state.goldMultiplier = keepGoldMult;
+    this.state.damageMultiplier = keepDmgMult;
+    TargetingRuleEngine.globalDamageMultiplier = keepDmgMult;
+
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
+    this.waveSystem.setTotalWaves(keepWaves);
     this.uiManager.updateHotbarVisuals();
     this.state.addFloatingText(`Bản đồ: ${found.name}`, 500, 100, '#38bdf8', 18);
   }
@@ -89,7 +99,8 @@ class GameApp {
     if (this.state.isGameOver || this.state.isVictory) return;
 
     if (this.waveSystem.isWaveInProgress) {
-      const bonus = 25;
+      const baseBonus = 25;
+      const bonus = Math.max(1, Math.round(baseBonus * this.state.goldMultiplier));
       this.state.gold += bonus;
       this.state.addFloatingText(`+${bonus} 🪙 Gọi đợt sớm!`, 500, 80, '#facc15', 15);
       this.waveSystem.currentWaveIndex++;
@@ -100,9 +111,19 @@ class GameApp {
   }
 
   private restartGame(): void {
+    const keepWaves = this.state.customTotalWaves;
+    const keepGoldMult = this.state.goldMultiplier;
+    const keepDmgMult = this.state.damageMultiplier;
+
     this.state.reset();
+    this.state.customTotalWaves = keepWaves;
+    this.state.goldMultiplier = keepGoldMult;
+    this.state.damageMultiplier = keepDmgMult;
+    TargetingRuleEngine.globalDamageMultiplier = keepDmgMult;
+
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
+    this.waveSystem.setTotalWaves(keepWaves);
   }
 
   private bindCanvasEvents(): void {
@@ -240,6 +261,10 @@ class GameApp {
   }
 
   private update(dt: number): void {
+    // Sync settings to engine
+    this.waveSystem.setTotalWaves(this.state.customTotalWaves);
+    TargetingRuleEngine.globalDamageMultiplier = this.state.damageMultiplier;
+
     // 1. Update Wave Spawning
     this.waveSystem.update(
       dt,
@@ -249,8 +274,9 @@ class GameApp {
         this.state.enemies.push(newEnemy);
       },
       (reward) => {
-        this.state.gold += reward;
-        this.state.addFloatingText(`+${reward} 🪙 Hoàn thành Đợt!`, 500, 100, '#22c55e', 18);
+        const scaledReward = Math.max(1, Math.round(reward * this.state.goldMultiplier));
+        this.state.gold += scaledReward;
+        this.state.addFloatingText(`+${scaledReward} 🪙 Hoàn thành Đợt!`, 500, 100, '#22c55e', 18);
         if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
           this.state.isVictory = true;
         }
@@ -269,12 +295,60 @@ class GameApp {
         if (enemy.hp <= 0) enemy.state = 'DEAD';
       });
 
+      // Enemy Death Handling (Gold Multiplier & Death-Spawn / Split)
       if (enemy.hp <= 0 || enemy.state === 'DEAD') {
-        this.state.gold += enemy.rewardGold;
-        this.state.addFloatingText(`+${enemy.rewardGold} 🪙`, enemy.x, enemy.y - 10, '#facc15', 14);
+        const scaledGold = enemy.rewardGold > 0 ? Math.max(1, Math.round(enemy.rewardGold * this.state.goldMultiplier)) : 0;
+        this.state.gold += scaledGold;
+        if (scaledGold > 0) {
+          this.state.addFloatingText(`+${scaledGold} 🪙`, enemy.x, enemy.y - 10, '#facc15', 14);
+        }
         this.state.addExplosionParticles(enemy.x, enemy.y, ELEMENT_COLORS[enemy.elementalProfile.primaryElement], 8);
+
+        // Check Death-Spawn / Split Mechanic
+        if (enemy.deathSpawn) {
+          const cfg = enemy.deathSpawn;
+          this.state.addFloatingText('💥 Phân tách!', enemy.x, enemy.y - 24, '#f97316', 15);
+          for (let s = 0; s < cfg.count; s++) {
+            const offset = (s - (cfg.count - 1) / 2) * 12;
+            const childDist = Math.max(0, enemy.pathDistance + offset);
+            const childNav = this.navSystem.getPointAlongPath(enemy.navigationMode, childDist, this.totalAnimTime);
+            const childEnemy = this.waveSystem.spawnMinionAt(cfg.typeId, childDist, childNav.position.x, childNav.position.y);
+            if (childEnemy) {
+              const pathInfo = this.navSystem.getPathInfo(childEnemy.navigationMode);
+              childEnemy.pathTotalLength = pathInfo.totalLength;
+              childEnemy.facing = childNav.facing;
+              this.state.enemies.push(childEnemy);
+              this.state.addExplosionParticles(childNav.position.x, childNav.position.y, '#f97316', 5);
+            }
+          }
+        }
+
         this.state.enemies.splice(i, 1);
         continue;
+      }
+
+      // Enemy Summoning Mechanic along path
+      if (enemy.summonConfig && (enemy.state === 'WALKING' || enemy.state === 'SWIMMING' || enemy.state === 'FLYING' || enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING')) {
+        enemy.summonTimer = (enemy.summonTimer ?? enemy.summonConfig.interval) - dt;
+        if (enemy.summonTimer <= 0) {
+          enemy.summonTimer = enemy.summonConfig.interval;
+          const sCfg = enemy.summonConfig;
+          this.state.addFloatingText('🔮 Triệu hồi!', enemy.x, enemy.y - 20, '#a855f7', 15);
+          this.state.addExplosionParticles(enemy.x, enemy.y, '#a855f7', 10);
+
+          for (let s = 0; s < sCfg.count; s++) {
+            const offset = (s + 1) * 14;
+            const minionDist = Math.max(0, enemy.pathDistance - offset);
+            const mNav = this.navSystem.getPointAlongPath(enemy.navigationMode, minionDist, this.totalAnimTime);
+            const minion = this.waveSystem.spawnMinionAt(sCfg.typeId, minionDist, mNav.position.x, mNav.position.y);
+            if (minion) {
+              const pathInfo = this.navSystem.getPathInfo(minion.navigationMode);
+              minion.pathTotalLength = pathInfo.totalLength;
+              minion.facing = mNav.facing;
+              this.state.enemies.push(minion);
+            }
+          }
+        }
       }
 
       if (enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING') {

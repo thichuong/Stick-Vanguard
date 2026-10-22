@@ -1,4 +1,5 @@
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
+import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import {
   ELEMENT_COLORS,
   ELEMENT_ICONS,
@@ -113,6 +114,9 @@ export class SideDetailPanel {
         break;
       case 'NAVIGATION':
         this.renderNavigationCategory(targetSubId);
+        break;
+      case 'ENEMIES':
+        this.renderEnemiesCategory(targetSubId);
         break;
       default:
         this.renderTowerCategory('BARRACKS');
@@ -1654,6 +1658,76 @@ export class SideDetailPanel {
             <li>🎯 <b>VŨ KHÍ KHẮC CHẾ:</b> Dùng <b>Tháp Cung</b>, <b>Tháp Phép</b>, <b>Pháo Cối</b> bao quát sông, hoặc đặt cờ <b>Lính Bắn Tên</b> sát mép sông!</li>
           </ul>
         </div>
+      </div>
+    `;
+  }
+
+  // ==========================================
+  // 7. ENEMIES CATEGORY
+  // ==========================================
+  private renderEnemiesCategory(targetSubId?: string): void {
+    this.titleEl.textContent = 'Bách Khoa Quái Vật & Chủng Loại Mới';
+    this.iconEl.textContent = '👾';
+    this.badgeEl.textContent = 'Thuộc Tính Đơn/Kép, Phân Tách & Triệu Hồi';
+
+    const enemiesList = Object.values(ENEMY_BLUEPRINTS);
+
+    const cardsHtml = enemiesList
+      .map((bp) => {
+        const pElem = bp.elementalProfile.primaryElement;
+        const sElem = bp.elementalProfile.secondaryElement;
+        const pColor = ELEMENT_COLORS[pElem] || '#94a3b8';
+        const pIcon = ELEMENT_ICONS[pElem] || '⚔️';
+        const sIcon = sElem ? ELEMENT_ICONS[sElem] : '';
+        const sName = sElem ? ` + ${ELEMENT_NAMES[sElem]}` : '';
+
+        const isHighlighted = targetSubId && (bp.typeId === targetSubId || bp.name.includes(targetSubId));
+
+        let abilityBadge = '';
+        if (bp.deathSpawn) {
+          abilityBadge += `<span style="background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; margin-left: 6px;">💥 Phân tách x${bp.deathSpawn.count}</span>`;
+        }
+        if (bp.summonConfig) {
+          abilityBadge += `<span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; margin-left: 6px;">🔮 Triệu hồi mỗi ${bp.summonConfig.interval}s</span>`;
+        }
+        if (sElem) {
+          abilityBadge += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; margin-left: 6px;">✨ 2 Thuộc Tính</span>`;
+        }
+
+        const moveText = bp.movementType === 'FLY' ? '✈️ Trên không' : bp.movementType === 'SWIM' ? '🏊 Kênh sông' : '🚶 Đường bộ';
+
+        return `
+          <div class="sp-card ${isHighlighted ? 'highlighted-elem' : ''}" style="border-left: 4px solid ${pColor}; padding: 12px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">${pIcon}${sIcon}</span>
+                <span style="font-weight: 800; font-size: 14px; color: #f8fafc;">${bp.name}</span>
+                ${abilityBadge}
+              </div>
+              <span style="color: #facc15; font-weight: 700;">🪙 +${bp.rewardGold}</span>
+            </div>
+            <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;">${bp.description}</p>
+            <div style="display: flex; gap: 14px; font-size: 11.5px; color: #94a3b8; flex-wrap: wrap;">
+              <span>Máu: <b style="color: #ef4444">${bp.hp} ❤️</b></span>
+              <span>Tốc độ: <b>${bp.speed} px/s</b></span>
+              <span>Sát thương: <b>${bp.damage} ⚔️</b></span>
+              <span>Di chuyển: <b>${moveText}</b></span>
+              <span>Hệ: <b style="color: ${pColor}">${pIcon} ${ELEMENT_NAMES[pElem]}${sName}</b></span>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    this.contentEl.innerHTML = `
+      <div class="sp-section sp-card">
+        <h4 class="sp-sec-title">👾 TỔNG HỢP CÁC CHỦNG LOẠI QUÁI VẬT</h4>
+        <p class="sp-desc">
+          Các đợt xâm lăng bao gồm quái đơn thuộc tính và <b>quái mang 2 thuộc tính</b> kết hợp, cùng các đặc tính chiến thuật như <b>Phân tách khi chết</b> và <b>Triệu hồi quái trên đường đi</b>.
+        </p>
+      </div>
+      <div class="sp-section">
+        ${cardsHtml}
       </div>
     `;
   }

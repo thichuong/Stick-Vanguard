@@ -458,5 +458,89 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(state.towers.length).toBe(2);
     });
   });
+
+  describe('Custom Game Settings & New Enemy Mechanics', () => {
+    it('should scale damage with damageMultiplier', () => {
+      TargetingRuleEngine.globalDamageMultiplier = 2.5;
+
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-runner',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: runnerBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      const res = TargetingRuleEngine.calculateDamage(
+        { amount: 20, element: 'PHYSICAL', sourceId: 'tower-1' },
+        enemy
+      );
+
+      // Base 20 * multiplier 2.5 = 50
+      expect(res.finalDamage).toBe(50);
+
+      // Reset
+      TargetingRuleEngine.globalDamageMultiplier = 1.0;
+    });
+
+    it('should support dual-element enemy matchup calculation', () => {
+      // MAGMA_SLIME is FIRE + EARTH
+      const slimeBp = ENEMY_BLUEPRINTS['MAGMA_SLIME'];
+      expect(slimeBp.elementalProfile.secondaryElement).toBe('EARTH');
+      expect(slimeBp.deathSpawn).toBeDefined();
+      expect(slimeBp.deathSpawn?.typeId).toBe('EMBER_BLOB');
+      expect(slimeBp.deathSpawn?.count).toBe(2);
+    });
+
+    it('should support summoner enemy blueprint config', () => {
+      // NECRO_WARLOCK summons SKELETON_MINION and spawns on death
+      const warlockBp = ENEMY_BLUEPRINTS['NECRO_WARLOCK'];
+      expect(warlockBp.summonConfig).toBeDefined();
+      expect(warlockBp.summonConfig?.typeId).toBe('SKELETON_MINION');
+      expect(warlockBp.deathSpawn?.typeId).toBe('SKELETON_MINION');
+      expect(warlockBp.elementalProfile.secondaryElement).toBe('ICE');
+    });
+
+    it('should scale waves procedurally up to any configured wave count', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const waveSys = new WaveSystem();
+      waveSys.setTotalWaves(25);
+      expect(waveSys.getTotalWaves()).toBe(25);
+
+      const wave1 = waveSys.generateWaveConfig(0, 25);
+      expect(wave1.waveNumber).toBe(1);
+
+      const wave15 = waveSys.generateWaveConfig(14, 25);
+      expect(wave15.waveNumber).toBe(15);
+      // Wave 15 is a milestone boss wave
+      expect(wave15.enemies.some((e) => e.typeId.includes('BOSS'))).toBe(true);
+
+      const wave25 = waveSys.generateWaveConfig(24, 25);
+      expect(wave25.waveNumber).toBe(25);
+      // Final wave has final bosses
+      expect(wave25.enemies.some((e) => e.typeId === 'VOID_HYDRA_BOSS')).toBe(true);
+    });
+  });
 });
 

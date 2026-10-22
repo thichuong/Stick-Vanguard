@@ -37,6 +37,7 @@ export interface StatusEffect {
 
 export interface ElementalProfile {
   primaryElement: ElementType;
+  secondaryElement?: ElementType;
   immunities: ElementType[]; // 100% immune (0 damage)
   /**
    * Multipliers for each damage type:

@@ -73,10 +73,22 @@ export class StickmanRenderer {
 
     // 5. Procedural Stickman Skeleton
     const elemColor = ELEMENT_COLORS[elementalProfile.primaryElement] || '#ffffff';
+    const secColor = elementalProfile.secondaryElement ? ELEMENT_COLORS[elementalProfile.secondaryElement] : elemColor;
     ctx.strokeStyle = elemColor;
     ctx.lineWidth = enemy.size > 22 ? 3.5 : 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    // Aura for dual-element or summoner enemies
+    if (elementalProfile.secondaryElement || enemy.tags.includes('SUMMONER')) {
+      ctx.save();
+      ctx.strokeStyle = `${secColor}50`;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(x, drawY - size * 0.2, size * 0.9 + Math.sin(animTime * 6) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     const walkCycle = isEngaged ? 0 : Math.sin(animTime * 8);
     const attackSwing = isAttacking ? Math.sin(animTime * 12) * 16 : 0;
@@ -126,7 +138,16 @@ export class StickmanRenderer {
     }
 
     // 6. Health bar & Elemental icons
-    this.renderHealthBar(ctx, x, headY - 10, enemy.hp, enemy.maxHp, elementalProfile.primaryElement, enemy.statusEffects);
+    this.renderHealthBar(
+      ctx,
+      x,
+      headY - 10,
+      enemy.hp,
+      enemy.maxHp,
+      elementalProfile.primaryElement,
+      enemy.statusEffects,
+      elementalProfile.secondaryElement
+    );
 
     ctx.restore();
   }
@@ -307,7 +328,8 @@ export class StickmanRenderer {
     hp: number,
     maxHp: number,
     element: string,
-    statusEffects: any[]
+    statusEffects: any[],
+    secondaryElement?: string
   ): void {
     const width = 28;
     const height = 4;
@@ -323,9 +345,17 @@ export class StickmanRenderer {
     ctx.fillRect(x - width / 2, y, width * healthPercent, height);
 
     // Element indicator pip
-    const icon = ELEMENT_ICONS[element as ElementType] || '⚔️';
-    ctx.font = '13px sans-serif';
-    ctx.fillText(icon, x - width / 2 - 14, y + 6);
+    const icon1 = ELEMENT_ICONS[element as ElementType] || '⚔️';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(icon1, x - width / 2 - 14, y + 6);
+
+    // Secondary Element indicator pip for dual-element enemies
+    if (secondaryElement) {
+      const icon2 = ELEMENT_ICONS[secondaryElement as ElementType] || '';
+      if (icon2) {
+        ctx.fillText(icon2, x - width / 2 - 26, y + 6);
+      }
+    }
 
     // Status icons
     if (statusEffects.length > 0) {

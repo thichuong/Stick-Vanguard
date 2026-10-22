@@ -44,6 +44,17 @@ export type EnemyState =
   | 'ATTACKING'
   | 'DEAD';
 
+export interface DeathSpawnConfig {
+  typeId: string;
+  count: number;
+}
+
+export interface SummonAbilityConfig {
+  typeId: string;
+  count: number;
+  interval: number; // in seconds
+}
+
 export interface SoldierEntity {
   id: string;
   towerId: string;
@@ -102,6 +113,9 @@ export interface EnemyEntity {
   altitude: number; // 0 for ground/water, > 0 for flying
   size: number;
   facing: number; // radians
+  deathSpawn?: DeathSpawnConfig;
+  summonConfig?: SummonAbilityConfig;
+  summonTimer?: number;
 }
 
 export interface TowerEntity {

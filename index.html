@@ -59,13 +59,35 @@
         </div>
 
         <!-- Cài đặt & Điều khiển trận đấu -->
-        <div class="panel-section settings-group">
-          <div class="section-title">⚙️ ĐIỀU KHIỂN & CÀI ĐẶT</div>
+        <div class="panel-section controls-group">
+          <div class="section-title">🎮 ĐIỀU KHIỂN</div>
           <div class="settings-grid">
             <button id="btn-speed" class="hud-btn control-btn">Tốc độ: x1</button>
             <button id="btn-pause" class="hud-btn control-btn">⏸️ Tạm dừng</button>
             <button id="btn-restart" class="hud-btn danger-btn control-btn">🔄 Chơi lại</button>
             <button id="btn-fullscreen" class="hud-btn control-btn" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
+          </div>
+        </div>
+
+        <!-- Cài đặt trận đấu tùy chỉnh (Custom Match Settings Button) -->
+        <div class="panel-section custom-settings-group">
+          <div class="section-title">⚙️ CÀI ĐẶT TRẬN ĐẤU</div>
+          <button id="btn-open-settings-modal" class="hud-btn highlight-btn settings-main-btn" title="Mở bảng cài đặt trận đấu toàn màn hình">
+            ⚙️ Cài Đặt Trận Đấu
+          </button>
+          <div class="quick-settings-summary">
+            <div class="qss-row">
+              <span class="qss-lbl">Số đợt quái:</span>
+              <span id="quick-hud-waves" class="qss-val">10 đợt</span>
+            </div>
+            <div class="qss-row">
+              <span class="qss-lbl">Tỉ lệ vàng:</span>
+              <span id="quick-hud-gold" class="qss-val gold-txt">x1.0</span>
+            </div>
+            <div class="qss-row">
+              <span class="qss-lbl">Tỉ lệ sát thương:</span>
+              <span id="quick-hud-dmg" class="qss-val dmg-txt">x1.0</span>
+            </div>
           </div>
         </div>
 
@@ -81,6 +103,7 @@
             <div class="lookup-pill-group">
               <button class="lookup-pill" data-cat="ELEMENTS" title="Ma trận tương khắc 9 hệ nguyên tố">✨ Hệ Nguyên Tố</button>
               <button class="lookup-pill" data-cat="NAVIGATION" title="Quy tắc di chuyển Bộ, Bay, Thủy">🚶 Di Chuyển</button>
+              <button class="lookup-pill" data-cat="ENEMIES" title="Danh sách & chủng loại quái vật">👾 Quái Vật</button>
             </div>
             <div class="lookup-pill-group mini-elements-group">
               <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="FIRE" title="Hệ Lửa">🔥</button>
@@ -235,6 +258,7 @@
             <button class="codex-tab" data-cat="ELEMENTS">✨ Hệ Nguyên Tố & Hiệu Ứng</button>
             <button class="codex-tab" data-cat="TRAPS">⚙️ Bẫy</button>
             <button class="codex-tab" data-cat="NAVIGATION">🚶 Di Chuyển</button>
+            <button class="codex-tab" data-cat="ENEMIES">👾 Quái Vật</button>
           </nav>
 
           <!-- Codex Modal Body -->
@@ -265,6 +289,129 @@
             </p>
             <div id="map-cards-grid" class="map-cards-grid">
               <!-- Danh sách bản đồ nạp động bởi UIManager -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. SETTINGS MODAL: Bảng Cài Đặt Lớn Toàn Màn Hình -->
+      <div id="settings-modal-backdrop" class="codex-backdrop hidden">
+        <div class="codex-modal-container settings-modal-container">
+          <div class="codex-modal-header">
+            <div class="codex-header-left">
+              <span class="codex-icon">⚙️</span>
+              <div class="codex-title-group">
+                <h2>Bảng Cài Đặt Trận Đấu</h2>
+                <span class="codex-badge">Custom Match Parameters</span>
+              </div>
+            </div>
+            <button id="btn-close-settings-modal" class="codex-close-btn" title="Đóng bảng cài đặt (Phím Esc hoặc Click ngoài)">✕</button>
+          </div>
+
+          <div class="settings-modal-body">
+            <div class="settings-cards-grid">
+              <!-- Card 1: Số đợt quái -->
+              <div class="settings-card sp-card">
+                <div class="sc-header">
+                  <div class="sc-icon-title">
+                    <span class="sc-icon">🌊</span>
+                    <div>
+                      <h3 class="sc-title">Số Đợt Quái Mỗi Màn (Wave Count)</h3>
+                      <span class="sc-sub">Thay đổi độ dài và quy mô chiến dịch</span>
+                    </div>
+                  </div>
+                  <span id="lbl-custom-waves" class="sc-badge-val">10 đợt</span>
+                </div>
+                <p class="sc-desc">
+                  Áp dụng cho mọi bản đồ chiến trường. Hệ thống sẽ tự động cân bằng tiến trình quái vật, phân bổ các chủng loại quái mới và bố trí Đại Trùm ở các đợt mốc và đợt cuối cùng.
+                </p>
+                <div class="sc-control-box">
+                  <input type="range" id="input-waves-range" min="1" max="100" step="1" value="10" class="cs-slider waves-slider" />
+                  <div class="sc-input-group">
+                    <label>Nhập số đợt:</label>
+                    <input type="number" id="input-waves-num" min="1" max="100" value="10" class="cs-num-input-large" />
+                  </div>
+                </div>
+                <div class="sc-preset-buttons">
+                  <span class="preset-label">Mốc nhanh:</span>
+                  <button class="preset-btn" data-type="waves" data-val="5">5 đợt (Thử nghiệm)</button>
+                  <button class="preset-btn active" data-type="waves" data-val="10">10 đợt (Tiêu chuẩn)</button>
+                  <button class="preset-btn" data-type="waves" data-val="15">15 đợt (Mở rộng)</button>
+                  <button class="preset-btn" data-type="waves" data-val="25">25 đợt (Chiến dịch dài)</button>
+                  <button class="preset-btn" data-type="waves" data-val="50">50 đợt (Vô tận)</button>
+                </div>
+              </div>
+
+              <!-- Card 2: Tỉ lệ vàng rơi -->
+              <div class="settings-card sp-card">
+                <div class="sc-header">
+                  <div class="sc-icon-title">
+                    <span class="sc-icon">🪙</span>
+                    <div>
+                      <h3 class="sc-title">Tỉ Lệ Vàng Rơi Xuống (Gold Drop Rate)</h3>
+                      <span class="sc-sub">Mặc định: x1.0 • Phạm vi: x0.1 đến x10.0</span>
+                    </div>
+                  </div>
+                  <span id="lbl-gold-mult" class="sc-badge-val gold-badge">x1.0</span>
+                </div>
+                <p class="sc-desc">
+                  Nhân trực tiếp vào lượng vàng rơi ra khi tiêu diệt quái vật, phần thưởng hoàn thành mỗi đợt và thưởng gọi đợt sớm. Cho phép bạn thử nghiệm nhanh các đội hình đắt tiền hoặc thử thách kinh tế khắc nghiệt.
+                </p>
+                <div class="sc-control-box">
+                  <input type="range" id="input-gold-range" min="0.1" max="10" step="0.1" value="1.0" class="cs-slider gold-slider" />
+                  <div class="sc-input-group">
+                    <span class="slider-min-max">x0.1 (Cực khó) ➔ x1.0 (Chuẩn) ➔ x10.0 (Vô tận vàng)</span>
+                  </div>
+                </div>
+                <div class="sc-preset-buttons">
+                  <span class="preset-label">Hệ số nhanh:</span>
+                  <button class="preset-btn" data-type="gold" data-val="0.5">x0.5 (Thử thách)</button>
+                  <button class="preset-btn active" data-type="gold" data-val="1.0">x1.0 (Mặc định)</button>
+                  <button class="preset-btn" data-type="gold" data-val="2.0">x2.0 (Dồi dào)</button>
+                  <button class="preset-btn" data-type="gold" data-val="5.0">x5.0 (Thịnh vượng)</button>
+                  <button class="preset-btn" data-type="gold" data-val="10.0">x10.0 (Tối đa)</button>
+                </div>
+              </div>
+
+              <!-- Card 3: Tỉ lệ sát thương -->
+              <div class="settings-card sp-card">
+                <div class="sc-header">
+                  <div class="sc-icon-title">
+                    <span class="sc-icon">⚔️</span>
+                    <div>
+                      <h3 class="sc-title">Tỉ Lệ Sát Thương (Damage Rate)</h3>
+                      <span class="sc-sub">Mặc định: x1.0 • Phạm vi: x0.1 đến x10.0</span>
+                    </div>
+                  </div>
+                  <span id="lbl-damage-mult" class="sc-badge-val dmg-badge">x1.0</span>
+                </div>
+                <p class="sc-desc">
+                  Hệ số khuếch đại toàn bộ sát thương của Tháp phòng ngự, Bẫy chiến thuật, Binh lính người que và sát thương thiêu đốt theo thời gian (DoT). Giúp người chơi tùy biến độ khó trận đấu theo ý muốn.
+                </p>
+                <div class="sc-control-box">
+                  <input type="range" id="input-damage-range" min="0.1" max="10" step="0.1" value="1.0" class="cs-slider dmg-slider" />
+                  <div class="sc-input-group">
+                    <span class="slider-min-max">x0.1 (Yếu ớt) ➔ x1.0 (Chuẩn) ➔ x10.0 (Công phá cực đại)</span>
+                  </div>
+                </div>
+                <div class="sc-preset-buttons">
+                  <span class="preset-label">Hệ số nhanh:</span>
+                  <button class="preset-btn" data-type="dmg" data-val="0.5">x0.5 (Khó nhằn)</button>
+                  <button class="preset-btn active" data-type="dmg" data-val="1.0">x1.0 (Mặc định)</button>
+                  <button class="preset-btn" data-type="dmg" data-val="2.0">x2.0 (Hỏa lực mạnh)</button>
+                  <button class="preset-btn" data-type="dmg" data-val="5.0">x5.0 (Càn quét)</button>
+                  <button class="preset-btn" data-type="dmg" data-val="10.0">x10.0 (Hủy diệt)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-modal-footer">
+              <button id="btn-reset-settings" class="action-btn" style="background: #334155; color: #cbd5e1; width: auto; padding: 10px 20px;">
+                🔄 Khôi phục mặc định
+              </button>
+              <button id="btn-confirm-settings" class="action-btn primary-btn" style="width: auto; padding: 10px 30px; font-weight: 800;">
+                ✓ Áp Dụng & Đóng
+              </button>
             </div>
           </div>
         </div>

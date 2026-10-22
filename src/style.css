@@ -281,6 +281,245 @@ html, body {
   padding: 7px 4px;
 }
 
+/* Custom Settings Group */
+.custom-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-main-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.settings-main-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.45);
+}
+
+.quick-settings-summary {
+  background: #090e1a;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.qss-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.qss-lbl {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.qss-val {
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.qss-val.gold-txt {
+  color: #facc15;
+}
+
+.qss-val.dmg-txt {
+  color: #f87171;
+}
+
+/* ==========================================================================
+   SETTINGS MODAL (Full Screen / Big Dialog like Codex)
+   ========================================================================== */
+.settings-modal-container {
+  width: 95vw;
+  max-width: 1200px;
+  height: 90vh;
+  max-height: 850px;
+}
+
+.settings-modal-body {
+  padding: 24px 30px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.settings-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-card {
+  background: #121b2d;
+  border: 1px solid #2d3b55;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sc-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sc-icon {
+  font-size: 26px;
+}
+
+.sc-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 2px;
+}
+
+.sc-sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.sc-badge-val {
+  font-size: 17px;
+  font-weight: 900;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 4px 14px;
+  border-radius: 6px;
+}
+
+.sc-badge-val.gold-badge {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.15);
+  border-color: rgba(250, 204, 21, 0.35);
+}
+
+.sc-badge-val.dmg-badge {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.sc-desc {
+  font-size: 13.5px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.sc-control-box {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #090e1a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px 18px;
+}
+
+.sc-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.sc-input-group label {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.cs-num-input-large {
+  width: 70px;
+  background: #141e33;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f8fafc;
+  padding: 6px 8px;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.slider-min-max {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.sc-preset-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.preset-btn {
+  background: #141e33;
+  border: 1px solid #2d3b55;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.preset-btn:hover {
+  background: #1e293b;
+  border-color: #60a5fa;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.preset-btn.active {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.settings-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #1e293b;
+  margin-top: auto;
+}
+
 /* Codex & Quick Lookups in Left Panel */
 .codex-main-btn {
   width: 100%;

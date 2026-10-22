@@ -36,6 +36,11 @@ export class GameState {
   public isGameOver: boolean = false;
   public isVictory: boolean = false;
 
+  // Custom Game Settings
+  public customTotalWaves: number = 10;
+  public goldMultiplier: number = 1.0;   // 0.1 to 10.0
+  public damageMultiplier: number = 1.0; // 0.1 to 10.0
+
   public currentMapId: string = MAPS_CONFIG[0].id;
   public currentMap: MapConfig = MAPS_CONFIG[0];
 

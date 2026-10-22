@@ -20,6 +20,7 @@ export class UIManager {
   private inspectorTitleEl: HTMLElement | null;
   private mapModalBackdropEl: HTMLElement | null;
   private mapCardsGridEl: HTMLElement | null;
+  private settingsModalBackdropEl: HTMLElement | null;
   private hudMapNameEl: HTMLElement | null;
   private hudMapWavesEl: HTMLElement | null;
   private sidePanel: SideDetailPanel;
@@ -39,6 +40,7 @@ export class UIManager {
     this.inspectorTitleEl = document.getElementById('inspector-main-title');
     this.mapModalBackdropEl = document.getElementById('map-modal-backdrop');
     this.mapCardsGridEl = document.getElementById('map-cards-grid');
+    this.settingsModalBackdropEl = document.getElementById('settings-modal-backdrop');
     this.hudMapNameEl = document.getElementById('hud-map-name');
     this.hudMapWavesEl = document.getElementById('hud-map-waves');
     this.sidePanel = new SideDetailPanel();
@@ -48,11 +50,138 @@ export class UIManager {
     this.bindKeyboard();
     this.bindCodexTriggers();
     this.bindMapModal();
+    this.bindSettingsModal();
   }
 
   public handleResize(): void {
     this.lastRenderKey = '';
     this.renderInspector();
+  }
+
+  private bindSettingsModal(): void {
+    const openBtn = document.getElementById('btn-open-settings-modal');
+    const closeBtn = document.getElementById('btn-close-settings-modal');
+    const confirmBtn = document.getElementById('btn-confirm-settings');
+    const resetBtn = document.getElementById('btn-reset-settings');
+
+    const wavesRange = document.getElementById('input-waves-range') as HTMLInputElement | null;
+    const wavesNum = document.getElementById('input-waves-num') as HTMLInputElement | null;
+    const wavesLbl = document.getElementById('lbl-custom-waves');
+    const quickWavesLbl = document.getElementById('quick-hud-waves');
+
+    const goldRange = document.getElementById('input-gold-range') as HTMLInputElement | null;
+    const goldLbl = document.getElementById('lbl-gold-mult');
+    const quickGoldLbl = document.getElementById('quick-hud-gold');
+
+    const dmgRange = document.getElementById('input-damage-range') as HTMLInputElement | null;
+    const dmgLbl = document.getElementById('lbl-damage-mult');
+    const quickDmgLbl = document.getElementById('quick-hud-dmg');
+
+    const updateWaves = (val: number) => {
+      const clamped = Math.max(1, Math.min(100, Math.round(val)));
+      this.state.customTotalWaves = clamped;
+      if (wavesRange) wavesRange.value = `${clamped}`;
+      if (wavesNum) wavesNum.value = `${clamped}`;
+      if (wavesLbl) wavesLbl.textContent = `${clamped} đợt`;
+      if (quickWavesLbl) quickWavesLbl.textContent = `${clamped} đợt`;
+
+      // Update preset buttons active state
+      document.querySelectorAll('.preset-btn[data-type="waves"]').forEach((btn) => {
+        const v = parseInt(btn.getAttribute('data-val') || '0', 10);
+        btn.classList.toggle('active', v === clamped);
+      });
+    };
+
+    const updateGold = (val: number) => {
+      const clamped = Math.max(0.1, Math.min(10, Math.round(val * 10) / 10));
+      this.state.goldMultiplier = clamped;
+      if (goldRange) goldRange.value = `${clamped}`;
+      const txt = `x${clamped.toFixed(1)}`;
+      if (goldLbl) goldLbl.textContent = txt;
+      if (quickGoldLbl) quickGoldLbl.textContent = txt;
+
+      document.querySelectorAll('.preset-btn[data-type="gold"]').forEach((btn) => {
+        const v = parseFloat(btn.getAttribute('data-val') || '0');
+        btn.classList.toggle('active', Math.abs(v - clamped) < 0.05);
+      });
+    };
+
+    const updateDmg = (val: number) => {
+      const clamped = Math.max(0.1, Math.min(10, Math.round(val * 10) / 10));
+      this.state.damageMultiplier = clamped;
+      if (dmgRange) dmgRange.value = `${clamped}`;
+      const txt = `x${clamped.toFixed(1)}`;
+      if (dmgLbl) dmgLbl.textContent = txt;
+      if (quickDmgLbl) quickDmgLbl.textContent = txt;
+
+      document.querySelectorAll('.preset-btn[data-type="dmg"]').forEach((btn) => {
+        const v = parseFloat(btn.getAttribute('data-val') || '0');
+        btn.classList.toggle('active', Math.abs(v - clamped) < 0.05);
+      });
+    };
+
+    if (wavesRange) {
+      wavesRange.addEventListener('input', () => updateWaves(parseInt(wavesRange.value, 10)));
+    }
+    if (wavesNum) {
+      wavesNum.addEventListener('change', () => updateWaves(parseInt(wavesNum.value, 10) || 10));
+    }
+    if (goldRange) {
+      goldRange.addEventListener('input', () => updateGold(parseFloat(goldRange.value)));
+    }
+    if (dmgRange) {
+      dmgRange.addEventListener('input', () => updateDmg(parseFloat(dmgRange.value)));
+    }
+
+    // Preset buttons inside settings modal
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const type = target.getAttribute('data-type');
+        const val = parseFloat(target.getAttribute('data-val') || '0');
+        if (type === 'waves') updateWaves(val);
+        else if (type === 'gold') updateGold(val);
+        else if (type === 'dmg') updateDmg(val);
+      });
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        updateWaves(10);
+        updateGold(1.0);
+        updateDmg(1.0);
+      });
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => this.openSettingsModal());
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeSettingsModal());
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', () => this.closeSettingsModal());
+    }
+
+    if (this.settingsModalBackdropEl) {
+      this.settingsModalBackdropEl.addEventListener('click', (e) => {
+        if (e.target === this.settingsModalBackdropEl) {
+          this.closeSettingsModal();
+        }
+      });
+    }
+  }
+
+  public openSettingsModal(): void {
+    if (this.settingsModalBackdropEl) {
+      this.settingsModalBackdropEl.classList.remove('hidden');
+    }
+  }
+
+  public closeSettingsModal(): void {
+    if (this.settingsModalBackdropEl) {
+      this.settingsModalBackdropEl.classList.add('hidden');
+    }
   }
 
   private bindEvents(): void {
@@ -160,7 +289,7 @@ export class UIManager {
 
     this.mapCardsGridEl.innerHTML = MAPS_CONFIG.map((m) => {
       const isSelected = m.id === this.state.currentMapId;
-      const totalWaves = m.waves ? m.waves.length : 10;
+      const totalWaves = this.state.customTotalWaves;
 
       return `
         <div class="map-card ${isSelected ? 'active-map' : ''}" data-map-id="${m.id}">
@@ -169,7 +298,7 @@ export class UIManager {
               <span class="map-card-name">${m.name}</span>
               <span class="map-card-sub">${m.subtitle}</span>
             </div>
-            <span class="current-map-waves-badge">⚔️ ${totalWaves} Đợt</span>
+            <span class="current-map-waves-badge">⚔️ ${totalWaves} Đợt (Cài đặt)</span>
           </div>
 
           <div class="map-preview-box">
@@ -270,6 +399,10 @@ export class UIManager {
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (this.settingsModalBackdropEl && !this.settingsModalBackdropEl.classList.contains('hidden')) {
+          this.closeSettingsModal();
+          return;
+        }
         if (this.mapModalBackdropEl && !this.mapModalBackdropEl.classList.contains('hidden')) {
           this.closeMapModal();
           return;
@@ -415,8 +548,7 @@ export class UIManager {
       this.hudMapNameEl.textContent = this.state.currentMap.name;
     }
     if (this.hudMapWavesEl) {
-      const maxW = this.state.currentMap.waves ? this.state.currentMap.waves.length : totalWaves;
-      this.hudMapWavesEl.textContent = `Tối đa: ${maxW} đợt`;
+      this.hudMapWavesEl.textContent = `Mục tiêu: ${totalWaves} đợt`;
     }
 
     if (nextWaveBtn) {

@@ -16,6 +16,8 @@ export interface DamageCalculationResult {
 }
 
 export class TargetingRuleEngine {
+  public static globalDamageMultiplier: number = 1.0;
+
   /**
    * Evaluates if an attacker (Tower, Trap, or Soldier) can target this enemy
    */
@@ -87,6 +89,14 @@ export class TargetingRuleEngine {
       if (matchup !== undefined) {
         multiplier *= matchup;
       }
+
+      // If enemy has secondary element, factor it in
+      if (profile.secondaryElement && profile.secondaryElement !== 'PHYSICAL') {
+        const secMatchup = ELEMENTAL_MATCHUPS[element]?.[profile.secondaryElement];
+        if (secMatchup !== undefined) {
+          multiplier = (multiplier + secMatchup) / 2;
+        }
+      }
     }
 
     // 4. Status effect interactions
@@ -116,7 +126,8 @@ export class TargetingRuleEngine {
       multiplier *= 1.5;
     }
 
-    const finalDamage = Math.max(1, Math.round(amount * multiplier));
+    const calculatedDamage = Math.max(1, Math.round(amount * multiplier * this.globalDamageMultiplier));
+    const finalDamage = calculatedDamage;
 
     let label: string | undefined;
     if (multiplier >= 1.4) {
@@ -320,7 +331,8 @@ export class TargetingRuleEngine {
         eff.tickTimer = (eff.tickTimer || 0) + dt;
         if (eff.tickTimer >= 0.5) {
           eff.tickTimer = 0;
-          onDotDamage(eff.value, 'FIRE');
+          const scaledDmg = Math.max(1, Math.round(eff.value * this.globalDamageMultiplier));
+          onDotDamage(scaledDmg, 'FIRE');
         }
       } else if (eff.type === 'SLOW') {
         speedMult = Math.min(speedMult, 1 - eff.value);
