@@ -5,6 +5,7 @@ import { GameState } from '../core/GameState.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { EnemyEntity } from '../types/entities.types.js';
+import { DamagePayload } from '../types/elements.types.js';
 
 describe('Stick Vanguard - Core Architecture Tests', () => {
   describe('NavigationSystem (Multi-Domain Movement)', () => {
@@ -750,6 +751,222 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       const finalWave = waveSys.generateWaveConfig(19, 20);
       const finalWaveTypes = new Set(finalWave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
       expect(finalWaveTypes.size).toBeGreaterThan(1);
+    });
+  });
+
+  describe('Game Balance & Rework Tests (Archer, Artillery, Barracks, Mage)', () => {
+    it('Archer and Artillery damage must be increased across tiers', () => {
+      // Archer damage checks
+      expect(TOWER_BLUEPRINTS['ARCHER_1'].damage).toBe(14);
+      expect(TOWER_BLUEPRINTS['ARCHER_2'].damage).toBe(26);
+      expect(TOWER_BLUEPRINTS['ARCHER_3'].damage).toBe(42);
+      expect(TOWER_BLUEPRINTS['ARCHER_4_A'].damage).toBe(56);
+      expect(TOWER_BLUEPRINTS['ARCHER_4_B'].damage).toBe(85);
+
+      // Artillery damage checks
+      expect(TOWER_BLUEPRINTS['ARTILLERY_1'].damage).toBe(40);
+      expect(TOWER_BLUEPRINTS['ARTILLERY_2'].damage).toBe(78);
+      expect(TOWER_BLUEPRINTS['ARTILLERY_3'].damage).toBe(130);
+      expect(TOWER_BLUEPRINTS['ARTILLERY_4_A'].damage).toBe(220);
+      expect(TOWER_BLUEPRINTS['ARTILLERY_4_B'].damage).toBe(170);
+    });
+
+    it('Barracks must increase soldiers at tier 2 (4 soldiers) and tier 3/4 (5 soldiers)', () => {
+      const state = new GameState();
+      state.gold = 2000;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'BARRACKS');
+      const tower = state.towers[0];
+
+      // Tier 1: 3 soldiers
+      expect(tower.maxSoldiers).toBe(3);
+      expect(tower.soldierIds?.length).toBe(3);
+      expect(state.soldiers.length).toBe(3);
+
+      // Tier 2: 4 soldiers
+      state.upgradeTower(tower.id);
+      expect(tower.tier).toBe(2);
+      expect(tower.maxSoldiers).toBe(4);
+      expect(tower.soldierIds?.length).toBe(4);
+      expect(state.soldiers.length).toBe(4);
+
+      // Tier 3: 5 soldiers
+      state.upgradeTower(tower.id);
+      expect(tower.tier).toBe(3);
+      expect(tower.maxSoldiers).toBe(5);
+      expect(tower.soldierIds?.length).toBe(5);
+      expect(state.soldiers.length).toBe(5);
+
+      // Tier 4-A: maintains 5 soldiers
+      state.upgradeTower(tower.id, 'A');
+      expect(tower.tier).toBe(4);
+      expect(tower.maxSoldiers).toBe(5);
+      expect(tower.soldierIds?.length).toBe(5);
+      expect(state.soldiers.length).toBe(5);
+    });
+
+    it('Mage tower must explode AoE damage from Tier 1, and ratio must be 1.0 (100%)', async () => {
+      const { MAGE_SECONDARY_DMG_RATIO } = await import('../config/elements.config.js');
+      expect(MAGE_SECONDARY_DMG_RATIO).toBe(1.0);
+
+      expect(TOWER_BLUEPRINTS['MAGE_1'].aoeRadius).toBe(45);
+      expect(TOWER_BLUEPRINTS['MAGE_2'].aoeRadius).toBe(55);
+      expect(TOWER_BLUEPRINTS['MAGE_3'].aoeRadius).toBe(65);
+      expect(TOWER_BLUEPRINTS['MAGE_1'].damage).toBe(10);
+      expect(TOWER_BLUEPRINTS['MAGE_2'].damage).toBe(18);
+      expect(TOWER_BLUEPRINTS['MAGE_3'].damage).toBe(30);
+    });
+
+    it('Mage 4_A must deal continuous area damage per second', async () => {
+      const { TowerSystem } = await import('../systems/TowerSystem.js');
+      const state = new GameState();
+      state.gold = 2000;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'MAGE');
+      const tower = state.towers[0];
+      state.upgradeTower(tower.id); // Tier 2
+      state.upgradeTower(tower.id); // Tier 3
+      state.upgradeTower(tower.id, 'A'); // Tier 4_A
+
+      expect(tower.branch).toBe('A');
+      expect(tower.tier).toBe(4);
+
+      const dummyEnemy: EnemyEntity = {
+        id: 'test-enemy-aura',
+        typeId: 'STICK_RUNNER',
+        name: 'Runner',
+        x: tower.x + 30,
+        y: tower.y,
+        hp: 200,
+        maxHp: 200,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 50,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      let auraHits = 0;
+      // Simulate 0.6 seconds (should trigger 1 aura tick)
+      TowerSystem.updateTowers(
+        state.towers,
+        [dummyEnemy],
+        0.6,
+        () => {},
+        () => {
+          auraHits++;
+        }
+      );
+
+      expect(auraHits).toBe(1);
+      expect(dummyEnemy.hp).toBeLessThan(200);
+    });
+
+    it('Mage 4_B must buff nearby towers with 2 elements, picking nearest when multiple exist', () => {
+      const state = new GameState();
+      state.gold = 5000;
+
+      // Build Mage 1 at (100, 100), upgrade to 4_B with elements FIRE and WATER
+      state.buildTowerAt(100, 100, 'MAGE');
+      const mage1 = state.towers.find((t) => t.x === 100 && t.y === 100)!;
+      state.upgradeTower(mage1.id);
+      state.upgradeTower(mage1.id);
+      state.upgradeTower(mage1.id, 'B');
+      state.setTowerElement(mage1.id, 'FIRE', 1);
+      state.setTowerElement(mage1.id, 'WATER', 2);
+
+      // Build Mage 2 at (250, 100), upgrade to 4_B with elements LIGHTNING and ICE
+      state.buildTowerAt(250, 100, 'MAGE');
+      const mage2 = state.towers.find((t) => t.x === 250 && t.y === 100)!;
+      state.upgradeTower(mage2.id);
+      state.upgradeTower(mage2.id);
+      state.upgradeTower(mage2.id, 'B');
+      state.setTowerElement(mage2.id, 'LIGHTNING', 1);
+      state.setTowerElement(mage2.id, 'ICE', 2);
+
+      // Build Archer at (140, 100) -> Closer to Mage 1 (dist 40) than Mage 2 (dist 110)
+      const builtArcher1 = state.buildTowerAt(140, 100, 'ARCHER');
+      expect(builtArcher1).toBe(true);
+      const archer = state.towers.find((t) => t.x === 140 && t.y === 100)!;
+
+      // Must be buffed by Mage 1 (nearest)
+      expect(archer.buffSourceId).toBe(mage1.id);
+      expect(archer.buffedElements).toEqual(['FIRE', 'WATER']);
+
+      // Build another Archer at (210, 100) -> Closer to Mage 2 (dist 40) than Mage 1 (dist 110)
+      const builtArcher2 = state.buildTowerAt(210, 100, 'ARCHER');
+      expect(builtArcher2).toBe(true);
+      const archer2 = state.towers.find((t) => t.x === 210 && t.y === 100)!;
+
+      // Must be buffed by Mage 2 (nearest)
+      expect(archer2.buffSourceId).toBe(mage2.id);
+      expect(archer2.buffedElements).toEqual(['LIGHTNING', 'ICE']);
+
+      // Selling Mage 1 must recalculate buffs: archer at (140, 100) should now pick Mage 2! (dist 110 <= 195)
+      state.sellTower(mage1.id);
+      expect(archer.buffSourceId).toBe(mage2.id);
+      expect(archer.buffedElements).toEqual(['LIGHTNING', 'ICE']);
+    });
+
+    it('TargetingRuleEngine.calculateDamage must include bonusElements from buff', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-runner-bonus',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 300,
+        maxHp: 300,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: runnerBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Payload with base physical 20 + secondary fire 10 + bonus lightning 10 + bonus water 10
+      const payload: DamagePayload = {
+        amount: 20,
+        element: 'PHYSICAL',
+        secondaryAmount: 10,
+        secondaryElement: 'FIRE',
+        bonusElements: [
+          { element: 'LIGHTNING', amount: 10 },
+          { element: 'WATER', amount: 10 }
+        ],
+        sourceId: 'test-archer'
+      };
+
+      const res = TargetingRuleEngine.calculateDamage(payload, enemy);
+      // All 4 components deal damage
+      expect(res.finalDamage).toBeGreaterThanOrEqual(40);
     });
   });
 });

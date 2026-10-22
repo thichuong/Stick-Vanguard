@@ -113,25 +113,15 @@ export class ProjectileSystem {
       const calc = TargetingRuleEngine.calculateDamage(p.damagePayload, target);
       if (!calc.isImmune) {
         target.hp -= calc.finalDamage;
-
-        // Apply primary element hit effect if magical
-        if (p.damagePayload.element !== 'PHYSICAL') {
-          TargetingRuleEngine.applyElementalHitEffects(target, p.damagePayload.element, p.damagePayload.amount);
-        }
-
-        // Apply secondary element hit effect if present
-        if (p.damagePayload.secondaryElement && p.damagePayload.secondaryAmount) {
-          TargetingRuleEngine.applyElementalHitEffects(
-            target,
-            p.damagePayload.secondaryElement,
-            p.damagePayload.secondaryAmount
-          );
-        }
+        TargetingRuleEngine.applyAllPayloadEffects(target, p.damagePayload);
       }
 
-      const displayColor = p.damagePayload.secondaryElement
-        ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
-        : ELEMENT_COLORS[p.damagePayload.element];
+      const displayColor =
+        p.damagePayload.bonusElements && p.damagePayload.bonusElements.length > 0
+          ? ELEMENT_COLORS[p.damagePayload.bonusElements[0].element]
+          : p.damagePayload.secondaryElement
+          ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
+          : ELEMENT_COLORS[p.damagePayload.element];
 
       onHit({
         enemy: target,
@@ -228,28 +218,26 @@ export class ProjectileSystem {
       const dist = Math.hypot(enemy.x - p.targetX, enemy.y - p.targetY);
       if (dist <= p.aoeRadius) {
         const falloff = Math.max(0.4, 1 - (dist / p.aoeRadius) * 0.6);
+        const bonusElements = p.damagePayload.bonusElements
+          ? p.damagePayload.bonusElements.map((b) => ({
+              element: b.element,
+              amount: Math.round(b.amount * falloff)
+            }))
+          : undefined;
+
         const payload = {
           ...p.damagePayload,
           amount: Math.round(p.damagePayload.amount * falloff),
           secondaryAmount: p.damagePayload.secondaryAmount
             ? Math.round(p.damagePayload.secondaryAmount * falloff)
-            : undefined
+            : undefined,
+          bonusElements
         };
 
         const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
         if (!calc.isImmune) {
           enemy.hp -= calc.finalDamage;
-
-          if (payload.element !== 'PHYSICAL') {
-            TargetingRuleEngine.applyElementalHitEffects(enemy, payload.element, payload.amount);
-          }
-          if (payload.secondaryElement && payload.secondaryAmount) {
-            TargetingRuleEngine.applyElementalHitEffects(
-              enemy,
-              payload.secondaryElement,
-              payload.secondaryAmount
-            );
-          }
+          TargetingRuleEngine.applyAllPayloadEffects(enemy, payload);
         }
 
         onHit({

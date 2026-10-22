@@ -343,6 +343,8 @@ export class GameState {
     this.selectedSlotId = null;
     this.selectedBuildPoint = null;
 
+    this.recalculateTowerBuffs();
+
     this.addFloatingText(`-${bp.cost} 🪙`, x, y - 15, '#eab308');
     return true;
   }
@@ -411,9 +413,60 @@ export class GameState {
     tower.totalInvested += nextBp.cost;
     if (nextBp.aoeRadius) tower.aoeRadius = nextBp.aoeRadius;
 
-    // Upgrade soldiers stats
-    if (tower.type === 'BARRACKS' && tower.soldierIds) {
-      for (const sid of tower.soldierIds) {
+    // Upgrade soldiers stats & count
+    if (tower.type === 'BARRACKS') {
+      const targetMaxSoldiers = nextBp.maxSoldiers || 3;
+      tower.maxSoldiers = targetMaxSoldiers;
+      if (!tower.soldierIds) tower.soldierIds = [];
+
+      // Spawn missing soldiers up to targetMaxSoldiers (e.g. tier 2 -> 4, tier 3/4 -> 5)
+      const rPoint = tower.rallyPoint || { x: tower.x, y: tower.y };
+      while (tower.soldierIds.length < targetMaxSoldiers) {
+        this.soldierIdCounter++;
+        const newSoldierId = `soldier-${this.soldierIdCounter}`;
+        tower.soldierIds.push(newSoldierId);
+
+        const soldierIndex = tower.soldierIds.length - 1;
+        const offsetAngle = (soldierIndex / targetMaxSoldiers) * Math.PI * 2;
+        const initialX = rPoint.x + Math.cos(offsetAngle) * 12;
+        const initialY = rPoint.y + Math.sin(offsetAngle) * 12;
+
+        this.soldiers.push({
+          id: newSoldierId,
+          towerId,
+          name: `Lính ${soldierIndex + 1}`,
+          x: initialX,
+          y: initialY,
+          hp: nextBp.soldierHp || 100,
+          maxHp: nextBp.soldierHp || 100,
+          baseMaxHp: nextBp.soldierHp || 100,
+          damage: nextBp.damage,
+          baseDamage: nextBp.damage,
+          attackSpeed: nextBp.fireRate,
+          attackCooldown: 0.5,
+          element: 'PHYSICAL',
+          secondaryElement: tower.secondaryElement || null,
+          buffedElements: tower.buffedElements ? [...tower.buffedElements] : undefined,
+          combatMode: tower.soldierMode || 'MELEE',
+          state: 'IDLE',
+          engagedEnemyId: null,
+          rallyPoint: { x: initialX, y: initialY },
+          targetPos: { x: initialX, y: initialY },
+          armor: nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : 0.1,
+          baseArmor: nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : 0.1,
+          magicResist: 0.1,
+          respawnTimer: 0,
+          respawnDelay: nextBp.soldierRespawn || 7,
+          tier: nextTier,
+          branch: branch,
+          rangedRange: 135 + nextTier * 12
+        });
+      }
+
+      // Reposition all soldiers evenly around rally point & update stats
+      const totalCount = tower.soldierIds.length;
+      for (let i = 0; i < totalCount; i++) {
+        const sid = tower.soldierIds[i];
         const soldier = this.soldiers.find((s) => s.id === sid);
         if (soldier) {
           soldier.tier = nextTier;
@@ -422,6 +475,13 @@ export class GameState {
           soldier.baseDamage = nextBp.damage;
           soldier.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : soldier.baseArmor;
           soldier.secondaryElement = tower.secondaryElement || null;
+          soldier.buffedElements = tower.buffedElements ? [...tower.buffedElements] : undefined;
+
+          const offsetAngle = (i / totalCount) * Math.PI * 2;
+          soldier.rallyPoint = {
+            x: rPoint.x + Math.cos(offsetAngle) * 12,
+            y: rPoint.y + Math.sin(offsetAngle) * 12
+          };
 
           if (soldier.combatMode === 'RANGED') {
             soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
@@ -440,6 +500,15 @@ export class GameState {
         }
       }
     }
+
+    // Mage 4-B auto-assign secondary element if not imbued yet so it has 2 elements to buff allies
+    if (tower.type === 'MAGE' && nextTier === 4 && branch === 'B') {
+      if (!tower.secondaryElement) {
+        tower.secondaryElement = tower.element === 'LIGHTNING' ? 'FIRE' : 'LIGHTNING';
+      }
+    }
+
+    this.recalculateTowerBuffs();
 
     this.addFloatingText(`CẤP ${nextTier}! -${nextBp.cost} 🪙`, tower.x, tower.y - 20, '#38bdf8');
     return true;
@@ -486,6 +555,7 @@ export class GameState {
 
     const icon = ELEMENT_ICONS[element];
     const name = ELEMENT_NAMES[element];
+    this.recalculateTowerBuffs();
     this.addFloatingText(`${icon} Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
     return true;
   }
@@ -565,6 +635,8 @@ export class GameState {
     this.selectedTowerId = null;
     this.isSettingRallyPoint = false;
 
+    this.recalculateTowerBuffs();
+
     this.addFloatingText(`+${refund} 🪙 Bán tháp`, tower.x, tower.y, '#22c55e');
     return true;
   }
@@ -603,6 +675,62 @@ export class GameState {
     this.isSettingRallyPoint = false;
     this.addFloatingText('🚩 Đã đổi điểm tập kết!', targetX, targetY - 10, '#eab308');
     return true;
+  }
+
+  /**
+   * Recalculates buffs provided by Mage 4_B towers to nearby towers and soldiers.
+   * Only called on discrete tower state changes (build, upgrade, element imbue, sell).
+   * If a tower is in range of multiple Mage 4_B towers, the closest one is chosen.
+   */
+  public recalculateTowerBuffs(): void {
+    const mage4BTowers = this.towers.filter(
+      (t) => t.type === 'MAGE' && t.tier === 4 && t.branch === 'B'
+    );
+
+    // Clear current buffs on all towers & soldiers
+    for (const t of this.towers) {
+      t.buffedElements = undefined;
+      t.buffSourceId = null;
+    }
+    for (const s of this.soldiers) {
+      s.buffedElements = undefined;
+    }
+
+    if (mage4BTowers.length === 0) return;
+
+    for (const tower of this.towers) {
+      if (tower.placement !== 'ROADSIDE') continue;
+
+      // Find the NEAREST Mage 4_B tower within its range
+      let nearestMage: TowerEntity | null = null;
+      let minDist = Infinity;
+
+      for (const mage of mage4BTowers) {
+        if (mage.id === tower.id) continue; // Cannot buff itself
+        const dist = Math.hypot(tower.x - mage.x, tower.y - mage.y);
+        if (dist <= mage.range && dist < minDist) {
+          minDist = dist;
+          nearestMage = mage;
+        }
+      }
+
+      if (nearestMage) {
+        const elem1 = nearestMage.element;
+        const elem2 = nearestMage.secondaryElement || nearestMage.element;
+        tower.buffSourceId = nearestMage.id;
+        tower.buffedElements = [elem1, elem2];
+
+        // Propagate to soldiers if barracks
+        if (tower.type === 'BARRACKS' && tower.soldierIds) {
+          for (const sid of tower.soldierIds) {
+            const soldier = this.soldiers.find((s) => s.id === sid);
+            if (soldier) {
+              soldier.buffedElements = [elem1, elem2];
+            }
+          }
+        }
+      }
+    }
   }
 
   public addFloatingText(

@@ -62,6 +62,7 @@ export interface DamagePayload {
   element: ElementType;
   secondaryAmount?: number;
   secondaryElement?: ElementType;
+  bonusElements?: Array<{ element: ElementType; amount: number }>;
   isCrit?: boolean;
   sourceId: string;
   statusEffect?: Omit<StatusEffect, 'tickTimer'>;

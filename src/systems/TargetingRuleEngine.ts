@@ -152,6 +152,12 @@ export class TargetingRuleEngine {
     enemy: EnemyEntity
   ): DamageCalculationResult {
     const primary = this.calculateSingleDamage(payload.amount, payload.element, payload.isCrit, enemy);
+    let totalBase = payload.amount;
+    let allImmune = primary.isImmune;
+    let finalDamage = primary.isImmune ? 0 : primary.finalDamage;
+    let hasSuperEffective = primary.label === 'KHẮC HỆ!';
+    let allResist = primary.label === 'KHÁNG!';
+    let secondaryDamage = 0;
 
     if (
       payload.secondaryElement &&
@@ -164,39 +170,81 @@ export class TargetingRuleEngine {
         payload.isCrit,
         enemy
       );
-
-      const isImmune = primary.isImmune && secondary.isImmune;
-      const finalDamage =
-        (primary.isImmune ? 0 : primary.finalDamage) +
-        (secondary.isImmune ? 0 : secondary.finalDamage);
-
-      const totalBase = payload.amount + payload.secondaryAmount;
-      const combinedMultiplier = totalBase > 0 ? finalDamage / totalBase : 1;
-
-      let label: string | undefined;
-      if (isImmune) {
-        label = 'MIỄN NHIỄM!';
-      } else if (primary.label === 'KHẮC HỆ!' || secondary.label === 'KHẮC HỆ!') {
-        label = 'KHẮC HỆ!';
-      } else if (primary.label === 'KHÁNG!' && secondary.label === 'KHÁNG!') {
-        label = 'KHÁNG!';
+      totalBase += payload.secondaryAmount;
+      if (!secondary.isImmune) {
+        allImmune = false;
+        finalDamage += secondary.finalDamage;
+        secondaryDamage = secondary.finalDamage;
       }
+      if (secondary.label === 'KHẮC HỆ!') hasSuperEffective = true;
+      if (secondary.label !== 'KHÁNG!') allResist = false;
+    }
 
+    if (payload.bonusElements && payload.bonusElements.length > 0) {
+      for (const bonus of payload.bonusElements) {
+        if (bonus.amount > 0) {
+          const bCalc = this.calculateSingleDamage(
+            bonus.amount,
+            bonus.element,
+            payload.isCrit,
+            enemy
+          );
+          totalBase += bonus.amount;
+          if (!bCalc.isImmune) {
+            allImmune = false;
+            finalDamage += bCalc.finalDamage;
+          }
+          if (bCalc.label === 'KHẮC HỆ!') hasSuperEffective = true;
+          if (bCalc.label !== 'KHÁNG!') allResist = false;
+        }
+      }
+    }
+
+    if (!payload.secondaryElement && (!payload.bonusElements || payload.bonusElements.length === 0)) {
       return {
-        finalDamage,
-        isImmune,
-        multiplier: combinedMultiplier,
-        label,
+        ...primary,
         primaryDamage: primary.finalDamage,
-        secondaryDamage: secondary.finalDamage
+        secondaryDamage: 0
       };
     }
 
+    const combinedMultiplier = totalBase > 0 ? finalDamage / totalBase : 1;
+    let label: string | undefined;
+    if (allImmune) {
+      label = 'MIỄN NHIỄM!';
+    } else if (hasSuperEffective) {
+      label = 'KHẮC HỆ!';
+    } else if (allResist) {
+      label = 'KHÁNG!';
+    }
+
     return {
-      ...primary,
+      finalDamage,
+      isImmune: allImmune,
+      multiplier: combinedMultiplier,
+      label,
       primaryDamage: primary.finalDamage,
-      secondaryDamage: 0
+      secondaryDamage
     };
+  }
+
+  /**
+   * Applies all combat effects for primary, secondary, and bonus elements
+   */
+  public static applyAllPayloadEffects(enemy: EnemyEntity, payload: DamagePayload): void {
+    if (payload.element !== 'PHYSICAL') {
+      this.applyElementalHitEffects(enemy, payload.element, payload.amount);
+    }
+    if (payload.secondaryElement && payload.secondaryAmount) {
+      this.applyElementalHitEffects(enemy, payload.secondaryElement, payload.secondaryAmount);
+    }
+    if (payload.bonusElements) {
+      for (const bonus of payload.bonusElements) {
+        if (bonus.amount > 0 && bonus.element !== 'PHYSICAL') {
+          this.applyElementalHitEffects(enemy, bonus.element, bonus.amount);
+        }
+      }
+    }
   }
 
   /**

@@ -14,7 +14,7 @@ export const SELECTABLE_ELEMENTS: MagicalElementType[] = [
 export const ELEMENT_IMBUE_COST = 40;
 export const MAGE_SECOND_ELEMENT_COST = 50;
 export const HYBRID_ELEMENT_DMG_RATIO = 0.45; // 45% bonus elemental dmg
-export const MAGE_SECONDARY_DMG_RATIO = 0.60; // 60% secondary elemental dmg
+export const MAGE_SECONDARY_DMG_RATIO = 1.0;  // 100% secondary elemental dmg (damage gốc giảm ngang damage nguyên tố)
 
 export const ELEMENT_NAMES: Record<ElementType, string> = {
   PHYSICAL: 'Vật Lý',

@@ -80,6 +80,7 @@ export interface SoldierEntity {
   tier: TowerTier;
   branch?: TowerBranch;
   canTargetAir?: boolean;
+  buffedElements?: ElementType[];
   rangedDamage?: number;
   rangedRange?: number;
   baseMaxHp: number;
@@ -148,6 +149,9 @@ export interface TowerEntity {
   isArmed?: boolean;
   rearmTimer?: number;
   aoeRadius?: number;
+  buffedElements?: ElementType[];
+  buffSourceId?: string | null;
+  auraTickTimer?: number;
 }
 
 export interface ProjectileEntity {

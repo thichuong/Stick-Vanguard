@@ -19,6 +19,11 @@ export class TowerRenderer {
 
       ctx.save();
 
+      // Ambient Storm Zone for Mage 4_A (Arcane Tempest)
+      if (tower.type === 'MAGE' && tower.tier === 4 && tower.branch === 'A') {
+        this.renderMageStormZone(ctx, tower, animTime);
+      }
+
       // Range indicator if selected
       if (isSelected) {
         ctx.save();
@@ -47,6 +52,39 @@ export class TowerRenderer {
           this.renderRallyFlag(ctx, tower.rallyPoint, animTime);
           ctx.restore();
         }
+
+        // If Mage 4_B, draw resonance conduit lines to all buffed towers
+        if (tower.type === 'MAGE' && tower.tier === 4 && tower.branch === 'B') {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.65)';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([5, 5]);
+          for (const other of towers) {
+            if (other.buffSourceId === tower.id) {
+              ctx.beginPath();
+              ctx.moveTo(tower.x, tower.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
+
+        // If this tower is receiving a buff from a Mage 4_B, draw connection beam
+        if (tower.buffSourceId) {
+          const sourceMage = towers.find((t) => t.id === tower.buffSourceId);
+          if (sourceMage) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.lineWidth = 1.8;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(sourceMage.x, sourceMage.y);
+            ctx.lineTo(tower.x, tower.y);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
       }
 
       // Render specific tower or trap
@@ -68,7 +106,7 @@ export class TowerRenderer {
   ): void {
     const { x, y, type, tier, branch } = tower;
 
-    // Base stone circle
+      // Base stone circle
     ctx.fillStyle = isSelected ? '#1e40af' : '#334155';
     ctx.beginPath();
     ctx.arc(x, y, 18, 0, Math.PI * 2);
@@ -86,6 +124,26 @@ export class TowerRenderer {
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Buffed elemental aura from nearby Mage 4_B
+    if (tower.buffedElements && tower.buffedElements.length > 0) {
+      ctx.save();
+      const bColor1 = ELEMENT_COLORS[tower.buffedElements[0]] || '#38bdf8';
+      const bColor2 = ELEMENT_COLORS[tower.buffedElements[1] || tower.buffedElements[0]] || '#f59e0b';
+      ctx.strokeStyle = bColor1;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(x, y, 22 + Math.sin(animTime * 4) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = bColor2;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(x, y, 25, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -319,6 +377,31 @@ export class TowerRenderer {
     ctx.lineTo(pt.x + 12 + wave, pt.y - 13);
     ctx.lineTo(pt.x, pt.y - 8);
     ctx.fill();
+    ctx.restore();
+  }
+
+  /**
+   * Renders a clean rotating storm circle around Mage 4_A to indicate its active area.
+   */
+  private static renderMageStormZone(
+    ctx: CanvasRenderingContext2D,
+    tower: TowerEntity,
+    animTime: number
+  ): void {
+    const { x, y, range, element } = tower;
+    const color = ELEMENT_COLORS[element] || '#a855f7';
+
+    ctx.save();
+
+    // Clean rotating dashed circle around the tower
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([8, 8]);
+    ctx.lineDashOffset = -animTime * 24;
+    ctx.beginPath();
+    ctx.arc(x, y, range, 0, Math.PI * 2);
+    ctx.stroke();
+
     ctx.restore();
   }
 

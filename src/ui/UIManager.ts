@@ -743,7 +743,7 @@ export class UIManager {
         .join('');
     }
 
-    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
+    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -817,16 +817,27 @@ export class UIManager {
 
       let damageDisplay = '';
       if (tower.type === 'MAGE') {
-        damageDisplay = `<b>${tower.damage}</b> (${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]})`;
+        const isAura = tower.tier === 4 && tower.branch === 'A';
+        damageDisplay = `<b>${tower.damage}</b>${isAura ? '/s' : ''} (${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]})`;
         if (tower.secondaryElement) {
-          const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
-          damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+          const secDmg = tower.damage; // 100%
+          damageDisplay += ` + <b>${secDmg}</b>${isAura ? '/s' : ''} (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
       } else {
         damageDisplay = `<b>${tower.damage}</b> (⚔️ Vật lý)`;
         if (tower.secondaryElement) {
           const secDmg = Math.max(1, Math.round(tower.damage * 0.45));
           damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+        }
+      }
+
+      if (tower.buffedElements && tower.buffedElements.length > 0) {
+        for (const bElem of tower.buffedElements) {
+          const bDmg =
+            tower.type === 'MAGE'
+              ? tower.damage
+              : Math.max(1, Math.round(tower.damage * 0.45));
+          damageDisplay += ` + <b style="color: #38bdf8;">${bDmg}</b> (${ELEMENT_ICONS[bElem]} ${ELEMENT_NAMES[bElem].split(' ')[0]} 🌟)`;
         }
       }
 

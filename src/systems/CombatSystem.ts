@@ -112,33 +112,41 @@ export class CombatSystem {
               ? Math.max(1, Math.round(soldier.damage * 0.45))
               : undefined;
 
-            const calc = TargetingRuleEngine.calculateDamage(
-              {
-                amount: soldier.damage,
-                element: 'PHYSICAL',
-                secondaryAmount,
-                secondaryElement,
-                sourceId: soldier.id
-              },
-              currentEnemy
-            );
+            const bonusElements = soldier.buffedElements
+              ? soldier.buffedElements.map((elem) => ({
+                  element: elem,
+                  amount: Math.max(1, Math.round(soldier.damage * 0.45))
+                }))
+              : undefined;
+
+            const payload = {
+              amount: soldier.damage,
+              element: 'PHYSICAL' as const,
+              secondaryAmount,
+              secondaryElement,
+              bonusElements,
+              sourceId: soldier.id
+            };
+
+            const calc = TargetingRuleEngine.calculateDamage(payload, currentEnemy);
 
             if (!calc.isImmune) {
               currentEnemy.hp -= calc.finalDamage;
-
-              if (secondaryElement && secondaryAmount) {
-                TargetingRuleEngine.applyElementalHitEffects(
-                  currentEnemy,
-                  secondaryElement,
-                  secondaryAmount
-                );
-              }
+              TargetingRuleEngine.applyAllPayloadEffects(currentEnemy, payload);
 
               // Light holy heal
-              if (secondaryElement === 'LIGHT') {
+              if (
+                secondaryElement === 'LIGHT' ||
+                soldier.buffedElements?.includes('LIGHT')
+              ) {
                 soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
               }
             }
+
+            const displayElement =
+              bonusElements && bonusElements.length > 0
+                ? bonusElements[0].element
+                : secondaryElement || 'PHYSICAL';
 
             onCombatEvent({
               type: 'MELEE_HIT',
@@ -149,7 +157,7 @@ export class CombatSystem {
               damage: calc.finalDamage,
               isImmune: calc.isImmune,
               label: calc.label,
-              element: secondaryElement || 'PHYSICAL'
+              element: displayElement
             });
 
             if (currentEnemy.hp <= 0) {
@@ -317,26 +325,40 @@ export class CombatSystem {
       ? Math.max(1, Math.round(soldier.damage * 0.45))
       : undefined;
 
-    const calc = TargetingRuleEngine.calculateDamage(
-      {
-        amount: soldier.damage,
-        element: 'PHYSICAL',
-        secondaryAmount,
-        secondaryElement,
-        sourceId: soldier.id
-      },
-      bestTarget
-    );
+    const bonusElements = soldier.buffedElements
+      ? soldier.buffedElements.map((elem) => ({
+          element: elem,
+          amount: Math.max(1, Math.round(soldier.damage * 0.45))
+        }))
+      : undefined;
+
+    const payload = {
+      amount: soldier.damage,
+      element: 'PHYSICAL' as const,
+      secondaryAmount,
+      secondaryElement,
+      bonusElements,
+      sourceId: soldier.id
+    };
+
+    const calc = TargetingRuleEngine.calculateDamage(payload, bestTarget);
 
     if (!calc.isImmune) {
       bestTarget.hp -= calc.finalDamage;
-      if (secondaryElement && secondaryAmount) {
-        TargetingRuleEngine.applyElementalHitEffects(bestTarget, secondaryElement, secondaryAmount);
-      }
-      if (secondaryElement === 'LIGHT') {
+      TargetingRuleEngine.applyAllPayloadEffects(bestTarget, payload);
+
+      if (
+        secondaryElement === 'LIGHT' ||
+        soldier.buffedElements?.includes('LIGHT')
+      ) {
         soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
       }
     }
+
+    const displayElement =
+      bonusElements && bonusElements.length > 0
+        ? bonusElements[0].element
+        : secondaryElement || 'PHYSICAL';
 
     onCombatEvent({
       type: 'RANGED_JAVELIN',
@@ -347,7 +369,7 @@ export class CombatSystem {
       damage: calc.finalDamage,
       isImmune: calc.isImmune,
       label: calc.label,
-      element: secondaryElement || 'PHYSICAL'
+      element: displayElement
     });
 
     if (bestTarget.hp <= 0) {

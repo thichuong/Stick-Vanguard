@@ -152,11 +152,11 @@ export class SideDetailPanel {
       MAGE: {
         title: 'Tháp Phù Thủy (Mage Tower)',
         icon: '🔮',
-        badge: 'Thuần Ma Pháp & Song Nguyên Tố',
-        role: 'Tháp ma thuật huyền bí gây 100% sát thương nguyên tố, sở hữu 2 khe nguyên tố độc lập.',
+        badge: 'Ma Pháp Nổ Lan & Song Nguyên Tố',
+        role: 'Tháp ma thuật huyền bí gây sát thương nổ lan AoE bỏ qua giáp, sở hữu 2 khe nguyên tố độc lập (sát thương 1:1).',
         mechanics:
-          'Bỏ qua giáp vật lý của mục tiêu. Người chơi có thể tự do phối hợp 2 hệ nguyên tố bất kỳ (ví dụ: Nước + Sét, Lửa + Bóng Tối) để tạo chuỗi phản ứng nguyên tố hủy diệt.',
-        tip: '💡 Khi trang bị 2 nguyên tố, đòn đánh gây cả 2 loại sát thương và áp dụng đồng thời cả 2 hiệu ứng trạng thái lên mục tiêu!'
+          'Đạn phép phát nổ diện rộng ngay từ Cấp 1. Người chơi có thể tự do trang bị 2 hệ nguyên tố gây sát thương ngang nhau. Cấp 4-A tạo bão tố sát thương liên tục mỗi giây; Cấp 4-B phát hào quang buff 2 nguyên tố cho các công trình xung quanh!',
+        tip: '💡 Tháp Phép 4-B buff thêm 2 nguyên tố mới cho mọi công trình đồng minh (Cung, Pháo, Lính, Tháp Phép khác) trong tầm gần nhất!'
       },
       ARTILLERY: {
         title: 'Pháo Cối (Artillery)',
@@ -330,7 +330,7 @@ export class SideDetailPanel {
           <div class="sp-section sp-card">
             <div class="sp-sec-header">
               <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (CẢ SÁT THƯƠNG NGUYÊN TỐ)</h4>
-              <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +60% Sát thương Phép' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
+              <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +100% Sát thương Phép (Tỷ lệ 1:1)' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
             </div>
             <div class="table-responsive">
               <table class="stats-table">
@@ -404,7 +404,7 @@ export class SideDetailPanel {
     rowClass: string = ''
   ): string {
     const isMage = type === 'MAGE';
-    const bonusDmg = Math.max(1, Math.round(bp.damage * (isMage ? 0.60 : 0.45)));
+    const bonusDmg = Math.max(1, Math.round(bp.damage * (isMage ? 1.0 : 0.45)));
     const totalDmg = bp.damage + bonusDmg;
     const totalDps = Math.round(totalDmg * bp.fireRate);
 
@@ -440,7 +440,7 @@ export class SideDetailPanel {
       const primaryElem = this.previewElement;
       const secondaryElem = this.mageSecondaryElement;
       const primaryDmg = bp.damage;
-      const secondaryDmg = Math.max(1, Math.round(bp.damage * 0.60));
+      const secondaryDmg = Math.max(1, Math.round(bp.damage * 1.0));
       const totalDmg = primaryDmg + secondaryDmg;
       const totalDps = Math.round(totalDmg * bp.fireRate);
 
@@ -500,7 +500,7 @@ export class SideDetailPanel {
             </div>
 
             <div class="mage-slot-row">
-              <span class="mage-slot-label">Khe 2 (Nguyên Tố Phụ +60%):</span>
+              <span class="mage-slot-label">Khe 2 (Nguyên Tố Phụ +100%):</span>
               <div class="sim-elem-selector">
                 ${selectableElements
                   .map(
@@ -522,7 +522,7 @@ export class SideDetailPanel {
               <span class="s-val" style="color: ${ELEMENT_COLORS[primaryElem]}">${primaryDmg} ${ELEMENT_ICONS[primaryElem]}</span>
             </div>
             <div class="stat-box">
-              <span class="s-label">Sát thương Khe 2 (+60%)</span>
+              <span class="s-label">Sát thương Khe 2 (+100%)</span>
               <span class="s-val" style="color: ${ELEMENT_COLORS[secondaryElem]}">+${secondaryDmg} ${ELEMENT_ICONS[secondaryElem]}</span>
             </div>
             <div class="stat-box">
@@ -1017,7 +1017,7 @@ export class SideDetailPanel {
               <tr>
                 <td><b>Cấp 2</b></td>
                 <td>Doanh Trại Bộ Binh</td>
-                <td>3 Lính</td>
+                <td>4 Lính</td>
                 <td>180 ❤️</td>
                 <td>25% 🛡️</td>
                 <td>8s</td>
@@ -1026,7 +1026,7 @@ export class SideDetailPanel {
               <tr>
                 <td><b>Cấp 3</b></td>
                 <td>Thành Trì Hiệp Sĩ</td>
-                <td>3 Lính</td>
+                <td>5 Lính</td>
                 <td>280 ❤️</td>
                 <td>40% 🛡️</td>
                 <td>7s</td>
@@ -1035,7 +1035,7 @@ export class SideDetailPanel {
               <tr class="branch-row-a">
                 <td><b>4-A 🌟</b></td>
                 <td>Thánh Điện Hộ Vệ</td>
-                <td>3 Lính</td>
+                <td>5 Lính</td>
                 <td class="highlight-val">480 ❤️ (+12 HP/s hồi phục)</td>
                 <td class="highlight-val">50% 🛡️</td>
                 <td>6s</td>
@@ -1043,12 +1043,12 @@ export class SideDetailPanel {
               </tr>
               <tr class="branch-row-b">
                 <td><b>4-B 🌟</b></td>
-                <td>Đấu Sĩ Cuồng Nộ</td>
-                <td>3 Lính</td>
-                <td>360 ❤️</td>
-                <td>35% 🛡️</td>
+                <td>Chiến Đội Xung Kích</td>
+                <td>5 Lính</td>
+                <td>380 ❤️</td>
+                <td>40% 🛡️</td>
                 <td>6s</td>
-                <td class="highlight-val">55 DMG (DPS ~66)</td>
+                <td class="highlight-val">54 DMG (DPS ~86)</td>
               </tr>
             </tbody>
           </table>
@@ -1154,7 +1154,7 @@ export class SideDetailPanel {
               <h3>3. Tháp Phù Thủy (Mage Tower)</h3>
               <span class="sp-hint">Thuần Phép Bỏ Qua Giáp • Độc Quyền Song Nguyên Tố</span>
             </div>
-            <span class="imbue-ratio-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #a855f7;">100% Phép + 60% Khe 2</span>
+            <span class="imbue-ratio-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #a855f7;">100% Phép + 100% Khe 2</span>
           </div>
           <p class="sp-desc">
             Tháp Pháp Sư là công trình ma thuật tối thượng <b>bỏ qua 100% giáp vật lý</b>. Sở hữu <b>2 KHE NGUYÊN TỐ ĐỘC LẬP</b> cho phép người chơi phối hợp tạo chuỗi phản ứng nguyên tố hủy diệt:

@@ -3,7 +3,13 @@ import {
   EnemyEntity,
   ProjectileEntity
 } from '../types/entities.types.js';
+import { ElementType, DamagePayload } from '../types/elements.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
+import {
+  HYBRID_ELEMENT_DMG_RATIO,
+  MAGE_SECONDARY_DMG_RATIO,
+  ELEMENT_COLORS
+} from '../config/elements.config.js';
 
 export class TowerSystem {
   private static projectileCounter = 0;
@@ -12,7 +18,8 @@ export class TowerSystem {
     towers: TowerEntity[],
     enemies: EnemyEntity[],
     dt: number,
-    onSpawnProjectile: (proj: ProjectileEntity) => void
+    onSpawnProjectile: (proj: ProjectileEntity) => void,
+    onAuraHit?: (params: { enemy: EnemyEntity; damage: number; color: string }) => void
   ): void {
     for (const tower of towers) {
       if (tower.attackCooldown > 0) {
@@ -21,6 +28,51 @@ export class TowerSystem {
 
       // Barracks and traps do not shoot normal projectiles from this loop
       if (tower.type === 'BARRACKS' || tower.placement !== 'ROADSIDE') {
+        continue;
+      }
+
+      // Handle Mage 4_A: Continuous Area DPS in its range
+      if (tower.type === 'MAGE' && tower.tier === 4 && tower.branch === 'A') {
+        tower.auraTickTimer = (tower.auraTickTimer || 0) + dt;
+        if (tower.auraTickTimer >= 0.5) {
+          tower.auraTickTimer = 0;
+          const tickDamage = Math.max(1, Math.round(tower.damage * 0.5));
+          const secDamage = tower.secondaryElement ? tickDamage : undefined;
+          const bonusElements = tower.buffedElements
+            ? tower.buffedElements.map((el) => ({ element: el, amount: tickDamage }))
+            : undefined;
+
+          const payload: DamagePayload = {
+            amount: tickDamage,
+            element: tower.element,
+            secondaryAmount: secDamage,
+            secondaryElement: tower.secondaryElement || undefined,
+            bonusElements,
+            sourceId: tower.id
+          };
+
+          for (const enemy of enemies) {
+            if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
+            const dist = Math.hypot(enemy.x - tower.x, enemy.y - tower.y);
+            if (dist <= tower.range && TargetingRuleEngine.canTarget(tower.targetingFilter, enemy)) {
+              const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
+              if (!calc.isImmune) {
+                enemy.hp -= calc.finalDamage;
+                TargetingRuleEngine.applyAllPayloadEffects(enemy, payload);
+                if (onAuraHit) {
+                  onAuraHit({
+                    enemy,
+                    damage: calc.finalDamage,
+                    color: ELEMENT_COLORS[tower.element] || '#a855f7'
+                  });
+                }
+              }
+              if (enemy.hp <= 0) {
+                enemy.state = 'DEAD';
+              }
+            }
+          }
+        }
         continue;
       }
 
@@ -43,22 +95,37 @@ export class TowerSystem {
       const projSpeed = isParabolic ? 220 : tower.type === 'ARCHER' ? 440 : 340;
 
       // Construct hybrid or dual-element payload
-      let primaryElement = tower.element;
+      let primaryElement: ElementType = tower.element;
       let primaryAmount = tower.damage;
       let secondaryElement = tower.secondaryElement || undefined;
       let secondaryAmount: number | undefined;
 
       if (tower.type === 'MAGE') {
-        // Mage is pure elemental. Primary is tower.element, secondary gets 60% damage
+        // Mage is pure elemental. Primary is tower.element, secondary gets 100% damage (equal to base)
+        primaryElement = tower.element;
+        primaryAmount = tower.damage;
         if (secondaryElement) {
-          secondaryAmount = Math.max(1, Math.round(tower.damage * 0.6));
+          secondaryAmount = Math.max(1, Math.round(tower.damage * MAGE_SECONDARY_DMG_RATIO));
         }
       } else {
         // Archer and Artillery use Physical base damage + 45% bonus elemental damage if imbued
         primaryElement = 'PHYSICAL';
+        primaryAmount = tower.damage;
         if (secondaryElement) {
-          secondaryAmount = Math.max(1, Math.round(tower.damage * 0.45));
+          secondaryAmount = Math.max(1, Math.round(tower.damage * HYBRID_ELEMENT_DMG_RATIO));
         }
+      }
+
+      // Additional elements if buffed by nearby Mage 4_B
+      let bonusElements: Array<{ element: ElementType; amount: number }> | undefined;
+      if (tower.buffedElements && tower.buffedElements.length > 0) {
+        bonusElements = tower.buffedElements.map((elem) => ({
+          element: elem,
+          amount:
+            tower.type === 'MAGE'
+              ? tower.damage
+              : Math.max(1, Math.round(tower.damage * HYBRID_ELEMENT_DMG_RATIO))
+        }));
       }
 
       const proj: ProjectileEntity = {
@@ -77,13 +144,14 @@ export class TowerSystem {
           element: primaryElement,
           secondaryAmount,
           secondaryElement,
+          bonusElements,
           sourceId: tower.id
         },
         aoeRadius,
         isParabolic,
         arcHeight: isParabolic ? 70 : 0,
         progress: 0,
-        chainCount: tower.branch === 'B' && tower.tier === 4 && tower.type === 'MAGE' ? 3 : 0
+        chainCount: 0
       };
 
       onSpawnProjectile(proj);

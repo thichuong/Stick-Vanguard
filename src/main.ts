@@ -439,9 +439,18 @@ class GameApp {
     });
 
     // 5. Update Towers
-    TowerSystem.updateTowers(this.state.towers, this.state.enemies, dt, (proj) => {
-      this.state.projectiles.push(proj);
-    });
+    TowerSystem.updateTowers(
+      this.state.towers,
+      this.state.enemies,
+      dt,
+      (proj) => {
+        this.state.projectiles.push(proj);
+      },
+      (hit) => {
+        this.state.addFloatingText(`-${hit.damage}`, hit.enemy.x, hit.enemy.y - 14, hit.color, 13);
+        this.state.addExplosionParticles(hit.enemy.x, hit.enemy.y, hit.color, 4);
+      }
+    );
 
     // 6. Update Projectiles
     ProjectileSystem.updateProjectiles(
