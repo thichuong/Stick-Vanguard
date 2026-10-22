@@ -24,6 +24,7 @@ export class UIManager {
   private hudMapWavesEl: HTMLElement | null;
   private sidePanel: SideDetailPanel;
   private lastRenderKey: string = '';
+  private bannerState: 'NONE' | 'GAME_OVER' | 'VICTORY' = 'NONE';
 
   constructor(
     private state: GameState,
@@ -85,6 +86,7 @@ export class UIManager {
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) {
       restartBtn.addEventListener('click', () => {
+        this.clearBanner();
         this.onRestart();
       });
     }
@@ -188,6 +190,7 @@ export class UIManager {
         const target = e.currentTarget as HTMLElement;
         const mapId = target.getAttribute('data-map-id');
         if (mapId) {
+          this.clearBanner();
           this.onSelectMap(mapId);
           this.closeMapModal();
         }
@@ -424,40 +427,81 @@ export class UIManager {
       }
     }
 
-    if (this.state.isGameOver) {
-      this.messageBannerEl.classList.remove('hidden');
-      this.messageBannerEl.innerHTML = `
-        <div class="banner-box game-over">
-          <h2>💀 THẤT THỦ!</h2>
-          <p>Căn cứ đã bị quái vật tràn vào tiêu diệt.</p>
-          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-            <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
-            <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6;">🗺️ Đổi bản đồ</button>
-          </div>
-        </div>
-      `;
-      document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.onRestart());
-      document.getElementById('btn-banner-change-map')?.addEventListener('click', () => this.openMapModal());
-    } else if (this.state.isVictory) {
-      this.messageBannerEl.classList.remove('hidden');
-      this.messageBannerEl.innerHTML = `
-        <div class="banner-box victory">
-          <h2>🏆 CHIẾN THẮNG QUANG VINH!</h2>
-          <p>Bạn đã chặn đứng toàn bộ ${totalWaves} đợt xâm lăng và bảo vệ thành công căn cứ!</p>
-          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-            <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
-            <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6;">🗺️ Bản đồ kế tiếp</button>
-          </div>
-        </div>
-      `;
-      document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.onRestart());
-      document.getElementById('btn-banner-change-map')?.addEventListener('click', () => this.openMapModal());
-    } else {
-      this.messageBannerEl.classList.add('hidden');
-    }
+    this.updateMessageBanner(totalWaves);
 
     this.updateArsenalVisuals();
     this.renderInspector();
+  }
+
+  private clearBanner(): void {
+    this.bannerState = 'NONE';
+    this.messageBannerEl.classList.add('hidden');
+    this.messageBannerEl.innerHTML = '';
+  }
+
+  private updateMessageBanner(totalWaves: number): void {
+    if (this.state.isGameOver) {
+      if (this.bannerState !== 'GAME_OVER') {
+        this.bannerState = 'GAME_OVER';
+        this.messageBannerEl.classList.remove('hidden');
+        this.messageBannerEl.innerHTML = `
+          <div class="banner-box game-over">
+            <h2>💀 THẤT THỦ!</h2>
+            <p>Căn cứ đã bị quái vật tràn vào tiêu diệt.</p>
+            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+              <button id="btn-banner-restart" class="action-btn" style="flex: 1;">🔄 Chơi lại</button>
+              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1;">🗺️ Đổi bản đồ</button>
+            </div>
+          </div>
+        `;
+        document.getElementById('btn-banner-restart')?.addEventListener('click', () => {
+          this.clearBanner();
+          this.onRestart();
+        });
+        document.getElementById('btn-banner-change-map')?.addEventListener('click', () => {
+          this.openMapModal();
+        });
+      }
+    } else if (this.state.isVictory) {
+      if (this.bannerState !== 'VICTORY') {
+        this.bannerState = 'VICTORY';
+        const currentIdx = MAPS_CONFIG.findIndex((m) => m.id === this.state.currentMapId);
+        const nextMap = currentIdx >= 0 && currentIdx < MAPS_CONFIG.length - 1 ? MAPS_CONFIG[currentIdx + 1] : null;
+
+        this.messageBannerEl.classList.remove('hidden');
+        this.messageBannerEl.innerHTML = `
+          <div class="banner-box victory">
+            <h2>🏆 CHIẾN THẮNG QUANG VINH!</h2>
+            <p>Bạn đã chặn đứng toàn bộ ${totalWaves} đợt xâm lăng và bảo vệ thành công căn cứ!</p>
+            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+              <button id="btn-banner-restart" class="action-btn" style="flex: 1; min-width: 95px;">🔄 Chơi lại</button>
+              ${nextMap ? `<button id="btn-banner-next-map" class="action-btn" style="background: #10b981; color: #fff; flex: 1; min-width: 120px;">⏩ Bản đồ kế tiếp</button>` : ''}
+              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1; min-width: 95px;">🗺️ ${nextMap ? 'Chọn bản đồ' : 'Đổi bản đồ'}</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('btn-banner-restart')?.addEventListener('click', () => {
+          this.clearBanner();
+          this.onRestart();
+        });
+
+        if (nextMap) {
+          document.getElementById('btn-banner-next-map')?.addEventListener('click', () => {
+            this.clearBanner();
+            this.onSelectMap(nextMap.id);
+          });
+        }
+
+        document.getElementById('btn-banner-change-map')?.addEventListener('click', () => {
+          this.openMapModal();
+        });
+      }
+    } else {
+      if (this.bannerState !== 'NONE') {
+        this.clearBanner();
+      }
+    }
   }
 
   private renderInspector(): void {
