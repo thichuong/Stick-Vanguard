@@ -1,5 +1,6 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
 import { WAVES_TWIN_CROSSROADS } from './twin_crossroads.map.js';
+import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_SERPENT_CANYON: WaveConfig[] = [
   ...WAVES_TWIN_CROSSROADS.slice(0, 9), // Wave 1-3: WALK, Wave 4: FLY, Wave 5: SWIM, Wave 6-9: Mixed
@@ -13,54 +14,7 @@ export const WAVES_SERPENT_CANYON: WaveConfig[] = [
       { typeId: 'WINGED_GARGOYLE', count: 4, interval: 2.0, delay: 5 }
     ]
   },
-  {
-    waveNumber: 11,
-    name: 'Đợt 11: Mãng Xà Trườn Hẻm (Bộ & Nước)',
-    rewardGold: 195,
-    enemies: [
-      { typeId: 'AQUA_SERPENT', count: 10, interval: 1.3, delay: 0 },
-      { typeId: 'STICK_RUNNER', count: 15, interval: 0.7, delay: 2 }
-    ]
-  },
-  {
-    waveNumber: 12,
-    name: 'Đợt 12: Không Kích Hẻm Núi (Bay & Bộ)',
-    rewardGold: 210,
-    enemies: [
-      { typeId: 'WINGED_GARGOYLE', count: 10, interval: 1.4, delay: 0 },
-      { typeId: 'SHADOW_WRAITH', count: 7, interval: 1.6, delay: 3 }
-    ]
-  },
-  {
-    waveNumber: 13,
-    name: 'Đợt 13: Bão Lửa Vách Đá (Tam Tuyến)',
-    rewardGold: 230,
-    enemies: [
-      { typeId: 'FIRE_IMP', count: 14, interval: 0.8, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 5, interval: 2.2, delay: 3 },
-      { typeId: 'AQUA_SERPENT', count: 7, interval: 1.5, delay: 6 }
-    ]
-  },
-  {
-    waveNumber: 14,
-    name: 'Đợt 14: Ác Mộng Trùng Điệp (Tam Tuyến)',
-    rewardGold: 260,
-    enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 8, interval: 1.4, delay: 0 },
-      { typeId: 'WINGED_GARGOYLE', count: 8, interval: 1.3, delay: 2 },
-      { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 5 }
-    ]
-  },
-  {
-    waveNumber: 15,
-    name: 'Đợt 15: Quyết Chiến Đỉnh Hẻm - Song Quái Vương',
-    rewardGold: 450,
-    enemies: [
-      { typeId: 'STICK_WARRIOR', count: 12, interval: 0.9, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
-    ]
-  }
+  ...WAVES_EXTENDED_POST_10
 ];
 
 export const MAP_SERPENT_CANYON: MapConfig = {

@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   // Wave 1-3: Chỉ quái đi bộ
@@ -86,14 +87,15 @@ export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Trùm Cuối - Đại Hắc Long',
+    name: 'Đợt 10: Tiền Trạm Trùm - Đại Hắc Long',
     rewardGold: 300,
     enemies: [
       { typeId: 'STICK_WARRIOR', count: 8, interval: 1.2, delay: 0 },
       { typeId: 'ROCK_GOLEM', count: 3, interval: 2.5, delay: 3 },
       { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  }
+  },
+  ...WAVES_EXTENDED_POST_10
 ];
 
 export const MAP_VALLEY_ORIGIN: MapConfig = {

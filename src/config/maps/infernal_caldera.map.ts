@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
   {
@@ -89,7 +90,8 @@ export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
       { typeId: 'MAGMA_SLIME', count: 6, interval: 1.6, delay: 3 },
       { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  }
+  },
+  ...WAVES_EXTENDED_POST_10
 ];
 
 export const MAP_INFERNAL_CALDERA: MapConfig = {

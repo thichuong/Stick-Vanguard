@@ -1,5 +1,6 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
 import { WAVES_VALLEY_ORIGIN } from './valley_origin.map.js';
+import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
   ...WAVES_VALLEY_ORIGIN.slice(0, 5), // Wave 1-3: WALK, Wave 4: FLY, Wave 5: SWIM
@@ -49,27 +50,7 @@ export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
       { typeId: 'WINGED_GARGOYLE', count: 7, interval: 1.6, delay: 6 }
     ]
   },
-  {
-    waveNumber: 11,
-    name: 'Đợt 11: Tổng Phản Công Giao Lộ (Tam Tuyến)',
-    rewardGold: 200,
-    enemies: [
-      { typeId: 'STICK_WARRIOR', count: 10, interval: 1.0, delay: 0 },
-      { typeId: 'AQUA_SERPENT', count: 8, interval: 1.4, delay: 2 },
-      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.5, delay: 4 },
-      { typeId: 'FIRE_IMP', count: 10, interval: 0.9, delay: 6 }
-    ]
-  },
-  {
-    waveNumber: 12,
-    name: 'Đợt 12: Đại Chiến Cầu Tử Thần - Đại Hắc Long',
-    rewardGold: 350,
-    enemies: [
-      { typeId: 'ROCK_GOLEM', count: 5, interval: 2.0, delay: 0 },
-      { typeId: 'SHADOW_WRAITH', count: 6, interval: 1.5, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 7 }
-    ]
-  }
+  ...WAVES_EXTENDED_POST_10
 ];
 
 export const MAP_TWIN_CROSSROADS: MapConfig = {

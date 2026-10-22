@@ -7,6 +7,7 @@ import { MAP_INFERNAL_CALDERA, WAVES_INFERNAL_CALDERA } from './infernal_caldera
 import { MAP_FROZEN_CITADEL, WAVES_FROZEN_CITADEL } from './frozen_citadel.map.js';
 import { MAP_ANCIENT_NECROPOLIS, WAVES_ANCIENT_NECROPOLIS } from './ancient_necropolis.map.js';
 import { MAP_PLAGUE_MORASS, WAVES_PLAGUE_MORASS } from './plague_morass.map.js';
+import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export {
   MAP_VALLEY_ORIGIN,
@@ -24,7 +25,8 @@ export {
   MAP_ANCIENT_NECROPOLIS,
   WAVES_ANCIENT_NECROPOLIS,
   MAP_PLAGUE_MORASS,
-  WAVES_PLAGUE_MORASS
+  WAVES_PLAGUE_MORASS,
+  WAVES_EXTENDED_POST_10
 };
 
 export const MAPS_CONFIG: MapConfig[] = [

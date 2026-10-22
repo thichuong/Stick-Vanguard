@@ -969,5 +969,85 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(res.finalDamage).toBeGreaterThanOrEqual(40);
     });
   });
+
+  describe('Post Wave 10 High Difficulty & Full Enemy Variety Scaling', () => {
+    it('should have all maps configured with at least 20 waves and high-difficulty extended waves', async () => {
+      const { MAPS_CONFIG, WAVES_CONFIG, WAVES_EXTENDED_POST_10 } = await import('../config/map.config.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+
+      expect(WAVES_EXTENDED_POST_10.length).toBe(10); // Waves 11 to 20
+      expect(WAVES_CONFIG.length).toBeGreaterThanOrEqual(20);
+
+      for (const map of MAPS_CONFIG) {
+        expect(map.waves.length).toBeGreaterThanOrEqual(20);
+
+        // Check waves 11 to 20
+        const post10Waves = map.waves.filter((w) => w.waveNumber > 10 && w.waveNumber <= 20);
+        expect(post10Waves.length).toBe(10);
+
+        // Verify full variety across multi-domains (WALK, FLY, SWIM)
+        for (const wave of post10Waves) {
+          const types = new Set(wave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
+          expect(types.has('WALK')).toBe(true);
+          expect(types.has('FLY')).toBe(true);
+          expect(types.has('SWIM')).toBe(true);
+        }
+
+        // Verify final wave 20 has both supreme bosses
+        const wave20 = map.waves.find((w) => w.waveNumber === 20)!;
+        expect(wave20.enemies.some((e) => e.typeId === 'VOID_HYDRA_BOSS')).toBe(true);
+        expect(wave20.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
+
+        // Verify enemy count strictly increases wave-over-wave from wave 11 to wave 19
+        for (let w = 11; w < 19; w++) {
+          const currentWave = map.waves.find((item) => item.waveNumber === w)!;
+          const nextWave = map.waves.find((item) => item.waveNumber === w + 1)!;
+
+          const currentTotalCount = currentWave.enemies.reduce((sum, e) => sum + e.count, 0);
+          const nextTotalCount = nextWave.enemies.reduce((sum, e) => sum + e.count, 0);
+
+          // Unless it's wave 15 boss milestone (which has massive boss HP), enemy count generally escalates
+          if (w !== 14) {
+            expect(nextTotalCount).toBeGreaterThan(currentTotalCount);
+          }
+        }
+      }
+    });
+
+    it('should scale procedural waves dynamically beyond wave 10 with full enemy roster and increasing quantities', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const waveSys = new WaveSystem(undefined, 30);
+
+      let prevTotalCount = 0;
+      for (let w = 11; w <= 25; w++) {
+        const wave = waveSys.generateWaveConfig(w - 1, 30);
+        expect(wave.waveNumber).toBe(w);
+
+        // Verify full enemy variety (WALK, FLY, SWIM)
+        const types = new Set(wave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
+        expect(types.has('WALK')).toBe(true);
+        expect(types.has('FLY')).toBe(true);
+        expect(types.has('SWIM')).toBe(true);
+
+        // Verify high-tier enemy presence (Summoners / Splitters / Wraiths)
+        const typeIds = new Set(wave.enemies.map((e) => e.typeId));
+        if (w % 5 !== 0) {
+          expect(typeIds.has('FROST_CRYSTAL_GOLEM')).toBe(true);
+          expect(typeIds.has('MAGMA_SLIME')).toBe(true);
+          expect(typeIds.has('NECRO_WARLOCK')).toBe(true);
+          expect(typeIds.has('STORM_CALLER_SIREN')).toBe(true);
+          expect(typeIds.has('SHADOW_WRAITH')).toBe(true);
+        }
+
+        const totalEnemies = wave.enemies.reduce((sum, e) => sum + e.count, 0);
+        // Compare regular non-boss wave progression (e.g. wave 12 vs 11, 13 vs 12, 14 vs 13)
+        if (w > 11 && w % 5 !== 0 && (w - 1) % 5 !== 0) {
+          expect(totalEnemies).toBeGreaterThan(prevTotalCount);
+        }
+        prevTotalCount = totalEnemies;
+      }
+    });
+  });
 });
 

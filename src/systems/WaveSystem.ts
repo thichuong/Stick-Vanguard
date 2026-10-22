@@ -143,8 +143,119 @@ export class WaveSystem {
     }
 
     // --- Wave > 5: Mới xuất hiện quái nhiều hơn 1 loại đường (Hỗn Hợp) ---
+    // --- Wave > 10: Độ khó tăng cao, xuất quái đầy đủ, số lượng tăng lên theo mỗi wave ---
+    if (waveNum > 10) {
+      const extraWave = waveNum - 10;
+      const post10Reward = 180 + Math.round(waveNum * 15);
+
+      if (isFinalWave) {
+        // Final Wave (>10): Song Trùm Ma Vương & Đại Quân Đa Tuyến Tinh Nhuệ Tối Thượng
+        enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 }); // WALK
+        enemies.push({ typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 5 }); // FLY
+        enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 6 + Math.floor(extraWave * 0.6), interval: 1.3, delay: 2 }); // WALK
+        enemies.push({ typeId: 'ROCK_GOLEM', count: 6 + Math.floor(extraWave * 0.6), interval: 1.3, delay: 3 }); // WALK
+        enemies.push({ typeId: 'NECRO_WARLOCK', count: 4 + Math.floor(extraWave * 0.5), interval: 1.6, delay: 4 }); // WALK
+        enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 5 + Math.floor(extraWave * 0.5), interval: 1.2, delay: 6 }); // SWIM
+        enemies.push({ typeId: 'WINGED_GARGOYLE', count: 14 + Math.floor(extraWave * 1.5), interval: 0.5, delay: 7 }); // FLY
+        enemies.push({ typeId: 'AQUA_SERPENT', count: 10 + Math.floor(extraWave * 1.0), interval: 0.7, delay: 9 }); // SWIM
+        enemies.push({ typeId: 'SHADOW_WRAITH', count: 8 + Math.floor(extraWave * 1.0), interval: 0.7, delay: 11 }); // WALK
+        enemies.push({ typeId: 'MAGMA_SLIME', count: 8 + Math.floor(extraWave * 0.8), interval: 1.0, delay: 13 }); // WALK
+
+        return {
+          waveNumber: waveNum,
+          name: `Đợt ${waveNum}: Chung Cuộc Tận Diệt - Song Trùm Ma Vương`,
+          rewardGold: Math.round(post10Reward * 2),
+          enemies
+        };
+      }
+
+      if (isBossWave) {
+        // Milestone Boss Wave (15, 20, 25, 30...) - Đầy đủ các hệ và số lượng lớn
+        const bossType = (waveNum % 10 === 0) ? 'VOID_HYDRA_BOSS' : 'DARK_DRAGON_BOSS';
+        enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 });
+        enemies.push({ typeId: 'ROCK_GOLEM', count: 5 + Math.floor(extraWave * 0.5), interval: 1.6, delay: 2 }); // WALK
+        enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 4 + Math.floor(extraWave * 0.5), interval: 1.8, delay: 4 }); // WALK
+        enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 4 + Math.floor(extraWave * 0.5), interval: 1.5, delay: 6 }); // SWIM
+        enemies.push({ typeId: 'WINGED_GARGOYLE', count: 12 + Math.floor(extraWave * 1.2), interval: 0.7, delay: 8 }); // FLY
+        enemies.push({ typeId: 'MAGMA_SLIME', count: 6 + Math.floor(extraWave * 0.8), interval: 1.4, delay: 10 }); // WALK
+        enemies.push({ typeId: 'AQUA_SERPENT', count: 8 + Math.floor(extraWave * 0.8), interval: 1.1, delay: 12 }); // SWIM
+        enemies.push({ typeId: 'NECRO_WARLOCK', count: 3 + Math.floor(extraWave * 0.4), interval: 1.8, delay: 14 }); // WALK
+
+        return {
+          waveNumber: waveNum,
+          name: `Đợt ${waveNum}: Tiền Trạm Trùm Ma Vương (Cấp ${waveNum})`,
+          rewardGold: Math.round(post10Reward * 1.5),
+          enemies
+        };
+      }
+
+      // Regular Wave > 10: Xuất quái đầy đủ 100% chủng loại và số lượng tăng dần theo mỗi wave!
+      enemies.push({
+        typeId: 'FROST_CRYSTAL_GOLEM',
+        count: 3 + Math.floor(extraWave * 0.6),
+        interval: Math.max(1.2, 2.2 - extraWave * 0.05),
+        delay: 0
+      });
+      enemies.push({
+        typeId: 'MAGMA_SLIME',
+        count: 5 + Math.floor(extraWave * 1.0),
+        interval: Math.max(0.8, 1.8 - extraWave * 0.06),
+        delay: 2
+      });
+      enemies.push({
+        typeId: 'WINGED_GARGOYLE',
+        count: 8 + Math.floor(extraWave * 1.5),
+        interval: Math.max(0.5, 1.4 - extraWave * 0.05),
+        delay: 4
+      });
+      enemies.push({
+        typeId: 'AQUA_SERPENT',
+        count: 6 + Math.floor(extraWave * 1.0),
+        interval: Math.max(0.7, 1.6 - extraWave * 0.05),
+        delay: 5
+      });
+      enemies.push({
+        typeId: 'NECRO_WARLOCK',
+        count: 2 + Math.floor(extraWave * 0.5),
+        interval: Math.max(1.5, 2.4 - extraWave * 0.05),
+        delay: 7
+      });
+      enemies.push({
+        typeId: 'STORM_CALLER_SIREN',
+        count: 3 + Math.floor(extraWave * 0.6),
+        interval: Math.max(1.1, 1.8 - extraWave * 0.05),
+        delay: 9
+      });
+      enemies.push({
+        typeId: 'SHADOW_WRAITH',
+        count: 4 + Math.floor(extraWave * 1.1),
+        interval: Math.max(0.6, 1.4 - extraWave * 0.05),
+        delay: 11
+      });
+      enemies.push({
+        typeId: 'SPARK_EEL',
+        count: 4 + Math.floor(extraWave * 0.8),
+        interval: Math.max(0.8, 1.4 - extraWave * 0.04),
+        delay: 12
+      });
+      enemies.push({
+        typeId: 'ROCK_GOLEM',
+        count: 3 + Math.floor(extraWave * 0.6),
+        interval: Math.max(1.2, 2.0 - extraWave * 0.04),
+        delay: 14
+      });
+
+      return {
+        waveNumber: waveNum,
+        name: `Đợt ${waveNum}: Đại Quân Đa Chiều Cuồng Nộ (Cấp ${waveNum})`,
+        rewardGold: post10Reward,
+        enemies
+      };
+    }
+
+    // --- Wave 6 - 10 ---
     if (isFinalWave) {
-      // Final Wave: Mega Boss & Elites (Mixed multi-path)
+      // Final Wave (Wave <= 10): Mega Boss & Elites (Mixed multi-path)
       enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 }); // WALK
       enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.2, delay: 3 }); // WALK
       enemies.push({ typeId: 'NECRO_WARLOCK', count: Math.min(5, 2 + Math.floor(waveNum / 5)), interval: 2.5, delay: 6 }); // WALK
@@ -160,7 +271,7 @@ export class WaveSystem {
     }
 
     if (isBossWave) {
-      // Milestone Boss Wave (e.g. Wave 10, 15...) - Multi-path mixed
+      // Milestone Boss Wave (Wave 10)
       const bossType = progress > 0.5 ? 'DARK_DRAGON_BOSS' : 'VOID_HYDRA_BOSS';
       enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 }); // FLY or WALK
       enemies.push({ typeId: 'MAGMA_SLIME', count: 4, interval: 1.6, delay: 3 }); // WALK
@@ -174,7 +285,7 @@ export class WaveSystem {
       };
     }
 
-    // Regular Waves > 5 based on tier progress (Mixed multi-path)
+    // Regular Waves 6-10 based on tier progress (Mixed multi-path)
     if (progress < 0.45) {
       // Early-mid: splitters & elemental flyers/swimmers (WALK + FLY + SWIM)
       enemies.push({ typeId: 'MAGMA_SLIME', count: 3 + Math.floor(waveNum / 2), interval: 2.0, delay: 0 }); // WALK
