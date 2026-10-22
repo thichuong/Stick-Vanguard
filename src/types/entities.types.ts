@@ -106,7 +106,7 @@ export interface EnemyEntity {
 
 export interface TowerEntity {
   id: string;
-  slotId: string;
+  slotId?: string;
   name: string;
   type: TowerType;
   tier: TowerTier;
@@ -161,6 +161,15 @@ export interface TowerSlot {
   y: number;
   placement: PlacementType;
   currentTowerId: string | null;
+}
+
+export interface BuildCursorTarget {
+  x: number;
+  y: number;
+  terrain: 'ROAD' | 'WATER' | 'LAND' | 'INVALID';
+  validFor: 'TOWER' | 'TRAP' | 'NONE';
+  placement: PlacementType;
+  reason?: string;
 }
 
 export interface FloatingText {

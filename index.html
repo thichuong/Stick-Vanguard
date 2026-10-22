@@ -44,6 +44,20 @@
           </button>
         </div>
 
+        <!-- Chọn Bản Đồ Chiến Đấu -->
+        <div class="panel-section map-select-group">
+          <div class="section-title">🗺️ BẢN ĐỒ CHIẾN TRƯỜNG</div>
+          <div class="current-map-card">
+            <div class="map-info-text">
+              <span id="hud-map-name" class="current-map-name">Thung Lũng Khởi Nguyên</span>
+              <span id="hud-map-waves" class="current-map-waves">Tối đa: 10 đợt</span>
+            </div>
+            <button id="btn-select-map" class="hud-btn highlight-btn map-select-btn" title="Đổi bản đồ chiến thuật">
+              🗺️ Chọn Bản Đồ
+            </button>
+          </div>
+        </div>
+
         <!-- Cài đặt & Điều khiển trận đấu -->
         <div class="panel-section settings-group">
           <div class="section-title">⚙️ ĐIỀU KHIỂN & CÀI ĐẶT</div>
@@ -226,6 +240,32 @@
           <!-- Codex Modal Body -->
           <div id="codex-modal-body" class="codex-modal-body">
             <!-- Nội dung nạp động -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MAP SELECTION MODAL: Chọn Bản Đồ -->
+      <div id="map-modal-backdrop" class="codex-backdrop hidden">
+        <div class="map-modal-container">
+          <div class="codex-modal-header">
+            <div class="codex-header-left">
+              <span class="codex-icon">🗺️</span>
+              <div class="codex-title-group">
+                <h2>Chọn Bản Đồ Chiến Trường</h2>
+                <span class="codex-badge">Địa Hình & Chiến Lược Đa Dạng</span>
+              </div>
+            </div>
+            <button id="btn-close-map-modal" class="codex-close-btn" title="Đóng bảng chọn bản đồ (Phím Esc)">✕</button>
+          </div>
+
+          <div class="map-modal-content">
+            <p class="map-modal-intro">
+              🎯 Mỗi bản đồ có tuyến đường bộ, dòng sông thủy quái và hành lang không kích khác nhau. 
+              Bạn có thể tự do đặt <b>Bẫy trên đường/sông</b> và <b>Tháp ở ngoài đường/sông</b> tại bất kỳ vị trí chiến lược nào!
+            </p>
+            <div id="map-cards-grid" class="map-cards-grid">
+              <!-- Danh sách bản đồ nạp động bởi UIManager -->
+            </div>
           </div>
         </div>
       </div>

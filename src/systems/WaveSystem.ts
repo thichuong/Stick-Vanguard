@@ -1,5 +1,5 @@
 import { EnemyEntity } from '../types/entities.types.js';
-import { WAVES_CONFIG, WaveConfig } from '../config/map.config.js';
+import { WaveConfig, MAP_CONFIG, MapConfig } from '../config/map.config.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 
 interface ActiveSpawner {
@@ -13,15 +13,28 @@ export class WaveSystem {
   public currentWaveIndex = 0; // 0-based
   public isWaveInProgress = false;
   public waveTime = 0;
+  private currentMap: MapConfig;
   private activeSpawners: ActiveSpawner[] = [];
   private enemyCounter = 0;
 
+  constructor(mapConfig: MapConfig = MAP_CONFIG) {
+    this.currentMap = mapConfig;
+  }
+
+  public setMap(mapConfig: MapConfig): void {
+    this.currentMap = mapConfig;
+    this.currentWaveIndex = 0;
+    this.isWaveInProgress = false;
+    this.waveTime = 0;
+    this.activeSpawners = [];
+  }
+
   public getCurrentWaveConfig(): WaveConfig | undefined {
-    return WAVES_CONFIG[this.currentWaveIndex];
+    return this.currentMap.waves ? this.currentMap.waves[this.currentWaveIndex] : undefined;
   }
 
   public getTotalWaves(): number {
-    return WAVES_CONFIG.length;
+    return this.currentMap.waves ? this.currentMap.waves.length : 10;
   }
 
   public startWave(waveNum?: number): boolean {
@@ -38,7 +51,7 @@ export class WaveSystem {
       typeId: entry.typeId,
       remainingCount: entry.count,
       interval: entry.interval,
-      timer: entry.delay // initial delay before first spawn
+      timer: entry.delay
     }));
 
     return true;
@@ -63,7 +76,6 @@ export class WaveSystem {
           spawner.timer = spawner.interval;
           spawner.remainingCount--;
 
-          // Instantiate enemy
           const enemy = this.createEnemy(spawner.typeId);
           if (enemy) {
             onSpawnEnemy(enemy);
@@ -72,7 +84,6 @@ export class WaveSystem {
       }
     }
 
-    // Check if wave is cleared
     if (allSpawned && activeEnemiesCount === 0) {
       this.isWaveInProgress = false;
       const config = this.getCurrentWaveConfig();
@@ -80,7 +91,7 @@ export class WaveSystem {
 
       onWaveComplete(reward);
 
-      if (this.currentWaveIndex < WAVES_CONFIG.length - 1) {
+      if (this.currentWaveIndex < this.getTotalWaves() - 1) {
         this.currentWaveIndex++;
       }
     }
@@ -92,12 +103,23 @@ export class WaveSystem {
 
     this.enemyCounter++;
 
+    let startX = this.currentMap.groundSpawn.x;
+    let startY = this.currentMap.groundSpawn.y;
+
+    if (bp.navigationMode === 'WATER_PATH') {
+      startX = this.currentMap.waterSpawn.x;
+      startY = this.currentMap.waterSpawn.y;
+    } else if (bp.navigationMode === 'AIR_DIRECT' || bp.navigationMode === 'AIR_WAYPOINTS') {
+      startX = this.currentMap.airStart.x;
+      startY = this.currentMap.airStart.y;
+    }
+
     return {
       id: `enemy-${this.enemyCounter}`,
       typeId: bp.typeId,
       name: bp.name,
-      x: bp.navigationMode === 'WATER_PATH' ? 340 : 40,
-      y: bp.navigationMode === 'WATER_PATH' ? 0 : bp.navigationMode === 'AIR_DIRECT' ? 60 : 160,
+      x: startX,
+      y: startY,
       hp: bp.hp,
       maxHp: bp.hp,
       speed: bp.speed,

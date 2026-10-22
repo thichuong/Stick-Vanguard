@@ -394,6 +394,69 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(state.gold).toBe(goldBeforeSell + Math.round(70 * 0.7));
       expect(slot.currentTowerId).toBe(null);
     });
+
+    it('should validate multi-map switching and free-form placement rules', () => {
+      const state = new GameState();
+      state.gold = 1000;
+
+      // 1. Check all maps can be loaded
+      expect(state.currentMapId).toBe('valley_origin');
+      state.setMap('twin_crossroads');
+      expect(state.currentMapId).toBe('twin_crossroads');
+      state.setMap('serpent_canyon');
+      expect(state.currentMapId).toBe('serpent_canyon');
+      state.setMap('delta_fortress');
+      expect(state.currentMapId).toBe('delta_fortress');
+
+      // Switch back to valley_origin for placement testing
+      state.setMap('valley_origin');
+
+      // 2. Traps MUST be on the road or water
+      // Point (160, 160) is directly on groundWaypoints: { x: 40, y: 160 } -> { x: 220, y: 160 }
+      const trapOnRoad = state.validatePlacement(160, 160, 'TRAP_SPIKE');
+      expect(trapOnRoad.valid).toBe(true);
+      expect(trapOnRoad.placement).toBe('PATH_TRAP');
+
+      // Point (380, 150) is on waterWaypoints
+      const trapOnWater = state.validatePlacement(380, 150, 'TRAP_FROST');
+      expect(trapOnWater.valid).toBe(true);
+      expect(trapOnWater.placement).toBe('WATER_TRAP');
+
+      // Point on empty land (150, 100) -> NOT on road or water
+      const trapOnLand = state.validatePlacement(150, 100, 'TRAP_SPIKE');
+      expect(trapOnLand.valid).toBe(false);
+      expect(trapOnLand.reason).toContain('Bẫy phải đặt trên đường hoặc trên sông');
+
+      // 3. Towers MUST NOT be on the road (or in the water)
+      // Point (160, 160) is on the road -> INVALID for tower
+      const towerOnRoad = state.validatePlacement(160, 160, 'ARCHER');
+      expect(towerOnRoad.valid).toBe(false);
+      expect(towerOnRoad.reason).toContain('Tháp không được đặt trên đường');
+
+      // Point (380, 150) is in the river -> INVALID for tower
+      const towerOnWater = state.validatePlacement(380, 150, 'ARCHER');
+      expect(towerOnWater.valid).toBe(false);
+      expect(towerOnWater.reason).toContain('Tháp không được đặt dưới dòng sông');
+
+      // Point (150, 95) is safely on land -> VALID for tower
+      const towerOnLand = state.validatePlacement(150, 95, 'ARCHER');
+      expect(towerOnLand.valid).toBe(true);
+      expect(towerOnLand.placement).toBe('ROADSIDE');
+
+      // 4. Test buildTowerAt
+      const builtTower = state.buildTowerAt(150, 95, 'ARCHER');
+      expect(builtTower).toBe(true);
+      expect(state.towers.length).toBe(1);
+
+      // Building another tower too close (< 34px) should fail
+      const tooClose = state.buildTowerAt(152, 97, 'MAGE');
+      expect(tooClose).toBe(false);
+
+      // Building trap on road
+      const builtTrap = state.buildTowerAt(160, 160, 'TRAP_SPIKE');
+      expect(builtTrap).toBe(true);
+      expect(state.towers.length).toBe(2);
+    });
   });
 });
 

@@ -1,6 +1,6 @@
 import { Vector2D } from '../types/entities.types.js';
 import { NavigationMode } from '../types/elements.types.js';
-import { MAP_CONFIG } from '../config/map.config.js';
+import { MAP_CONFIG, MapConfig } from '../config/map.config.js';
 
 export interface PathInfo {
   totalLength: number;
@@ -13,14 +13,25 @@ export interface PathInfo {
 }
 
 export class NavigationSystem {
-  private groundPath: PathInfo;
-  private waterPath: PathInfo;
-  private airPath: PathInfo;
+  private currentMap: MapConfig;
+  private groundPath!: PathInfo;
+  private waterPath!: PathInfo;
+  private airPath!: PathInfo;
 
-  constructor() {
-    this.groundPath = this.buildPathInfo(MAP_CONFIG.groundWaypoints);
-    this.waterPath = this.buildPathInfo(MAP_CONFIG.waterWaypoints);
-    this.airPath = this.buildPathInfo(MAP_CONFIG.airWaypoints);
+  constructor(mapConfig: MapConfig = MAP_CONFIG) {
+    this.currentMap = mapConfig;
+    this.rebuildPaths();
+  }
+
+  public setMap(mapConfig: MapConfig): void {
+    this.currentMap = mapConfig;
+    this.rebuildPaths();
+  }
+
+  private rebuildPaths(): void {
+    this.groundPath = this.buildPathInfo(this.currentMap.groundWaypoints);
+    this.waterPath = this.buildPathInfo(this.currentMap.waterWaypoints);
+    this.airPath = this.buildPathInfo(this.currentMap.airWaypoints);
   }
 
   private buildPathInfo(waypoints: Vector2D[]): PathInfo {
@@ -95,14 +106,12 @@ export class NavigationSystem {
 
         // Add gentle wobble for flying or swimming units
         if (mode === 'AIR_DIRECT') {
-          // sinusoidal weave
           const perpX = -Math.sin(facing);
           const perpY = Math.cos(facing);
           const wobble = Math.sin(animTime * 3 + distance * 0.05) * 8;
           x += perpX * wobble;
           y += perpY * wobble;
         } else if (mode === 'WATER_PATH') {
-          // gentle water drift
           y += Math.sin(animTime * 4 + x * 0.04) * 3;
         }
 
@@ -115,4 +124,3 @@ export class NavigationSystem {
     return { position: { ...lastPt }, facing: 0, isFinished: true };
   }
 }
-

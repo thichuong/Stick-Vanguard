@@ -9,10 +9,16 @@ import {
   TowerSlot,
   TowerType,
   TowerBranch,
-  Vector2D
+  Vector2D,
+  PlacementType,
+  BuildCursorTarget
 } from '../types/entities.types.js';
 import { MagicalElementType } from '../types/elements.types.js';
-import { MAP_CONFIG } from '../config/map.config.js';
+import {
+  MAPS_CONFIG,
+  MapConfig,
+  getDistanceToPolyline
+} from '../config/map.config.js';
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
 import {
   ELEMENT_IMBUE_COST,
@@ -30,6 +36,9 @@ export class GameState {
   public isGameOver: boolean = false;
   public isVictory: boolean = false;
 
+  public currentMapId: string = MAPS_CONFIG[0].id;
+  public currentMap: MapConfig = MAPS_CONFIG[0];
+
   public towerSlots: TowerSlot[] = [];
   public towers: TowerEntity[] = [];
   public soldiers: SoldierEntity[] = [];
@@ -40,6 +49,7 @@ export class GameState {
 
   public selectedSlotId: string | null = null;
   public selectedTowerId: string | null = null;
+  public selectedBuildPoint: BuildCursorTarget | null = null;
   public isSettingRallyPoint: boolean = false;
   public activePlacementType: TowerType | null = null;
   public hoveredSlotId: string | null = null;
@@ -53,6 +63,15 @@ export class GameState {
     this.reset();
   }
 
+  public setMap(mapId: string): void {
+    const found = MAPS_CONFIG.find((m) => m.id === mapId);
+    if (found) {
+      this.currentMapId = found.id;
+      this.currentMap = found;
+      this.reset();
+    }
+  }
+
   public reset(): void {
     this.gold = 320;
     this.lives = 20;
@@ -62,12 +81,14 @@ export class GameState {
     this.isVictory = false;
     this.selectedSlotId = null;
     this.selectedTowerId = null;
+    this.selectedBuildPoint = null;
     this.isSettingRallyPoint = false;
     this.activePlacementType = null;
     this.hoveredSlotId = null;
     this.hoveredTowerId = null;
 
-    this.towerSlots = MAP_CONFIG.towerSlots.map((s) => ({
+    // Legacy slot support if map defines slots
+    this.towerSlots = (this.currentMap.towerSlots || []).map((s) => ({
       ...s,
       currentTowerId: null
     }));
@@ -88,22 +109,109 @@ export class GameState {
   }
 
   /**
-   * Build a new tower or trap on a slot
+   * Validate free placement condition for a given coordinate (x, y)
    */
-  public buildTower(slotId: string, type: TowerType): boolean {
-    const slot = this.towerSlots.find((s) => s.id === slotId);
-    if (!slot || slot.currentTowerId) return false;
+  public validatePlacement(
+    x: number,
+    y: number,
+    type: TowerType | 'TOWER_GENERIC' | 'TRAP_GENERIC'
+  ): { valid: boolean; placement: PlacementType; reason?: string } {
+    const isTrap = type === 'TRAP_GENERIC' || type.startsWith('TRAP_');
+    const { width, height, groundWaypoints, waterWaypoints, playerBase, groundSpawn, waterSpawn } = this.currentMap;
 
+    // 1. Boundary check
+    const margin = 26;
+    if (x < margin || x > width - margin || y < margin || y > height - margin) {
+      return { valid: false, placement: 'ROADSIDE', reason: 'Vị trí nằm ngoài phạm vi chiến trường!' };
+    }
+
+    // 2. Base & Spawn zone clearance
+    const distToBase = Math.hypot(x - playerBase.x, y - playerBase.y);
+    if (distToBase < playerBase.radius + 14) {
+      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần căn cứ trung tâm!' };
+    }
+
+    const distToGroundSpawn = Math.hypot(x - groundSpawn.x, y - groundSpawn.y);
+    if (distToGroundSpawn < 30) {
+      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng quái xuất phát!' };
+    }
+
+    const distToWaterSpawn = Math.hypot(x - waterSpawn.x, y - waterSpawn.y);
+    if (distToWaterSpawn < 30) {
+      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng thủy quái!' };
+    }
+
+    // 3. Distance to Road & River
+    const roadRes = getDistanceToPolyline(x, y, groundWaypoints);
+    const riverRes = getDistanceToPolyline(x, y, waterWaypoints);
+
+    const roadHalfWidth = 22; // Road half width
+    const riverHalfWidth = 20; // River half width
+
+    const isOnRoad = roadRes.distance <= roadHalfWidth;
+    const isOnRiver = riverRes.distance <= riverHalfWidth;
+
+    // 4. Overlap with existing towers or traps
+    const minDistanceToOther = isTrap ? 26 : 34;
+    for (const existing of this.towers) {
+      const d = Math.hypot(x - existing.x, y - existing.y);
+      if (d < minDistanceToOther) {
+        return { valid: false, placement: isTrap ? 'PATH_TRAP' : 'ROADSIDE', reason: 'Quá gần công trình khác!' };
+      }
+    }
+
+    // 5. Check type-specific conditions
+    if (isTrap) {
+      // TRAP CONDITION: Must be ON THE ROAD or ON THE RIVER
+      if (!isOnRoad && !isOnRiver) {
+        return {
+          valid: false,
+          placement: 'PATH_TRAP',
+          reason: 'Bẫy phải đặt trên đường hoặc trên sông!'
+        };
+      }
+      const placement: PlacementType = isOnRiver ? 'WATER_TRAP' : 'PATH_TRAP';
+      return { valid: true, placement };
+    } else {
+      // TOWER CONDITION: Must NOT be ON THE ROAD (and not in the river)
+      if (roadRes.distance < roadHalfWidth + 14) {
+        return {
+          valid: false,
+          placement: 'ROADSIDE',
+          reason: 'Tháp không được đặt trên đường!'
+        };
+      }
+      if (riverRes.distance < riverHalfWidth + 14) {
+        return {
+          valid: false,
+          placement: 'ROADSIDE',
+          reason: 'Tháp không được đặt dưới dòng sông!'
+        };
+      }
+      return { valid: true, placement: 'ROADSIDE' };
+    }
+  }
+
+  /**
+   * Free-form placement of a tower or trap at coordinate (x, y)
+   */
+  public buildTowerAt(x: number, y: number, type: TowerType): boolean {
     const blueprintKey = type.startsWith('TRAP_') ? type : `${type}_1`;
     const bp: TowerBlueprint | undefined = TOWER_BLUEPRINTS[blueprintKey];
     if (!bp) return false;
 
-    if (this.gold < bp.cost) {
-      this.addFloatingText('Không đủ vàng!', slot.x, slot.y, '#ef4444');
+    // Validate placement rules
+    const validation = this.validatePlacement(x, y, type);
+    if (!validation.valid) {
+      this.addFloatingText(validation.reason || 'Vị trí không hợp lệ!', x, y - 10, '#ef4444');
       return false;
     }
 
-    // Deduct gold
+    if (this.gold < bp.cost) {
+      this.addFloatingText('Không đủ vàng!', x, y - 10, '#ef4444');
+      return false;
+    }
+
     this.gold -= bp.cost;
     this.towerIdCounter++;
     const towerId = `tower-${this.towerIdCounter}`;
@@ -111,13 +219,23 @@ export class GameState {
     let rallyPoint: Vector2D | undefined;
     let soldierIds: string[] | undefined;
 
-    // For Barracks, find road point near slot for initial rally point
+    // For Barracks, find closest point on road
     if (bp.type === 'BARRACKS') {
-      const nearRoad = this.findNearestRoadPoint(slot.x, slot.y);
-      rallyPoint = nearRoad;
-      soldierIds = [];
+      const roadRes = getDistanceToPolyline(x, y, this.currentMap.groundWaypoints);
+      const distToClosest = Math.hypot(roadRes.closestPoint.x - x, roadRes.closestPoint.y - y);
 
-      // Create 3 soldiers
+      if (distToClosest <= bp.range) {
+        rallyPoint = { ...roadRes.closestPoint };
+      } else {
+        // Clamp towards closest road point within tower range
+        const angle = Math.atan2(roadRes.closestPoint.y - y, roadRes.closestPoint.x - x);
+        rallyPoint = {
+          x: Math.round(x + Math.cos(angle) * (bp.range - 10)),
+          y: Math.round(y + Math.sin(angle) * (bp.range - 10))
+        };
+      }
+
+      soldierIds = [];
       for (let i = 0; i < (bp.maxSoldiers || 3); i++) {
         this.soldierIdCounter++;
         const soldierId = `soldier-${this.soldierIdCounter}`;
@@ -160,13 +278,12 @@ export class GameState {
 
     const tower: TowerEntity = {
       id: towerId,
-      slotId: slot.id,
       name: bp.name,
       type: bp.type,
       tier: bp.tier,
       branch: bp.branch,
-      x: slot.x,
-      y: slot.y,
+      x,
+      y,
       range: bp.range,
       damage: bp.damage,
       fireRate: bp.fireRate,
@@ -175,7 +292,7 @@ export class GameState {
       secondaryElement: null,
       soldierMode: bp.type === 'BARRACKS' ? 'MELEE' : undefined,
       targetingFilter: { ...bp.targetingFilter },
-      placement: slot.placement,
+      placement: validation.placement,
       cost: bp.cost,
       totalInvested: bp.cost,
       rallyPoint,
@@ -188,13 +305,34 @@ export class GameState {
       rearmTimer: bp.rearmTime
     };
 
-    slot.currentTowerId = towerId;
     this.towers.push(tower);
     this.selectedTowerId = towerId;
     this.selectedSlotId = null;
+    this.selectedBuildPoint = null;
 
-    this.addFloatingText(`-${bp.cost} 🪙`, slot.x, slot.y - 15, '#eab308');
+    this.addFloatingText(`-${bp.cost} 🪙`, x, y - 15, '#eab308');
     return true;
+  }
+
+  /**
+   * Legacy slot builder for backwards compatibility and tests
+   */
+  public buildTower(slotId: string, type: TowerType): boolean {
+    const slot = this.towerSlots.find((s) => s.id === slotId);
+    if (!slot || slot.currentTowerId) {
+      // If no slot matching id, attempt coordinate parse or fallback
+      return false;
+    }
+
+    const built = this.buildTowerAt(slot.x, slot.y, type);
+    if (built) {
+      slot.currentTowerId = this.selectedTowerId;
+      if (this.selectedTowerId) {
+        const t = this.towers.find((tow) => tow.id === this.selectedTowerId);
+        if (t) t.slotId = slot.id;
+      }
+    }
+    return built;
   }
 
   /**
@@ -228,11 +366,9 @@ export class GameState {
     tower.damage = nextBp.damage;
     tower.range = nextBp.range;
     tower.fireRate = nextBp.fireRate;
-    // Elements are preserved independently! Mage keeps primary element, others keep physical base
     if (tower.type !== 'MAGE') {
       tower.element = 'PHYSICAL';
     }
-    // targeting filter: if barracks is ranged, keep air & water targeting
     if (tower.type === 'BARRACKS' && tower.soldierMode === 'RANGED') {
       tower.targetingFilter = { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
     } else {
@@ -242,7 +378,7 @@ export class GameState {
     tower.totalInvested += nextBp.cost;
     if (nextBp.aoeRadius) tower.aoeRadius = nextBp.aoeRadius;
 
-    // If Barracks, upgrade soldiers stats
+    // Upgrade soldiers stats
     if (tower.type === 'BARRACKS' && tower.soldierIds) {
       for (const sid of tower.soldierIds) {
         const soldier = this.soldiers.find((s) => s.id === sid);
@@ -267,7 +403,7 @@ export class GameState {
             soldier.canTargetAir = false;
           }
 
-          soldier.hp = soldier.maxHp; // full heal on upgrade!
+          soldier.hp = soldier.maxHp;
         }
       }
     }
@@ -304,7 +440,6 @@ export class GameState {
         tower.secondaryElement = element;
       }
     } else {
-      // Archer, Artillery, Barracks
       tower.secondaryElement = element;
       if (tower.type === 'BARRACKS' && tower.soldierIds) {
         for (const sid of tower.soldierIds) {
@@ -323,7 +458,7 @@ export class GameState {
   }
 
   /**
-   * Toggle between Melee (Foot soldier) and Ranged (Archer soldier) for Barracks
+   * Toggle between Melee and Ranged for Barracks
    */
   public setBarracksSoldierMode(towerId: string, mode: SoldierCombatMode): boolean {
     const tower = this.towers.find((t) => t.id === towerId);
@@ -382,9 +517,11 @@ export class GameState {
     const refund = Math.round(tower.totalInvested * 0.7);
     this.gold += refund;
 
-    // Free slot
-    const slot = this.towerSlots.find((s) => s.id === tower.slotId);
-    if (slot) slot.currentTowerId = null;
+    // Free slot if any
+    if (tower.slotId) {
+      const slot = this.towerSlots.find((s) => s.id === tower.slotId);
+      if (slot) slot.currentTowerId = null;
+    }
 
     // Remove soldiers if barracks
     if (tower.soldierIds) {
@@ -406,7 +543,6 @@ export class GameState {
     const tower = this.towers.find((t) => t.id === towerId);
     if (!tower || tower.type !== 'BARRACKS') return false;
 
-    // Check distance within tower range
     const dist = Math.hypot(targetX - tower.x, targetY - tower.y);
     if (dist > tower.range) {
       this.addFloatingText('Ngoài phạm vi điều động!', targetX, targetY, '#ef4444');
@@ -415,7 +551,6 @@ export class GameState {
 
     tower.rallyPoint = { x: targetX, y: targetY };
 
-    // Move all soldiers to new rally positions
     if (tower.soldierIds) {
       for (let i = 0; i < tower.soldierIds.length; i++) {
         const sid = tower.soldierIds[i];
@@ -474,18 +609,4 @@ export class GameState {
       });
     }
   }
-
-  private findNearestRoadPoint(x: number, y: number): Vector2D {
-    let closest = { ...MAP_CONFIG.groundWaypoints[0] };
-    let minDist = Infinity;
-    for (const pt of MAP_CONFIG.groundWaypoints) {
-      const d = Math.hypot(pt.x - x, pt.y - y);
-      if (d < minDist) {
-        minDist = d;
-        closest = { ...pt };
-      }
-    }
-    return closest;
-  }
 }
-

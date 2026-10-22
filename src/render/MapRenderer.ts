@@ -1,16 +1,18 @@
-import { TowerSlot, Vector2D, TowerType } from '../types/entities.types.js';
-import { MAP_CONFIG } from '../config/map.config.js';
+import { Vector2D, TowerType } from '../types/entities.types.js';
+import { MapConfig } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
+import { GameState } from '../core/GameState.js';
 
 export class MapRenderer {
   public static renderBackground(
     ctx: CanvasRenderingContext2D,
-    animTime: number
+    animTime: number,
+    mapConfig: MapConfig
   ): void {
-    const { width, height } = MAP_CONFIG;
+    const { width, height, themeColor, roadColor, riverColor } = mapConfig;
 
-    // 1. Paper / tactical parchment background
-    ctx.fillStyle = '#1e293b'; // Slate dark battlefield
+    // 1. Tactical parchment background with map theme
+    ctx.fillStyle = themeColor || '#1e293b';
     ctx.fillRect(0, 0, width, height);
 
     // Subtle tactical grid
@@ -31,38 +33,41 @@ export class MapRenderer {
     }
 
     // 2. Render River (Water Path)
-    this.renderRiver(ctx, MAP_CONFIG.waterWaypoints, animTime);
+    this.renderRiver(ctx, mapConfig.waterWaypoints, animTime, mapConfig.riverWidth || 38, riverColor);
 
     // 3. Render Ground Road (Dirt Path)
-    this.renderGroundRoad(ctx, MAP_CONFIG.groundWaypoints);
+    this.renderGroundRoad(ctx, mapConfig.groundWaypoints, mapConfig.roadWidth || 42, roadColor);
 
     // 4. Render Air Corridor (Dotted warning line)
-    this.renderAirCorridor(ctx, MAP_CONFIG.airWaypoints, animTime);
+    this.renderAirCorridor(ctx, mapConfig.airWaypoints, animTime);
 
     // 5. Render Spawners & Base
-    this.renderPortalsAndBase(ctx, animTime);
+    this.renderPortalsAndBase(ctx, animTime, mapConfig);
   }
 
   private static renderGroundRoad(
     ctx: CanvasRenderingContext2D,
-    waypoints: Vector2D[]
+    waypoints: Vector2D[],
+    roadWidth: number,
+    surfaceColor: string = '#b45309'
   ): void {
     if (waypoints.length < 2) return;
 
-    // Road base
+    // Road dark earthen border
     ctx.beginPath();
     ctx.moveTo(waypoints[0].x, waypoints[0].y);
     for (let i = 1; i < waypoints.length; i++) {
       ctx.lineTo(waypoints[i].x, waypoints[i].y);
     }
-    ctx.strokeStyle = '#78350f'; // Dark earthen border
-    ctx.lineWidth = 42;
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = roadWidth + 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    ctx.strokeStyle = '#b45309'; // Earthen road surface
-    ctx.lineWidth = 36;
+    // Road surface
+    ctx.strokeStyle = surfaceColor;
+    ctx.lineWidth = roadWidth;
     ctx.stroke();
 
     // Center dash line for sketch feel
@@ -77,7 +82,9 @@ export class MapRenderer {
   private static renderRiver(
     ctx: CanvasRenderingContext2D,
     waypoints: Vector2D[],
-    animTime: number
+    animTime: number,
+    riverWidth: number,
+    surfaceColor: string = '#0284c7'
   ): void {
     if (waypoints.length < 2) return;
 
@@ -88,13 +95,13 @@ export class MapRenderer {
     }
 
     ctx.strokeStyle = '#0369a1';
-    ctx.lineWidth = 38;
+    ctx.lineWidth = riverWidth + 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    ctx.strokeStyle = '#0284c7';
-    ctx.lineWidth = 30;
+    ctx.strokeStyle = surfaceColor;
+    ctx.lineWidth = riverWidth;
     ctx.stroke();
 
     // Water flow animation
@@ -112,31 +119,36 @@ export class MapRenderer {
     waypoints: Vector2D[],
     animTime: number
   ): void {
+    if (waypoints.length < 2) return;
+
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(waypoints[0].x, waypoints[0].y);
     for (let i = 1; i < waypoints.length; i++) {
       ctx.lineTo(waypoints[i].x, waypoints[i].y);
     }
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.28)'; // Translucent green air vector
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.28)';
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 10]);
     ctx.lineDashOffset = -animTime * 25;
     ctx.stroke();
 
     // Air warning icon
+    const labelX = (waypoints[0].x + waypoints[1].x) / 2;
+    const labelY = (waypoints[0].y + waypoints[1].y) / 2 - 12;
     ctx.fillStyle = '#34d399';
-    ctx.font = '13px sans-serif';
-    ctx.fillText('✈️ HÀNH LANG BAY', 120, 85);
+    ctx.font = '12px sans-serif';
+    ctx.fillText('✈️ HÀNH LANG BAY', labelX, Math.max(20, labelY));
     ctx.restore();
   }
 
   private static renderPortalsAndBase(
     ctx: CanvasRenderingContext2D,
-    animTime: number
+    animTime: number,
+    mapConfig: MapConfig
   ): void {
     // Ground spawn
-    const gs = MAP_CONFIG.groundSpawn;
+    const gs = mapConfig.groundSpawn;
     ctx.save();
     ctx.fillStyle = '#ef4444';
     ctx.beginPath();
@@ -150,25 +162,24 @@ export class MapRenderer {
     ctx.restore();
 
     // Water spawn
-    const ws = MAP_CONFIG.waterSpawn;
+    const ws = mapConfig.waterSpawn;
     ctx.save();
     ctx.fillStyle = '#0ea5e9';
     ctx.beginPath();
-    ctx.arc(ws.x, ws.y + 16, 18, 0, Math.PI * 2);
+    ctx.arc(ws.x, ws.y, 18, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🌊', ws.x, ws.y + 16);
+    ctx.fillText('🌊', ws.x, ws.y);
     ctx.restore();
 
     // Player Base (Gate)
-    const base = MAP_CONFIG.playerBase;
+    const base = mapConfig.playerBase;
     const pulse = Math.sin(animTime * 3) * 3;
 
     ctx.save();
-    // Glowing perimeter
     ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -192,120 +203,105 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  public static renderSlots(
+  /**
+   * Render real-time cursor feedback for Free Placement
+   */
+  public static renderPlacementFeedback(
     ctx: CanvasRenderingContext2D,
-    slots: TowerSlot[],
-    selectedSlotId: string | null,
-    activePlacementType: TowerType | null = null,
-    hoveredSlotId: string | null = null,
-    animTime: number = 0
+    state: GameState,
+    animTime: number
   ): void {
-    for (const slot of slots) {
-      if (slot.currentTowerId) continue; // Tower already placed
+    const { mousePos, activePlacementType, selectedBuildPoint } = state;
 
-      const isSelected = slot.id === selectedSlotId;
-      const isHovered = slot.id === hoveredSlotId;
+    // 1. Ghost preview when active placement type is selected
+    if (activePlacementType) {
+      const bpKey = activePlacementType.startsWith('TRAP_') ? activePlacementType : `${activePlacementType}_1`;
+      const bp = TOWER_BLUEPRINTS[bpKey];
+      if (!bp) return;
 
-      // Check if slot matches active placement type
-      let isValidForPlacement = false;
-      if (activePlacementType) {
-        const bp = TOWER_BLUEPRINTS[activePlacementType.startsWith('TRAP_') ? activePlacementType : `${activePlacementType}_1`];
-        if (bp) {
-          if (bp.placement === slot.placement) {
-            isValidForPlacement = true;
-          } else if (bp.type === 'TRAP_FROST' && (slot.placement === 'PATH_TRAP' || slot.placement === 'WATER_TRAP')) {
-            isValidForPlacement = true;
-          }
-        }
-      }
+      const isTrap = activePlacementType.startsWith('TRAP_');
+      const validation = state.validatePlacement(mousePos.x, mousePos.y, activePlacementType);
+      const isValid = validation.valid;
 
       ctx.save();
 
-      // Highlight glowing ring for valid slots during placement
-      if (isValidForPlacement) {
-        const pulse = Math.sin(animTime * 6) * 4;
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(slot.x, slot.y, 22 + pulse, 0, Math.PI * 2);
-        ctx.stroke();
+      // Range indicator
+      const rangeRadius = isTrap ? (bp.triggerRadius || bp.range || 40) : bp.range;
+      ctx.beginPath();
+      ctx.arc(mousePos.x, mousePos.y, rangeRadius, 0, Math.PI * 2);
+      ctx.fillStyle = isValid ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+      ctx.fill();
+      ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.restore();
+
+      // Base footprint ring
+      const baseRadius = isTrap ? 14 : 18;
+      const pulse = Math.sin(animTime * 8) * 2;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mousePos.x, mousePos.y, baseRadius + pulse, 0, Math.PI * 2);
+      ctx.fillStyle = isValid ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+      ctx.fill();
+      ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Icon in center
+      ctx.fillStyle = '#ffffff';
+      ctx.font = isTrap ? '14px sans-serif' : '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const icon = isTrap ? '⚙️' : '🏰';
+      ctx.fillText(icon, mousePos.x, mousePos.y);
+
+      // Status Tooltip above cursor
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      if (isValid) {
+        ctx.fillStyle = '#22c55e';
+        ctx.fillText(`✓ BẤM ĐỂ XÂY [${bp.name.toUpperCase()}] (🪙 ${bp.cost})`, mousePos.x, mousePos.y - 28);
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText(validation.reason || '✕ VỊ TRÍ KHÔNG HỢP LỆ', mousePos.x, mousePos.y - 28);
       }
+      ctx.restore();
+    }
 
-      // Preview range on hover when placing
-      if (isHovered && activePlacementType) {
-        const bp = TOWER_BLUEPRINTS[activePlacementType.startsWith('TRAP_') ? activePlacementType : `${activePlacementType}_1`];
-        if (bp && isValidForPlacement) {
-          ctx.save();
-          ctx.strokeStyle = 'rgba(34, 197, 94, 0.7)';
-          ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 6]);
-          ctx.beginPath();
-          ctx.arc(slot.x, slot.y, bp.range, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+    // 2. Selected build marker on canvas (when player clicked empty spot)
+    if (selectedBuildPoint && !activePlacementType) {
+      ctx.save();
+      const pulse = Math.sin(animTime * 6) * 3;
+      ctx.beginPath();
+      ctx.arc(selectedBuildPoint.x, selectedBuildPoint.y, 18 + pulse, 0, Math.PI * 2);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
 
-          // Tooltip
-          ctx.fillStyle = '#22c55e';
-          ctx.font = 'bold 13px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`BẤM ĐỂ XÂY ${bp.name.toUpperCase()}`, slot.x, slot.y - 28);
-          ctx.restore();
-        }
-      }
-
-      if (slot.placement === 'ROADSIDE') {
-        // Roadside stone pad
-        ctx.fillStyle = isSelected ? '#3b82f6' : isHovered ? '#475569' : '#334155';
-        ctx.beginPath();
-        ctx.arc(slot.x, slot.y, isHovered ? 19 : 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = isSelected ? '#93c5fd' : isHovered ? '#60a5fa' : '#64748b';
-        ctx.lineWidth = isHovered ? 3 : 2;
-        ctx.stroke();
-
-        ctx.fillStyle = isSelected ? '#ffffff' : '#94a3b8';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('+', slot.x, slot.y);
-      } else if (slot.placement === 'PATH_TRAP') {
-        // Road Trap Diamond
-        ctx.save();
-        ctx.translate(slot.x, slot.y);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = isSelected ? '#f59e0b' : isHovered ? '#92400e' : '#78350f';
-        const dSize = isHovered ? 26 : 22;
-        ctx.fillRect(-dSize / 2, -dSize / 2, dSize, dSize);
-        ctx.strokeStyle = isSelected ? '#fde047' : isHovered ? '#fbbf24' : '#d97706';
-        ctx.lineWidth = isHovered ? 3 : 2;
-        ctx.strokeRect(-dSize / 2, -dSize / 2, dSize, dSize);
-        ctx.restore();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⚙️', slot.x, slot.y);
-      } else if (slot.placement === 'WATER_TRAP') {
-        // Water Buoy
-        ctx.fillStyle = isSelected ? '#38bdf8' : isHovered ? '#0284c7' : '#0369a1';
-        ctx.beginPath();
-        ctx.arc(slot.x, slot.y, isHovered ? 17 : 14, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = isHovered ? '#bae6fd' : '#7dd3fc';
-        ctx.lineWidth = isHovered ? 3 : 2;
-        ctx.stroke();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⚓', slot.x, slot.y);
-      }
-
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      const label = selectedBuildPoint.validFor === 'TRAP' ? '📍 ĐIỂM ĐẶT BẪY' : '📍 ĐIỂM ĐẶT THÁP';
+      ctx.fillText(label, selectedBuildPoint.x, selectedBuildPoint.y - 24);
       ctx.restore();
     }
   }
-}
 
+  /**
+   * Backwards compatible slot rendering if map has legacy slots
+   */
+  public static renderSlots(
+    _ctx: CanvasRenderingContext2D,
+    _slots: any[],
+    _selectedSlotId: string | null,
+    _activePlacementType: TowerType | null = null,
+    _hoveredSlotId: string | null = null,
+    _animTime: number = 0
+  ): void {
+    // Empty as free placement replaces static slots
+  }
+}

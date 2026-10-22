@@ -1,5 +1,6 @@
 import { GameState } from '../core/GameState.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
+import { MAPS_CONFIG, MapConfig } from '../config/map.config.js';
 import {
   ELEMENT_ICONS,
   ELEMENT_NAMES,
@@ -17,25 +18,35 @@ export class UIManager {
   private placementHintEl: HTMLElement | null;
   private inspectorContentEl: HTMLElement;
   private inspectorTitleEl: HTMLElement | null;
+  private mapModalBackdropEl: HTMLElement | null;
+  private mapCardsGridEl: HTMLElement | null;
+  private hudMapNameEl: HTMLElement | null;
+  private hudMapWavesEl: HTMLElement | null;
   private sidePanel: SideDetailPanel;
   private lastRenderKey: string = '';
 
   constructor(
     private state: GameState,
     private onCallWave: () => void,
-    private onRestart: () => void
+    private onRestart: () => void,
+    private onSelectMap: (mapId: string) => void
   ) {
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
     this.messageBannerEl = document.getElementById('message-banner')!;
     this.placementHintEl = document.getElementById('placement-hint');
     this.inspectorContentEl = document.getElementById('inspector-content')!;
     this.inspectorTitleEl = document.getElementById('inspector-main-title');
+    this.mapModalBackdropEl = document.getElementById('map-modal-backdrop');
+    this.mapCardsGridEl = document.getElementById('map-cards-grid');
+    this.hudMapNameEl = document.getElementById('hud-map-name');
+    this.hudMapWavesEl = document.getElementById('hud-map-waves');
     this.sidePanel = new SideDetailPanel();
 
     this.bindEvents();
     this.bindArsenal();
     this.bindKeyboard();
     this.bindCodexTriggers();
+    this.bindMapModal();
   }
 
   public handleResize(): void {
@@ -105,6 +116,117 @@ export class UIManager {
     }
   }
 
+  private bindMapModal(): void {
+    const selectMapBtn = document.getElementById('btn-select-map');
+    const closeMapModalBtn = document.getElementById('btn-close-map-modal');
+
+    if (selectMapBtn) {
+      selectMapBtn.addEventListener('click', () => {
+        this.openMapModal();
+      });
+    }
+
+    if (closeMapModalBtn) {
+      closeMapModalBtn.addEventListener('click', () => {
+        this.closeMapModal();
+      });
+    }
+
+    if (this.mapModalBackdropEl) {
+      this.mapModalBackdropEl.addEventListener('click', (e) => {
+        if (e.target === this.mapModalBackdropEl) {
+          this.closeMapModal();
+        }
+      });
+    }
+  }
+
+  public openMapModal(): void {
+    if (!this.mapModalBackdropEl || !this.mapCardsGridEl) return;
+    this.renderMapCards();
+    this.mapModalBackdropEl.classList.remove('hidden');
+  }
+
+  public closeMapModal(): void {
+    if (this.mapModalBackdropEl) {
+      this.mapModalBackdropEl.classList.add('hidden');
+    }
+  }
+
+  private renderMapCards(): void {
+    if (!this.mapCardsGridEl) return;
+
+    this.mapCardsGridEl.innerHTML = MAPS_CONFIG.map((m) => {
+      const isSelected = m.id === this.state.currentMapId;
+      const totalWaves = m.waves ? m.waves.length : 10;
+
+      return `
+        <div class="map-card ${isSelected ? 'active-map' : ''}" data-map-id="${m.id}">
+          <div class="map-card-header">
+            <div class="map-card-title-group">
+              <span class="map-card-name">${m.name}</span>
+              <span class="map-card-sub">${m.subtitle}</span>
+            </div>
+            <span class="current-map-waves-badge">⚔️ ${totalWaves} Đợt</span>
+          </div>
+
+          <div class="map-preview-box">
+            ${this.generateMiniMapSvg(m)}
+          </div>
+
+          <p class="map-card-desc">${m.description}</p>
+
+          <button class="action-btn select-map-action-btn ${isSelected ? 'current-btn' : ''}">
+            ${isSelected ? '✓ Đang Chơi' : '⚔️ Chọn Bản Đồ Này'}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    this.mapCardsGridEl.querySelectorAll('.map-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const mapId = target.getAttribute('data-map-id');
+        if (mapId) {
+          this.onSelectMap(mapId);
+          this.closeMapModal();
+        }
+      });
+    });
+  }
+
+  private generateMiniMapSvg(map: MapConfig): string {
+    const scale = 0.24;
+    const w = Math.round(map.width * scale);
+    const h = Math.round(map.height * scale);
+
+    const toSvgPath = (pts: { x: number; y: number }[]) => {
+      if (!pts || pts.length === 0) return '';
+      return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${Math.round(p.x * scale)} ${Math.round(p.y * scale)}`).join(' ');
+    };
+
+    const groundPathD = toSvgPath(map.groundWaypoints);
+    const waterPathD = toSvgPath(map.waterWaypoints);
+    const airPathD = toSvgPath(map.airWaypoints);
+
+    return `
+      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="mini-map-svg">
+        <rect width="${w}" height="${h}" fill="${map.themeColor || '#1e293b'}" rx="6" />
+        <!-- River -->
+        <path d="${waterPathD}" fill="none" stroke="${map.riverColor || '#0284c7'}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Road -->
+        <path d="${groundPathD}" fill="none" stroke="${map.roadColor || '#b45309'}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="${groundPathD}" fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="3,3" />
+        <!-- Air line -->
+        <path d="${airPathD}" fill="none" stroke="rgba(52, 211, 153, 0.4)" stroke-width="1.5" stroke-dasharray="2,3" />
+        <!-- Spawners & Base -->
+        <circle cx="${Math.round(map.groundSpawn.x * scale)}" cy="${Math.round(map.groundSpawn.y * scale)}" r="4.5" fill="#ef4444" />
+        <circle cx="${Math.round(map.waterSpawn.x * scale)}" cy="${Math.round(map.waterSpawn.y * scale)}" r="4" fill="#0ea5e9" />
+        <circle cx="${Math.round(map.playerBase.x * scale)}" cy="${Math.round(map.playerBase.y * scale)}" r="7" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5" />
+      </svg>
+    `;
+  }
+
   private bindArsenal(): void {
     const hotbarBtns = document.querySelectorAll('#right-panel .hotbar-btn');
     hotbarBtns.forEach((btn) => {
@@ -120,6 +242,7 @@ export class UIManager {
           this.state.activePlacementType = type;
           this.state.selectedSlotId = null;
           this.state.selectedTowerId = null;
+          this.state.selectedBuildPoint = null;
           this.state.isSettingRallyPoint = false;
         }
 
@@ -144,6 +267,10 @@ export class UIManager {
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (this.mapModalBackdropEl && !this.mapModalBackdropEl.classList.contains('hidden')) {
+          this.closeMapModal();
+          return;
+        }
         if (this.sidePanel.isOpen()) {
           this.sidePanel.close();
           return;
@@ -151,6 +278,7 @@ export class UIManager {
         this.state.activePlacementType = null;
         this.state.selectedSlotId = null;
         this.state.selectedTowerId = null;
+        this.state.selectedBuildPoint = null;
         this.state.isSettingRallyPoint = false;
         this.updateArsenalVisuals();
         this.lastRenderKey = '';
@@ -162,6 +290,18 @@ export class UIManager {
         const target = e.target as HTMLElement;
         if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
           this.sidePanel.toggle();
+          return;
+        }
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        const target = e.target as HTMLElement;
+        if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          if (this.mapModalBackdropEl?.classList.contains('hidden')) {
+            this.openMapModal();
+          } else {
+            this.closeMapModal();
+          }
           return;
         }
       }
@@ -186,6 +326,7 @@ export class UIManager {
           this.state.activePlacementType = type;
           this.state.selectedSlotId = null;
           this.state.selectedTowerId = null;
+          this.state.selectedBuildPoint = null;
           this.state.isSettingRallyPoint = false;
         }
         this.updateArsenalVisuals();
@@ -196,7 +337,6 @@ export class UIManager {
   }
 
   private bindCodexTriggers(): void {
-    // Left Panel main codex button
     const codexBtn = document.getElementById('btn-codex');
     if (codexBtn) {
       codexBtn.addEventListener('click', () => {
@@ -204,7 +344,6 @@ export class UIManager {
       });
     }
 
-    // Left Panel quick lookup pills
     const lookupBtns = document.querySelectorAll('#left-panel .lookup-pill, #left-panel .elem-mini-pill');
     lookupBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -222,14 +361,12 @@ export class UIManager {
       const type = btn.getAttribute('data-type') as TowerType;
       const bp = TOWER_BLUEPRINTS[type.startsWith('TRAP_') ? type : `${type}_1`];
 
-      // Active selected state
       if (this.state.activePlacementType === type) {
         btn.classList.add('active');
       } else {
         btn.classList.remove('active');
       }
 
-      // Affordability state
       if (bp && this.state.gold < bp.cost) {
         btn.classList.add('disabled');
       } else {
@@ -239,11 +376,19 @@ export class UIManager {
 
     if (this.placementHintEl) {
       if (this.state.activePlacementType) {
-        const bp = TOWER_BLUEPRINTS[this.state.activePlacementType.startsWith('TRAP_') ? this.state.activePlacementType : `${this.state.activePlacementType}_1`];
-        this.placementHintEl.textContent = `📍 ĐANG CHỌN [${bp?.name.toUpperCase()}]. Bấm vào ô đất trên bản đồ để xây (hoặc phím ESC để hủy).`;
+        const isTrap = this.state.activePlacementType.startsWith('TRAP_');
+        const bp = TOWER_BLUEPRINTS[isTrap ? this.state.activePlacementType : `${this.state.activePlacementType}_1`];
+        this.placementHintEl.textContent = isTrap
+          ? `📍 ĐẶT [${bp?.name.toUpperCase()}]: Nhấp vào ĐƯỜNG ĐI hoặc DÒNG SÔNG để đặt (ESC hủy)`
+          : `📍 ĐẶT [${bp?.name.toUpperCase()}]: Nhấp vào ĐẤT TRỐNG (ngoài đường & sông) để xây (ESC hủy)`;
+        this.placementHintEl.classList.add('highlight');
+      } else if (this.state.selectedBuildPoint) {
+        this.placementHintEl.textContent = this.state.selectedBuildPoint.validFor === 'TRAP'
+          ? '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐƯỜNG/SÔNG. Bấm chọn Bẫy [5]-[8] bên phải để đặt!'
+          : '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐẤT. Bấm chọn Tháp [1]-[4] bên phải để xây!';
         this.placementHintEl.classList.add('highlight');
       } else {
-        this.placementHintEl.textContent = 'Bấm chọn tháp bên phải hoặc phím [1]-[8] rồi nhấp vào ô đất để xây';
+        this.placementHintEl.textContent = 'Đặt tự do: Tháp đặt ngoài đường/sông | Bẫy đặt trên đường hoặc dưới sông [1]-[8]';
         this.placementHintEl.classList.remove('highlight');
       }
     }
@@ -263,6 +408,14 @@ export class UIManager {
     if (livesEl) livesEl.textContent = `${this.state.lives}/${this.state.maxLives}`;
     if (waveEl) waveEl.textContent = `${currentWave}/${totalWaves}`;
 
+    if (this.hudMapNameEl) {
+      this.hudMapNameEl.textContent = this.state.currentMap.name;
+    }
+    if (this.hudMapWavesEl) {
+      const maxW = this.state.currentMap.waves ? this.state.currentMap.waves.length : totalWaves;
+      this.hudMapWavesEl.textContent = `Tối đa: ${maxW} đợt`;
+    }
+
     if (nextWaveBtn) {
       if (isWaveRunning) {
         nextWaveBtn.textContent = '⚡ Gọi đợt kế tiếp (+ Vàng)';
@@ -271,27 +424,34 @@ export class UIManager {
       }
     }
 
-    // Game Over / Victory banners
     if (this.state.isGameOver) {
       this.messageBannerEl.classList.remove('hidden');
       this.messageBannerEl.innerHTML = `
         <div class="banner-box game-over">
           <h2>💀 THẤT THỦ!</h2>
           <p>Căn cứ đã bị quái vật tràn vào tiêu diệt.</p>
-          <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+            <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
+            <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6;">🗺️ Đổi bản đồ</button>
+          </div>
         </div>
       `;
       document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.onRestart());
+      document.getElementById('btn-banner-change-map')?.addEventListener('click', () => this.openMapModal());
     } else if (this.state.isVictory) {
       this.messageBannerEl.classList.remove('hidden');
       this.messageBannerEl.innerHTML = `
         <div class="banner-box victory">
           <h2>🏆 CHIẾN THẮNG QUANG VINH!</h2>
-          <p>Bạn đã chặn đứng 10 đợt xâm lăng và hạ gục Đại Hắc Long!</p>
-          <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
+          <p>Bạn đã chặn đứng toàn bộ ${totalWaves} đợt xâm lăng và bảo vệ thành công căn cứ!</p>
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+            <button id="btn-banner-restart" class="action-btn">🔄 Chơi lại</button>
+            <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6;">🗺️ Bản đồ kế tiếp</button>
+          </div>
         </div>
       `;
       document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.onRestart());
+      document.getElementById('btn-banner-change-map')?.addEventListener('click', () => this.openMapModal());
     } else {
       this.messageBannerEl.classList.add('hidden');
     }
@@ -301,17 +461,15 @@ export class UIManager {
   }
 
   private renderInspector(): void {
-    const slot = this.state.getSelectedSlot();
     const tower = this.state.getSelectedTower();
+    const buildPt = this.state.selectedBuildPoint;
 
-    // Generate render key to prevent trashing DOM every frame
-    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}`;
+    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${Math.floor(this.state.gold / 25)}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
     this.lastRenderKey = currentKey;
 
-    // Notice on canvas overlay when setting rally point
     if (this.state.isSettingRallyPoint) {
       this.menuOverlayEl.innerHTML = `
         <div class="floating-panel" style="position: absolute; left: 50%; top: 20px; transform: translateX(-50%); text-align: center;">
@@ -329,7 +487,7 @@ export class UIManager {
       this.menuOverlayEl.innerHTML = '';
     }
 
-    // CASE 1: A built Tower or Trap is selected on canvas
+    // CASE 1: Built tower or trap selected
     if (tower) {
       if (this.inspectorTitleEl) {
         this.inspectorTitleEl.textContent = '🏰 CHI TIẾT CÔNG TRÌNH & NÂNG CẤP';
@@ -354,7 +512,6 @@ export class UIManager {
           `;
         }
       } else if (tower.tier === 3) {
-        // Tier 4 Branches
         const bpA = TOWER_BLUEPRINTS[`${tower.type}_4_A`];
         const bpB = TOWER_BLUEPRINTS[`${tower.type}_4_B`];
         const canA = bpA && this.state.gold >= bpA.cost;
@@ -379,7 +536,6 @@ export class UIManager {
         upgradeHtml = `<p class="max-tier-note">✨ ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP 4)</p>`;
       }
 
-      // Damage label for Hybrid and Dual-Element
       let damageDisplay = '';
       if (tower.type === 'MAGE') {
         damageDisplay = `<b>${tower.damage}</b> (${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]})`;
@@ -395,7 +551,6 @@ export class UIManager {
         }
       }
 
-      // Soldier Mode Switch for Barracks
       let soldierModeHtml = '';
       if (isBarracks) {
         const isMelee = tower.soldierMode !== 'RANGED';
@@ -414,7 +569,6 @@ export class UIManager {
         `;
       }
 
-      // Element Picker Section
       let elementPickerHtml = '';
       if (!isTrap) {
         if (tower.type === 'MAGE') {
@@ -520,7 +674,6 @@ export class UIManager {
         </div>
       `;
 
-      // Event handlers for Inspector
       document.getElementById('btn-open-tree')?.addEventListener('click', () => {
         const tierKey = `${tower.type}_${tower.tier}${tower.branch ? '_' + tower.branch : ''}`;
         this.sidePanel.open(tower.type, tierKey);
@@ -584,21 +737,26 @@ export class UIManager {
       return;
     }
 
-    // CASE 2: An empty slot on canvas is selected
-    if (slot && !slot.currentTowerId) {
+    // CASE 2: Free-form position clicked on map (selectedBuildPoint)
+    if (buildPt) {
+      const isTrapArea = buildPt.validFor === 'TRAP';
       if (this.inspectorTitleEl) {
-        this.inspectorTitleEl.textContent = `🛠️ XÂY TẠI Ô ĐẤT [${slot.id.toUpperCase()}]`;
+        this.inspectorTitleEl.textContent = isTrapArea
+          ? `⚙️ ĐẶT BẪY TẠI (${buildPt.x}, ${buildPt.y})`
+          : `🏰 XÂY THÁP TẠI (${buildPt.x}, ${buildPt.y})`;
       }
 
-      let optionsHtml = '';
-      if (slot.placement === 'ROADSIDE') {
-        const roadsideTypes: TowerType[] = ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
-        optionsHtml = roadsideTypes
-          .map((type) => {
-            const bp = TOWER_BLUEPRINTS[`${type}_1`];
-            const canAfford = this.state.gold >= bp.cost;
-            const icon = ELEMENT_ICONS[bp.element] || '⚔️';
-            return `
+      const availableTypes: TowerType[] = isTrapArea
+        ? ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET']
+        : ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
+
+      const optionsHtml = availableTypes
+        .map((type) => {
+          const bpKey = type.startsWith('TRAP_') ? type : `${type}_1`;
+          const bp = TOWER_BLUEPRINTS[bpKey];
+          const canAfford = this.state.gold >= bp.cost;
+          const icon = ELEMENT_ICONS[bp.element] || (isTrapArea ? '⚙️' : '⚔️');
+          return `
             <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
               <div class="opt-top">
                 <span class="opt-name">${bp.name}</span>
@@ -607,56 +765,42 @@ export class UIManager {
               <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
             </button>
           `;
-          })
-          .join('');
-      } else {
-        const trapTypes: TowerType[] =
-          slot.placement === 'WATER_TRAP'
-            ? ['TRAP_FROST']
-            : ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
-
-        optionsHtml = trapTypes
-          .map((type) => {
-            const bp = TOWER_BLUEPRINTS[type];
-            const canAfford = this.state.gold >= bp.cost;
-            const icon = ELEMENT_ICONS[bp.element] || '⚙️';
-            return `
-            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
-              <div class="opt-top">
-                <span class="opt-name">${bp.name}</span>
-                <span class="opt-cost">🪙 ${bp.cost}</span>
-              </div>
-              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
-            </button>
-          `;
-          })
-          .join('');
-      }
+        })
+        .join('');
 
       this.inspectorContentEl.innerHTML = `
         <div class="insp-card">
           <div class="insp-header">
-            <span class="insp-title">${slot.placement === 'ROADSIDE' ? 'Ô Xây Tháp Ven Đường' : slot.placement === 'WATER_TRAP' ? 'Ô Bẫy Dưới Lòng Sông' : 'Ô Bẫy Trên Đường Đi'}</span>
+            <span class="insp-title">${isTrapArea ? 'Vị Trí Đường/Sông (Cho Phép Bẫy)' : 'Vị Trí Đất Trống (Cho Phép Tháp)'}</span>
             <button id="btn-slot-tree" class="btn-detail-link" title="Xem giải thích cẩm nang">
-              📖 Xem chi tiết
+              📖 Cẩm nang
             </button>
           </div>
           <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
-            Nhấp chuột vào một trong các lựa chọn bên dưới để xây dựng ngay lên ô đất đã chọn.
+            Nhấp chuột vào một công trình bên dưới để xây dựng trực tiếp tại tọa độ đã đánh dấu.
           </p>
         </div>
         <div class="build-options-list">${optionsHtml}</div>
+        <button id="btn-cancel-point" class="action-btn" style="background: #334155; margin-top: 10px;">
+          Hủy chọn điểm này (ESC)
+        </button>
       `;
 
       document.getElementById('btn-slot-tree')?.addEventListener('click', () => {
-        this.sidePanel.open(slot.placement === 'ROADSIDE' ? 'BARRACKS' : 'TRAPS');
+        this.sidePanel.open(isTrapArea ? 'TRAPS' : 'BARRACKS');
+      });
+
+      document.getElementById('btn-cancel-point')?.addEventListener('click', () => {
+        this.state.selectedBuildPoint = null;
+        this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       this.inspectorContentEl.querySelectorAll('.build-option').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           const type = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
-          if (type && slot) {
-            this.state.buildTower(slot.id, type);
+          if (type && this.state.selectedBuildPoint) {
+            this.state.buildTowerAt(this.state.selectedBuildPoint.x, this.state.selectedBuildPoint.y, type);
             this.lastRenderKey = '';
             this.renderInspector();
           }
@@ -666,7 +810,7 @@ export class UIManager {
       return;
     }
 
-    // CASE 3: Active placement type chosen from right arsenal or hotkeys
+    // CASE 3: Active placement type chosen from hotbar or keys
     if (this.state.activePlacementType) {
       if (this.inspectorTitleEl) {
         this.inspectorTitleEl.textContent = '📍 ĐANG CHỌN ĐẶT THÁP / BẪY';
@@ -703,8 +847,12 @@ export class UIManager {
           </div>
 
           <div style="background: rgba(59, 130, 246, 0.1); border: 1px dashed #3b82f6; border-radius: 6px; padding: 10px; text-align: center;">
-            <p style="font-size: 11px; color: #93c5fd; line-height: 1.4;">
-              👉 Hãy nhấp chuột vào một <b>ô đất ${isTrap ? 'đường đi/dưới sông' : 'ven đường'}</b> màu xanh lá trên bản đồ để xây dựng!
+            <p style="font-size: 11px; color: #93c5fd; line-height: 1.5;">
+              ${
+                isTrap
+                  ? '👉 <b>BẪY:</b> Rà chuột và nhấp vào <b>TRÊN ĐƯỜNG BỘ</b> hoặc <b>DÒNG SÔNG</b> màu xanh lá để đặt!'
+                  : '👉 <b>THÁP:</b> Rà chuột và nhấp vào <b>VÙNG ĐẤT TRỐNG NGOÀI ĐƯỜNG/SÔNG</b> màu xanh lá để xây dựng!'
+              }
             </p>
             <button id="btn-cancel-placement" class="action-btn" style="margin-top: 8px; background: #334155; color: #fff;">
               Hủy chọn (ESC)
@@ -735,8 +883,10 @@ export class UIManager {
       <div class="inspector-empty">
         <span class="inspector-empty-icon">🏰</span>
         <p>
-          Chưa chọn công trình nào.<br />
-          Nhấp vào một <b>Tháp/Bẫy trên bản đồ</b> để xem chỉ số và nâng cấp, hoặc bấm chọn tháp bên trên để xây dựng.
+          Chưa chọn công trình nào.<br /><br />
+          <b>Cách Đặt Tự Do:</b><br />
+          • Chọn tháp/bẫy ở trên [1]-[8] rồi nhấp vị trí hợp lệ trên bản đồ.<br />
+          • Hoặc nhấp chuột vào bất kỳ vị trí trống nào trên bản đồ để mở menu xây dựng.
         </p>
       </div>
     `;
