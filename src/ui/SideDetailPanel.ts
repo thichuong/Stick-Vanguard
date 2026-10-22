@@ -7,7 +7,7 @@ import { ElementType } from '../types/elements.types.js';
 import { TowerType } from '../types/entities.types.js';
 
 export class SideDetailPanel {
-  private panelEl: HTMLElement;
+  private backdropEl: HTMLElement;
   private contentEl: HTMLElement;
   private titleEl: HTMLElement;
   private badgeEl: HTMLElement;
@@ -16,24 +16,31 @@ export class SideDetailPanel {
   private selectedTierKey: string = 'BARRACKS_1';
 
   constructor() {
-    this.panelEl = document.getElementById('side-detail-panel')!;
-    this.contentEl = document.getElementById('side-panel-body')!;
-    this.titleEl = document.getElementById('side-panel-title')!;
-    this.badgeEl = document.getElementById('side-panel-badge')!;
-    this.iconEl = document.getElementById('side-panel-icon')!;
+    this.backdropEl = document.getElementById('codex-modal-backdrop')!;
+    this.contentEl = document.getElementById('codex-modal-body')!;
+    this.titleEl = document.getElementById('codex-modal-title')!;
+    this.badgeEl = document.getElementById('codex-modal-badge')!;
+    this.iconEl = document.getElementById('codex-modal-icon')!;
 
     this.bindEvents();
   }
 
   private bindEvents(): void {
     // Close button
-    const closeBtn = document.getElementById('btn-close-side-panel');
+    const closeBtn = document.getElementById('btn-close-codex-modal');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.close());
     }
 
+    // Click outside modal (backdrop click) to close
+    this.backdropEl.addEventListener('click', (e) => {
+      if (e.target === this.backdropEl) {
+        this.close();
+      }
+    });
+
     // Category Tabs
-    const tabBtns = this.panelEl.querySelectorAll('.sp-tab');
+    const tabBtns = this.backdropEl.querySelectorAll('.codex-tab');
     tabBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const cat = (e.currentTarget as HTMLElement).getAttribute('data-cat');
@@ -45,15 +52,15 @@ export class SideDetailPanel {
   }
 
   public isOpen(): boolean {
-    return !this.panelEl.classList.contains('hidden');
+    return !this.backdropEl.classList.contains('hidden');
   }
 
   public open(category: string = 'BARRACKS', targetSubId?: string): void {
     this.currentCategory = category;
-    this.panelEl.classList.remove('hidden');
+    this.backdropEl.classList.remove('hidden');
 
     // Update active tab visual
-    const tabBtns = this.panelEl.querySelectorAll('.sp-tab');
+    const tabBtns = this.backdropEl.querySelectorAll('.codex-tab');
     tabBtns.forEach((btn) => {
       const cat = btn.getAttribute('data-cat');
       if (cat === category) {
@@ -67,7 +74,7 @@ export class SideDetailPanel {
   }
 
   public close(): void {
-    this.panelEl.classList.add('hidden');
+    this.backdropEl.classList.add('hidden');
   }
 
   public toggle(category: string = 'BARRACKS'): void {
@@ -167,180 +174,188 @@ export class SideDetailPanel {
     const selectedBp = TOWER_BLUEPRINTS[this.selectedTierKey] || bp1;
 
     this.contentEl.innerHTML = `
-      <!-- Role and Mechanics Explanation -->
-      <div class="sp-section sp-card">
-        <h4 class="sp-sec-title">📖 VAI TRÒ & CƠ CHẾ HOẠT ĐỘNG</h4>
-        <p class="sp-desc">${meta.role}</p>
-        <div class="sp-mechanic-box">
-          <p><b>⚙️ Cơ chế:</b> ${meta.mechanics}</p>
-          <p class="sp-tip-text">${meta.tip}</p>
+      <div class="codex-two-col">
+        <!-- CỘT TRÁI: VAI TRÒ & CÂY NÂNG CẤP -->
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Role and Mechanics Explanation -->
+          <div class="sp-section sp-card">
+            <h4 class="sp-sec-title">📖 VAI TRÒ & CƠ CHẾ HOẠT ĐỘNG</h4>
+            <p class="sp-desc">${meta.role}</p>
+            <div class="sp-mechanic-box">
+              <p><b>⚙️ Cơ chế:</b> ${meta.mechanics}</p>
+              <p class="sp-tip-text">${meta.tip}</p>
+            </div>
+          </div>
+
+          <!-- Interactive Upgrade Tree Diagram -->
+          <div class="sp-section sp-card">
+            <div class="sp-sec-header">
+              <h4 class="sp-sec-title">🌳 CÂY NÂNG CẤP (UPGRADE TREE)</h4>
+              <span class="sp-hint">Bấm vào từng cấp để xem thông số</span>
+            </div>
+
+            <div class="upgrade-tree-container">
+              <!-- Tier 1 -->
+              ${this.renderTreeNode(bp1, 'CẤP 1', `${type}_1`)}
+
+              <div class="tree-arrow">▼</div>
+
+              <!-- Tier 2 -->
+              ${this.renderTreeNode(bp2, 'CẤP 2', `${type}_2`)}
+
+              <div class="tree-arrow">▼</div>
+
+              <!-- Tier 3 -->
+              ${this.renderTreeNode(bp3, 'CẤP 3', `${type}_3`)}
+
+              <div class="tree-split-arrow">
+                <span>┌───────┴───────┐</span>
+                <span>▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼</span>
+              </div>
+
+              <!-- Tier 4 Branch Split -->
+              <div class="tree-branch-split">
+                ${this.renderTreeNode(bp4A, '4-A', `${type}_4_A`, true)}
+                ${this.renderTreeNode(bp4B, '4-B', `${type}_4_B`, true)}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Interactive Upgrade Tree Diagram -->
-      <div class="sp-section">
-        <div class="sp-sec-header">
-          <h4 class="sp-sec-title">🌳 CÂY NÂNG CẤP CHI TIẾT (UPGRADE TREE)</h4>
-          <span class="sp-hint">Bấm vào từng cấp để xem thông số</span>
-        </div>
+        <!-- CỘT PHẢI: CHI TIẾT CẤP ĐỘ ĐANG CHỌN & BẢNG SO SÁNH -->
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Selected Tier Detail Card -->
+          <div class="sp-section sp-card highlighted-detail-card">
+            <div class="dt-header">
+              <span class="dt-tier-badge">CHI TIẾT: ${selectedBp.name}</span>
+              <span class="dt-cost">🪙 ${selectedBp.cost} Vàng</span>
+            </div>
+            <p class="dt-desc">${selectedBp.description}</p>
 
-        <div class="upgrade-tree-container">
-          <!-- Tier 1 -->
-          ${this.renderTreeNode(bp1, 'CẤP 1', `${type}_1`)}
-
-          <div class="tree-arrow">▼</div>
-
-          <!-- Tier 2 -->
-          ${this.renderTreeNode(bp2, 'CẤP 2', `${type}_2`)}
-
-          <div class="tree-arrow">▼</div>
-
-          <!-- Tier 3 -->
-          ${this.renderTreeNode(bp3, 'CẤP 3', `${type}_3`)}
-
-          <div class="tree-split-arrow">
-            <span>┌───────┴───────┐</span>
-            <span>▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼</span>
-          </div>
-
-          <!-- Tier 4 Branch Split -->
-          <div class="tree-branch-split">
-            ${this.renderTreeNode(bp4A, 'CẤP 4 - NHÁNH A', `${type}_4_A`, true)}
-            ${this.renderTreeNode(bp4B, 'CẤP 4 - NHÁNH B', `${type}_4_B`, true)}
-          </div>
-        </div>
-      </div>
-
-      <!-- Selected Tier Detail Card -->
-      <div class="sp-section sp-card highlighted-detail-card">
-        <div class="dt-header">
-          <span class="dt-tier-badge">CHI TIẾT: ${selectedBp.name}</span>
-          <span class="dt-cost">🪙 ${selectedBp.cost} Vàng</span>
-        </div>
-        <p class="dt-desc">${selectedBp.description}</p>
-
-        <div class="dt-stats-grid">
-          <div class="stat-box">
-            <span class="s-label">Sát thương</span>
-            <span class="s-val">${selectedBp.damage}</span>
-          </div>
-          <div class="stat-box">
-            <span class="s-label">Tầm bắn</span>
-            <span class="s-val">${selectedBp.range} px</span>
-          </div>
-          <div class="stat-box">
-            <span class="s-label">Tốc độ</span>
-            <span class="s-val">${selectedBp.fireRate}/s</span>
-          </div>
-          <div class="stat-box">
-            <span class="s-label">Nguyên tố</span>
-            <span class="s-val" style="color: ${ELEMENT_COLORS[selectedBp.element]}">
-              ${ELEMENT_ICONS[selectedBp.element]} ${selectedBp.element}
-            </span>
-          </div>
-          <div class="stat-box">
-            <span class="s-label">Mục tiêu</span>
-            <span class="s-val">${selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
-          </div>
-          <div class="stat-box">
-            <span class="s-label">Sát thương/giây (DPS)</span>
-            <span class="s-val highlight-dps">${Math.round(selectedBp.damage * selectedBp.fireRate)}</span>
-          </div>
-          ${
-            selectedBp.maxSoldiers
-              ? `
+            <div class="dt-stats-grid">
               <div class="stat-box">
-                <span class="s-label">Số lính</span>
-                <span class="s-val">${selectedBp.maxSoldiers} Lính</span>
+                <span class="s-label">Sát thương</span>
+                <span class="s-val">${selectedBp.damage}</span>
               </div>
               <div class="stat-box">
-                <span class="s-label">Máu lính (HP)</span>
-                <span class="s-val">${selectedBp.soldierHp} ❤️</span>
+                <span class="s-label">Tầm bắn</span>
+                <span class="s-val">${selectedBp.range} px</span>
               </div>
               <div class="stat-box">
-                <span class="s-label">Giáp lính</span>
-                <span class="s-val">${Math.round((selectedBp.soldierArmor || 0) * 100)}% 🛡️</span>
+                <span class="s-label">Tốc độ</span>
+                <span class="s-val">${selectedBp.fireRate}/s</span>
               </div>
-            `
-              : ''
-          }
-          ${
-            selectedBp.aoeRadius
-              ? `
               <div class="stat-box">
-                <span class="s-label">Bán kính nổ AOE</span>
-                <span class="s-val">${selectedBp.aoeRadius} px 💥</span>
+                <span class="s-label">Nguyên tố</span>
+                <span class="s-val" style="color: ${ELEMENT_COLORS[selectedBp.element]}">
+                  ${ELEMENT_ICONS[selectedBp.element]} ${selectedBp.element}
+                </span>
               </div>
-            `
-              : ''
-          }
-        </div>
-      </div>
+              <div class="stat-box">
+                <span class="s-label">Mục tiêu</span>
+                <span class="s-val">${selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
+              </div>
+              <div class="stat-box">
+                <span class="s-label">Sát thương/giây</span>
+                <span class="s-val highlight-dps">${Math.round(selectedBp.damage * selectedBp.fireRate)} DPS</span>
+              </div>
+              ${
+                selectedBp.maxSoldiers
+                  ? `
+                  <div class="stat-box">
+                    <span class="s-label">Số lính</span>
+                    <span class="s-val">${selectedBp.maxSoldiers} Lính</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Máu lính (HP)</span>
+                    <span class="s-val">${selectedBp.soldierHp} ❤️</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Giáp lính</span>
+                    <span class="s-val">${Math.round((selectedBp.soldierArmor || 0) * 100)}% 🛡️</span>
+                  </div>
+                `
+                  : ''
+              }
+              ${
+                selectedBp.aoeRadius
+                  ? `
+                  <div class="stat-box">
+                    <span class="s-label">Bán kính nổ AOE</span>
+                    <span class="s-val">${selectedBp.aoeRadius} px 💥</span>
+                  </div>
+                `
+                  : ''
+              }
+            </div>
+          </div>
 
-      <!-- Full Comparison Table -->
-      <div class="sp-section">
-        <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP</h4>
-        <div class="table-responsive">
-          <table class="stats-table">
-            <thead>
-              <tr>
-                <th>Cấp Độ</th>
-                <th>Tên Tháp</th>
-                <th>Giá</th>
-                <th>DMG</th>
-                <th>Tầm</th>
-                <th>Tốc</th>
-                <th>Hệ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Cấp 1</td>
-                <td><b>${bp1.name}</b></td>
-                <td class="gold-col">🪙 ${bp1.cost}</td>
-                <td>${bp1.damage}</td>
-                <td>${bp1.range}</td>
-                <td>${bp1.fireRate}</td>
-                <td>${ELEMENT_ICONS[bp1.element]}</td>
-              </tr>
-              <tr>
-                <td>Cấp 2</td>
-                <td><b>${bp2.name}</b></td>
-                <td class="gold-col">🪙 ${bp2.cost}</td>
-                <td>${bp2.damage}</td>
-                <td>${bp2.range}</td>
-                <td>${bp2.fireRate}</td>
-                <td>${ELEMENT_ICONS[bp2.element]}</td>
-              </tr>
-              <tr>
-                <td>Cấp 3</td>
-                <td><b>${bp3.name}</b></td>
-                <td class="gold-col">🪙 ${bp3.cost}</td>
-                <td>${bp3.damage}</td>
-                <td>${bp3.range}</td>
-                <td>${bp3.fireRate}</td>
-                <td>${ELEMENT_ICONS[bp3.element]}</td>
-              </tr>
-              <tr class="branch-row-a">
-                <td>4-A 🌟</td>
-                <td><b>${bp4A.name}</b></td>
-                <td class="gold-col">🪙 ${bp4A.cost}</td>
-                <td class="highlight-val">${bp4A.damage}</td>
-                <td>${bp4A.range}</td>
-                <td>${bp4A.fireRate}</td>
-                <td>${ELEMENT_ICONS[bp4A.element]}</td>
-              </tr>
-              <tr class="branch-row-b">
-                <td>4-B 🌟</td>
-                <td><b>${bp4B.name}</b></td>
-                <td class="gold-col">🪙 ${bp4B.cost}</td>
-                <td class="highlight-val">${bp4B.damage}</td>
-                <td>${bp4B.range}</td>
-                <td>${bp4B.fireRate}</td>
-                <td>${ELEMENT_ICONS[bp4B.element]}</td>
-              </tr>
-            </tbody>
-          </table>
+          <!-- Full Comparison Table -->
+          <div class="sp-section sp-card">
+            <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP</h4>
+            <div class="table-responsive">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Cấp Độ</th>
+                    <th>Tên Tháp</th>
+                    <th>Giá</th>
+                    <th>DMG</th>
+                    <th>Tầm</th>
+                    <th>Tốc</th>
+                    <th>Hệ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Cấp 1</td>
+                    <td><b>${bp1.name}</b></td>
+                    <td class="gold-col">🪙 ${bp1.cost}</td>
+                    <td>${bp1.damage}</td>
+                    <td>${bp1.range}</td>
+                    <td>${bp1.fireRate}</td>
+                    <td>${ELEMENT_ICONS[bp1.element]}</td>
+                  </tr>
+                  <tr>
+                    <td>Cấp 2</td>
+                    <td><b>${bp2.name}</b></td>
+                    <td class="gold-col">🪙 ${bp2.cost}</td>
+                    <td>${bp2.damage}</td>
+                    <td>${bp2.range}</td>
+                    <td>${bp2.fireRate}</td>
+                    <td>${ELEMENT_ICONS[bp2.element]}</td>
+                  </tr>
+                  <tr>
+                    <td>Cấp 3</td>
+                    <td><b>${bp3.name}</b></td>
+                    <td class="gold-col">🪙 ${bp3.cost}</td>
+                    <td>${bp3.damage}</td>
+                    <td>${bp3.range}</td>
+                    <td>${bp3.fireRate}</td>
+                    <td>${ELEMENT_ICONS[bp3.element]}</td>
+                  </tr>
+                  <tr class="branch-row-a">
+                    <td>4-A 🌟</td>
+                    <td><b>${bp4A.name}</b></td>
+                    <td class="gold-col">🪙 ${bp4A.cost}</td>
+                    <td class="highlight-val">${bp4A.damage}</td>
+                    <td>${bp4A.range}</td>
+                    <td>${bp4A.fireRate}</td>
+                    <td>${ELEMENT_ICONS[bp4A.element]}</td>
+                  </tr>
+                  <tr class="branch-row-b">
+                    <td>4-B 🌟</td>
+                    <td><b>${bp4B.name}</b></td>
+                    <td class="gold-col">🪙 ${bp4B.cost}</td>
+                    <td class="highlight-val">${bp4B.damage}</td>
+                    <td>${bp4B.range}</td>
+                    <td>${bp4B.fireRate}</td>
+                    <td>${ELEMENT_ICONS[bp4B.element]}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -442,8 +457,8 @@ export class SideDetailPanel {
       </div>
 
       <div class="sp-section">
-        <h4 class="sp-sec-title">⚙️ DANH SÁCH 4 LOẠI BẪY</h4>
-        <div class="traps-list">${cardsHtml}</div>
+        <h4 class="sp-sec-title">⚙️ DANH SÁCH 4 LOẠI BẪY CHIẾN THUẬT</h4>
+        <div class="traps-list-grid">${cardsHtml}</div>
       </div>
     `;
   }
@@ -595,7 +610,7 @@ export class SideDetailPanel {
 
       <div class="sp-section">
         <h4 class="sp-sec-title">✨ CHI TIẾT 9 HỆ NGUYÊN TỐ</h4>
-        <div class="elements-grid">${cardsHtml}</div>
+        <div class="elements-grid-modal">${cardsHtml}</div>
       </div>
     `;
   }
@@ -616,19 +631,19 @@ export class SideDetailPanel {
         </p>
       </div>
 
-      <div class="nav-cards-list">
+      <div class="nav-cards-list-grid">
         <!-- 1. Ground Path -->
         <div class="nav-card ${highlightNav === 'WALK' ? 'highlighted-elem' : ''}">
           <div class="nav-card-header">
             <span class="nav-icon">🚶</span>
             <div>
-              <h4>1. Đường Bộ (Ground Path)</h4>
+              <h4>1. Tuyến Đường Bộ (Ground)</h4>
               <span class="nav-tag">Đường mòn đất uốn lượn</span>
             </div>
           </div>
           <p class="nav-desc">Tuyến đường chính của quái vật bộ binh, kiếm sĩ, dân quân và trùm khổng lồ.</p>
           <ul class="nav-rules-list">
-            <li>✅ <b>Bị chặn bởi lính Nhà Lính:</b> Lính bộ binh sẽ đứng nghênh chiến và kìm chân quái bộ lại.</li>
+            <li>✅ <b>Bị chặn bởi lính Nhà Lính:</b> Lính bộ binh sẽ nghênh chiến và kìm chân 1v1.</li>
             <li>✅ <b>Dẫm bẫy:</b> Dễ dàng dẫm phải Bẫy Chông, Mìn Lửa trên đường.</li>
             <li>✅ <b>Mục tiêu của mọi loại tháp:</b> Cung, Phép, Pháo cối và Lính đều đánh được.</li>
           </ul>
@@ -639,16 +654,16 @@ export class SideDetailPanel {
           <div class="nav-card-header">
             <span class="nav-icon">✈️</span>
             <div>
-              <h4>2. Đường Bay Trên Không (Air Path)</h4>
-              <span class="nav-tag air-tag">Đường chéo ngắn nhất thẳng về căn cứ</span>
+              <h4>2. Tuyến Đường Bay (Air)</h4>
+              <span class="nav-tag air-tag">Đường chéo ngắn nhất về căn cứ</span>
             </div>
           </div>
           <p class="nav-desc">Dơi Quỷ, Rồng Lửa và Khí cầu bay lượn trên không trung với tốc độ cao.</p>
           <ul class="nav-rules-list">
-            <li>🚫 <b>BỎ QUA HOÀN TOÀN LÍNH CHẶN:</b> Lính Nhà Lính thông thường không với tới quái bay!</li>
-            <li>🚫 <b>BỎ QUA BẪY ĐẤT:</b> Bay lơ lửng nên không bao giờ kích hoạt bẫy chông/mìn dưới đất.</li>
-            <li>🚫 <b>PHÁO CỐI KHÔNG BẮN ĐƯỢC:</b> Pháo cối mặt đất không thể nhắm mục tiêu bay.</li>
-            <li>🎯 <b>VŨ KHÍ ĐỐI PHÓ:</b> Bắt buộc phải xây <b>Tháp Cung</b>, <b>Tháp Phép</b> hoặc nâng cấp Nhà Lính lên <b>Cấp 4B (Chiến Binh Phong Lôi)</b> để phóng lao sét!</li>
+            <li>🚫 <b>BỎ QUA HOÀN TOÀN LÍNH CHẶN:</b> Lính Nhà Lính thường không với tới!</li>
+            <li>🚫 <b>BỎ QUA BẪY ĐẤT:</b> Bay lơ lửng nên không kích hoạt bẫy dưới đất.</li>
+            <li>🚫 <b>PHÁO CỐI KHÔNG BẮN ĐƯỢC:</b> Không thể nhắm mục tiêu bay.</li>
+            <li>🎯 <b>VŨ KHÍ:</b> Dùng <b>Tháp Cung</b>, <b>Tháp Phép</b> hoặc Lính <b>Cung/Lao Sét</b>.</li>
           </ul>
         </div>
 
@@ -657,15 +672,15 @@ export class SideDetailPanel {
           <div class="nav-card-header">
             <span class="nav-icon">🏊</span>
             <div>
-              <h4>3. Tuyến Thủy / Kênh Sông (Water Path)</h4>
+              <h4>3. Tuyến Kênh Sông (Water)</h4>
               <span class="nav-tag water-tag">Dòng sông xanh uốn khúc</span>
             </div>
           </div>
           <p class="nav-desc">Thủy quái, cá dữ và người que biết bơi tiến công men theo lòng sông.</p>
           <ul class="nav-rules-list">
-            <li>🚫 <b>Lính bộ không xuống nước:</b> Không thể đặt điểm tập kết dưới lòng sông sâu.</li>
-            <li>✅ <b>Bẫy Thủy Lôi:</b> Chỉ có ô bẫy nước (WATER_TRAP) đặt Thủy Lôi Băng mới phát nổ dưới lòng sông.</li>
-            <li>🎯 <b>VŨ KHÍ ĐỐI PHÓ:</b> Dùng <b>Tháp Cung</b>, <b>Tháp Phép</b> hoặc <b>Pháo Cối</b> có bán kính phủ qua dòng sông.</li>
+            <li>🚫 <b>Lính bộ không xuống nước:</b> Không thể đặt điểm tập kết dưới lòng sông.</li>
+            <li>✅ <b>Bẫy Thủy Lôi:</b> Bẫy Thủy Lôi Băng đặt ở ô bẫy nước phát nổ dưới lòng sông.</li>
+            <li>🎯 <b>VŨ KHÍ:</b> Dùng <b>Tháp Cung</b>, <b>Tháp Phép</b> hoặc <b>Pháo Cối</b> có bán kính phủ sông.</li>
           </ul>
         </div>
       </div>

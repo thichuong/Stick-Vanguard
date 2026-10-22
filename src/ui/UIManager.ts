@@ -15,7 +15,8 @@ export class UIManager {
   private menuOverlayEl: HTMLElement;
   private messageBannerEl: HTMLElement;
   private placementHintEl: HTMLElement | null;
-  private canvasEl: HTMLCanvasElement;
+  private inspectorContentEl: HTMLElement;
+  private inspectorTitleEl: HTMLElement | null;
   private sidePanel: SideDetailPanel;
   private lastRenderKey: string = '';
 
@@ -27,22 +28,23 @@ export class UIManager {
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
     this.messageBannerEl = document.getElementById('message-banner')!;
     this.placementHintEl = document.getElementById('placement-hint');
-    this.canvasEl = document.getElementById('game-canvas') as HTMLCanvasElement;
+    this.inspectorContentEl = document.getElementById('inspector-content')!;
+    this.inspectorTitleEl = document.getElementById('inspector-main-title');
     this.sidePanel = new SideDetailPanel();
 
     this.bindEvents();
-    this.bindHotbar();
+    this.bindArsenal();
     this.bindKeyboard();
     this.bindCodexTriggers();
   }
 
   public handleResize(): void {
     this.lastRenderKey = '';
-    this.renderActionMenu();
+    this.renderInspector();
   }
 
   private bindEvents(): void {
-    // Top HUD buttons
+    // Left panel Wave button
     const nextWaveBtn = document.getElementById('btn-next-wave');
     if (nextWaveBtn) {
       nextWaveBtn.addEventListener('click', () => {
@@ -50,6 +52,7 @@ export class UIManager {
       });
     }
 
+    // Speed button
     const speedBtn = document.getElementById('btn-speed');
     if (speedBtn) {
       speedBtn.addEventListener('click', () => {
@@ -58,6 +61,7 @@ export class UIManager {
       });
     }
 
+    // Pause button
     const pauseBtn = document.getElementById('btn-pause');
     if (pauseBtn) {
       pauseBtn.addEventListener('click', () => {
@@ -66,6 +70,7 @@ export class UIManager {
       });
     }
 
+    // Restart button
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) {
       restartBtn.addEventListener('click', () => {
@@ -73,6 +78,7 @@ export class UIManager {
       });
     }
 
+    // Fullscreen button
     const fullscreenBtn = document.getElementById('btn-fullscreen');
     if (fullscreenBtn) {
       const toggleFullscreen = () => {
@@ -99,8 +105,8 @@ export class UIManager {
     }
   }
 
-  private bindHotbar(): void {
-    const hotbarBtns = document.querySelectorAll('.hotbar-btn');
+  private bindArsenal(): void {
+    const hotbarBtns = document.querySelectorAll('#right-panel .hotbar-btn');
     hotbarBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
@@ -117,7 +123,9 @@ export class UIManager {
           this.state.isSettingRallyPoint = false;
         }
 
-        this.updateHotbarVisuals();
+        this.updateArsenalVisuals();
+        this.lastRenderKey = '';
+        this.renderInspector();
       });
     });
   }
@@ -144,7 +152,9 @@ export class UIManager {
         this.state.selectedSlotId = null;
         this.state.selectedTowerId = null;
         this.state.isSettingRallyPoint = false;
-        this.updateHotbarVisuals();
+        this.updateArsenalVisuals();
+        this.lastRenderKey = '';
+        this.renderInspector();
         return;
       }
 
@@ -178,13 +188,15 @@ export class UIManager {
           this.state.selectedTowerId = null;
           this.state.isSettingRallyPoint = false;
         }
-        this.updateHotbarVisuals();
+        this.updateArsenalVisuals();
+        this.lastRenderKey = '';
+        this.renderInspector();
       }
     });
   }
 
   private bindCodexTriggers(): void {
-    // Top HUD button
+    // Left Panel main codex button
     const codexBtn = document.getElementById('btn-codex');
     if (codexBtn) {
       codexBtn.addEventListener('click', () => {
@@ -192,21 +204,9 @@ export class UIManager {
       });
     }
 
-    // Hotbar info mini buttons
-    const infoBtns = document.querySelectorAll('.hotbar-info-btn');
-    infoBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const infoCat = (e.currentTarget as HTMLElement).getAttribute('data-info');
-        if (infoCat) {
-          this.sidePanel.open(infoCat);
-        }
-      });
-    });
-
-    // Footer Legend buttons
-    const legendBtns = document.querySelectorAll('#footer-legend button');
-    legendBtns.forEach((btn) => {
+    // Left Panel quick lookup pills
+    const lookupBtns = document.querySelectorAll('#left-panel .lookup-pill, #left-panel .elem-mini-pill');
+    lookupBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
         const cat = target.getAttribute('data-cat') || 'ELEMENTS';
@@ -216,8 +216,8 @@ export class UIManager {
     });
   }
 
-  public updateHotbarVisuals(): void {
-    const hotbarBtns = document.querySelectorAll('.hotbar-btn');
+  public updateArsenalVisuals(): void {
+    const hotbarBtns = document.querySelectorAll('#right-panel .hotbar-btn');
     hotbarBtns.forEach((btn) => {
       const type = btn.getAttribute('data-type') as TowerType;
       const bp = TOWER_BLUEPRINTS[type.startsWith('TRAP_') ? type : `${type}_1`];
@@ -240,13 +240,17 @@ export class UIManager {
     if (this.placementHintEl) {
       if (this.state.activePlacementType) {
         const bp = TOWER_BLUEPRINTS[this.state.activePlacementType.startsWith('TRAP_') ? this.state.activePlacementType : `${this.state.activePlacementType}_1`];
-        this.placementHintEl.textContent = `📍 ĐANG CHỌN [${bp?.name.toUpperCase()}]. Bấm vào ô đất màu xanh để đặt tháp (hoặc phím ESC để hủy).`;
+        this.placementHintEl.textContent = `📍 ĐANG CHỌN [${bp?.name.toUpperCase()}]. Bấm vào ô đất trên bản đồ để xây (hoặc phím ESC để hủy).`;
         this.placementHintEl.classList.add('highlight');
       } else {
-        this.placementHintEl.textContent = 'Bấm phím [1]-[8] hoặc chọn tháp bên dưới rồi bấm vào ô đất để xây';
+        this.placementHintEl.textContent = 'Bấm chọn tháp bên phải hoặc phím [1]-[8] rồi nhấp vào ô đất để xây';
         this.placementHintEl.classList.remove('highlight');
       }
     }
+  }
+
+  public updateHotbarVisuals(): void {
+    this.updateArsenalVisuals();
   }
 
   public updateHUD(currentWave: number, totalWaves: number, isWaveRunning: boolean): void {
@@ -292,136 +296,52 @@ export class UIManager {
       this.messageBannerEl.classList.add('hidden');
     }
 
-    this.updateHotbarVisuals();
-    this.renderActionMenu();
+    this.updateArsenalVisuals();
+    this.renderInspector();
   }
 
-  private renderActionMenu(): void {
-    const canvasRect = this.canvasEl ? this.canvasEl.getBoundingClientRect() : { width: 1000, height: 650 };
-    const currentW = Math.round(canvasRect.width);
-    const currentH = Math.round(canvasRect.height);
+  private renderInspector(): void {
     const slot = this.state.getSelectedSlot();
     const tower = this.state.getSelectedTower();
+
     // Generate render key to prevent trashing DOM every frame
-    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}_${currentW}x${currentH}`;
+    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
     this.lastRenderKey = currentKey;
 
-    const scaleX = canvasRect.width / 1000;
-    const scaleY = canvasRect.height / 650;
-
+    // Notice on canvas overlay when setting rally point
     if (this.state.isSettingRallyPoint) {
       this.menuOverlayEl.innerHTML = `
-        <div class="action-panel floating-panel" style="position: absolute; left: 50%; top: 20px; transform: translateX(-50%); text-align: center;">
-          <div class="panel-header" style="justify-content: center;">🚩 CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
-          <p class="panel-desc">Nhấp chuột vào một điểm trên đường đi (trong vòng tròn vàng) để lính chạy ra chặn quái.</p>
-          <button id="btn-cancel-rally" class="btn-cancel">Hủy bỏ</button>
+        <div class="floating-panel" style="position: absolute; left: 50%; top: 20px; transform: translateX(-50%); text-align: center;">
+          <div style="font-weight: 700; color: #facc15; margin-bottom: 4px;">🚩 CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
+          <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px;">Nhấp chuột vào một điểm trên đường đi để lính chạy ra chặn quái.</p>
+          <button id="btn-cancel-rally" class="action-btn" style="background: #334155; color: #fff; width: auto; padding: 4px 12px;">Hủy bỏ</button>
         </div>
       `;
       document.getElementById('btn-cancel-rally')?.addEventListener('click', () => {
         this.state.isSettingRallyPoint = false;
         this.lastRenderKey = '';
+        this.renderInspector();
       });
-      return;
+    } else {
+      this.menuOverlayEl.innerHTML = '';
     }
 
-    // 1. Build Menu when slot selected
-    if (slot && !slot.currentTowerId) {
-      let optionsHtml = '';
-
-      if (slot.placement === 'ROADSIDE') {
-        const roadsideTypes: TowerType[] = ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
-        optionsHtml = roadsideTypes
-          .map((type) => {
-            const bp = TOWER_BLUEPRINTS[`${type}_1`];
-            const canAfford = this.state.gold >= bp.cost;
-            const icon = ELEMENT_ICONS[bp.element] || '⚔️';
-            return `
-            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
-              <div class="opt-top">
-                <span class="opt-name">${bp.name}</span>
-                <span class="opt-cost">🪙 ${bp.cost}</span>
-              </div>
-              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
-            </button>
-          `;
-          })
-          .join('');
-      } else {
-        // Path & Water Traps
-        const trapTypes: TowerType[] =
-          slot.placement === 'WATER_TRAP'
-            ? ['TRAP_FROST']
-            : ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
-
-        optionsHtml = trapTypes
-          .map((type) => {
-            const bp = TOWER_BLUEPRINTS[type];
-            const canAfford = this.state.gold >= bp.cost;
-            const icon = ELEMENT_ICONS[bp.element] || '⚙️';
-            return `
-            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
-              <div class="opt-top">
-                <span class="opt-name">${bp.name}</span>
-                <span class="opt-cost">🪙 ${bp.cost}</span>
-              </div>
-              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
-            </button>
-          `;
-          })
-          .join('');
+    // CASE 1: A built Tower or Trap is selected on canvas
+    if (tower) {
+      if (this.inspectorTitleEl) {
+        this.inspectorTitleEl.textContent = '🏰 CHI TIẾT CÔNG TRÌNH & NÂNG CẤP';
       }
 
-      const screenX = slot.x * scaleX;
-      const screenY = slot.y * scaleY;
-
-      this.menuOverlayEl.innerHTML = `
-        <div class="action-panel" style="position: absolute; visibility: hidden;">
-          <div class="panel-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span>🛠️ XÂY ${slot.placement === 'ROADSIDE' ? 'THÁP' : 'BẪY'}</span>
-              <button id="btn-slot-tree" class="btn-tree-link" title="Xem giải thích & cây nâng cấp">📖 Cẩm Nang</button>
-            </div>
-            <button id="btn-close-panel" class="btn-x">✕</button>
-          </div>
-          <div class="build-options-list">${optionsHtml}</div>
-        </div>
-      `;
-
-      this.positionActionPanel(screenX, screenY);
-
-      document.getElementById('btn-slot-tree')?.addEventListener('click', () => {
-        this.sidePanel.open(slot.placement === 'ROADSIDE' ? 'BARRACKS' : 'TRAPS');
-      });
-
-      document.getElementById('btn-close-panel')?.addEventListener('click', () => {
-        this.state.selectedSlotId = null;
-        this.lastRenderKey = '';
-      });
-
-      this.menuOverlayEl.querySelectorAll('.build-option').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          const type = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
-          if (type && slot) {
-            this.state.buildTower(slot.id, type);
-            this.lastRenderKey = '';
-          }
-        });
-      });
-      return;
-    }
-
-    // 2. Tower Inspect / Upgrade / Sell Menu
-    if (tower) {
       const isBarracks = tower.type === 'BARRACKS';
       const isTrap = tower.placement !== 'ROADSIDE';
       const refund = Math.round(tower.totalInvested * 0.7);
 
       let upgradeHtml = '';
       if (isTrap) {
-        upgradeHtml = `<p class="max-tier-note">Bẫy tự động kích hoạt và tái nạp mỗi đợt.</p>`;
+        upgradeHtml = `<p class="max-tier-note">Bẫy tự động kích nổ và tái nạp mỗi đợt quái mới.</p>`;
       } else if (tower.tier < 3) {
         const nextBp = TOWER_BLUEPRINTS[`${tower.type}_${tower.tier + 1}`];
         if (nextBp) {
@@ -434,7 +354,7 @@ export class UIManager {
           `;
         }
       } else if (tower.tier === 3) {
-        // Tier 4 Branches!
+        // Tier 4 Branches
         const bpA = TOWER_BLUEPRINTS[`${tower.type}_4_A`];
         const bpB = TOWER_BLUEPRINTS[`${tower.type}_4_B`];
         const canA = bpA && this.state.gold >= bpA.cost;
@@ -458,9 +378,6 @@ export class UIManager {
       } else {
         upgradeHtml = `<p class="max-tier-note">✨ ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP 4)</p>`;
       }
-
-      const screenX = tower.x * scaleX;
-      const screenY = tower.y * scaleY;
 
       // Damage label for Hybrid and Dual-Element
       let damageDisplay = '';
@@ -559,80 +476,95 @@ export class UIManager {
         }
       }
 
-      this.menuOverlayEl.innerHTML = `
-        <div class="action-panel" style="position: absolute; visibility: hidden;">
-          <div class="panel-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="panel-title">${tower.name}</span>
-              <span class="tier-pill">Cấp ${tower.tier}</span>
-              <button id="btn-open-tree" class="btn-tree-link" title="Xem giải thích, thông số & cây nâng cấp">📖 Cây Nâng Cấp</button>
+      this.inspectorContentEl.innerHTML = `
+        <div class="insp-card">
+          <div class="insp-header">
+            <div class="insp-title-box">
+              <span class="insp-title">${tower.name}</span>
+              <span class="insp-tier-badge">Cấp ${tower.tier}</span>
             </div>
-            <button id="btn-close-panel" class="btn-x">✕</button>
+            <button id="btn-open-tree" class="btn-detail-link" title="Xem giải thích, thông số & cây nâng cấp">
+              📖 Xem chi tiết
+            </button>
           </div>
-          <div class="stats-row">
-            <span>Sát thương: ${damageDisplay}</span>
-            <span>Tầm bắn: <b>${tower.range}</b></span>
-            <span>Tốc độ: <b>${tower.fireRate}/s</b></span>
+          <div class="insp-stats-grid">
+            <div class="insp-stat-item">
+              <span class="isi-lbl">Tầm bắn</span>
+              <span class="isi-val">${tower.range} px</span>
+            </div>
+            <div class="insp-stat-item">
+              <span class="isi-lbl">Tốc độ</span>
+              <span class="isi-val">${tower.fireRate}/s</span>
+            </div>
+            <div class="insp-stat-item">
+              <span class="isi-lbl">Đã đầu tư</span>
+              <span class="isi-val">🪙 ${tower.totalInvested}</span>
+            </div>
           </div>
-          ${soldierModeHtml}
-          ${elementPickerHtml}
-          ${upgradeHtml}
-          <div class="button-row">
-            ${
-              isBarracks
-                ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
-                : ''
-            }
-            <button id="btn-sell" class="action-btn sell-btn">💰 Bán (+${refund} 🪙)</button>
+          <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
+            Sát thương: ${damageDisplay}
           </div>
+        </div>
+
+        ${soldierModeHtml}
+        ${elementPickerHtml}
+        ${upgradeHtml}
+
+        <div class="button-row">
+          ${
+            isBarracks
+              ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
+              : ''
+          }
+          <button id="btn-sell" class="action-btn sell-btn">💰 Bán (+${refund} 🪙)</button>
         </div>
       `;
 
-      this.positionActionPanel(screenX, screenY);
-
+      // Event handlers for Inspector
       document.getElementById('btn-open-tree')?.addEventListener('click', () => {
         const tierKey = `${tower.type}_${tower.tier}${tower.branch ? '_' + tower.branch : ''}`;
         this.sidePanel.open(tower.type, tierKey);
       });
 
-      document.getElementById('btn-close-panel')?.addEventListener('click', () => {
-        this.state.selectedTowerId = null;
-        this.lastRenderKey = '';
-      });
-
       document.getElementById('btn-upgrade')?.addEventListener('click', () => {
         this.state.upgradeTower(tower.id);
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       document.getElementById('btn-branch-a')?.addEventListener('click', () => {
         this.state.upgradeTower(tower.id, 'A');
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       document.getElementById('btn-branch-b')?.addEventListener('click', () => {
         this.state.upgradeTower(tower.id, 'B');
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       document.getElementById('btn-mode-melee')?.addEventListener('click', () => {
         this.state.setBarracksSoldierMode(tower.id, 'MELEE');
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       document.getElementById('btn-mode-ranged')?.addEventListener('click', () => {
         this.state.setBarracksSoldierMode(tower.id, 'RANGED');
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
-      this.menuOverlayEl.querySelectorAll('.elem-btn').forEach((btn) => {
+      this.inspectorContentEl.querySelectorAll('.elem-btn').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           const target = e.currentTarget as HTMLElement;
           const elem = target.getAttribute('data-elem') as MagicalElementType;
-          const slot = (parseInt(target.getAttribute('data-slot') || '1', 10) as 1 | 2);
+          const slotIndex = (parseInt(target.getAttribute('data-slot') || '1', 10) as 1 | 2);
           if (elem && tower) {
-            this.state.setTowerElement(tower.id, elem, slot);
+            this.state.setTowerElement(tower.id, elem, slotIndex);
             this.lastRenderKey = '';
+            this.renderInspector();
           }
         });
       });
@@ -640,73 +572,173 @@ export class UIManager {
       document.getElementById('btn-rally')?.addEventListener('click', () => {
         this.state.isSettingRallyPoint = true;
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       document.getElementById('btn-sell')?.addEventListener('click', () => {
         this.state.sellTower(tower.id);
         this.lastRenderKey = '';
+        this.renderInspector();
       });
 
       return;
     }
 
-    // Nothing selected
-    this.menuOverlayEl.innerHTML = '';
-  }
+    // CASE 2: An empty slot on canvas is selected
+    if (slot && !slot.currentTowerId) {
+      if (this.inspectorTitleEl) {
+        this.inspectorTitleEl.textContent = `🛠️ XÂY TẠI Ô ĐẤT [${slot.id.toUpperCase()}]`;
+      }
 
-  private positionActionPanel(targetScreenX: number, targetScreenY: number): void {
-    const panelEl = this.menuOverlayEl.querySelector('.action-panel:not(.floating-panel)') as HTMLElement;
-    if (!panelEl) return;
-
-    const canvasRect = this.canvasEl ? this.canvasEl.getBoundingClientRect() : { width: 1000, height: 650 };
-    const canvasW = canvasRect.width;
-    const canvasH = canvasRect.height;
-
-    // Set max height so that the panel never overflows the canvas vertically
-    const margin = 12;
-    const maxAllowedHeight = canvasH - margin * 2;
-    panelEl.style.maxHeight = `${maxAllowedHeight}px`;
-
-    // Measure true rendered dimensions
-    const panelW = panelEl.offsetWidth || 290;
-    const panelH = panelEl.offsetHeight || 340;
-
-    const offsetFromTarget = 36; // Keep the tower or slot completely unobstructed
-
-    const spaceRight = canvasW - (targetScreenX + offsetFromTarget);
-    const spaceLeft = targetScreenX - offsetFromTarget;
-
-    let posX: number;
-    let posY: number;
-
-    // 1. Prefer placing horizontally adjacent (Left or Right) to leave the tower/slot visible
-    if (spaceRight >= panelW + margin) {
-      // Place to the right of the target
-      posX = targetScreenX + offsetFromTarget;
-      // Vertically center on the target, clamped within screen margins
-      posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
-    } else if (spaceLeft >= panelW + margin) {
-      // Place to the left of the target
-      posX = targetScreenX - offsetFromTarget - panelW;
-      posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
-    } else {
-      // 2. If horizontal space on either side is too tight (e.g. extremely narrow canvas)
-      posX = Math.max(margin, Math.min(targetScreenX - panelW / 2, canvasW - panelW - margin));
-
-      const spaceBelow = canvasH - (targetScreenY + offsetFromTarget);
-      const spaceAbove = targetScreenY - offsetFromTarget;
-
-      if (spaceBelow >= panelH + margin) {
-        posY = targetScreenY + offsetFromTarget;
-      } else if (spaceAbove >= panelH + margin) {
-        posY = targetScreenY - offsetFromTarget - panelH;
+      let optionsHtml = '';
+      if (slot.placement === 'ROADSIDE') {
+        const roadsideTypes: TowerType[] = ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
+        optionsHtml = roadsideTypes
+          .map((type) => {
+            const bp = TOWER_BLUEPRINTS[`${type}_1`];
+            const canAfford = this.state.gold >= bp.cost;
+            const icon = ELEMENT_ICONS[bp.element] || '⚔️';
+            return `
+            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
+              <div class="opt-top">
+                <span class="opt-name">${bp.name}</span>
+                <span class="opt-cost">🪙 ${bp.cost}</span>
+              </div>
+              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
+            </button>
+          `;
+          })
+          .join('');
       } else {
-        posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
+        const trapTypes: TowerType[] =
+          slot.placement === 'WATER_TRAP'
+            ? ['TRAP_FROST']
+            : ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
+
+        optionsHtml = trapTypes
+          .map((type) => {
+            const bp = TOWER_BLUEPRINTS[type];
+            const canAfford = this.state.gold >= bp.cost;
+            const icon = ELEMENT_ICONS[bp.element] || '⚙️';
+            return `
+            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
+              <div class="opt-top">
+                <span class="opt-name">${bp.name}</span>
+                <span class="opt-cost">🪙 ${bp.cost}</span>
+              </div>
+              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
+            </button>
+          `;
+          })
+          .join('');
+      }
+
+      this.inspectorContentEl.innerHTML = `
+        <div class="insp-card">
+          <div class="insp-header">
+            <span class="insp-title">${slot.placement === 'ROADSIDE' ? 'Ô Xây Tháp Ven Đường' : slot.placement === 'WATER_TRAP' ? 'Ô Bẫy Dưới Lòng Sông' : 'Ô Bẫy Trên Đường Đi'}</span>
+            <button id="btn-slot-tree" class="btn-detail-link" title="Xem giải thích cẩm nang">
+              📖 Xem chi tiết
+            </button>
+          </div>
+          <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+            Nhấp chuột vào một trong các lựa chọn bên dưới để xây dựng ngay lên ô đất đã chọn.
+          </p>
+        </div>
+        <div class="build-options-list">${optionsHtml}</div>
+      `;
+
+      document.getElementById('btn-slot-tree')?.addEventListener('click', () => {
+        this.sidePanel.open(slot.placement === 'ROADSIDE' ? 'BARRACKS' : 'TRAPS');
+      });
+
+      this.inspectorContentEl.querySelectorAll('.build-option').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const type = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
+          if (type && slot) {
+            this.state.buildTower(slot.id, type);
+            this.lastRenderKey = '';
+            this.renderInspector();
+          }
+        });
+      });
+
+      return;
+    }
+
+    // CASE 3: Active placement type chosen from right arsenal or hotkeys
+    if (this.state.activePlacementType) {
+      if (this.inspectorTitleEl) {
+        this.inspectorTitleEl.textContent = '📍 ĐANG CHỌN ĐẶT THÁP / BẪY';
+      }
+
+      const type = this.state.activePlacementType;
+      const bp = TOWER_BLUEPRINTS[type.startsWith('TRAP_') ? type : `${type}_1`];
+      const isTrap = type.startsWith('TRAP_');
+
+      if (bp) {
+        this.inspectorContentEl.innerHTML = `
+          <div class="insp-card">
+            <div class="insp-header">
+              <span class="insp-title">${bp.name}</span>
+              <button id="btn-placement-tree" class="btn-detail-link" title="Xem giải thích cẩm nang">
+                📖 Xem chi tiết
+              </button>
+            </div>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 4px 0 8px 0;">${bp.description}</p>
+            <div class="insp-stats-grid">
+              <div class="insp-stat-item">
+                <span class="isi-lbl">Chi phí</span>
+                <span class="isi-val" style="color: #facc15;">🪙 ${bp.cost}</span>
+              </div>
+              <div class="insp-stat-item">
+                <span class="isi-lbl">Sát thương</span>
+                <span class="isi-val">${bp.damage}</span>
+              </div>
+              <div class="insp-stat-item">
+                <span class="isi-lbl">Tầm bắn</span>
+                <span class="isi-val">${bp.range} px</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: rgba(59, 130, 246, 0.1); border: 1px dashed #3b82f6; border-radius: 6px; padding: 10px; text-align: center;">
+            <p style="font-size: 11px; color: #93c5fd; line-height: 1.4;">
+              👉 Hãy nhấp chuột vào một <b>ô đất ${isTrap ? 'đường đi/dưới sông' : 'ven đường'}</b> màu xanh lá trên bản đồ để xây dựng!
+            </p>
+            <button id="btn-cancel-placement" class="action-btn" style="margin-top: 8px; background: #334155; color: #fff;">
+              Hủy chọn (ESC)
+            </button>
+          </div>
+        `;
+
+        document.getElementById('btn-placement-tree')?.addEventListener('click', () => {
+          this.sidePanel.open(isTrap ? 'TRAPS' : type);
+        });
+
+        document.getElementById('btn-cancel-placement')?.addEventListener('click', () => {
+          this.state.activePlacementType = null;
+          this.updateArsenalVisuals();
+          this.lastRenderKey = '';
+          this.renderInspector();
+        });
+        return;
       }
     }
 
-    panelEl.style.left = `${Math.round(posX)}px`;
-    panelEl.style.top = `${Math.round(posY)}px`;
-    panelEl.style.visibility = 'visible';
+    // CASE 4: Default / Nothing selected
+    if (this.inspectorTitleEl) {
+      this.inspectorTitleEl.textContent = '🔍 BẢNG ĐIỀU KHIỂN & NÂNG CẤP';
+    }
+
+    this.inspectorContentEl.innerHTML = `
+      <div class="inspector-empty">
+        <span class="inspector-empty-icon">🏰</span>
+        <p>
+          Chưa chọn công trình nào.<br />
+          Nhấp vào một <b>Tháp/Bẫy trên bản đồ</b> để xem chỉ số và nâng cấp, hoặc bấm chọn tháp bên trên để xây dựng.
+        </p>
+      </div>
+    `;
   }
 }

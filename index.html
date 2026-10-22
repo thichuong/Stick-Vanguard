@@ -8,36 +8,93 @@
   </head>
   <body>
     <div id="game-container">
-      <!-- Top HUD Header -->
-      <header id="hud">
-        <div class="hud-left">
+      <!-- 1. LEFT PANEL: Thông số, Cài đặt & Cẩm nang -->
+      <aside id="left-panel">
+        <div class="panel-section brand-section">
+          <h1 class="game-logo">⚔️ STICK VANGUARD</h1>
+          <span class="game-tagline">Thủ Thành Người Que</span>
+        </div>
+
+        <!-- Trạng thái trận đấu (Vàng, Máu, Đợt) -->
+        <div class="panel-section stats-hud-group">
           <div class="hud-item gold-box">
             <span class="hud-icon">🪙</span>
-            <span id="hud-gold" class="hud-val">320</span>
+            <div class="hud-item-content">
+              <span class="hud-lbl">VÀNG HIỆN CÓ</span>
+              <span id="hud-gold" class="hud-val">320</span>
+            </div>
           </div>
           <div class="hud-item lives-box">
             <span class="hud-icon">❤️</span>
-            <span id="hud-lives" class="hud-val">20/20</span>
+            <div class="hud-item-content">
+              <span class="hud-lbl">MÁU CĂN CỨ</span>
+              <span id="hud-lives" class="hud-val">20/20</span>
+            </div>
           </div>
           <div class="hud-item wave-box">
             <span class="hud-icon">🌊</span>
-            <span>Đợt: </span>
-            <span id="hud-wave" class="hud-val">1/10</span>
+            <div class="hud-item-content">
+              <span class="hud-lbl">ĐỢT QUÁI</span>
+              <span id="hud-wave" class="hud-val">1/10</span>
+            </div>
+          </div>
+
+          <button id="btn-next-wave" class="hud-btn primary-btn wave-call-btn">
+            ⚔️ Bắt đầu Đợt Quái
+          </button>
+        </div>
+
+        <!-- Cài đặt & Điều khiển trận đấu -->
+        <div class="panel-section settings-group">
+          <div class="section-title">⚙️ ĐIỀU KHIỂN & CÀI ĐẶT</div>
+          <div class="settings-grid">
+            <button id="btn-speed" class="hud-btn control-btn">Tốc độ: x1</button>
+            <button id="btn-pause" class="hud-btn control-btn">⏸️ Tạm dừng</button>
+            <button id="btn-restart" class="hud-btn danger-btn control-btn">🔄 Chơi lại</button>
+            <button id="btn-fullscreen" class="hud-btn control-btn" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
           </div>
         </div>
 
-        <div class="hud-right">
-          <button id="btn-next-wave" class="hud-btn primary-btn">⚔️ Bắt đầu Đợt Quái</button>
-          <button id="btn-speed" class="hud-btn">Tốc độ: x1</button>
-          <button id="btn-pause" class="hud-btn">⏸️ Tạm dừng</button>
-          <button id="btn-restart" class="hud-btn danger-btn">🔄 Chơi lại</button>
-          <button id="btn-codex" class="hud-btn highlight-btn" title="Cẩm nang tra cứu & Cây nâng cấp (Phím tắt: B)">📖 Cẩm Nang</button>
-          <button id="btn-fullscreen" class="hud-btn" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
-        </div>
-      </header>
+        <!-- Cẩm nang & Tra cứu nhanh -->
+        <div class="panel-section codex-group">
+          <div class="section-title">📖 CẨM NANG & TRA CỨU</div>
+          <button id="btn-codex" class="hud-btn highlight-btn codex-main-btn" title="Mở cẩm nang tra cứu & Cây nâng cấp (Phím B)">
+            📖 Mở Cẩm Nang Toàn Thư (B)
+          </button>
 
-      <!-- Main Game Canvas Stage -->
+          <div class="quick-lookup-box">
+            <span class="quick-lookup-title">Tra cứu nhanh:</span>
+            <div class="lookup-pill-group">
+              <button class="lookup-pill" data-cat="ELEMENTS" title="Ma trận tương khắc 9 hệ nguyên tố">✨ Hệ Nguyên Tố</button>
+              <button class="lookup-pill" data-cat="NAVIGATION" title="Quy tắc di chuyển Bộ, Bay, Thủy">🚶 Di Chuyển</button>
+            </div>
+            <div class="lookup-pill-group mini-elements-group">
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="FIRE" title="Hệ Lửa">🔥</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="WATER" title="Hệ Nước">💧</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="EARTH" title="Hệ Đất">🪨</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="WIND" title="Hệ Gió">🌪️</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="LIGHTNING" title="Hệ Sét">⚡</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="ICE" title="Hệ Băng">❄️</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="LIGHT" title="Hệ Ánh Sáng">✨</button>
+              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="DARK" title="Hệ Bóng Tối">🔮</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="left-panel-footer">
+          <span>Phím tắt: [1]-[8] Chọn tháp | [B] Cẩm nang | [ESC] Hủy chọn</span>
+        </div>
+      </aside>
+
+      <!-- 2. CENTER STAGE: Khu vực bản đồ chính giữa -->
       <main id="canvas-stage">
+        <!-- Floating Hint Bar -->
+        <div id="placement-hint-bar" class="placement-hint-bar">
+          <span id="placement-hint" class="placement-hint">
+            Bấm chọn tháp bên phải hoặc phím [1]-[8] rồi nhấp vào ô đất để xây
+          </span>
+        </div>
+
         <div id="canvas-wrapper">
           <canvas id="game-canvas" width="1000" height="650"></canvas>
           <div id="menu-overlay"></div>
@@ -45,149 +102,133 @@
         </div>
       </main>
 
-      <!-- Right-Side Codex & Upgrade Tree Panel -->
-      <aside id="side-detail-panel" class="side-panel hidden">
-        <div class="side-panel-header">
-          <div class="sp-header-left">
-            <span id="side-panel-icon" class="sp-icon">🏰</span>
-            <div class="sp-title-group">
-              <h3 id="side-panel-title">Chi Tiết Tháp & Cây Nâng Cấp</h3>
-              <span id="side-panel-badge" class="sp-badge">Bách Khoa Toàn Thư</span>
-            </div>
+      <!-- 3. RIGHT PANEL: Chọn Tháp, Bẫy & Nâng Cấp -->
+      <aside id="right-panel">
+        <!-- Arsenal: Chọn nhanh Tháp & Bẫy -->
+        <div class="panel-section arsenal-section">
+          <div class="section-title">
+            <span>🏰 KHO QUÂN & CÔNG TRÌNH</span>
+            <span class="sub-title-hint">[1]-[8]</span>
           </div>
-          <button id="btn-close-side-panel" class="sp-close-btn" title="Đóng panel (Esc)">✕</button>
+
+          <!-- Tabs or Section for Towers -->
+          <div class="arsenal-subgroup-title">THÁP PHÒNG NGỰ (VEN ĐƯỜNG)</div>
+          <div class="arsenal-grid">
+            <button class="hotbar-btn" data-type="BARRACKS" data-key="1">
+              <span class="hotbar-key">[1]</span>
+              <span class="hotbar-icon">🛡️</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Trại Lính</span>
+                <span class="hotbar-cost">🪙 70</span>
+              </div>
+            </button>
+            <button class="hotbar-btn" data-type="ARCHER" data-key="2">
+              <span class="hotbar-key">[2]</span>
+              <span class="hotbar-icon">🏹</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Tháp Cung</span>
+                <span class="hotbar-cost">🪙 60</span>
+              </div>
+            </button>
+            <button class="hotbar-btn" data-type="MAGE" data-key="3">
+              <span class="hotbar-key">[3]</span>
+              <span class="hotbar-icon">🔮</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Tháp Phép</span>
+                <span class="hotbar-cost">🪙 75</span>
+              </div>
+            </button>
+            <button class="hotbar-btn" data-type="ARTILLERY" data-key="4">
+              <span class="hotbar-key">[4]</span>
+              <span class="hotbar-icon">💣</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Pháo Cối</span>
+                <span class="hotbar-cost">🪙 80</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="arsenal-subgroup-title" style="margin-top: 10px;">BẪY CHIẾN THUẬT (ĐƯỜNG & NƯỚC)</div>
+          <div class="arsenal-grid">
+            <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5">
+              <span class="hotbar-key">[5]</span>
+              <span class="hotbar-icon">🪨</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Bẫy Chông</span>
+                <span class="hotbar-cost">🪙 45</span>
+              </div>
+            </button>
+            <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6">
+              <span class="hotbar-key">[6]</span>
+              <span class="hotbar-icon">🔥</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Mìn Lửa</span>
+                <span class="hotbar-cost">🪙 55</span>
+              </div>
+            </button>
+            <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7">
+              <span class="hotbar-key">[7]</span>
+              <span class="hotbar-icon">❄️</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Thủy Lôi/Băng</span>
+                <span class="hotbar-cost">🪙 50</span>
+              </div>
+            </button>
+            <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8">
+              <span class="hotbar-key">[8]</span>
+              <span class="hotbar-icon">⚡</span>
+              <div class="hotbar-info">
+                <span class="hotbar-name">Cọc Sét</span>
+                <span class="hotbar-cost">🪙 65</span>
+              </div>
+            </button>
+          </div>
         </div>
 
-        <!-- Category Nav Tabs -->
-        <nav class="side-panel-tabs">
-          <button class="sp-tab active" data-cat="BARRACKS">🛡️ Nhà Lính</button>
-          <button class="sp-tab" data-cat="ARCHER">🏹 Cung Thủ</button>
-          <button class="sp-tab" data-cat="MAGE">🔮 Pháp Sư</button>
-          <button class="sp-tab" data-cat="ARTILLERY">💣 Pháo Cối</button>
-          <button class="sp-tab" data-cat="TRAPS">⚙️ Bẫy</button>
-          <button class="sp-tab" data-cat="ELEMENTS">✨ Hệ Nguyên Tố</button>
-          <button class="sp-tab" data-cat="NAVIGATION">🚶 Di Chuyển</button>
-        </nav>
-
-        <!-- Panel Body Content -->
-        <div id="side-panel-body" class="side-panel-body">
-          <!-- Injected dynamically -->
+        <!-- Inspector: Hiện thông tin, Nâng cấp, Đổi chế độ, Gắn nguyên tố -->
+        <div id="inspector-section" class="panel-section inspector-section">
+          <div class="section-title">
+            <span id="inspector-main-title">🔍 BẢNG ĐIỀU KHIỂN & NÂNG CẤP</span>
+          </div>
+          <div id="inspector-content" class="inspector-content">
+            <!-- Được render động bởi UIManager -->
+          </div>
         </div>
       </aside>
 
-      <!-- Tower Quick Selection Bar (Hotbar) -->
-      <div id="tower-hotbar">
-        <div class="hotbar-container">
-          <div class="hotbar-header">
-            <span class="hotbar-title">🏰 CHỌN THÁP / BẪY NHANH:</span>
-            <span id="placement-hint" class="placement-hint">Bấm phím [1]-[8] hoặc chọn tháp bên dưới rồi bấm vào ô đất để xây</span>
+      <!-- 4. CODEX MODAL: Bảng lớn mở chính giữa màn hình -->
+      <div id="codex-modal-backdrop" class="codex-backdrop hidden">
+        <div id="codex-modal" class="codex-modal-container">
+          <div class="codex-modal-header">
+            <div class="codex-header-left">
+              <span id="codex-modal-icon" class="codex-icon">📖</span>
+              <div class="codex-title-group">
+                <h2 id="codex-modal-title">Cẩm Nang Bách Khoa Toàn Thư</h2>
+                <span id="codex-modal-badge" class="codex-badge">Stick Vanguard Codex</span>
+              </div>
+            </div>
+            <button id="btn-close-codex-modal" class="codex-close-btn" title="Đóng cẩm nang (Phím Esc hoặc Click ngoài)">✕</button>
           </div>
-          <div class="hotbar-slots">
-          <!-- Roadside Towers -->
-          <button class="hotbar-btn" data-type="BARRACKS" data-key="1">
-            <span class="hotbar-key">[1]</span>
-            <span class="hotbar-icon">🛡️</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Trại Lính</span>
-              <span class="hotbar-cost">🪙 70</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="BARRACKS" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
-          </button>
-          <button class="hotbar-btn" data-type="ARCHER" data-key="2">
-            <span class="hotbar-key">[2]</span>
-            <span class="hotbar-icon">🏹</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Tháp Cung</span>
-              <span class="hotbar-cost">🪙 60</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="ARCHER" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
-          </button>
-          <button class="hotbar-btn" data-type="MAGE" data-key="3">
-            <span class="hotbar-key">[3]</span>
-            <span class="hotbar-icon">🔮</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Tháp Phép</span>
-              <span class="hotbar-cost">🪙 75</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="MAGE" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
-          </button>
-          <button class="hotbar-btn" data-type="ARTILLERY" data-key="4">
-            <span class="hotbar-key">[4]</span>
-            <span class="hotbar-icon">💣</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Pháo Cối</span>
-              <span class="hotbar-cost">🪙 80</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="ARTILLERY" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
-          </button>
 
-          <div class="hotbar-divider"></div>
+          <!-- Category Nav Tabs -->
+          <nav class="codex-modal-tabs">
+            <button class="codex-tab active" data-cat="BARRACKS">🛡️ Nhà Lính</button>
+            <button class="codex-tab" data-cat="ARCHER">🏹 Cung Thủ</button>
+            <button class="codex-tab" data-cat="MAGE">🔮 Pháp Sư</button>
+            <button class="codex-tab" data-cat="ARTILLERY">💣 Pháo Cối</button>
+            <button class="codex-tab" data-cat="TRAPS">⚙️ Bẫy</button>
+            <button class="codex-tab" data-cat="ELEMENTS">✨ Hệ Nguyên Tố</button>
+            <button class="codex-tab" data-cat="NAVIGATION">🚶 Di Chuyển</button>
+          </nav>
 
-          <!-- On-Path Traps -->
-          <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5">
-            <span class="hotbar-key">[5]</span>
-            <span class="hotbar-icon">🪨</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Bẫy Chông</span>
-              <span class="hotbar-cost">🪙 45</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
-          </button>
-          <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6">
-            <span class="hotbar-key">[6]</span>
-            <span class="hotbar-icon">🔥</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Mìn Lửa</span>
-              <span class="hotbar-cost">🪙 55</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
-          </button>
-          <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7">
-            <span class="hotbar-key">[7]</span>
-            <span class="hotbar-icon">❄️</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Thủy Lôi/Băng</span>
-              <span class="hotbar-cost">🪙 50</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
-          </button>
-          <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8">
-            <span class="hotbar-key">[8]</span>
-            <span class="hotbar-icon">⚡</span>
-            <div class="hotbar-info">
-              <span class="hotbar-name">Cọc Sét</span>
-              <span class="hotbar-cost">🪙 65</span>
-            </div>
-            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
-          </button>
-        </div>
+          <!-- Codex Modal Body -->
+          <div id="codex-modal-body" class="codex-modal-body">
+            <!-- Nội dung nạp động -->
+          </div>
         </div>
       </div>
-
-      <!-- Quick Legend Footer -->
-      <footer id="footer-legend">
-        <div class="legend-group">
-          <button class="legend-title-btn" data-cat="NAVIGATION" title="Xem giải thích quy tắc di chuyển">DI CHUYỂN ℹ️</button>
-          <button class="legend-pill" data-cat="NAVIGATION" data-target="WALK" title="Xem chi tiết quái đi bộ">🚶 Đi bộ (Đường mòn)</button>
-          <button class="legend-pill" data-cat="NAVIGATION" data-target="FLY" title="Xem chi tiết quái bay">✈️ Bay (Bỏ qua lính chặn)</button>
-          <button class="legend-pill" data-cat="NAVIGATION" data-target="SWIM" title="Xem chi tiết quái bơi">🏊 Bơi (Kênh sông)</button>
-        </div>
-        <div class="legend-group">
-          <button class="legend-title-btn" data-cat="ELEMENTS" title="Xem ma trận tương khắc 9 hệ nguyên tố">HỆ NGUYÊN TỐ ℹ️</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="PHYSICAL">⚔️ Vật lý</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="FIRE">🔥 Lửa</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="WATER">💧 Nước</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="EARTH">🪨 Đất</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="WIND">🌪️ Gió</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="LIGHTNING">⚡ Sét</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="ICE">❄️ Băng</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="LIGHT">✨ Sáng</button>
-          <button class="legend-pill" data-cat="ELEMENTS" data-target="DARK">🔮 Tối</button>
-        </div>
-      </footer>
     </div>
 
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
-
