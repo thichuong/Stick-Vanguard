@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stick Vanguard - Thủ Thành Người Que</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <!-- Top HUD Header -->
+      <header id="hud">
+        <div class="hud-left">
+          <div class="hud-item gold-box">
+            <span class="hud-icon">🪙</span>
+            <span id="hud-gold" class="hud-val">320</span>
+          </div>
+          <div class="hud-item lives-box">
+            <span class="hud-icon">❤️</span>
+            <span id="hud-lives" class="hud-val">20/20</span>
+          </div>
+          <div class="hud-item wave-box">
+            <span class="hud-icon">🌊</span>
+            <span>Đợt: </span>
+            <span id="hud-wave" class="hud-val">1/10</span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <button id="btn-next-wave" class="hud-btn primary-btn">⚔️ Bắt đầu Đợt Quái</button>
+          <button id="btn-speed" class="hud-btn">Tốc độ: x1</button>
+          <button id="btn-pause" class="hud-btn">⏸️ Tạm dừng</button>
+          <button id="btn-restart" class="hud-btn danger-btn">🔄 Chơi lại</button>
+        </div>
+      </header>
+
+      <!-- Main Game Canvas -->
+      <div id="canvas-wrapper">
+        <canvas id="game-canvas" width="1000" height="650"></canvas>
+        <div id="menu-overlay"></div>
+        <div id="message-banner" class="hidden"></div>
+      </div>
+
+      <!-- Tower Quick Selection Bar (Hotbar) -->
+      <div id="tower-hotbar">
+        <div class="hotbar-header">
+          <span class="hotbar-title">🏰 CHỌN THÁP / BẪY NHANH:</span>
+          <span id="placement-hint" class="placement-hint">Bấm phím [1]-[8] hoặc chọn tháp bên dưới rồi bấm vào ô đất để xây</span>
+        </div>
+        <div class="hotbar-slots">
+          <!-- Roadside Towers -->
+          <button class="hotbar-btn" data-type="BARRACKS" data-key="1">
+            <span class="hotbar-key">[1]</span>
+            <span class="hotbar-icon">🛡️</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Trại Lính</span>
+              <span class="hotbar-cost">🪙 70</span>
+            </div>
+          </button>
+          <button class="hotbar-btn" data-type="ARCHER" data-key="2">
+            <span class="hotbar-key">[2]</span>
+            <span class="hotbar-icon">🏹</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Tháp Cung</span>
+              <span class="hotbar-cost">🪙 60</span>
+            </div>
+          </button>
+          <button class="hotbar-btn" data-type="MAGE" data-key="3">
+            <span class="hotbar-key">[3]</span>
+            <span class="hotbar-icon">🔮</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Tháp Phép</span>
+              <span class="hotbar-cost">🪙 75</span>
+            </div>
+          </button>
+          <button class="hotbar-btn" data-type="ARTILLERY" data-key="4">
+            <span class="hotbar-key">[4]</span>
+            <span class="hotbar-icon">💣</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Pháo Cối</span>
+              <span class="hotbar-cost">🪙 80</span>
+            </div>
+          </button>
+
+          <div class="hotbar-divider"></div>
+
+          <!-- On-Path Traps -->
+          <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5">
+            <span class="hotbar-key">[5]</span>
+            <span class="hotbar-icon">🪨</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Bẫy Chông</span>
+              <span class="hotbar-cost">🪙 45</span>
+            </div>
+          </button>
+          <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6">
+            <span class="hotbar-key">[6]</span>
+            <span class="hotbar-icon">🔥</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Mìn Lửa</span>
+              <span class="hotbar-cost">🪙 55</span>
+            </div>
+          </button>
+          <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7">
+            <span class="hotbar-key">[7]</span>
+            <span class="hotbar-icon">❄️</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Thủy Lôi/Băng</span>
+              <span class="hotbar-cost">🪙 50</span>
+            </div>
+          </button>
+          <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8">
+            <span class="hotbar-key">[8]</span>
+            <span class="hotbar-icon">⚡</span>
+            <div class="hotbar-info">
+              <span class="hotbar-name">Cọc Sét</span>
+              <span class="hotbar-cost">🪙 65</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Legend Footer -->
+      <footer id="footer-legend">
+        <div class="legend-group">
+          <span class="legend-title">DI CHUYỂN:</span>
+          <span>🚶 Đi bộ (Đường mòn)</span>
+          <span>✈️ Bay (Bỏ qua bẫy đất & lính chặn)</span>
+          <span>🏊 Bơi (Kênh sông)</span>
+        </div>
+        <div class="legend-group">
+          <span class="legend-title">HỆ NGUYÊN TỐ:</span>
+          <span>⚔️ Vật lý</span>
+          <span>🔥 Lửa</span>
+          <span>💧 Nước</span>
+          <span>🪨 Đất</span>
+          <span>🌪️ Gió</span>
+          <span>⚡ Sét</span>
+          <span>❄️ Băng</span>
+          <span>✨ Sáng</span>
+          <span>🔮 Tối</span>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
+
