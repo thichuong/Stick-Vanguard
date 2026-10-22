@@ -126,7 +126,7 @@ export class MapRenderer {
 
     // Air warning icon
     ctx.fillStyle = '#34d399';
-    ctx.font = '11px sans-serif';
+    ctx.font = '13px sans-serif';
     ctx.fillText('✈️ HÀNH LANG BAY', 120, 85);
     ctx.restore();
   }
@@ -157,7 +157,7 @@ export class MapRenderer {
     ctx.arc(ws.x, ws.y + 16, 18, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '12px sans-serif';
+    ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('🌊', ws.x, ws.y + 16);
@@ -247,7 +247,7 @@ export class MapRenderer {
 
           // Tooltip
           ctx.fillStyle = '#22c55e';
-          ctx.font = 'bold 12px sans-serif';
+          ctx.font = 'bold 13px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(`BẤM ĐỂ XÂY ${bp.name.toUpperCase()}`, slot.x, slot.y - 28);
           ctx.restore();
@@ -283,7 +283,7 @@ export class MapRenderer {
         ctx.restore();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = '10px sans-serif';
+        ctx.font = '13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('⚙️', slot.x, slot.y);
@@ -298,7 +298,7 @@ export class MapRenderer {
         ctx.stroke();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = '10px sans-serif';
+        ctx.font = '13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('⚓', slot.x, slot.y);

@@ -172,7 +172,7 @@ export class TowerRenderer {
 
     // Tier badge (stars)
     ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 9px sans-serif';
+    ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('★'.repeat(tier), x, y + 26);
   }
@@ -209,7 +209,7 @@ export class TowerRenderer {
       ctx.arc(x, y, 12 + (isReady ? Math.sin(animTime * 6) * 2 : 0), 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillStyle = '#ef4444';
-      ctx.font = '10px sans-serif';
+      ctx.font = '13px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('🔥', x, y);
@@ -221,7 +221,7 @@ export class TowerRenderer {
       ctx.arc(x, y, 12, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillStyle = '#06b6d4';
-      ctx.font = '10px sans-serif';
+      ctx.font = '13px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('❄️', x, y);

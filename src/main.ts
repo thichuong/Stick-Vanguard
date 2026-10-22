@@ -37,8 +37,40 @@ class GameApp {
       () => this.restartGame()
     );
 
+    this.setupResize();
     this.bindCanvasEvents();
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  private setupResize(): void {
+    const stage = document.getElementById('canvas-stage');
+    const wrapper = document.getElementById('canvas-wrapper');
+    if (!stage || !wrapper) return;
+
+    const resize = () => {
+      const stageW = stage.clientWidth - 12;
+      const stageH = stage.clientHeight - 12;
+      if (stageW <= 0 || stageH <= 0) return;
+
+      const targetRatio = 1000 / 650;
+      let w = stageW;
+      let h = stageW / targetRatio;
+
+      if (h > stageH) {
+        h = stageH;
+        w = stageH * targetRatio;
+      }
+
+      wrapper.style.width = `${Math.floor(w)}px`;
+      wrapper.style.height = `${Math.floor(h)}px`;
+
+      this.uiManager?.handleResize();
+    };
+
+    window.addEventListener('resize', resize);
+    const observer = new ResizeObserver(() => resize());
+    observer.observe(stage);
+    resize();
   }
 
   private handleCallWave(): void {
@@ -210,14 +242,14 @@ class GameApp {
       // Update status effects (DoT damage, slow)
       TargetingRuleEngine.updateStatusEffects(enemy, dt, (dmg, elem) => {
         enemy.hp -= dmg;
-        this.state.addFloatingText(`-${dmg}`, enemy.x, enemy.y - 12, ELEMENT_COLORS[elem], 11);
+        this.state.addFloatingText(`-${dmg}`, enemy.x, enemy.y - 12, ELEMENT_COLORS[elem], 13);
         if (enemy.hp <= 0) enemy.state = 'DEAD';
       });
 
       if (enemy.hp <= 0 || enemy.state === 'DEAD') {
         // Enemy defeated!
         this.state.gold += enemy.rewardGold;
-        this.state.addFloatingText(`+${enemy.rewardGold} 🪙`, enemy.x, enemy.y - 10, '#facc15', 12);
+        this.state.addFloatingText(`+${enemy.rewardGold} 🪙`, enemy.x, enemy.y - 10, '#facc15', 14);
         this.state.addExplosionParticles(enemy.x, enemy.y, ELEMENT_COLORS[enemy.elementalProfile.primaryElement], 8);
         this.state.enemies.splice(i, 1);
         continue;
@@ -259,7 +291,7 @@ class GameApp {
         const en = this.state.enemies.find((e) => e.id === hit.enemyId);
         if (en) {
           if (hit.isImmune) {
-            this.state.addFloatingText('MIỄN NHIỄM!', en.x, en.y - 14, '#94a3b8', 12);
+            this.state.addFloatingText('MIỄN NHIỄM!', en.x, en.y - 14, '#94a3b8', 13);
           } else {
             this.state.addFloatingText(
               `${hit.label ? hit.label + ' ' : ''}-${hit.damage}`,
@@ -278,9 +310,9 @@ class GameApp {
       if (evt.type === 'MELEE_HIT' || evt.type === 'RANGED_JAVELIN') {
         const color = ELEMENT_COLORS[evt.element as ElementType] || '#ffffff';
         if (evt.isImmune) {
-          this.state.addFloatingText('MIỄN NHIỄM!', evt.x, evt.y - 12, '#94a3b8', 12);
+          this.state.addFloatingText('MIỄN NHIỄM!', evt.x, evt.y - 12, '#94a3b8', 13);
         } else {
-          this.state.addFloatingText(`${evt.label ? evt.label + ' ' : ''}-${evt.damage}`, evt.x, evt.y - 12, color, 12);
+          this.state.addFloatingText(`${evt.label ? evt.label + ' ' : ''}-${evt.damage}`, evt.x, evt.y - 12, color, 13);
         }
         this.state.addExplosionParticles(evt.x, evt.y, color, 4);
       }

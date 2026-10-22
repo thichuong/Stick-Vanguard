@@ -31,23 +31,58 @@
           <button id="btn-speed" class="hud-btn">Tốc độ: x1</button>
           <button id="btn-pause" class="hud-btn">⏸️ Tạm dừng</button>
           <button id="btn-restart" class="hud-btn danger-btn">🔄 Chơi lại</button>
+          <button id="btn-codex" class="hud-btn highlight-btn" title="Cẩm nang tra cứu & Cây nâng cấp (Phím tắt: B)">📖 Cẩm Nang</button>
+          <button id="btn-fullscreen" class="hud-btn" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
         </div>
       </header>
 
-      <!-- Main Game Canvas -->
-      <div id="canvas-wrapper">
-        <canvas id="game-canvas" width="1000" height="650"></canvas>
-        <div id="menu-overlay"></div>
-        <div id="message-banner" class="hidden"></div>
-      </div>
+      <!-- Main Game Canvas Stage -->
+      <main id="canvas-stage">
+        <div id="canvas-wrapper">
+          <canvas id="game-canvas" width="1000" height="650"></canvas>
+          <div id="menu-overlay"></div>
+          <div id="message-banner" class="hidden"></div>
+        </div>
+      </main>
+
+      <!-- Right-Side Codex & Upgrade Tree Panel -->
+      <aside id="side-detail-panel" class="side-panel hidden">
+        <div class="side-panel-header">
+          <div class="sp-header-left">
+            <span id="side-panel-icon" class="sp-icon">🏰</span>
+            <div class="sp-title-group">
+              <h3 id="side-panel-title">Chi Tiết Tháp & Cây Nâng Cấp</h3>
+              <span id="side-panel-badge" class="sp-badge">Bách Khoa Toàn Thư</span>
+            </div>
+          </div>
+          <button id="btn-close-side-panel" class="sp-close-btn" title="Đóng panel (Esc)">✕</button>
+        </div>
+
+        <!-- Category Nav Tabs -->
+        <nav class="side-panel-tabs">
+          <button class="sp-tab active" data-cat="BARRACKS">🛡️ Nhà Lính</button>
+          <button class="sp-tab" data-cat="ARCHER">🏹 Cung Thủ</button>
+          <button class="sp-tab" data-cat="MAGE">🔮 Pháp Sư</button>
+          <button class="sp-tab" data-cat="ARTILLERY">💣 Pháo Cối</button>
+          <button class="sp-tab" data-cat="TRAPS">⚙️ Bẫy</button>
+          <button class="sp-tab" data-cat="ELEMENTS">✨ Hệ Nguyên Tố</button>
+          <button class="sp-tab" data-cat="NAVIGATION">🚶 Di Chuyển</button>
+        </nav>
+
+        <!-- Panel Body Content -->
+        <div id="side-panel-body" class="side-panel-body">
+          <!-- Injected dynamically -->
+        </div>
+      </aside>
 
       <!-- Tower Quick Selection Bar (Hotbar) -->
       <div id="tower-hotbar">
-        <div class="hotbar-header">
-          <span class="hotbar-title">🏰 CHỌN THÁP / BẪY NHANH:</span>
-          <span id="placement-hint" class="placement-hint">Bấm phím [1]-[8] hoặc chọn tháp bên dưới rồi bấm vào ô đất để xây</span>
-        </div>
-        <div class="hotbar-slots">
+        <div class="hotbar-container">
+          <div class="hotbar-header">
+            <span class="hotbar-title">🏰 CHỌN THÁP / BẪY NHANH:</span>
+            <span id="placement-hint" class="placement-hint">Bấm phím [1]-[8] hoặc chọn tháp bên dưới rồi bấm vào ô đất để xây</span>
+          </div>
+          <div class="hotbar-slots">
           <!-- Roadside Towers -->
           <button class="hotbar-btn" data-type="BARRACKS" data-key="1">
             <span class="hotbar-key">[1]</span>
@@ -56,6 +91,7 @@
               <span class="hotbar-name">Trại Lính</span>
               <span class="hotbar-cost">🪙 70</span>
             </div>
+            <span class="hotbar-info-btn" data-info="BARRACKS" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
           </button>
           <button class="hotbar-btn" data-type="ARCHER" data-key="2">
             <span class="hotbar-key">[2]</span>
@@ -64,6 +100,7 @@
               <span class="hotbar-name">Tháp Cung</span>
               <span class="hotbar-cost">🪙 60</span>
             </div>
+            <span class="hotbar-info-btn" data-info="ARCHER" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
           </button>
           <button class="hotbar-btn" data-type="MAGE" data-key="3">
             <span class="hotbar-key">[3]</span>
@@ -72,6 +109,7 @@
               <span class="hotbar-name">Tháp Phép</span>
               <span class="hotbar-cost">🪙 75</span>
             </div>
+            <span class="hotbar-info-btn" data-info="MAGE" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
           </button>
           <button class="hotbar-btn" data-type="ARTILLERY" data-key="4">
             <span class="hotbar-key">[4]</span>
@@ -80,6 +118,7 @@
               <span class="hotbar-name">Pháo Cối</span>
               <span class="hotbar-cost">🪙 80</span>
             </div>
+            <span class="hotbar-info-btn" data-info="ARTILLERY" title="Xem chi tiết & cây nâng cấp">ℹ️</span>
           </button>
 
           <div class="hotbar-divider"></div>
@@ -92,6 +131,7 @@
               <span class="hotbar-name">Bẫy Chông</span>
               <span class="hotbar-cost">🪙 45</span>
             </div>
+            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
           </button>
           <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6">
             <span class="hotbar-key">[6]</span>
@@ -100,6 +140,7 @@
               <span class="hotbar-name">Mìn Lửa</span>
               <span class="hotbar-cost">🪙 55</span>
             </div>
+            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
           </button>
           <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7">
             <span class="hotbar-key">[7]</span>
@@ -108,6 +149,7 @@
               <span class="hotbar-name">Thủy Lôi/Băng</span>
               <span class="hotbar-cost">🪙 50</span>
             </div>
+            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
           </button>
           <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8">
             <span class="hotbar-key">[8]</span>
@@ -116,29 +158,31 @@
               <span class="hotbar-name">Cọc Sét</span>
               <span class="hotbar-cost">🪙 65</span>
             </div>
+            <span class="hotbar-info-btn" data-info="TRAPS" title="Xem chi tiết bẫy">ℹ️</span>
           </button>
+        </div>
         </div>
       </div>
 
       <!-- Quick Legend Footer -->
       <footer id="footer-legend">
         <div class="legend-group">
-          <span class="legend-title">DI CHUYỂN:</span>
-          <span>🚶 Đi bộ (Đường mòn)</span>
-          <span>✈️ Bay (Bỏ qua bẫy đất & lính chặn)</span>
-          <span>🏊 Bơi (Kênh sông)</span>
+          <button class="legend-title-btn" data-cat="NAVIGATION" title="Xem giải thích quy tắc di chuyển">DI CHUYỂN ℹ️</button>
+          <button class="legend-pill" data-cat="NAVIGATION" data-target="WALK" title="Xem chi tiết quái đi bộ">🚶 Đi bộ (Đường mòn)</button>
+          <button class="legend-pill" data-cat="NAVIGATION" data-target="FLY" title="Xem chi tiết quái bay">✈️ Bay (Bỏ qua lính chặn)</button>
+          <button class="legend-pill" data-cat="NAVIGATION" data-target="SWIM" title="Xem chi tiết quái bơi">🏊 Bơi (Kênh sông)</button>
         </div>
         <div class="legend-group">
-          <span class="legend-title">HỆ NGUYÊN TỐ:</span>
-          <span>⚔️ Vật lý</span>
-          <span>🔥 Lửa</span>
-          <span>💧 Nước</span>
-          <span>🪨 Đất</span>
-          <span>🌪️ Gió</span>
-          <span>⚡ Sét</span>
-          <span>❄️ Băng</span>
-          <span>✨ Sáng</span>
-          <span>🔮 Tối</span>
+          <button class="legend-title-btn" data-cat="ELEMENTS" title="Xem ma trận tương khắc 9 hệ nguyên tố">HỆ NGUYÊN TỐ ℹ️</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="PHYSICAL">⚔️ Vật lý</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="FIRE">🔥 Lửa</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="WATER">💧 Nước</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="EARTH">🪨 Đất</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="WIND">🌪️ Gió</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="LIGHTNING">⚡ Sét</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="ICE">❄️ Băng</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="LIGHT">✨ Sáng</button>
+          <button class="legend-pill" data-cat="ELEMENTS" data-target="DARK">🔮 Tối</button>
         </div>
       </footer>
     </div>

@@ -292,8 +292,8 @@ export class StickmanRenderer {
 
     // Element indicator pip
     const icon = ELEMENT_ICONS[element as ElementType] || '⚔️';
-    ctx.font = '8px sans-serif';
-    ctx.fillText(icon, x - width / 2 - 9, y + 4);
+    ctx.font = '13px sans-serif';
+    ctx.fillText(icon, x - width / 2 - 14, y + 6);
 
     // Status icons
     if (statusEffects.length > 0) {
@@ -304,8 +304,8 @@ export class StickmanRenderer {
         else if (eff.type === 'SLOW' || eff.type === 'FREEZE') effIcon = '❄️';
         else if (eff.type === 'WET') effIcon = '💧';
         if (effIcon) {
-          ctx.fillText(effIcon, x + width / 2 + 2 + iconOffset, y + 4);
-          iconOffset += 8;
+          ctx.fillText(effIcon, x + width / 2 + 2 + iconOffset, y + 6);
+          iconOffset += 13;
         }
       }
     }

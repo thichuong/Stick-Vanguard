@@ -2,11 +2,14 @@ import { GameState } from '../core/GameState.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { ELEMENT_ICONS } from '../config/elements.config.js';
 import { TowerType } from '../types/entities.types.js';
+import { SideDetailPanel } from './SideDetailPanel.js';
 
 export class UIManager {
   private menuOverlayEl: HTMLElement;
   private messageBannerEl: HTMLElement;
   private placementHintEl: HTMLElement | null;
+  private canvasEl: HTMLCanvasElement;
+  private sidePanel: SideDetailPanel;
   private lastRenderKey: string = '';
 
   constructor(
@@ -17,10 +20,18 @@ export class UIManager {
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
     this.messageBannerEl = document.getElementById('message-banner')!;
     this.placementHintEl = document.getElementById('placement-hint');
+    this.canvasEl = document.getElementById('game-canvas') as HTMLCanvasElement;
+    this.sidePanel = new SideDetailPanel();
 
     this.bindEvents();
     this.bindHotbar();
     this.bindKeyboard();
+    this.bindCodexTriggers();
+  }
+
+  public handleResize(): void {
+    this.lastRenderKey = '';
+    this.renderActionMenu();
   }
 
   private bindEvents(): void {
@@ -53,6 +64,31 @@ export class UIManager {
       restartBtn.addEventListener('click', () => {
         this.onRestart();
       });
+    }
+
+    const fullscreenBtn = document.getElementById('btn-fullscreen');
+    if (fullscreenBtn) {
+      const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      };
+
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+      const updateFullscreenLabel = () => {
+        if (document.fullscreenElement) {
+          fullscreenBtn.innerHTML = '🗗 Thu nhỏ';
+          fullscreenBtn.title = 'Thoát toàn màn hình (F)';
+        } else {
+          fullscreenBtn.innerHTML = '⛶ Toàn màn hình';
+          fullscreenBtn.title = 'Toàn màn hình (F)';
+        }
+      };
+
+      document.addEventListener('fullscreenchange', updateFullscreenLabel);
     }
   }
 
@@ -93,11 +129,35 @@ export class UIManager {
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (this.sidePanel.isOpen()) {
+          this.sidePanel.close();
+          return;
+        }
         this.state.activePlacementType = null;
         this.state.selectedSlotId = null;
         this.state.selectedTowerId = null;
         this.state.isSettingRallyPoint = false;
         this.updateHotbarVisuals();
+        return;
+      }
+
+      if (e.key === 'b' || e.key === 'B') {
+        const target = e.target as HTMLElement;
+        if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          this.sidePanel.toggle();
+          return;
+        }
+      }
+
+      if (e.key === 'f' || e.key === 'F') {
+        const target = e.target as HTMLElement;
+        if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
         return;
       }
 
@@ -113,6 +173,39 @@ export class UIManager {
         }
         this.updateHotbarVisuals();
       }
+    });
+  }
+
+  private bindCodexTriggers(): void {
+    // Top HUD button
+    const codexBtn = document.getElementById('btn-codex');
+    if (codexBtn) {
+      codexBtn.addEventListener('click', () => {
+        this.sidePanel.toggle();
+      });
+    }
+
+    // Hotbar info mini buttons
+    const infoBtns = document.querySelectorAll('.hotbar-info-btn');
+    infoBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const infoCat = (e.currentTarget as HTMLElement).getAttribute('data-info');
+        if (infoCat) {
+          this.sidePanel.open(infoCat);
+        }
+      });
+    });
+
+    // Footer Legend buttons
+    const legendBtns = document.querySelectorAll('#footer-legend button');
+    legendBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const cat = target.getAttribute('data-cat') || 'ELEMENTS';
+        const subTarget = target.getAttribute('data-target') || undefined;
+        this.sidePanel.open(cat, subTarget);
+      });
     });
   }
 
@@ -197,20 +290,25 @@ export class UIManager {
   }
 
   private renderActionMenu(): void {
+    const canvasRect = this.canvasEl ? this.canvasEl.getBoundingClientRect() : { width: 1000, height: 650 };
+    const currentW = Math.round(canvasRect.width);
+    const currentH = Math.round(canvasRect.height);
     // Generate render key to prevent trashing DOM every frame
-    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}`;
+    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}_${currentW}x${currentH}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
     this.lastRenderKey = currentKey;
 
+    const scaleX = canvasRect.width / 1000;
+    const scaleY = canvasRect.height / 650;
     const slot = this.state.getSelectedSlot();
     const tower = this.state.getSelectedTower();
 
     if (this.state.isSettingRallyPoint) {
       this.menuOverlayEl.innerHTML = `
-        <div class="action-panel floating-panel">
-          <div class="panel-header">🚩 CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
+        <div class="action-panel floating-panel" style="position: absolute; left: 50%; top: 20px; transform: translateX(-50%); text-align: center;">
+          <div class="panel-header" style="justify-content: center;">🚩 CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
           <p class="panel-desc">Nhấp chuột vào một điểm trên đường đi (trong vòng tròn vàng) để lính chạy ra chặn quái.</p>
           <button id="btn-cancel-rally" class="btn-cancel">Hủy bỏ</button>
         </div>
@@ -269,19 +367,27 @@ export class UIManager {
           .join('');
       }
 
-      // Position panel near slot coordinates
-      const posX = Math.min(Math.max(16, slot.x - 140), 1000 - 310);
-      const posY = slot.y > 380 ? slot.y - 250 : slot.y + 25;
+      const screenX = slot.x * scaleX;
+      const screenY = slot.y * scaleY;
 
       this.menuOverlayEl.innerHTML = `
-        <div class="action-panel" style="position: absolute; left: ${posX}px; top: ${posY}px;">
+        <div class="action-panel" style="position: absolute; visibility: hidden;">
           <div class="panel-header">
-            <span>🛠️ XÂY ${slot.placement === 'ROADSIDE' ? 'THÁP' : 'BẪY'}</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>🛠️ XÂY ${slot.placement === 'ROADSIDE' ? 'THÁP' : 'BẪY'}</span>
+              <button id="btn-slot-tree" class="btn-tree-link" title="Xem giải thích & cây nâng cấp">📖 Cẩm Nang</button>
+            </div>
             <button id="btn-close-panel" class="btn-x">✕</button>
           </div>
           <div class="build-options-list">${optionsHtml}</div>
         </div>
       `;
+
+      this.positionActionPanel(screenX, screenY);
+
+      document.getElementById('btn-slot-tree')?.addEventListener('click', () => {
+        this.sidePanel.open(slot.placement === 'ROADSIDE' ? 'BARRACKS' : 'TRAPS');
+      });
 
       document.getElementById('btn-close-panel')?.addEventListener('click', () => {
         this.state.selectedSlotId = null;
@@ -346,16 +452,16 @@ export class UIManager {
         upgradeHtml = `<p class="max-tier-note">✨ ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP 4)</p>`;
       }
 
-      // Position near tower
-      const posX = Math.min(Math.max(16, tower.x - 140), 1000 - 310);
-      const posY = tower.y > 380 ? tower.y - 230 : tower.y + 25;
+      const screenX = tower.x * scaleX;
+      const screenY = tower.y * scaleY;
 
       this.menuOverlayEl.innerHTML = `
-        <div class="action-panel" style="position: absolute; left: ${posX}px; top: ${posY}px;">
+        <div class="action-panel" style="position: absolute; visibility: hidden;">
           <div class="panel-header">
-            <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
               <span class="panel-title">${tower.name}</span>
               <span class="tier-pill">Cấp ${tower.tier}</span>
+              <button id="btn-open-tree" class="btn-tree-link" title="Xem giải thích, thông số & cây nâng cấp">📖 Cây Nâng Cấp</button>
             </div>
             <button id="btn-close-panel" class="btn-x">✕</button>
           </div>
@@ -375,6 +481,13 @@ export class UIManager {
           </div>
         </div>
       `;
+
+      this.positionActionPanel(screenX, screenY);
+
+      document.getElementById('btn-open-tree')?.addEventListener('click', () => {
+        const tierKey = `${tower.type}_${tower.tier}${tower.branch ? '_' + tower.branch : ''}`;
+        this.sidePanel.open(tower.type, tierKey);
+      });
 
       document.getElementById('btn-close-panel')?.addEventListener('click', () => {
         this.state.selectedTowerId = null;
@@ -411,5 +524,61 @@ export class UIManager {
 
     // Nothing selected
     this.menuOverlayEl.innerHTML = '';
+  }
+
+  private positionActionPanel(targetScreenX: number, targetScreenY: number): void {
+    const panelEl = this.menuOverlayEl.querySelector('.action-panel:not(.floating-panel)') as HTMLElement;
+    if (!panelEl) return;
+
+    const canvasRect = this.canvasEl ? this.canvasEl.getBoundingClientRect() : { width: 1000, height: 650 };
+    const canvasW = canvasRect.width;
+    const canvasH = canvasRect.height;
+
+    // Set max height so that the panel never overflows the canvas vertically
+    const margin = 12;
+    const maxAllowedHeight = canvasH - margin * 2;
+    panelEl.style.maxHeight = `${maxAllowedHeight}px`;
+
+    // Measure true rendered dimensions
+    const panelW = panelEl.offsetWidth || 290;
+    const panelH = panelEl.offsetHeight || 340;
+
+    const offsetFromTarget = 36; // Keep the tower or slot completely unobstructed
+
+    const spaceRight = canvasW - (targetScreenX + offsetFromTarget);
+    const spaceLeft = targetScreenX - offsetFromTarget;
+
+    let posX: number;
+    let posY: number;
+
+    // 1. Prefer placing horizontally adjacent (Left or Right) to leave the tower/slot visible
+    if (spaceRight >= panelW + margin) {
+      // Place to the right of the target
+      posX = targetScreenX + offsetFromTarget;
+      // Vertically center on the target, clamped within screen margins
+      posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
+    } else if (spaceLeft >= panelW + margin) {
+      // Place to the left of the target
+      posX = targetScreenX - offsetFromTarget - panelW;
+      posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
+    } else {
+      // 2. If horizontal space on either side is too tight (e.g. extremely narrow canvas)
+      posX = Math.max(margin, Math.min(targetScreenX - panelW / 2, canvasW - panelW - margin));
+
+      const spaceBelow = canvasH - (targetScreenY + offsetFromTarget);
+      const spaceAbove = targetScreenY - offsetFromTarget;
+
+      if (spaceBelow >= panelH + margin) {
+        posY = targetScreenY + offsetFromTarget;
+      } else if (spaceAbove >= panelH + margin) {
+        posY = targetScreenY - offsetFromTarget - panelH;
+      } else {
+        posY = Math.max(margin, Math.min(targetScreenY - panelH / 2, canvasH - panelH - margin));
+      }
+    }
+
+    panelEl.style.left = `${Math.round(posX)}px`;
+    panelEl.style.top = `${Math.round(posY)}px`;
+    panelEl.style.visibility = 'visible';
   }
 }
