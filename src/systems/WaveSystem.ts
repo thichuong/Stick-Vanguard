@@ -17,6 +17,9 @@ export class WaveSystem {
   private currentMap: MapConfig;
   private activeSpawners: ActiveSpawner[] = [];
   private enemyCounter = 0;
+  private groundLaneIndex = 0;
+  private waterLaneIndex = 0;
+  private airLaneIndex = 0;
 
   constructor(mapConfig: MapConfig = MAP_CONFIG, totalWaves: number = 10) {
     this.currentMap = mapConfig;
@@ -29,6 +32,9 @@ export class WaveSystem {
     this.isWaveInProgress = false;
     this.waveTime = 0;
     this.activeSpawners = [];
+    this.groundLaneIndex = 0;
+    this.waterLaneIndex = 0;
+    this.airLaneIndex = 0;
   }
 
   public setTotalWaves(waves: number): void {
@@ -185,21 +191,52 @@ export class WaveSystem {
     }
   }
 
-  private createEnemy(typeId: string): EnemyEntity | null {
+  private createEnemy(typeId: string, forcedLaneIndex?: number): EnemyEntity | null {
     const bp = ENEMY_BLUEPRINTS[typeId];
     if (!bp) return null;
 
     this.enemyCounter++;
 
+    let laneIndex = 0;
     let startX = this.currentMap.groundSpawn.x;
     let startY = this.currentMap.groundSpawn.y;
 
     if (bp.navigationMode === 'WATER_PATH') {
-      startX = this.currentMap.waterSpawn.x;
-      startY = this.currentMap.waterSpawn.y;
+      const waterLanesCount =
+        this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
+          ? this.currentMap.waterLanes.length
+          : 1;
+      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.waterLaneIndex++ % waterLanesCount;
+      const spawnPt =
+        (this.currentMap.waterSpawns && this.currentMap.waterSpawns[laneIndex]) ||
+        (this.currentMap.waterLanes && this.currentMap.waterLanes[laneIndex]?.[0]) ||
+        this.currentMap.waterSpawn;
+      startX = spawnPt.x;
+      startY = spawnPt.y;
     } else if (bp.navigationMode === 'AIR_DIRECT' || bp.navigationMode === 'AIR_WAYPOINTS') {
-      startX = this.currentMap.airStart.x;
-      startY = this.currentMap.airStart.y;
+      const airLanesCount =
+        this.currentMap.airLanes && this.currentMap.airLanes.length > 0
+          ? this.currentMap.airLanes.length
+          : 1;
+      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.airLaneIndex++ % airLanesCount;
+      const spawnPt =
+        (this.currentMap.airStarts && this.currentMap.airStarts[laneIndex]) ||
+        (this.currentMap.airLanes && this.currentMap.airLanes[laneIndex]?.[0]) ||
+        this.currentMap.airStart;
+      startX = spawnPt.x;
+      startY = spawnPt.y;
+    } else {
+      const groundLanesCount =
+        this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
+          ? this.currentMap.groundLanes.length
+          : 1;
+      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.groundLaneIndex++ % groundLanesCount;
+      const spawnPt =
+        (this.currentMap.groundSpawns && this.currentMap.groundSpawns[laneIndex]) ||
+        (this.currentMap.groundLanes && this.currentMap.groundLanes[laneIndex]?.[0]) ||
+        this.currentMap.groundSpawn;
+      startX = spawnPt.x;
+      startY = spawnPt.y;
     }
 
     return {
@@ -220,6 +257,7 @@ export class WaveSystem {
       navigationMode: bp.navigationMode,
       pathDistance: 0,
       pathTotalLength: 1000,
+      laneIndex,
       elementalProfile: {
         primaryElement: bp.elementalProfile.primaryElement,
         secondaryElement: bp.elementalProfile.secondaryElement,
@@ -248,7 +286,8 @@ export class WaveSystem {
     typeId: string,
     pathDistance: number,
     x: number,
-    y: number
+    y: number,
+    laneIndex: number = 0
   ): EnemyEntity | null {
     const bp = ENEMY_BLUEPRINTS[typeId];
     if (!bp) return null;
@@ -272,6 +311,7 @@ export class WaveSystem {
       navigationMode: bp.navigationMode,
       pathDistance,
       pathTotalLength: 1000,
+      laneIndex,
       elementalProfile: {
         primaryElement: bp.elementalProfile.primaryElement,
         secondaryElement: bp.elementalProfile.secondaryElement,

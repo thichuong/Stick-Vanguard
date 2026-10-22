@@ -35,6 +35,14 @@ export interface MapConfig {
   riverWidth: number;
   towerSlots: TowerSlot[];
   waves: WaveConfig[];
+  // Multi-Lane Architecture
+  groundLanes?: Vector2D[][];
+  waterLanes?: Vector2D[][];
+  airLanes?: Vector2D[][];
+  groundSpawns?: Vector2D[];
+  waterSpawns?: Vector2D[];
+  airStarts?: Vector2D[];
+  laneBadges?: string[];
 }
 
 // Distance helper from point (px, py) to segment (x1, y1)-(x2, y2)
@@ -73,7 +81,7 @@ export function getDistanceToPolyline(
   py: number,
   waypoints: Vector2D[]
 ): { distance: number; closestPoint: Vector2D } {
-  if (waypoints.length === 0) {
+  if (!waypoints || waypoints.length === 0) {
     return { distance: Infinity, closestPoint: { x: px, y: py } };
   }
   if (waypoints.length === 1) {
@@ -97,6 +105,34 @@ export function getDistanceToPolyline(
   }
 
   return { distance: minDistance, closestPoint };
+}
+
+// Distance from point (px, py) to multiple polylines (multi-lane check)
+export function getDistanceToPolylines(
+  px: number,
+  py: number,
+  polylines: Vector2D[][]
+): { distance: number; closestPoint: Vector2D; laneIndex: number } {
+  if (!polylines || polylines.length === 0) {
+    return { distance: Infinity, closestPoint: { x: px, y: py }, laneIndex: -1 };
+  }
+
+  let minDistance = Infinity;
+  let closestPoint: Vector2D = { x: px, y: py };
+  let bestLaneIndex = 0;
+
+  for (let i = 0; i < polylines.length; i++) {
+    const lane = polylines[i];
+    if (!lane || lane.length === 0) continue;
+    const res = getDistanceToPolyline(px, py, lane);
+    if (res.distance < minDistance) {
+      minDistance = res.distance;
+      closestPoint = res.closestPoint;
+      bestLaneIndex = i;
+    }
+  }
+
+  return { distance: minDistance, closestPoint, laneIndex: bestLaneIndex };
 }
 
 // 1. Waves for Map 1: Thung Lũng Khởi Nguyên (10 Waves)
@@ -444,7 +480,8 @@ export const MAPS_CONFIG: MapConfig[] = [
       { id: 'slot-t1', x: 160, y: 160, placement: 'PATH_TRAP', currentTowerId: null },
       { id: 'slot-w1', x: 410, y: 210, placement: 'WATER_TRAP', currentTowerId: null }
     ],
-    waves: WAVES_VALLEY_ORIGIN
+    waves: WAVES_VALLEY_ORIGIN,
+    laneBadges: ['1 Tuyến Bộ Uốn S', '1 Dòng Suối', '1 Hành Lang Bay']
   },
 
   // 2. Giao Lộ Sinh Tử (12 Đợt)
@@ -491,7 +528,8 @@ export const MAPS_CONFIG: MapConfig[] = [
     groundSpawn: { x: 40, y: 320 },
     waterSpawn: { x: 500, y: 0 },
     towerSlots: [],
-    waves: WAVES_TWIN_CROSSROADS
+    waves: WAVES_TWIN_CROSSROADS,
+    laneBadges: ['1 Tuyến Bộ Cắt Sông', '1 Thủy Lộ Xuyên Tâm', 'Giao Điểm Cầu']
   },
 
   // 3. Hẻm Núi Mãng Xà (15 Đợt)
@@ -536,7 +574,8 @@ export const MAPS_CONFIG: MapConfig[] = [
     groundSpawn: { x: 40, y: 120 },
     waterSpawn: { x: 0, y: 300 },
     towerSlots: [],
-    waves: WAVES_SERPENT_CANYON
+    waves: WAVES_SERPENT_CANYON,
+    laneBadges: ['1 Tuyến Bộ 3 Tầng', '1 Thủy Lộ Đáy Vực', 'Đường Dài Tập Kích']
   },
 
   // 4. Pháo Đài Đồng Bằng (20 Đợt)
@@ -578,7 +617,415 @@ export const MAPS_CONFIG: MapConfig[] = [
     groundSpawn: { x: 40, y: 520 },
     waterSpawn: { x: 40, y: 120 },
     towerSlots: [],
-    waves: WAVES_DELTA_FORTRESS
+    waves: WAVES_DELTA_FORTRESS,
+    laneBadges: ['1 Tuyến Bộ Tây Nam', '1 Thủy Lộ Tây Bắc', 'Song Tuyến Hợp Lưu']
+  },
+
+  // 5. Hỏa Ngục Núi Lửa (Multi-Lane: 2 Ground + 1 Magma River + 2 Air)
+  {
+    id: 'infernal_caldera',
+    name: 'Hỏa Ngục Núi Lửa',
+    subtitle: 'Song cánh gọng kìm & Sông nham thạch',
+    description: 'Hai đạo quân bộ tràn xuống từ vách núi Bắc - Nam kẹp lấy dòng dung nham rực lửa ở trung tâm.',
+    themeColor: '#1a0500',
+    roadColor: '#9a3412',
+    riverColor: '#ea580c',
+    width: 1000,
+    height: 650,
+    roadWidth: 42,
+    riverWidth: 38,
+    // Primary fallback waypoints
+    groundWaypoints: [
+      { x: 40, y: 120 },
+      { x: 260, y: 120 },
+      { x: 440, y: 160 },
+      { x: 640, y: 160 },
+      { x: 820, y: 240 },
+      { x: 920, y: 325 }
+    ],
+    waterWaypoints: [
+      { x: 40, y: 325 },
+      { x: 280, y: 325 },
+      { x: 520, y: 325 },
+      { x: 740, y: 325 },
+      { x: 920, y: 325 }
+    ],
+    airStart: { x: 40, y: 80 },
+    airWaypoints: [
+      { x: 40, y: 80 },
+      { x: 450, y: 180 },
+      { x: 920, y: 325 }
+    ],
+    playerBase: { x: 920, y: 325, radius: 45 },
+    groundSpawn: { x: 40, y: 120 },
+    waterSpawn: { x: 40, y: 325 },
+    towerSlots: [],
+    waves: WAVES_DELTA_FORTRESS,
+    // MULTI-LANE SPECIFICATION
+    groundLanes: [
+      // Lane 0: Cánh Bắc
+      [
+        { x: 40, y: 120 },
+        { x: 260, y: 120 },
+        { x: 440, y: 160 },
+        { x: 640, y: 160 },
+        { x: 820, y: 240 },
+        { x: 920, y: 325 }
+      ],
+      // Lane 1: Cánh Nam
+      [
+        { x: 40, y: 530 },
+        { x: 260, y: 530 },
+        { x: 440, y: 490 },
+        { x: 640, y: 490 },
+        { x: 820, y: 410 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    waterLanes: [
+      // Sông Nham Thạch Xuyên Tâm
+      [
+        { x: 40, y: 325 },
+        { x: 280, y: 325 },
+        { x: 520, y: 325 },
+        { x: 740, y: 325 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    airLanes: [
+      [
+        { x: 40, y: 80 },
+        { x: 450, y: 180 },
+        { x: 920, y: 325 }
+      ],
+      [
+        { x: 40, y: 570 },
+        { x: 450, y: 470 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    groundSpawns: [
+      { x: 40, y: 120 }, // Cổng Bắc
+      { x: 40, y: 530 }  // Cổng Nam
+    ],
+    waterSpawns: [
+      { x: 40, y: 325 }  // Cổng Nham Thạch
+    ],
+    airStarts: [
+      { x: 40, y: 80 },
+      { x: 40, y: 570 }
+    ],
+    laneBadges: ['2 Tuyến Bộ Song Cánh', '1 Sông Nham Thạch', '2 Hành Lang Bay']
+  },
+
+  // 6. Băng Đảo Cực Bắc (Multi-Lane: 1 Ground + 2 Glacial Rivers + 2 Air)
+  {
+    id: 'frozen_citadel',
+    name: 'Băng Đảo Cực Bắc',
+    subtitle: 'Song thủy lộ & Đường bộ uốn Z',
+    description: 'Hai dòng sông băng cuồn cuộn ép vào hai sườn đồi, kẹp chặt con đường bộ quanh co ở trung tâm.',
+    themeColor: '#0a192f',
+    roadColor: '#64748b',
+    riverColor: '#38bdf8',
+    width: 1000,
+    height: 650,
+    roadWidth: 40,
+    riverWidth: 38,
+    groundWaypoints: [
+      { x: 40, y: 325 },
+      { x: 200, y: 325 },
+      { x: 300, y: 220 },
+      { x: 500, y: 220 },
+      { x: 600, y: 430 },
+      { x: 760, y: 430 },
+      { x: 850, y: 325 },
+      { x: 920, y: 325 }
+    ],
+    waterWaypoints: [
+      { x: 40, y: 90 },
+      { x: 300, y: 90 },
+      { x: 580, y: 110 },
+      { x: 780, y: 170 },
+      { x: 920, y: 325 }
+    ],
+    airStart: { x: 40, y: 60 },
+    airWaypoints: [
+      { x: 40, y: 60 },
+      { x: 480, y: 200 },
+      { x: 920, y: 325 }
+    ],
+    playerBase: { x: 920, y: 325, radius: 45 },
+    groundSpawn: { x: 40, y: 325 },
+    waterSpawn: { x: 40, y: 90 },
+    towerSlots: [],
+    waves: WAVES_DELTA_FORTRESS,
+    groundLanes: [
+      [
+        { x: 40, y: 325 },
+        { x: 200, y: 325 },
+        { x: 300, y: 220 },
+        { x: 500, y: 220 },
+        { x: 600, y: 430 },
+        { x: 760, y: 430 },
+        { x: 850, y: 325 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    waterLanes: [
+      // Sông Băng Bắc
+      [
+        { x: 40, y: 90 },
+        { x: 300, y: 90 },
+        { x: 580, y: 110 },
+        { x: 780, y: 170 },
+        { x: 920, y: 325 }
+      ],
+      // Sông Băng Nam
+      [
+        { x: 40, y: 560 },
+        { x: 300, y: 560 },
+        { x: 580, y: 540 },
+        { x: 780, y: 480 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    airLanes: [
+      [
+        { x: 40, y: 60 },
+        { x: 480, y: 200 },
+        { x: 920, y: 325 }
+      ],
+      [
+        { x: 40, y: 590 },
+        { x: 480, y: 450 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    groundSpawns: [
+      { x: 40, y: 325 }
+    ],
+    waterSpawns: [
+      { x: 40, y: 90 },  // Thủy Cổng Bắc
+      { x: 40, y: 560 }  // Thủy Cổng Nam
+    ],
+    airStarts: [
+      { x: 40, y: 60 },
+      { x: 40, y: 590 }
+    ],
+    laneBadges: ['1 Tuyến Bộ Uốn Z', '2 Dòng Sông Băng', 'Song Thủy Đột Kích']
+  },
+
+  // 7. Cổ Thành Hư Vô (Multi-Lane: 3 Ground + 1 Magic Canal + 2 Air)
+  {
+    id: 'ancient_necropolis',
+    name: 'Cổ Thành Hư Vô',
+    subtitle: 'Tam lộ huyết chiến - 3 Cửa bộ riêng biệt',
+    description: 'Quân đoàn hư vô tấn công từ ba hướng Tây Bắc, Chính Tây và Tây Nam, vây hãm đại điện trung tâm.',
+    themeColor: '#0a0914',
+    roadColor: '#a16207',
+    riverColor: '#9333ea',
+    width: 1000,
+    height: 650,
+    roadWidth: 38,
+    riverWidth: 36,
+    groundWaypoints: [
+      { x: 40, y: 110 },
+      { x: 280, y: 110 },
+      { x: 480, y: 220 },
+      { x: 720, y: 220 },
+      { x: 920, y: 325 }
+    ],
+    waterWaypoints: [
+      { x: 200, y: 0 },
+      { x: 280, y: 220 },
+      { x: 450, y: 330 },
+      { x: 580, y: 200 },
+      { x: 820, y: 280 },
+      { x: 920, y: 325 }
+    ],
+    airStart: { x: 40, y: 60 },
+    airWaypoints: [
+      { x: 40, y: 60 },
+      { x: 460, y: 160 },
+      { x: 920, y: 325 }
+    ],
+    playerBase: { x: 920, y: 325, radius: 45 },
+    groundSpawn: { x: 40, y: 110 },
+    waterSpawn: { x: 200, y: 0 },
+    towerSlots: [],
+    waves: WAVES_DELTA_FORTRESS,
+    // 3 GROUND LANES!
+    groundLanes: [
+      // Cánh Tây Bắc
+      [
+        { x: 40, y: 110 },
+        { x: 280, y: 110 },
+        { x: 480, y: 220 },
+        { x: 720, y: 220 },
+        { x: 920, y: 325 }
+      ],
+      // Cánh Chính Tây
+      [
+        { x: 40, y: 325 },
+        { x: 260, y: 325 },
+        { x: 400, y: 440 },
+        { x: 620, y: 440 },
+        { x: 760, y: 325 },
+        { x: 920, y: 325 }
+      ],
+      // Cánh Tây Nam
+      [
+        { x: 40, y: 540 },
+        { x: 280, y: 540 },
+        { x: 500, y: 490 },
+        { x: 720, y: 400 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    waterLanes: [
+      // Kênh Năng Lượng Ma Thuật Tím
+      [
+        { x: 200, y: 0 },
+        { x: 280, y: 220 },
+        { x: 450, y: 330 },
+        { x: 580, y: 200 },
+        { x: 820, y: 280 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    airLanes: [
+      [
+        { x: 40, y: 60 },
+        { x: 460, y: 160 },
+        { x: 920, y: 325 }
+      ],
+      [
+        { x: 40, y: 580 },
+        { x: 460, y: 480 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    groundSpawns: [
+      { x: 40, y: 110 }, // Cổng Tây Bắc
+      { x: 40, y: 325 }, // Cổng Chính Tây
+      { x: 40, y: 540 }  // Cổng Tây Nam
+    ],
+    waterSpawns: [
+      { x: 200, y: 0 }   // Kênh Bắc
+    ],
+    airStarts: [
+      { x: 40, y: 60 },
+      { x: 40, y: 580 }
+    ],
+    laneBadges: ['3 Tuyến Bộ Riêng Biệt', '1 Kênh Năng Lượng', 'Tam Lộ Giáp Kẹp']
+  },
+
+  // 8. Đầm Lầy Tử Khí (Multi-Lane: 2 Ground + 2 Poison Channels + 2 Air)
+  {
+    id: 'plague_morass',
+    name: 'Đầm Lầy Tử Khí',
+    subtitle: 'Tứ trận hợp điểm - 2 Tuyến bộ & 2 Kênh độc',
+    description: 'Địa hình sình lầy đan xen mạng lưới kênh bùn độc, quái vật xuất hiện từ cả 4 hướng tiếp cận.',
+    themeColor: '#051f15',
+    roadColor: '#166534',
+    riverColor: '#84cc16',
+    width: 1000,
+    height: 650,
+    roadWidth: 40,
+    riverWidth: 36,
+    groundWaypoints: [
+      { x: 40, y: 140 },
+      { x: 220, y: 140 },
+      { x: 360, y: 280 },
+      { x: 560, y: 160 },
+      { x: 740, y: 200 },
+      { x: 920, y: 325 }
+    ],
+    waterWaypoints: [
+      { x: 300, y: 0 },
+      { x: 340, y: 180 },
+      { x: 460, y: 325 },
+      { x: 640, y: 280 },
+      { x: 820, y: 310 },
+      { x: 920, y: 325 }
+    ],
+    airStart: { x: 40, y: 80 },
+    airWaypoints: [
+      { x: 40, y: 80 },
+      { x: 460, y: 220 },
+      { x: 920, y: 325 }
+    ],
+    playerBase: { x: 920, y: 325, radius: 45 },
+    groundSpawn: { x: 40, y: 140 },
+    waterSpawn: { x: 300, y: 0 },
+    towerSlots: [],
+    waves: WAVES_DELTA_FORTRESS,
+    // MULTI-LANE SPECIFICATION
+    groundLanes: [
+      // Tuyến Lầy Bắc
+      [
+        { x: 40, y: 140 },
+        { x: 220, y: 140 },
+        { x: 360, y: 280 },
+        { x: 560, y: 160 },
+        { x: 740, y: 200 },
+        { x: 920, y: 325 }
+      ],
+      // Tuyến Lầy Nam
+      [
+        { x: 40, y: 510 },
+        { x: 220, y: 510 },
+        { x: 360, y: 370 },
+        { x: 560, y: 490 },
+        { x: 740, y: 450 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    waterLanes: [
+      // Kênh Bùn Độc Phương Bắc
+      [
+        { x: 300, y: 0 },
+        { x: 340, y: 180 },
+        { x: 460, y: 325 },
+        { x: 640, y: 280 },
+        { x: 820, y: 310 },
+        { x: 920, y: 325 }
+      ],
+      // Kênh Bùn Độc Phương Nam
+      [
+        { x: 300, y: 650 },
+        { x: 340, y: 470 },
+        { x: 460, y: 325 },
+        { x: 640, y: 370 },
+        { x: 820, y: 340 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    airLanes: [
+      [
+        { x: 40, y: 80 },
+        { x: 460, y: 220 },
+        { x: 920, y: 325 }
+      ],
+      [
+        { x: 40, y: 570 },
+        { x: 460, y: 430 },
+        { x: 920, y: 325 }
+      ]
+    ],
+    groundSpawns: [
+      { x: 40, y: 140 }, // Cổng Lầy 1
+      { x: 40, y: 510 }  // Cổng Lầy 2
+    ],
+    waterSpawns: [
+      { x: 300, y: 0 },   // Kênh Độc Bắc
+      { x: 300, y: 650 }  // Kênh Độc Nam
+    ],
+    airStarts: [
+      { x: 40, y: 80 },
+      { x: 40, y: 570 }
+    ],
+    laneBadges: ['2 Tuyến Bộ Đan Chéo', '2 Kênh Bùn Độc', 'Tứ Tuyến Tử Địa']
   }
 ];
 

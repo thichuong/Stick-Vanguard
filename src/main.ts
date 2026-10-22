@@ -269,7 +269,7 @@ class GameApp {
     this.waveSystem.update(
       dt,
       (newEnemy) => {
-        const pathInfo = this.navSystem.getPathInfo(newEnemy.navigationMode);
+        const pathInfo = this.navSystem.getPathInfo(newEnemy.navigationMode, newEnemy.laneIndex ?? 0);
         newEnemy.pathTotalLength = pathInfo.totalLength;
         this.state.enemies.push(newEnemy);
       },
@@ -311,10 +311,21 @@ class GameApp {
           for (let s = 0; s < cfg.count; s++) {
             const offset = (s - (cfg.count - 1) / 2) * 12;
             const childDist = Math.max(0, enemy.pathDistance + offset);
-            const childNav = this.navSystem.getPointAlongPath(enemy.navigationMode, childDist, this.totalAnimTime);
-            const childEnemy = this.waveSystem.spawnMinionAt(cfg.typeId, childDist, childNav.position.x, childNav.position.y);
+            const childNav = this.navSystem.getPointAlongPath(
+              enemy.navigationMode,
+              childDist,
+              this.totalAnimTime,
+              enemy.laneIndex ?? 0
+            );
+            const childEnemy = this.waveSystem.spawnMinionAt(
+              cfg.typeId,
+              childDist,
+              childNav.position.x,
+              childNav.position.y,
+              enemy.laneIndex ?? 0
+            );
             if (childEnemy) {
-              const pathInfo = this.navSystem.getPathInfo(childEnemy.navigationMode);
+              const pathInfo = this.navSystem.getPathInfo(childEnemy.navigationMode, childEnemy.laneIndex ?? 0);
               childEnemy.pathTotalLength = pathInfo.totalLength;
               childEnemy.facing = childNav.facing;
               this.state.enemies.push(childEnemy);
@@ -339,10 +350,21 @@ class GameApp {
           for (let s = 0; s < sCfg.count; s++) {
             const offset = (s + 1) * 14;
             const minionDist = Math.max(0, enemy.pathDistance - offset);
-            const mNav = this.navSystem.getPointAlongPath(enemy.navigationMode, minionDist, this.totalAnimTime);
-            const minion = this.waveSystem.spawnMinionAt(sCfg.typeId, minionDist, mNav.position.x, mNav.position.y);
+            const mNav = this.navSystem.getPointAlongPath(
+              enemy.navigationMode,
+              minionDist,
+              this.totalAnimTime,
+              enemy.laneIndex ?? 0
+            );
+            const minion = this.waveSystem.spawnMinionAt(
+              sCfg.typeId,
+              minionDist,
+              mNav.position.x,
+              mNav.position.y,
+              enemy.laneIndex ?? 0
+            );
             if (minion) {
-              const pathInfo = this.navSystem.getPathInfo(minion.navigationMode);
+              const pathInfo = this.navSystem.getPathInfo(minion.navigationMode, minion.laneIndex ?? 0);
               minion.pathTotalLength = pathInfo.totalLength;
               minion.facing = mNav.facing;
               this.state.enemies.push(minion);
@@ -356,7 +378,12 @@ class GameApp {
       }
 
       enemy.pathDistance += enemy.speed * dt;
-      const nav = this.navSystem.getPointAlongPath(enemy.navigationMode, enemy.pathDistance, this.totalAnimTime);
+      const nav = this.navSystem.getPointAlongPath(
+        enemy.navigationMode,
+        enemy.pathDistance,
+        this.totalAnimTime,
+        enemy.laneIndex ?? 0
+      );
 
       enemy.x = nav.position.x;
       enemy.y = nav.position.y;

@@ -17,7 +17,7 @@ import { MagicalElementType } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
   MapConfig,
-  getDistanceToPolyline
+  getDistanceToPolylines
 } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
 import {
@@ -136,19 +136,43 @@ export class GameState {
       return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần căn cứ trung tâm!' };
     }
 
-    const distToGroundSpawn = Math.hypot(x - groundSpawn.x, y - groundSpawn.y);
-    if (distToGroundSpawn < 30) {
-      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng quái xuất phát!' };
+    const allGroundSpawns =
+      this.currentMap.groundSpawns && this.currentMap.groundSpawns.length > 0
+        ? this.currentMap.groundSpawns
+        : [groundSpawn];
+
+    for (const sp of allGroundSpawns) {
+      if (Math.hypot(x - sp.x, y - sp.y) < 30) {
+        return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng quái xuất phát!' };
+      }
     }
 
-    const distToWaterSpawn = Math.hypot(x - waterSpawn.x, y - waterSpawn.y);
-    if (distToWaterSpawn < 30) {
-      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng thủy quái!' };
+    const allWaterSpawns =
+      this.currentMap.waterSpawns && this.currentMap.waterSpawns.length > 0
+        ? this.currentMap.waterSpawns
+        : [waterSpawn];
+
+    for (const sp of allWaterSpawns) {
+      if (Math.hypot(x - sp.x, y - sp.y) < 30) {
+        return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng thủy quái!' };
+      }
     }
 
-    // 3. Distance to Road & River
-    const roadRes = getDistanceToPolyline(x, y, groundWaypoints);
-    const riverRes = getDistanceToPolyline(x, y, waterWaypoints);
+    // 3. Distance to Road & River (Multi-lane aware)
+    const allGroundLanes =
+      this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
+        ? this.currentMap.groundLanes
+        : [groundWaypoints];
+
+    const allWaterLanes =
+      this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
+        ? this.currentMap.waterLanes
+        : waterWaypoints && waterWaypoints.length > 0
+        ? [waterWaypoints]
+        : [];
+
+    const roadRes = getDistanceToPolylines(x, y, allGroundLanes);
+    const riverRes = getDistanceToPolylines(x, y, allWaterLanes);
 
     const roadHalfWidth = 22; // Road half width
     const riverHalfWidth = 20; // River half width
@@ -224,9 +248,13 @@ export class GameState {
     let rallyPoint: Vector2D | undefined;
     let soldierIds: string[] | undefined;
 
-    // For Barracks, find closest point on road
+    // For Barracks, find closest point on nearest road lane
     if (bp.type === 'BARRACKS') {
-      const roadRes = getDistanceToPolyline(x, y, this.currentMap.groundWaypoints);
+      const allGroundLanes =
+        this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
+          ? this.currentMap.groundLanes
+          : [this.currentMap.groundWaypoints];
+      const roadRes = getDistanceToPolylines(x, y, allGroundLanes);
       const distToClosest = Math.hypot(roadRes.closestPoint.x - x, roadRes.closestPoint.y - y);
 
       if (distToClosest <= bp.range) {

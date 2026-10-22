@@ -32,14 +32,36 @@ export class MapRenderer {
       ctx.stroke();
     }
 
-    // 2. Render River (Water Path)
-    this.renderRiver(ctx, mapConfig.waterWaypoints, animTime, mapConfig.riverWidth || 38, riverColor);
+    // 2. Render Rivers (Water Paths - Multi-lane aware)
+    const allWaterLanes =
+      mapConfig.waterLanes && mapConfig.waterLanes.length > 0
+        ? mapConfig.waterLanes
+        : mapConfig.waterWaypoints && mapConfig.waterWaypoints.length > 0
+        ? [mapConfig.waterWaypoints]
+        : [];
+    for (const lane of allWaterLanes) {
+      this.renderRiver(ctx, lane, animTime, mapConfig.riverWidth || 38, riverColor);
+    }
 
-    // 3. Render Ground Road (Dirt Path)
-    this.renderGroundRoad(ctx, mapConfig.groundWaypoints, mapConfig.roadWidth || 42, roadColor);
+    // 3. Render Ground Roads (Dirt Paths - Multi-lane aware)
+    const allGroundLanes =
+      mapConfig.groundLanes && mapConfig.groundLanes.length > 0
+        ? mapConfig.groundLanes
+        : [mapConfig.groundWaypoints];
+    for (const lane of allGroundLanes) {
+      this.renderGroundRoad(ctx, lane, mapConfig.roadWidth || 42, roadColor);
+    }
 
-    // 4. Render Air Corridor (Dotted warning line)
-    this.renderAirCorridor(ctx, mapConfig.airWaypoints, animTime);
+    // 4. Render Air Corridors (Dotted warning lines - Multi-lane aware)
+    const allAirLanes =
+      mapConfig.airLanes && mapConfig.airLanes.length > 0
+        ? mapConfig.airLanes
+        : mapConfig.airWaypoints && mapConfig.airWaypoints.length > 0
+        ? [mapConfig.airWaypoints]
+        : [];
+    allAirLanes.forEach((lane, idx) => {
+      this.renderAirCorridor(ctx, lane, animTime, idx);
+    });
 
     // 5. Render Spawners & Base
     this.renderPortalsAndBase(ctx, animTime, mapConfig);
@@ -117,9 +139,10 @@ export class MapRenderer {
   private static renderAirCorridor(
     ctx: CanvasRenderingContext2D,
     waypoints: Vector2D[],
-    animTime: number
+    animTime: number,
+    laneIdx: number = 0
   ): void {
-    if (waypoints.length < 2) return;
+    if (!waypoints || waypoints.length < 2) return;
 
     ctx.save();
     ctx.beginPath();
@@ -130,15 +153,16 @@ export class MapRenderer {
     ctx.strokeStyle = 'rgba(52, 211, 153, 0.28)';
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 10]);
-    ctx.lineDashOffset = -animTime * 25;
+    ctx.lineDashOffset = -animTime * 25 - laneIdx * 5;
     ctx.stroke();
 
     // Air warning icon
     const labelX = (waypoints[0].x + waypoints[1].x) / 2;
     const labelY = (waypoints[0].y + waypoints[1].y) / 2 - 12;
     ctx.fillStyle = '#34d399';
-    ctx.font = '12px sans-serif';
-    ctx.fillText('✈️ HÀNH LANG BAY', labelX, Math.max(20, labelY));
+    ctx.font = '11px sans-serif';
+    const tag = laneIdx > 0 ? `✈️ HÀNH LANG BAY #${laneIdx + 1}` : '✈️ HÀNH LANG BAY';
+    ctx.fillText(tag, labelX, Math.max(20, labelY));
     ctx.restore();
   }
 
@@ -147,35 +171,69 @@ export class MapRenderer {
     animTime: number,
     mapConfig: MapConfig
   ): void {
-    // Ground spawn
-    const gs = mapConfig.groundSpawn;
-    ctx.save();
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(gs.x, gs.y, 20, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💀', gs.x, gs.y);
-    ctx.restore();
+    // 1. Ground spawns (Multi-spawn aware)
+    const groundSpawns =
+      mapConfig.groundSpawns && mapConfig.groundSpawns.length > 0
+        ? mapConfig.groundSpawns
+        : [mapConfig.groundSpawn];
 
-    // Water spawn
-    const ws = mapConfig.waterSpawn;
-    ctx.save();
-    ctx.fillStyle = '#0ea5e9';
-    ctx.beginPath();
-    ctx.arc(ws.x, ws.y, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🌊', ws.x, ws.y);
-    ctx.restore();
+    groundSpawns.forEach((gs, idx) => {
+      ctx.save();
+      const pulse = Math.sin(animTime * 4 + idx) * 2;
+      // Glow ring
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(gs.x, gs.y, 22 + pulse, 0, Math.PI * 2);
+      ctx.stroke();
 
-    // Player Base (Gate)
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(gs.x, gs.y, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = groundSpawns.length > 1 ? 'bold 11px sans-serif' : '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = groundSpawns.length > 1 ? `💀${idx + 1}` : '💀';
+      ctx.fillText(label, gs.x, gs.y);
+      ctx.restore();
+    });
+
+    // 2. Water spawns (Multi-spawn aware)
+    const waterSpawns =
+      mapConfig.waterSpawns && mapConfig.waterSpawns.length > 0
+        ? mapConfig.waterSpawns
+        : mapConfig.waterSpawn
+        ? [mapConfig.waterSpawn]
+        : [];
+
+    waterSpawns.forEach((ws, idx) => {
+      ctx.save();
+      const pulse = Math.sin(animTime * 4 + idx + 1) * 2;
+      // Glow ring
+      ctx.strokeStyle = 'rgba(14, 165, 233, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(ws.x, ws.y, 20 + pulse, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0ea5e9';
+      ctx.beginPath();
+      ctx.arc(ws.x, ws.y, 17, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = waterSpawns.length > 1 ? 'bold 11px sans-serif' : '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = waterSpawns.length > 1 ? `🌊${idx + 1}` : '🌊';
+      ctx.fillText(label, ws.x, ws.y);
+      ctx.restore();
+    });
+
+    // 3. Player Base (Gate)
     const base = mapConfig.playerBase;
     const pulse = Math.sin(animTime * 3) * 3;
 

@@ -542,5 +542,101 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(wave25.enemies.some((e) => e.typeId === 'VOID_HYDRA_BOSS')).toBe(true);
     });
   });
+
+  describe('Multi-Lane Maps & Map Diversity', () => {
+    it('should have at least 8 diverse maps configured', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      expect(MAPS_CONFIG.length).toBeGreaterThanOrEqual(8);
+
+      const mapIds = MAPS_CONFIG.map((m) => m.id);
+      expect(mapIds).toContain('valley_origin');
+      expect(mapIds).toContain('twin_crossroads');
+      expect(mapIds).toContain('serpent_canyon');
+      expect(mapIds).toContain('delta_fortress');
+      expect(mapIds).toContain('infernal_caldera');
+      expect(mapIds).toContain('frozen_citadel');
+      expect(mapIds).toContain('ancient_necropolis');
+      expect(mapIds).toContain('plague_morass');
+    });
+
+    it('should support multi-lane configuration in NavigationSystem', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      const necropolis = MAPS_CONFIG.find((m) => m.id === 'ancient_necropolis')!;
+      expect(necropolis).toBeDefined();
+      expect(necropolis.groundLanes?.length).toBe(3);
+
+      const nav = new NavigationSystem(necropolis);
+      expect(nav.getLaneCount('GROUND_PATH')).toBe(3);
+
+      const lane0 = nav.getPathInfo('GROUND_PATH', 0);
+      const lane1 = nav.getPathInfo('GROUND_PATH', 1);
+      const lane2 = nav.getPathInfo('GROUND_PATH', 2);
+
+      expect(lane0.totalLength).toBeGreaterThan(400);
+      expect(lane1.totalLength).toBeGreaterThan(400);
+      expect(lane2.totalLength).toBeGreaterThan(400);
+
+      // Verify each lane has distinct starting points
+      const pt0 = nav.getPointAlongPath('GROUND_PATH', 0, 0, 0);
+      const pt1 = nav.getPointAlongPath('GROUND_PATH', 0, 0, 1);
+      const pt2 = nav.getPointAlongPath('GROUND_PATH', 0, 0, 2);
+
+      expect(pt0.position.y).not.toBe(pt1.position.y);
+      expect(pt1.position.y).not.toBe(pt2.position.y);
+    });
+
+    it('should cycle enemy spawns across multiple lanes in WaveSystem', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const caldera = MAPS_CONFIG.find((m) => m.id === 'infernal_caldera')!;
+      expect(caldera).toBeDefined();
+      expect(caldera.groundLanes?.length).toBe(2);
+
+      const waveSys = new WaveSystem(caldera, 5);
+      waveSys.startWave(1);
+
+      const spawnedEnemies: EnemyEntity[] = [];
+      // Simulate spawning 4 enemies
+      for (let i = 0; i < 4; i++) {
+        waveSys.update(
+          2.0,
+          (enemy) => spawnedEnemies.push(enemy),
+          () => {},
+          0
+        );
+      }
+
+      expect(spawnedEnemies.length).toBeGreaterThanOrEqual(2);
+      const groundEnemies = spawnedEnemies.filter((e) => e.navigationMode === 'GROUND_PATH');
+      if (groundEnemies.length >= 2) {
+        // First enemy on lane 0, second on lane 1
+        expect(groundEnemies[0].laneIndex).toBe(0);
+        expect(groundEnemies[1].laneIndex).toBe(1);
+      }
+    });
+
+    it('should validate placement on multi-lane map correctly', async () => {
+      const gs = new GameState();
+      gs.setMap('infernal_caldera');
+
+      expect(gs.currentMapId).toBe('infernal_caldera');
+      // Lane 0 is near (40, 120), Lane 1 is near (40, 530)
+      // Placing trap on lane 0 should be valid
+      const trapOnLane0 = gs.validatePlacement(260, 120, 'TRAP_SPIKE');
+      expect(trapOnLane0.valid).toBe(true);
+
+      // Placing trap on lane 1 should be valid
+      const trapOnLane1 = gs.validatePlacement(260, 530, 'TRAP_SPIKE');
+      expect(trapOnLane1.valid).toBe(true);
+
+      // Placing tower on lane 0 should be INVALID (towers cannot be built on roads)
+      const towerOnRoad = gs.validatePlacement(260, 120, 'ARCHER');
+      expect(towerOnRoad.valid).toBe(false);
+
+      // Placing tower in clear roadside area should be VALID
+      const towerOnLand = gs.validatePlacement(260, 220, 'ARCHER');
+      expect(towerOnLand.valid).toBe(true);
+    });
+  });
 });
 

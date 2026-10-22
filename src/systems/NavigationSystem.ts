@@ -14,9 +14,9 @@ export interface PathInfo {
 
 export class NavigationSystem {
   private currentMap: MapConfig;
-  private groundPath!: PathInfo;
-  private waterPath!: PathInfo;
-  private airPath!: PathInfo;
+  private groundPaths: PathInfo[] = [];
+  private waterPaths: PathInfo[] = [];
+  private airPaths: PathInfo[] = [];
 
   constructor(mapConfig: MapConfig = MAP_CONFIG) {
     this.currentMap = mapConfig;
@@ -29,12 +29,40 @@ export class NavigationSystem {
   }
 
   private rebuildPaths(): void {
-    this.groundPath = this.buildPathInfo(this.currentMap.groundWaypoints);
-    this.waterPath = this.buildPathInfo(this.currentMap.waterWaypoints);
-    this.airPath = this.buildPathInfo(this.currentMap.airWaypoints);
+    // 1. Build Ground Paths
+    const groundLanes =
+      this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
+        ? this.currentMap.groundLanes
+        : [this.currentMap.groundWaypoints];
+
+    this.groundPaths = groundLanes.map((lane) => this.buildPathInfo(lane));
+
+    // 2. Build Water Paths
+    const waterLanes =
+      this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
+        ? this.currentMap.waterLanes
+        : this.currentMap.waterWaypoints && this.currentMap.waterWaypoints.length > 0
+        ? [this.currentMap.waterWaypoints]
+        : [];
+
+    this.waterPaths = waterLanes.map((lane) => this.buildPathInfo(lane));
+
+    // 3. Build Air Paths
+    const airLanes =
+      this.currentMap.airLanes && this.currentMap.airLanes.length > 0
+        ? this.currentMap.airLanes
+        : this.currentMap.airWaypoints && this.currentMap.airWaypoints.length > 0
+        ? [this.currentMap.airWaypoints]
+        : [];
+
+    this.airPaths = airLanes.map((lane) => this.buildPathInfo(lane));
   }
 
   private buildPathInfo(waypoints: Vector2D[]): PathInfo {
+    if (!waypoints || waypoints.length < 2) {
+      return { totalLength: 0, segments: [] };
+    }
+
     const segments = [];
     let totalLength = 0;
 
@@ -56,28 +84,71 @@ export class NavigationSystem {
     return { totalLength, segments };
   }
 
-  public getPathInfo(mode: NavigationMode): PathInfo {
+  public getLaneCount(mode: NavigationMode): number {
     switch (mode) {
       case 'WATER_PATH':
-        return this.waterPath;
+        return Math.max(1, this.waterPaths.length);
       case 'AIR_DIRECT':
       case 'AIR_WAYPOINTS':
-        return this.airPath;
+        return Math.max(1, this.airPaths.length);
       case 'GROUND_PATH':
       default:
-        return this.groundPath;
+        return Math.max(1, this.groundPaths.length);
     }
   }
 
+  public getAllLanes(mode: NavigationMode): PathInfo[] {
+    switch (mode) {
+      case 'WATER_PATH':
+        return this.waterPaths;
+      case 'AIR_DIRECT':
+      case 'AIR_WAYPOINTS':
+        return this.airPaths;
+      case 'GROUND_PATH':
+      default:
+        return this.groundPaths;
+    }
+  }
+
+  public getPathInfo(mode: NavigationMode, laneIndex: number = 0): PathInfo {
+    let pool: PathInfo[];
+    switch (mode) {
+      case 'WATER_PATH':
+        pool = this.waterPaths;
+        break;
+      case 'AIR_DIRECT':
+      case 'AIR_WAYPOINTS':
+        pool = this.airPaths;
+        break;
+      case 'GROUND_PATH':
+      default:
+        pool = this.groundPaths;
+        break;
+    }
+
+    if (!pool || pool.length === 0) {
+      // Fallback to primary ground path
+      return this.groundPaths[0] || { totalLength: 0, segments: [] };
+    }
+
+    const safeIndex = Math.abs(laneIndex) % pool.length;
+    return pool[safeIndex];
+  }
+
   /**
-   * Returns { position, facingAngle, isFinished } given current path distance
+   * Returns { position, facingAngle, isFinished } given current path distance and lane
    */
   public getPointAlongPath(
     mode: NavigationMode,
     distance: number,
-    animTime: number = 0
+    animTime: number = 0,
+    laneIndex: number = 0
   ): { position: Vector2D; facing: number; isFinished: boolean } {
-    const path = this.getPathInfo(mode);
+    const path = this.getPathInfo(mode, laneIndex);
+
+    if (!path || path.segments.length === 0) {
+      return { position: { x: 0, y: 0 }, facing: 0, isFinished: true };
+    }
 
     if (distance >= path.totalLength) {
       const lastPt = path.segments[path.segments.length - 1].p2;
@@ -108,11 +179,11 @@ export class NavigationSystem {
         if (mode === 'AIR_DIRECT') {
           const perpX = -Math.sin(facing);
           const perpY = Math.cos(facing);
-          const wobble = Math.sin(animTime * 3 + distance * 0.05) * 8;
+          const wobble = Math.sin(animTime * 3 + distance * 0.05 + laneIndex) * 8;
           x += perpX * wobble;
           y += perpY * wobble;
         } else if (mode === 'WATER_PATH') {
-          y += Math.sin(animTime * 4 + x * 0.04) * 3;
+          y += Math.sin(animTime * 4 + x * 0.04 + laneIndex) * 3;
         }
 
         return { position: { x, y }, facing, isFinished: false };

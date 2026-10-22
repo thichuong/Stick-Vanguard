@@ -113,6 +113,7 @@ export interface EnemyEntity {
   altitude: number; // 0 for ground/water, > 0 for flying
   size: number;
   facing: number; // radians
+  laneIndex?: number; // 0-based lane index for multi-lane maps
   deathSpawn?: DeathSpawnConfig;
   summonConfig?: SummonAbilityConfig;
   summonTimer?: number;
