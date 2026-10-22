@@ -49,28 +49,107 @@ export class WaveSystem {
   }
 
   public getCurrentWaveConfig(): WaveConfig {
+    if (
+      this.currentMap &&
+      this.currentMap.waves &&
+      this.currentMap.waves[this.currentWaveIndex] &&
+      this.customTotalWaves === this.currentMap.waves.length
+    ) {
+      return this.currentMap.waves[this.currentWaveIndex];
+    }
     return this.generateWaveConfig(this.currentWaveIndex, this.customTotalWaves);
   }
 
   /**
    * Procedural / Dynamic wave generation scaling with custom wave counts
+   * Rule:
+   * - Wave 1-3: ONLY walking (WALK)
+   * - Wave 4: ONLY flying (FLY)
+   * - Wave 5: ONLY swimming/water (SWIM)
+   * - Wave > 5: Multiple movement types (mixed routes)
    */
   public generateWaveConfig(waveIdx: number, totalWaves: number): WaveConfig {
     const waveNum = waveIdx + 1;
     const progress = totalWaves > 1 ? waveIdx / (totalWaves - 1) : 1; // 0.0 to 1.0
-    const isFinalWave = waveNum === totalWaves;
-    const isBossWave = isFinalWave || (totalWaves >= 10 && waveNum % 5 === 0);
+    const isFinalWave = waveNum === totalWaves && waveNum > 5;
+    const isBossWave = (isFinalWave || (totalWaves >= 10 && waveNum % 5 === 0)) && waveNum > 5;
 
     const baseReward = 45 + Math.round(waveNum * 12);
     const enemies: WaveConfig['enemies'] = [];
 
+    // --- Wave 1, 2, 3: Đảm bảo 3 waves đầu là quái đi bộ (WALK only) ---
+    if (waveNum === 1) {
+      enemies.push({ typeId: 'STICK_RUNNER', count: 8, interval: 1.4, delay: 0 });
+      return {
+        waveNumber: 1,
+        name: 'Đợt 1: Dân Quân Bất Tuân (Đi Bộ)',
+        rewardGold: baseReward,
+        enemies
+      };
+    }
+
+    if (waveNum === 2) {
+      enemies.push({ typeId: 'STICK_RUNNER', count: 6, interval: 1.2, delay: 0 });
+      enemies.push({ typeId: 'STICK_WARRIOR', count: 4, interval: 2.0, delay: 4 });
+      return {
+        waveNumber: 2,
+        name: 'Đợt 2: Tiền Trạm Kiếm Sĩ (Đi Bộ)',
+        rewardGold: baseReward,
+        enemies
+      };
+    }
+
+    if (waveNum === 3) {
+      enemies.push({ typeId: 'STICK_WARRIOR', count: 6, interval: 1.6, delay: 0 });
+      enemies.push({ typeId: 'FIRE_IMP', count: 5, interval: 1.4, delay: 3 });
+      return {
+        waveNumber: 3,
+        name: 'Đợt 3: Tiên Phong Hỏa Diệm (Đi Bộ)',
+        rewardGold: baseReward,
+        enemies
+      };
+    }
+
+    // --- Wave 4: 1 wave kế CHỈ quái bay (FLY only) ---
+    if (waveNum === 4) {
+      enemies.push({
+        typeId: 'WINGED_GARGOYLE',
+        count: 6 + Math.min(6, Math.floor(totalWaves / 4)),
+        interval: 1.8,
+        delay: 0
+      });
+      return {
+        waveNumber: 4,
+        name: 'Đợt 4: Không Kích Đột Ngột (Chỉ Quái Bay)',
+        rewardGold: baseReward,
+        enemies
+      };
+    }
+
+    // --- Wave 5: 1 wave kế CHỈ quái dưới nước (SWIM only) ---
+    if (waveNum === 5) {
+      enemies.push({
+        typeId: 'AQUA_SERPENT',
+        count: 5 + Math.min(5, Math.floor(totalWaves / 4)),
+        interval: 2.0,
+        delay: 0
+      });
+      return {
+        waveNumber: 5,
+        name: 'Đợt 5: Thủy Quái Cuộn Sóng (Chỉ Quái Bơi)',
+        rewardGold: baseReward,
+        enemies
+      };
+    }
+
+    // --- Wave > 5: Mới xuất hiện quái nhiều hơn 1 loại đường (Hỗn Hợp) ---
     if (isFinalWave) {
-      // Final Wave: Mega Boss & Elites
-      enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 });
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.2, delay: 3 });
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: Math.min(5, 2 + Math.floor(waveNum / 5)), interval: 2.5, delay: 6 });
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.0, delay: 7 });
-      enemies.push({ typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 12 });
+      // Final Wave: Mega Boss & Elites (Mixed multi-path)
+      enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 }); // WALK
+      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.2, delay: 3 }); // WALK
+      enemies.push({ typeId: 'NECRO_WARLOCK', count: Math.min(5, 2 + Math.floor(waveNum / 5)), interval: 2.5, delay: 6 }); // WALK
+      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.0, delay: 7 }); // SWIM
+      enemies.push({ typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 12 }); // FLY
 
       return {
         waveNumber: waveNum,
@@ -81,11 +160,11 @@ export class WaveSystem {
     }
 
     if (isBossWave) {
-      // Milestone Boss Wave (e.g. Wave 5, 10, 15...)
+      // Milestone Boss Wave (e.g. Wave 10, 15...) - Multi-path mixed
       const bossType = progress > 0.5 ? 'DARK_DRAGON_BOSS' : 'VOID_HYDRA_BOSS';
-      enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 });
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 4, interval: 1.6, delay: 3 });
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: 3, interval: 2.2, delay: 5 });
+      enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 }); // FLY or WALK
+      enemies.push({ typeId: 'MAGMA_SLIME', count: 4, interval: 1.6, delay: 3 }); // WALK
+      enemies.push({ typeId: 'AQUA_SERPENT', count: 4, interval: 2.0, delay: 5 }); // SWIM
 
       return {
         waveNumber: waveNum,
@@ -95,32 +174,26 @@ export class WaveSystem {
       };
     }
 
-    // Regular Waves based on tier progress
-    if (progress < 0.2) {
-      // Early: runners & basic warriors
-      enemies.push({ typeId: 'STICK_RUNNER', count: 6 + waveNum * 2, interval: 1.2, delay: 0 });
-      if (waveNum > 1) {
-        enemies.push({ typeId: 'STICK_WARRIOR', count: 3 + waveNum, interval: 2.0, delay: 4 });
-      }
-    } else if (progress < 0.45) {
-      // Early-mid: introduce splitters & elemental flyers/swimmers
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 3 + Math.floor(waveNum / 2), interval: 2.0, delay: 0 });
-      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 4 + Math.floor(waveNum / 2), interval: 1.8, delay: 3 });
-      enemies.push({ typeId: 'AQUA_SERPENT', count: 3 + Math.floor(waveNum / 3), interval: 2.2, delay: 5 });
+    // Regular Waves > 5 based on tier progress (Mixed multi-path)
+    if (progress < 0.45) {
+      // Early-mid: splitters & elemental flyers/swimmers (WALK + FLY + SWIM)
+      enemies.push({ typeId: 'MAGMA_SLIME', count: 3 + Math.floor(waveNum / 2), interval: 2.0, delay: 0 }); // WALK
+      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 4 + Math.floor(waveNum / 2), interval: 1.8, delay: 3 }); // FLY
+      enemies.push({ typeId: 'AQUA_SERPENT', count: 3 + Math.floor(waveNum / 3), interval: 2.2, delay: 5 }); // SWIM
     } else if (progress < 0.75) {
-      // Mid-late: introduce summoners & tank splitters
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 3 + Math.floor(waveNum / 3), interval: 2.5, delay: 0 });
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: 2 + Math.floor(waveNum / 4), interval: 2.8, delay: 3 });
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 3 + Math.floor(waveNum / 3), interval: 2.0, delay: 5 });
-      enemies.push({ typeId: 'FIRE_IMP', count: 6 + Math.floor(waveNum / 2), interval: 1.0, delay: 7 });
+      // Mid-late: summoners & tank splitters (WALK + FLY + SWIM)
+      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 3 + Math.floor(waveNum / 3), interval: 2.5, delay: 0 }); // WALK
+      enemies.push({ typeId: 'NECRO_WARLOCK', count: 2 + Math.floor(waveNum / 4), interval: 2.8, delay: 3 }); // WALK
+      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 3 + Math.floor(waveNum / 3), interval: 2.0, delay: 5 }); // SWIM
+      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 5 + Math.floor(waveNum / 3), interval: 1.5, delay: 7 }); // FLY
     } else {
       // Late: full horde mix
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 4, interval: 2.2, delay: 0 });
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 5, interval: 1.8, delay: 3 });
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: 3, interval: 2.4, delay: 5 });
-      enemies.push({ typeId: 'SHADOW_WRAITH', count: 5, interval: 1.5, delay: 7 });
-      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.4, delay: 9 });
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 4, interval: 1.8, delay: 10 });
+      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 4, interval: 2.2, delay: 0 }); // WALK
+      enemies.push({ typeId: 'MAGMA_SLIME', count: 5, interval: 1.8, delay: 3 }); // WALK
+      enemies.push({ typeId: 'NECRO_WARLOCK', count: 3, interval: 2.4, delay: 5 }); // WALK
+      enemies.push({ typeId: 'SHADOW_WRAITH', count: 5, interval: 1.5, delay: 7 }); // WALK
+      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.4, delay: 9 }); // FLY
+      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 4, interval: 1.8, delay: 10 }); // SWIM
     }
 
     return {

@@ -638,5 +638,119 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(towerOnLand.valid).toBe(true);
     });
   });
+
+  describe('Modular Map Files & Strict Wave Movement Rules', () => {
+    it('should have each map in its own file and correctly imported', async () => {
+      const { MAP_VALLEY_ORIGIN } = await import('../config/maps/valley_origin.map.js');
+      const { MAP_TWIN_CROSSROADS } = await import('../config/maps/twin_crossroads.map.js');
+      const { MAP_SERPENT_CANYON } = await import('../config/maps/serpent_canyon.map.js');
+      const { MAP_DELTA_FORTRESS } = await import('../config/maps/delta_fortress.map.js');
+      const { MAP_INFERNAL_CALDERA } = await import('../config/maps/infernal_caldera.map.js');
+      const { MAP_FROZEN_CITADEL } = await import('../config/maps/frozen_citadel.map.js');
+      const { MAP_ANCIENT_NECROPOLIS } = await import('../config/maps/ancient_necropolis.map.js');
+      const { MAP_PLAGUE_MORASS } = await import('../config/maps/plague_morass.map.js');
+
+      expect(MAP_VALLEY_ORIGIN.id).toBe('valley_origin');
+      expect(MAP_TWIN_CROSSROADS.id).toBe('twin_crossroads');
+      expect(MAP_SERPENT_CANYON.id).toBe('serpent_canyon');
+      expect(MAP_DELTA_FORTRESS.id).toBe('delta_fortress');
+      expect(MAP_INFERNAL_CALDERA.id).toBe('infernal_caldera');
+      expect(MAP_FROZEN_CITADEL.id).toBe('frozen_citadel');
+      expect(MAP_ANCIENT_NECROPOLIS.id).toBe('ancient_necropolis');
+      expect(MAP_PLAGUE_MORASS.id).toBe('plague_morass');
+    });
+
+    it('should strictly enforce waves 1-3 WALK, wave 4 FLY, wave 5 SWIM, and wave > 5 mixed in all maps', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+
+      for (const map of MAPS_CONFIG) {
+        expect(map.waves.length).toBeGreaterThanOrEqual(10);
+
+        // Wave 1, 2, 3: ONLY WALK
+        for (let w = 1; w <= 3; w++) {
+          const wave = map.waves.find((item) => item.waveNumber === w)!;
+          expect(wave).toBeDefined();
+          for (const enemyEntry of wave.enemies) {
+            const bp = ENEMY_BLUEPRINTS[enemyEntry.typeId];
+            expect(bp).toBeDefined();
+            expect(bp.movementType).toBe('WALK');
+          }
+        }
+
+        // Wave 4: ONLY FLY
+        const wave4 = map.waves.find((item) => item.waveNumber === 4)!;
+        expect(wave4).toBeDefined();
+        expect(wave4.enemies.length).toBeGreaterThan(0);
+        for (const enemyEntry of wave4.enemies) {
+          const bp = ENEMY_BLUEPRINTS[enemyEntry.typeId];
+          expect(bp.movementType).toBe('FLY');
+        }
+
+        // Wave 5: ONLY SWIM
+        const wave5 = map.waves.find((item) => item.waveNumber === 5)!;
+        expect(wave5).toBeDefined();
+        expect(wave5.enemies.length).toBeGreaterThan(0);
+        for (const enemyEntry of wave5.enemies) {
+          const bp = ENEMY_BLUEPRINTS[enemyEntry.typeId];
+          expect(bp.movementType).toBe('SWIM');
+        }
+
+        // Wave > 5: More than 1 movementType in waves
+        const postWave5 = map.waves.filter((item) => item.waveNumber > 5);
+        expect(postWave5.length).toBeGreaterThan(0);
+
+        // Verify that waves after 5 have waves featuring multiple movement types
+        const hasMixedWave = postWave5.some((wave) => {
+          const types = new Set(wave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
+          return types.size > 1;
+        });
+        expect(hasMixedWave).toBe(true);
+      }
+    });
+
+    it('should strictly enforce wave movement rules in WaveSystem.generateWaveConfig', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const waveSys = new WaveSystem(undefined, 20);
+
+      // Waves 1-3: WALK ONLY
+      for (let w = 0; w < 3; w++) {
+        const wave = waveSys.generateWaveConfig(w, 20);
+        expect(wave.waveNumber).toBe(w + 1);
+        for (const enemy of wave.enemies) {
+          const bp = ENEMY_BLUEPRINTS[enemy.typeId];
+          expect(bp.movementType).toBe('WALK');
+        }
+      }
+
+      // Wave 4: FLY ONLY
+      const wave4 = waveSys.generateWaveConfig(3, 20);
+      expect(wave4.waveNumber).toBe(4);
+      for (const enemy of wave4.enemies) {
+        const bp = ENEMY_BLUEPRINTS[enemy.typeId];
+        expect(bp.movementType).toBe('FLY');
+      }
+
+      // Wave 5: SWIM ONLY
+      const wave5 = waveSys.generateWaveConfig(4, 20);
+      expect(wave5.waveNumber).toBe(5);
+      for (const enemy of wave5.enemies) {
+        const bp = ENEMY_BLUEPRINTS[enemy.typeId];
+        expect(bp.movementType).toBe('SWIM');
+      }
+
+      // Wave 6+: Multi-path (more than 1 movement type)
+      const wave6 = waveSys.generateWaveConfig(5, 20);
+      expect(wave6.waveNumber).toBe(6);
+      const wave6Types = new Set(wave6.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
+      expect(wave6Types.size).toBeGreaterThan(1);
+
+      // Final wave: Multi-path
+      const finalWave = waveSys.generateWaveConfig(19, 20);
+      const finalWaveTypes = new Set(finalWave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
+      expect(finalWaveTypes.size).toBeGreaterThan(1);
+    });
+  });
 });
 
