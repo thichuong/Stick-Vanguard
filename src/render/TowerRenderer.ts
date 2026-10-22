@@ -77,6 +77,19 @@ export class TowerRenderer {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
+    // Imbued elemental ring on base
+    if (tower.secondaryElement && tower.type !== 'MAGE') {
+      const elemColor = ELEMENT_COLORS[tower.secondaryElement];
+      ctx.save();
+      ctx.strokeStyle = elemColor;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     switch (type) {
       case 'BARRACKS': {
         // Barracks Garrison
@@ -124,7 +137,7 @@ export class TowerRenderer {
         break;
       }
       case 'MAGE': {
-        // Arcane spire with floating pulsing crystal
+        // Arcane spire with floating pulsing crystals
         ctx.fillStyle = '#475569';
         ctx.beginPath();
         ctx.moveTo(x - 8, y + 8);
@@ -132,24 +145,55 @@ export class TowerRenderer {
         ctx.lineTo(x + 8, y + 8);
         ctx.fill();
 
-        // Floating crystal
+        // Primary crystal
         const floatY = y - 24 + Math.sin(animTime * 3) * 3;
-        const color = ELEMENT_COLORS[tower.element] || '#a855f7';
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x, floatY - 8);
-        ctx.lineTo(x + 6, floatY);
-        ctx.lineTo(x, floatY + 8);
-        ctx.lineTo(x - 6, floatY);
-        ctx.closePath();
-        ctx.fill();
+        const color1 = ELEMENT_COLORS[tower.element] || '#a855f7';
 
-        // Pulsing glow ring
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.arc(x, floatY, 10 + Math.sin(animTime * 4) * 2, 0, Math.PI * 2);
-        ctx.stroke();
+        if (tower.secondaryElement) {
+          // Dual floating orbiting crystals
+          const color2 = ELEMENT_COLORS[tower.secondaryElement] || '#38bdf8';
+          const orbitAngle = animTime * 3;
+          const cx1 = x + Math.cos(orbitAngle) * 8;
+          const cy1 = floatY + Math.sin(orbitAngle) * 3;
+          const cx2 = x + Math.cos(orbitAngle + Math.PI) * 8;
+          const cy2 = floatY + Math.sin(orbitAngle + Math.PI) * 3;
+
+          // Crystal 1
+          ctx.fillStyle = color1;
+          ctx.beginPath();
+          ctx.arc(cx1, cy1, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Crystal 2
+          ctx.fillStyle = color2;
+          ctx.beginPath();
+          ctx.arc(cx2, cy2, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pulsing glow ring
+          ctx.strokeStyle = color1;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(x, floatY, 13 + Math.sin(animTime * 4) * 2, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          // Single crystal
+          ctx.fillStyle = color1;
+          ctx.beginPath();
+          ctx.moveTo(x, floatY - 8);
+          ctx.lineTo(x + 6, floatY);
+          ctx.lineTo(x, floatY + 8);
+          ctx.lineTo(x - 6, floatY);
+          ctx.closePath();
+          ctx.fill();
+
+          // Pulsing glow ring
+          ctx.strokeStyle = color1;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(x, floatY, 10 + Math.sin(animTime * 4) * 2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
         break;
       }
       case 'ARTILLERY': {
@@ -297,8 +341,12 @@ export class TowerRenderer {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
+
+        const strokeColor = p.damagePayload.secondaryElement
+          ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
+          : color;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.0;
         ctx.stroke();
       } else if (p.damagePayload.element === 'PHYSICAL') {
         // Arrow
@@ -312,7 +360,10 @@ export class TowerRenderer {
         ctx.lineTo(6, 0);
         ctx.stroke();
 
-        ctx.fillStyle = '#94a3b8';
+        const tipColor = p.damagePayload.secondaryElement
+          ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
+          : '#94a3b8';
+        ctx.fillStyle = tipColor;
         ctx.beginPath();
         ctx.moveTo(6, -2);
         ctx.lineTo(10, 0);
@@ -324,6 +375,14 @@ export class TowerRenderer {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
         ctx.fill();
+
+        if (p.damagePayload.secondaryElement) {
+          ctx.strokeStyle = ELEMENT_COLORS[p.damagePayload.secondaryElement];
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();

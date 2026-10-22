@@ -17,6 +17,8 @@ export type ElementType =
   | 'LIGHT'
   | 'DARK';
 
+export type MagicalElementType = Exclude<ElementType, 'PHYSICAL'>;
+
 export type StatusEffectType =
   | 'BURN'      // DoT damage
   | 'WET'       // Vulnerable to lightning / ice
@@ -57,8 +59,11 @@ export interface TargetingFilter {
 export interface DamagePayload {
   amount: number;
   element: ElementType;
+  secondaryAmount?: number;
+  secondaryElement?: ElementType;
   isCrit?: boolean;
   sourceId: string;
   statusEffect?: Omit<StatusEffect, 'tickTimer'>;
+  secondaryStatusEffect?: Omit<StatusEffect, 'tickTimer'>;
 }
 

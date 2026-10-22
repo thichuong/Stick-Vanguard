@@ -141,7 +141,7 @@ export class StickmanRenderer {
   ): void {
     if (soldier.state === 'DEAD') return;
 
-    const { x, y, tier, branch, state, element } = soldier;
+    const { x, y, tier, branch, state } = soldier;
     const isAttacking = state === 'ATTACKING';
     const isMoving = state === 'MOVING_TO_ENGAGE' || state === 'MOVING_TO_RALLY';
 
@@ -220,8 +220,29 @@ export class StickmanRenderer {
     ctx.lineTo(x, y);
     ctx.stroke();
 
-    // Shield (Left Hand)
-    if (tier >= 2) {
+    // Shield or Bow (Left Hand)
+    const isRanged = soldier.combatMode === 'RANGED';
+
+    if (isRanged) {
+      // Archer Bow in Left Hand
+      ctx.save();
+      ctx.strokeStyle = '#78350f'; // Dark wood
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(x - 6, y - 6, 8, -Math.PI / 2, Math.PI / 2);
+      ctx.stroke();
+
+      // Bow string
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y - 14);
+      ctx.lineTo(x - (isAttacking ? 2 : 6), y - 6);
+      ctx.lineTo(x - 6, y + 2);
+      ctx.stroke();
+      ctx.restore();
+    } else if (tier >= 2) {
+      // Melee Shield
       ctx.save();
       ctx.fillStyle = branch === 'A' ? '#fef08a' : '#64748b';
       ctx.strokeStyle = '#334155';
@@ -235,17 +256,27 @@ export class StickmanRenderer {
 
     // Weapon (Right Hand)
     ctx.save();
-    if (tier === 4 && branch === 'B') {
-      // Lightning Spear / Javelin
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2.2;
+    const elemColor = soldier.secondaryElement ? ELEMENT_COLORS[soldier.secondaryElement] : '#e2e8f0';
+
+    if (isRanged) {
+      // Arrow nocked or drawn
+      ctx.strokeStyle = elemColor;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x - 2, y - 6);
+      ctx.lineTo(x + 8 + swing, y - 6);
+      ctx.stroke();
+    } else if (tier === 4 && branch === 'B') {
+      // Vanguard Elite Halberd / Dual blade
+      ctx.strokeStyle = elemColor;
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(x + 2, y - 2);
       ctx.lineTo(x + 14 + swing, y - 18 - swing);
       ctx.stroke();
     } else {
-      // Sword
-      ctx.strokeStyle = '#e2e8f0';
+      // Melee Sword
+      ctx.strokeStyle = elemColor;
       ctx.lineWidth = 2.2;
       ctx.beginPath();
       ctx.moveTo(x + 2, y - 4);
@@ -263,7 +294,8 @@ export class StickmanRenderer {
     ctx.stroke();
 
     // Soldier Health bar
-    this.renderHealthBar(ctx, x, headY - 8, soldier.hp, soldier.maxHp, element, []);
+    const displayElement = soldier.secondaryElement || soldier.element;
+    this.renderHealthBar(ctx, x, headY - 8, soldier.hp, soldier.maxHp, displayElement, []);
 
     ctx.restore();
   }

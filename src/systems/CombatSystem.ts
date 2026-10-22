@@ -45,12 +45,18 @@ export class CombatSystem {
         continue;
       }
 
-      // 2. Self-healing for Paladin (Tier 4 Branch A)
+      // 2. Self-healing for Guardian Citadel (Tier 4 Branch A)
       if (soldier.branch === 'A' && soldier.tier === 4 && soldier.hp < soldier.maxHp) {
-        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 12 * dt);
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 15 * dt);
       }
 
-      // 3. Check current engaged enemy validity
+      // Check if soldier is in RANGED mode
+      if (soldier.combatMode === 'RANGED') {
+        this.updateRangedSoldier(soldier, enemies, dt, onCombatEvent);
+        continue;
+      }
+
+      // 3. Melee mode: Check current engaged enemy validity
       let currentEnemy: EnemyEntity | undefined;
       if (soldier.engagedEnemyId) {
         currentEnemy = enemyMap.get(soldier.engagedEnemyId);
@@ -76,12 +82,11 @@ export class CombatSystem {
           soldier.state = 'MOVING_TO_ENGAGE';
           currentEnemy = interceptCandidate;
         } else if (soldier.canTargetAir) {
-          // Special ability: Tempest Spartan throws lightning javelin at flying targets!
           this.checkSoldierAirAttack(soldier, enemies, dt, onCombatEvent);
         }
       }
 
-      // 5. State Machine execution
+      // 5. State Machine execution for Melee
       if (soldier.engagedEnemyId && currentEnemy) {
         const dist = Math.hypot(soldier.x - currentEnemy.x, soldier.y - currentEnemy.y);
 
@@ -97,15 +102,22 @@ export class CombatSystem {
           soldier.state = 'ATTACKING';
           currentEnemy.state = 'ATTACKING';
 
-          // Soldier attacks enemy
+          // Soldier attacks enemy with Hybrid Damage
           soldier.attackCooldown -= dt;
           if (soldier.attackCooldown <= 0) {
             soldier.attackCooldown = 1 / soldier.attackSpeed;
 
+            const secondaryElement = soldier.secondaryElement || undefined;
+            const secondaryAmount = secondaryElement
+              ? Math.max(1, Math.round(soldier.damage * 0.45))
+              : undefined;
+
             const calc = TargetingRuleEngine.calculateDamage(
               {
                 amount: soldier.damage,
-                element: soldier.element,
+                element: 'PHYSICAL',
+                secondaryAmount,
+                secondaryElement,
                 sourceId: soldier.id
               },
               currentEnemy
@@ -113,6 +125,19 @@ export class CombatSystem {
 
             if (!calc.isImmune) {
               currentEnemy.hp -= calc.finalDamage;
+
+              if (secondaryElement && secondaryAmount) {
+                TargetingRuleEngine.applyElementalHitEffects(
+                  currentEnemy,
+                  secondaryElement,
+                  secondaryAmount
+                );
+              }
+
+              // Light holy heal
+              if (secondaryElement === 'LIGHT') {
+                soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+              }
             }
 
             onCombatEvent({
@@ -124,7 +149,7 @@ export class CombatSystem {
               damage: calc.finalDamage,
               isImmune: calc.isImmune,
               label: calc.label,
-              element: soldier.element
+              element: secondaryElement || 'PHYSICAL'
             });
 
             if (currentEnemy.hp <= 0) {
@@ -140,7 +165,7 @@ export class CombatSystem {
                 y: currentEnemy.y,
                 damage: 0,
                 isImmune: false,
-                element: soldier.element
+                element: secondaryElement || 'PHYSICAL'
               });
               continue;
             }
@@ -199,6 +224,144 @@ export class CombatSystem {
           soldier.state = 'IDLE';
         }
       }
+    }
+  }
+
+  private static updateRangedSoldier(
+    soldier: SoldierEntity,
+    enemies: EnemyEntity[],
+    dt: number,
+    onCombatEvent: (evt: CombatEvent) => void
+  ): void {
+    // 1. Move back to rally point if moved
+    const distToRally = Math.hypot(soldier.x - soldier.rallyPoint.x, soldier.y - soldier.rallyPoint.y);
+    if (distToRally > 6) {
+      soldier.state = 'MOVING_TO_RALLY';
+      const angle = Math.atan2(soldier.rallyPoint.y - soldier.y, soldier.rallyPoint.x - soldier.x);
+      const moveSpeed = 65;
+      soldier.x += Math.cos(angle) * moveSpeed * dt;
+      soldier.y += Math.sin(angle) * moveSpeed * dt;
+    } else {
+      soldier.state = 'IDLE';
+    }
+
+    // 2. Decrement attack cooldown
+    if (soldier.attackCooldown > 0) {
+      soldier.attackCooldown -= dt;
+    }
+
+    // 3. Melee defense check: if an enemy walked right on top of this archer
+    for (const enemy of enemies) {
+      if (enemy.hp <= 0 || enemy.state === 'DEAD' || enemy.movementType !== 'WALK') continue;
+      const d = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
+      if (d <= 22) {
+        enemy.attackCooldown -= dt;
+        if (enemy.attackCooldown <= 0) {
+          enemy.attackCooldown = 1 / enemy.attackSpeed;
+          const rawDmg = enemy.damage * (1 - soldier.armor);
+          const takenDmg = Math.max(1, Math.round(rawDmg));
+          soldier.hp -= takenDmg;
+          onCombatEvent({
+            type: 'MELEE_HIT',
+            sourceId: enemy.id,
+            targetId: soldier.id,
+            x: soldier.x,
+            y: soldier.y,
+            damage: takenDmg,
+            isImmune: false,
+            element: 'PHYSICAL'
+          });
+          if (soldier.hp <= 0) {
+            soldier.state = 'DEAD';
+            soldier.respawnTimer = soldier.respawnDelay;
+            onCombatEvent({
+              type: 'SOLDIER_DEATH',
+              sourceId: enemy.id,
+              targetId: soldier.id,
+              x: soldier.x,
+              y: soldier.y,
+              damage: 0,
+              isImmune: false,
+              element: 'PHYSICAL'
+            });
+            return;
+          }
+        }
+      }
+    }
+
+    if (soldier.attackCooldown > 0) return;
+
+    // 4. Find best target for Ranged Soldier (Can hit WALK, SWIM, and FLY!)
+    const range = soldier.rangedRange || 150;
+    let bestTarget: EnemyEntity | null = null;
+    let maxProgress = -1;
+
+    for (const enemy of enemies) {
+      if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
+      const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
+      if (dist <= range && enemy.pathDistance > maxProgress) {
+        maxProgress = enemy.pathDistance;
+        bestTarget = enemy;
+      }
+    }
+
+    if (!bestTarget) return;
+
+    // 5. Fire ranged arrow
+    soldier.attackCooldown = 1 / soldier.attackSpeed;
+    soldier.state = 'ATTACKING';
+
+    const secondaryElement = soldier.secondaryElement || undefined;
+    const secondaryAmount = secondaryElement
+      ? Math.max(1, Math.round(soldier.damage * 0.45))
+      : undefined;
+
+    const calc = TargetingRuleEngine.calculateDamage(
+      {
+        amount: soldier.damage,
+        element: 'PHYSICAL',
+        secondaryAmount,
+        secondaryElement,
+        sourceId: soldier.id
+      },
+      bestTarget
+    );
+
+    if (!calc.isImmune) {
+      bestTarget.hp -= calc.finalDamage;
+      if (secondaryElement && secondaryAmount) {
+        TargetingRuleEngine.applyElementalHitEffects(bestTarget, secondaryElement, secondaryAmount);
+      }
+      if (secondaryElement === 'LIGHT') {
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+      }
+    }
+
+    onCombatEvent({
+      type: 'RANGED_JAVELIN',
+      sourceId: soldier.id,
+      targetId: bestTarget.id,
+      x: bestTarget.x,
+      y: bestTarget.y - (bestTarget.altitude || 0),
+      damage: calc.finalDamage,
+      isImmune: calc.isImmune,
+      label: calc.label,
+      element: secondaryElement || 'PHYSICAL'
+    });
+
+    if (bestTarget.hp <= 0) {
+      bestTarget.state = 'DEAD';
+      onCombatEvent({
+        type: 'ENEMY_DEATH',
+        sourceId: soldier.id,
+        targetId: bestTarget.id,
+        x: bestTarget.x,
+        y: bestTarget.y,
+        damage: 0,
+        isImmune: false,
+        element: secondaryElement || 'PHYSICAL'
+      });
     }
   }
 

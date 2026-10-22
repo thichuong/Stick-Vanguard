@@ -109,40 +109,40 @@ export class SideDetailPanel {
       { title: string; icon: string; badge: string; role: string; mechanics: string; tip: string }
     > = {
       BARRACKS: {
-        title: 'Trại Lính (Barracks)',
+        title: 'Trại Dân Quân (Barracks)',
         icon: '🛡️',
-        badge: 'Cận Chiến & Chặn Đường',
-        role: 'Triệu hồi 3 chiến binh người que tinh nhuệ đứng chốt chặn trên đường mòn, câu giờ và tiêu diệt quái bộ.',
+        badge: 'Cận Chiến & Bắn Cung Linh Hoạt',
+        role: 'Triệu hồi 3 chiến binh người que tinh nhuệ. Người chơi có thể tự do chọn Lính Đánh Gần hoặc Lính Bắn Tên.',
         mechanics:
-          'Lính tự động tham chiến 1v1 khi quái bộ đi ngang qua. Người chơi có thể bấm nút "🚩 Điểm tập kết" để tự do điều lính tập kết ở bất kỳ đâu trong phạm vi vòng tròn vàng. Lính có giáp giảm sát thương và tự động hồi sinh sau thời gian hồi.',
-        tip: '⚠️ Nhà lính KHÔNG THỂ chặn quái Bay (FLY) hay quái Bơi dưới sông (SWIM). Tuy nhiên ở Cấp 4B (Tempest Spartan), lính được trang bị lao lôi điện có thể phóng hạ quái bay!'
+          'Lính Đánh Gần có máu và DPS cao, chốt chặn quái đi bộ 1v1. Lính Bắn Tên đứng tại điểm tập kết bắn cung tầm xa tấn công được cả Đi bộ, Dưới nước và Trên không. Cả 2 đều dùng sát thương hỗn hợp Vật lý + Nguyên tố tự chọn!',
+        tip: '💡 Bấm vào tháp để đổi qua lại giữa Lính Đánh Gần và Lính Bắn Tên bất kỳ lúc nào; gắn nguyên tố để đòn đánh có thêm sát thương phép và hiệu ứng riêng.'
       },
       ARCHER: {
         title: 'Tháp Cung (Archer Tower)',
         icon: '🏹',
-        badge: 'Xạ Thủ Bắn Nhanh',
-        role: 'Tháp bắn tỉa với tốc độ ra đạn cao nhất game. Khắc tinh số 1 của quái bay và quái tốc độ nhanh.',
+        badge: 'Sát Thương Hỗn Hợp Bắn Nhanh',
+        role: 'Tháp bắn tỉa với tốc độ ra đạn cao. Bắn được cả quái Đi bộ, Trên không và Dưới nước.',
         mechanics:
-          'Tấn công được TẤT CẢ 3 loại di chuyển: Đi bộ (WALK), Bay trên không (FLY) và Bơi dưới sông (SWIM). Sát thương đơn mục tiêu chuẩn xác, cự ly bắn mở rộng theo từng cấp.',
-        tip: '💡 Nhánh 4A (Tempest Bow) có tốc độ cực hạn và đẩy lùi quái bay; Nhánh 4B (Frost Crossbow) bắn tên băng làm chậm 50% tốc độ di chuyển.'
+          'Gây sát thương Vật lý cơ bản + sát thương Nguyên tố cộng thêm kèm hiệu ứng trạng thái khi được gắn nguyên tố. Nhánh 4A bắn siêu tốc liên châu; Nhánh 4B bắn tỉa tầm xa cực đại.',
+        tip: '💡 Tự do gắn nguyên tố (Lửa thiêu đốt, Băng làm chậm/đóng băng, Sét giật lan...) độc lập với cấp độ nâng cấp của tháp.'
       },
       MAGE: {
-        title: 'Tháp Phép (Mage Tower)',
+        title: 'Tháp Phù Thủy (Mage Tower)',
         icon: '🔮',
-        badge: 'Sát Thương Phép Thuật',
-        role: 'Tia phép thuật đậm đặc xuyên phá hoàn toàn giáp vật lý của mục tiêu, chuyên trị các quái vật khổng lồ trâu bò.',
+        badge: 'Thuần Ma Pháp & Song Nguyên Tố',
+        role: 'Tháp ma thuật huyền bí gây 100% sát thương nguyên tố, sở hữu 2 khe nguyên tố độc lập.',
         mechanics:
-          'Sát thương nguyên tố Hắc Ám (DARK) bỏ qua giáp của kẻ địch. Tấn công được cả quái bộ, bay và bơi. Ở các cấp cao mở khóa hiệu ứng nổ lan diện rộng hoặc tia laser quang điện.',
-        tip: '💡 Nhánh 4A (Hellfire Archon) gây nổ cầu lửa AOE và thiêu đốt liên tục; Nhánh 4B (Radiant Arcane) bắn tia laser ánh sáng xuyên thấu nảy điện sang quái kế bên.'
+          'Bỏ qua giáp vật lý của mục tiêu. Người chơi có thể tự do phối hợp 2 hệ nguyên tố bất kỳ (ví dụ: Nước + Sét, Lửa + Bóng Tối) để tạo chuỗi phản ứng nguyên tố hủy diệt.',
+        tip: '💡 Khi trang bị 2 nguyên tố, đòn đánh gây cả 2 loại sát thương và áp dụng đồng thời cả 2 hiệu ứng trạng thái lên mục tiêu!'
       },
       ARTILLERY: {
         title: 'Pháo Cối (Artillery)',
         icon: '💣',
-        badge: 'Công Phá Diện Rộng (AOE)',
-        role: 'Vũ khí hạng nặng bắn đạn cầu vồng nổ lan diện rộng, hủy diệt hàng đàn quái vật bộ binh tập trung đông đúc.',
+        badge: 'Công Phá Diện Rộng Hỗn Hợp',
+        role: 'Vũ khí hạng nặng bắn đạn cầu vồng nổ lan diện rộng lên quái Đi bộ và Bơi lội.',
         mechanics:
-          'Đạn pháo bay hình vòng cung parabol và phát nổ khi chạm đất, gây 100% sát thương cho tất cả quái vật trong bán kính nổ. CHỈ TẤN CÔNG quái Đi bộ và Bơi, TUYỆT ĐỐI KHÔNG BẮN ĐƯỢC quái Bay (FLY).',
-        tip: '⚠️ Đặt pháo cối ở gần các khúc cua hoặc điểm lính chặn để tối đa hóa số quái dính bom. Nhánh 4A tạo vùng đất dung nham cháy rực; Nhánh 4B phát xung từ trường sét làm choáng diện rộng.'
+          'Đạn pháo phát nổ khi chạm đất gây sát thương nổ lan Vật lý + Nguyên tố phép cộng thêm trên toàn bộ bán kính nổ. Nhánh 4A siêu nổ đại địa chấn; Nhánh 4B pháo liên thanh nạp cực nhanh.',
+        tip: '⚠️ Pháo cối không bắn được quái Bay (FLY). Gắn thêm nguyên tố để tạo vùng nổ thiêu đốt (Lửa), bão từ (Sét) hoặc chấn động làm chậm (Đất)!'
       },
       TRAP_SPIKE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },
       TRAP_FIRE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },

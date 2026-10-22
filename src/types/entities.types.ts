@@ -27,6 +27,7 @@ export type TowerType =
 
 export type TowerTier = 1 | 2 | 3 | 4;
 export type TowerBranch = 'A' | 'B';
+export type SoldierCombatMode = 'MELEE' | 'RANGED';
 
 export type SoldierState =
   | 'IDLE'
@@ -55,6 +56,8 @@ export interface SoldierEntity {
   attackSpeed: number; // attacks per second
   attackCooldown: number;
   element: ElementType;
+  secondaryElement?: ElementType | null;
+  combatMode: SoldierCombatMode;
   state: SoldierState;
   engagedEnemyId: string | null;
   rallyPoint: Vector2D;
@@ -68,6 +71,9 @@ export interface SoldierEntity {
   canTargetAir?: boolean;
   rangedDamage?: number;
   rangedRange?: number;
+  baseMaxHp: number;
+  baseDamage: number;
+  baseArmor: number;
 }
 
 export interface EnemyEntity {
@@ -112,6 +118,8 @@ export interface TowerEntity {
   fireRate: number; // attacks per second
   attackCooldown: number;
   element: ElementType;
+  secondaryElement?: ElementType | null;
+  soldierMode?: SoldierCombatMode;
   targetingFilter: TargetingFilter;
   placement: PlacementType;
   cost: number;

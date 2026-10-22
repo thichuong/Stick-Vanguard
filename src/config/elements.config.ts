@@ -1,4 +1,67 @@
-import { ElementType } from '../types/elements.types.js';
+import { ElementType, MagicalElementType } from '../types/elements.types.js';
+
+export const SELECTABLE_ELEMENTS: MagicalElementType[] = [
+  'FIRE',
+  'WATER',
+  'EARTH',
+  'WIND',
+  'LIGHTNING',
+  'ICE',
+  'LIGHT',
+  'DARK'
+];
+
+export const ELEMENT_IMBUE_COST = 40;
+export const MAGE_SECOND_ELEMENT_COST = 50;
+export const HYBRID_ELEMENT_DMG_RATIO = 0.45; // 45% bonus elemental dmg
+export const MAGE_SECONDARY_DMG_RATIO = 0.60; // 60% secondary elemental dmg
+
+export const ELEMENT_NAMES: Record<ElementType, string> = {
+  PHYSICAL: 'Vật Lý',
+  FIRE: 'Lửa (Hỏa)',
+  WATER: 'Nước (Thủy)',
+  EARTH: 'Đất (Thổ)',
+  WIND: 'Gió (Phong)',
+  LIGHTNING: 'Sét (Lôi)',
+  ICE: 'Băng (Hàn)',
+  LIGHT: 'Ánh Sáng (Quang)',
+  DARK: 'Hắc Ám (Ám)'
+};
+
+export const ELEMENT_EFFECT_DESCRIPTIONS: Record<MagicalElementType, { effectName: string; description: string }> = {
+  FIRE: {
+    effectName: 'Thiêu Đốt (Burn)',
+    description: 'Đốt cháy mục tiêu, gây sát thương Lửa liên tục mỗi 0.5s trong 3s.'
+  },
+  WATER: {
+    effectName: 'Ẩm Ướt & Trì Hoãn (Wet)',
+    description: 'Làm ướt mục tiêu trong 4s (tăng mạnh sát thương Sét x1.75, Băng x1.5) và giảm 20% tốc độ di chuyển.'
+  },
+  EARTH: {
+    effectName: 'Địa Chấn & Làm Chậm (Slow)',
+    description: 'Tạo chấn động làm chậm 35% tốc độ di chuyển trong 2.5s và tăng 35% sát thương lên quái Đi bộ.'
+  },
+  WIND: {
+    effectName: 'Cuồng Phong & Đẩy Lùi (Knockback)',
+    description: 'Gây thêm x1.5 sát thương lên quái Bay và đẩy lùi nhẹ quái vật về sau trên lộ trình.'
+  },
+  LIGHTNING: {
+    effectName: 'Tê Liệt & Giật Lan (Shock)',
+    description: 'Gây choáng ngắn 0.4s và phóng tia điện giật lan sang 1 kẻ địch kế bên (35% DMG).'
+  },
+  ICE: {
+    effectName: 'Hàn Băng & Đóng Băng (Freeze)',
+    description: 'Làm chậm 45% tốc độ trong 3s và có 20% tỉ lệ đóng băng bất động trong 1.2s.'
+  },
+  LIGHT: {
+    effectName: 'Thánh Quang & Hồi Phục (Holy)',
+    description: 'Khắc chế x2 sát thương hệ Tối; đòn đánh của Lính tự hồi 5 HP cho bản thân.'
+  },
+  DARK: {
+    effectName: 'Nguyền Rủa Suy Yếu (Curse)',
+    description: 'Khắc dấu ấn Nguyền Rủa 3.5s khiến quái nhận thêm +35% sát thương từ mọi nguồn.'
+  }
+};
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
   PHYSICAL: '#e2e8f0', // Silver / White

@@ -1,7 +1,14 @@
 import { GameState } from '../core/GameState.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
-import { ELEMENT_ICONS } from '../config/elements.config.js';
+import {
+  ELEMENT_ICONS,
+  ELEMENT_NAMES,
+  SELECTABLE_ELEMENTS,
+  ELEMENT_IMBUE_COST,
+  MAGE_SECOND_ELEMENT_COST
+} from '../config/elements.config.js';
 import { TowerType } from '../types/entities.types.js';
+import { MagicalElementType } from '../types/elements.types.js';
 import { SideDetailPanel } from './SideDetailPanel.js';
 
 export class UIManager {
@@ -293,8 +300,10 @@ export class UIManager {
     const canvasRect = this.canvasEl ? this.canvasEl.getBoundingClientRect() : { width: 1000, height: 650 };
     const currentW = Math.round(canvasRect.width);
     const currentH = Math.round(canvasRect.height);
+    const slot = this.state.getSelectedSlot();
+    const tower = this.state.getSelectedTower();
     // Generate render key to prevent trashing DOM every frame
-    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}_${currentW}x${currentH}`;
+    const currentKey = `${this.state.selectedSlotId}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${Math.floor(this.state.gold / 25)}_${currentW}x${currentH}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -302,8 +311,6 @@ export class UIManager {
 
     const scaleX = canvasRect.width / 1000;
     const scaleY = canvasRect.height / 650;
-    const slot = this.state.getSelectedSlot();
-    const tower = this.state.getSelectedTower();
 
     if (this.state.isSettingRallyPoint) {
       this.menuOverlayEl.innerHTML = `
@@ -455,6 +462,103 @@ export class UIManager {
       const screenX = tower.x * scaleX;
       const screenY = tower.y * scaleY;
 
+      // Damage label for Hybrid and Dual-Element
+      let damageDisplay = '';
+      if (tower.type === 'MAGE') {
+        damageDisplay = `<b>${tower.damage}</b> (${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]})`;
+        if (tower.secondaryElement) {
+          const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
+          damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+        }
+      } else {
+        damageDisplay = `<b>${tower.damage}</b> (⚔️ Vật lý)`;
+        if (tower.secondaryElement) {
+          const secDmg = Math.max(1, Math.round(tower.damage * 0.45));
+          damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+        }
+      }
+
+      // Soldier Mode Switch for Barracks
+      let soldierModeHtml = '';
+      if (isBarracks) {
+        const isMelee = tower.soldierMode !== 'RANGED';
+        soldierModeHtml = `
+          <div class="soldier-mode-section">
+            <div class="section-subtitle">🛡️ CHỌN LOẠI BINH CHỦNG:</div>
+            <div class="soldier-mode-toggle">
+              <button id="btn-mode-melee" class="mode-btn ${isMelee ? 'active' : ''}">
+                🗡️ Đánh Gần (HP & DPS lớn)
+              </button>
+              <button id="btn-mode-ranged" class="mode-btn ${!isMelee ? 'active' : ''}">
+                🏹 Bắn Tên (Bộ, Nước & Bay)
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // Element Picker Section
+      let elementPickerHtml = '';
+      if (!isTrap) {
+        if (tower.type === 'MAGE') {
+          elementPickerHtml = `
+            <div class="elem-picker-section">
+              <div class="picker-header">
+                <span>🔮 NGUYÊN TỐ CHÍNH (KHE 1):</span>
+                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+              </div>
+              <div class="current-elem-text">Đang dùng: <b>${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]}</b></div>
+              <div class="elem-buttons-grid">
+                ${SELECTABLE_ELEMENTS.map(
+                  (elem) => `
+                  <button class="elem-btn ${tower.element === elem ? 'selected' : ''}" data-slot="1" data-elem="${elem}" title="${ELEMENT_NAMES[elem]}">
+                    <span>${ELEMENT_ICONS[elem]}</span>
+                    <span class="eb-lbl">${ELEMENT_NAMES[elem].split(' ')[0]}</span>
+                  </button>
+                `
+                ).join('')}
+              </div>
+
+              <div class="picker-header" style="margin-top: 8px;">
+                <span>✨ NGUYÊN TỐ PHỤ (KHE 2):</span>
+                <span class="cost-pill">🪙 ${MAGE_SECOND_ELEMENT_COST}</span>
+              </div>
+              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : 'Chưa gắn'}</b></div>
+              <div class="elem-buttons-grid">
+                ${SELECTABLE_ELEMENTS.map(
+                  (elem) => `
+                  <button class="elem-btn ${tower.secondaryElement === elem ? 'selected' : ''}" data-slot="2" data-elem="${elem}" title="${ELEMENT_NAMES[elem]}">
+                    <span>${ELEMENT_ICONS[elem]}</span>
+                    <span class="eb-lbl">${ELEMENT_NAMES[elem].split(' ')[0]}</span>
+                  </button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          elementPickerHtml = `
+            <div class="elem-picker-section">
+              <div class="picker-header">
+                <span>✨ GẮN THUỘC TÍNH NGUYÊN TỐ:</span>
+                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+              </div>
+              <div class="current-elem-text">Thuộc tính: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : 'Chưa gắn (Thuần Vật Lý)'}</b></div>
+              <div class="elem-buttons-grid">
+                ${SELECTABLE_ELEMENTS.map(
+                  (elem) => `
+                  <button class="elem-btn ${tower.secondaryElement === elem ? 'selected' : ''}" data-slot="1" data-elem="${elem}" title="${ELEMENT_NAMES[elem]}">
+                    <span>${ELEMENT_ICONS[elem]}</span>
+                    <span class="eb-lbl">${ELEMENT_NAMES[elem].split(' ')[0]}</span>
+                  </button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
       this.menuOverlayEl.innerHTML = `
         <div class="action-panel" style="position: absolute; visibility: hidden;">
           <div class="panel-header">
@@ -466,10 +570,12 @@ export class UIManager {
             <button id="btn-close-panel" class="btn-x">✕</button>
           </div>
           <div class="stats-row">
-            <span>Sát thương: <b>${tower.damage}</b> (${tower.element})</span>
+            <span>Sát thương: ${damageDisplay}</span>
             <span>Tầm bắn: <b>${tower.range}</b></span>
             <span>Tốc độ: <b>${tower.fireRate}/s</b></span>
           </div>
+          ${soldierModeHtml}
+          ${elementPickerHtml}
           ${upgradeHtml}
           <div class="button-row">
             ${
@@ -507,6 +613,28 @@ export class UIManager {
       document.getElementById('btn-branch-b')?.addEventListener('click', () => {
         this.state.upgradeTower(tower.id, 'B');
         this.lastRenderKey = '';
+      });
+
+      document.getElementById('btn-mode-melee')?.addEventListener('click', () => {
+        this.state.setBarracksSoldierMode(tower.id, 'MELEE');
+        this.lastRenderKey = '';
+      });
+
+      document.getElementById('btn-mode-ranged')?.addEventListener('click', () => {
+        this.state.setBarracksSoldierMode(tower.id, 'RANGED');
+        this.lastRenderKey = '';
+      });
+
+      this.menuOverlayEl.querySelectorAll('.elem-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const target = e.currentTarget as HTMLElement;
+          const elem = target.getAttribute('data-elem') as MagicalElementType;
+          const slot = (parseInt(target.getAttribute('data-slot') || '1', 10) as 1 | 2);
+          if (elem && tower) {
+            this.state.setTowerElement(tower.id, elem, slot);
+            this.lastRenderKey = '';
+          }
+        });
       });
 
       document.getElementById('btn-rally')?.addEventListener('click', () => {

@@ -11,6 +11,8 @@ export interface DamageCalculationResult {
   isImmune: boolean;
   multiplier: number;
   label?: string; // 'MIỄN NHIỄM!' | 'KHẮC HỆ!' | 'KHÁNG!'
+  primaryDamage?: number;
+  secondaryDamage?: number;
 }
 
 export class TargetingRuleEngine {
@@ -51,13 +53,14 @@ export class TargetingRuleEngine {
   }
 
   /**
-   * Calculates final damage applying immunities, elemental matchup, and active status effects
+   * Calculates damage for a single element component
    */
-  public static calculateDamage(
-    payload: DamagePayload,
+  public static calculateSingleDamage(
+    amount: number,
+    element: ElementType,
+    isCrit: boolean | undefined,
     enemy: EnemyEntity
   ): DamageCalculationResult {
-    const { element, amount, isCrit } = payload;
     const profile = enemy.elementalProfile;
 
     // 1. Check complete 100% Immunity
@@ -86,7 +89,7 @@ export class TargetingRuleEngine {
       }
     }
 
-    // 4. Status effect interactions (e.g. WET increases Lightning / Ice damage)
+    // 4. Status effect interactions
     const hasWet = enemy.statusEffects.some((s) => s.type === 'WET');
     const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
 
@@ -102,6 +105,11 @@ export class TargetingRuleEngine {
     // Special bonus: WIND against flying enemies
     if (element === 'WIND' && enemy.movementType === 'FLY') {
       multiplier *= 1.5;
+    }
+
+    // Special bonus: EARTH against walking enemies
+    if (element === 'EARTH' && enemy.movementType === 'WALK') {
+      multiplier *= 1.2;
     }
 
     if (isCrit) {
@@ -123,6 +131,153 @@ export class TargetingRuleEngine {
       multiplier,
       label
     };
+  }
+
+  /**
+   * Calculates final damage supporting hybrid (Physical + Magic) & dual-element payloads
+   */
+  public static calculateDamage(
+    payload: DamagePayload,
+    enemy: EnemyEntity
+  ): DamageCalculationResult {
+    const primary = this.calculateSingleDamage(payload.amount, payload.element, payload.isCrit, enemy);
+
+    if (
+      payload.secondaryElement &&
+      payload.secondaryAmount !== undefined &&
+      payload.secondaryAmount > 0
+    ) {
+      const secondary = this.calculateSingleDamage(
+        payload.secondaryAmount,
+        payload.secondaryElement,
+        payload.isCrit,
+        enemy
+      );
+
+      const isImmune = primary.isImmune && secondary.isImmune;
+      const finalDamage =
+        (primary.isImmune ? 0 : primary.finalDamage) +
+        (secondary.isImmune ? 0 : secondary.finalDamage);
+
+      const totalBase = payload.amount + payload.secondaryAmount;
+      const combinedMultiplier = totalBase > 0 ? finalDamage / totalBase : 1;
+
+      let label: string | undefined;
+      if (isImmune) {
+        label = 'MIỄN NHIỄM!';
+      } else if (primary.label === 'KHẮC HỆ!' || secondary.label === 'KHẮC HỆ!') {
+        label = 'KHẮC HỆ!';
+      } else if (primary.label === 'KHÁNG!' && secondary.label === 'KHÁNG!') {
+        label = 'KHÁNG!';
+      }
+
+      return {
+        finalDamage,
+        isImmune,
+        multiplier: combinedMultiplier,
+        label,
+        primaryDamage: primary.finalDamage,
+        secondaryDamage: secondary.finalDamage
+      };
+    }
+
+    return {
+      ...primary,
+      primaryDamage: primary.finalDamage,
+      secondaryDamage: 0
+    };
+  }
+
+  /**
+   * Applies specific combat effects triggered on hit for a given magical element
+   */
+  public static applyElementalHitEffects(
+    enemy: EnemyEntity,
+    element: ElementType,
+    baseDamage: number
+  ): void {
+    if (element === 'PHYSICAL') return;
+
+    switch (element) {
+      case 'FIRE':
+        this.applyStatusEffect(enemy, {
+          type: 'BURN',
+          duration: 3.0,
+          value: Math.max(5, Math.round(baseDamage * 0.2))
+        });
+        break;
+
+      case 'WATER':
+        this.applyStatusEffect(enemy, {
+          type: 'WET',
+          duration: 4.0,
+          value: 0
+        });
+        this.applyStatusEffect(enemy, {
+          type: 'SLOW',
+          duration: 2.5,
+          value: 0.2
+        });
+        break;
+
+      case 'EARTH':
+        this.applyStatusEffect(enemy, {
+          type: 'SLOW',
+          duration: 2.5,
+          value: 0.35
+        });
+        break;
+
+      case 'WIND':
+        if (enemy.movementType === 'FLY') {
+          enemy.pathDistance = Math.max(0, enemy.pathDistance - 25);
+        } else {
+          enemy.pathDistance = Math.max(0, enemy.pathDistance - 15);
+        }
+        break;
+
+      case 'LIGHTNING':
+        this.applyStatusEffect(enemy, {
+          type: 'FREEZE',
+          duration: 0.35, // mini shock stun
+          value: 0
+        });
+        break;
+
+      case 'ICE':
+        this.applyStatusEffect(enemy, {
+          type: 'SLOW',
+          duration: 3.0,
+          value: 0.45
+        });
+        if (Math.random() < 0.25) {
+          this.applyStatusEffect(enemy, {
+            type: 'FREEZE',
+            duration: 1.2,
+            value: 0
+          });
+        }
+        break;
+
+      case 'LIGHT':
+        // Holy purification: if enemy is DARK, apply a lingering burn-like holy radiance
+        if (enemy.elementalProfile.primaryElement === 'DARK') {
+          this.applyStatusEffect(enemy, {
+            type: 'BURN',
+            duration: 2.5,
+            value: Math.max(6, Math.round(baseDamage * 0.25))
+          });
+        }
+        break;
+
+      case 'DARK':
+        this.applyStatusEffect(enemy, {
+          type: 'CURSE',
+          duration: 3.5,
+          value: 0.35
+        });
+        break;
+    }
   }
 
   /**

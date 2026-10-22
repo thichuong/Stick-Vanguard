@@ -42,6 +42,25 @@ export class TowerSystem {
       const aoeRadius = tower.aoeRadius || (isParabolic ? 75 : 0);
       const projSpeed = isParabolic ? 220 : tower.type === 'ARCHER' ? 440 : 340;
 
+      // Construct hybrid or dual-element payload
+      let primaryElement = tower.element;
+      let primaryAmount = tower.damage;
+      let secondaryElement = tower.secondaryElement || undefined;
+      let secondaryAmount: number | undefined;
+
+      if (tower.type === 'MAGE') {
+        // Mage is pure elemental. Primary is tower.element, secondary gets 60% damage
+        if (secondaryElement) {
+          secondaryAmount = Math.max(1, Math.round(tower.damage * 0.6));
+        }
+      } else {
+        // Archer and Artillery use Physical base damage + 45% bonus elemental damage if imbued
+        primaryElement = 'PHYSICAL';
+        if (secondaryElement) {
+          secondaryAmount = Math.max(1, Math.round(tower.damage * 0.45));
+        }
+      }
+
       const proj: ProjectileEntity = {
         id: `proj-${this.projectileCounter}`,
         sourceTowerId: tower.id,
@@ -54,8 +73,10 @@ export class TowerSystem {
         targetEnemyId: isParabolic ? undefined : target.id, // Artillery shoots at ground position
         speed: projSpeed,
         damagePayload: {
-          amount: tower.damage,
-          element: tower.element,
+          amount: primaryAmount,
+          element: primaryElement,
+          secondaryAmount,
+          secondaryElement,
           sourceId: tower.id
         },
         aoeRadius,

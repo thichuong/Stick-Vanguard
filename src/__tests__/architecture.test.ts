@@ -248,17 +248,134 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(state.upgradeTower(tower.id)).toBe(true);
       expect(tower.tier).toBe(3);
 
-      // Lv 3 -> Lv 4 Branch B (Tempest Spartan with air target capability!)
+      // Lv 3 -> Lv 4 Branch B (Vanguard Elite)
       expect(state.upgradeTower(tower.id, 'B')).toBe(true);
       expect(tower.tier).toBe(4);
       expect(tower.branch).toBe('B');
-      expect(tower.element).toBe('LIGHTNING');
+      expect(tower.element).toBe('PHYSICAL'); // Elements separated from tiers!
 
       // Check soldier upgrade
       const soldier = state.soldiers[0];
       expect(soldier.tier).toBe(4);
       expect(soldier.branch).toBe('B');
+    });
+
+    it('should allow free imbuing of elements independently from tower level', () => {
+      const state = new GameState();
+      state.gold = 500;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'ARCHER'); // cost 60
+      const tower = state.towers[0];
+
+      // Imbue Fire element (cost 40)
+      const imbueSuccess = state.setTowerElement(tower.id, 'FIRE');
+      expect(imbueSuccess).toBe(true);
+      expect(tower.secondaryElement).toBe('FIRE');
+      expect(tower.totalInvested).toBe(60 + 40);
+      expect(state.gold).toBe(500 - 60 - 40);
+
+      // Upgrade to tier 2: fire element MUST be preserved!
+      state.upgradeTower(tower.id);
+      expect(tower.tier).toBe(2);
+      expect(tower.secondaryElement).toBe('FIRE');
+    });
+
+    it('should support dual-elements for Mage tower', () => {
+      const state = new GameState();
+      state.gold = 600;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'MAGE'); // cost 75, default element DARK
+      const tower = state.towers[0];
+
+      // Slot 1 change to WATER (cost 40)
+      expect(state.setTowerElement(tower.id, 'WATER', 1)).toBe(true);
+      expect(tower.element).toBe('WATER');
+
+      // Slot 2 imbue LIGHTNING (cost 50)
+      expect(state.setTowerElement(tower.id, 'LIGHTNING', 2)).toBe(true);
+      expect(tower.secondaryElement).toBe('LIGHTNING');
+      expect(tower.totalInvested).toBe(75 + 40 + 50);
+    });
+
+    it('should switch Barracks soldier mode between Melee and Ranged', () => {
+      const state = new GameState();
+      state.gold = 500;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'BARRACKS');
+      const tower = state.towers[0];
+      const soldier = state.soldiers[0];
+
+      expect(tower.soldierMode).toBe('MELEE');
+      expect(soldier.combatMode).toBe('MELEE');
+      expect(soldier.canTargetAir).toBeFalsy();
+      const meleeHp = soldier.maxHp;
+      const meleeDmg = soldier.damage;
+
+      // Switch to RANGED (archer soldiers)
+      expect(state.setBarracksSoldierMode(tower.id, 'RANGED')).toBe(true);
+      expect(tower.soldierMode).toBe('RANGED');
+      expect(soldier.combatMode).toBe('RANGED');
       expect(soldier.canTargetAir).toBe(true);
+      expect(soldier.maxHp).toBe(Math.round(meleeHp * 0.65));
+      expect(soldier.damage).toBe(Math.round(meleeDmg * 0.7));
+      expect(tower.targetingFilter.allowedMovement).toContain('FLY');
+      expect(tower.targetingFilter.allowedMovement).toContain('SWIM');
+
+      // Switch back to MELEE
+      expect(state.setBarracksSoldierMode(tower.id, 'MELEE')).toBe(true);
+      expect(tower.soldierMode).toBe('MELEE');
+      expect(soldier.combatMode).toBe('MELEE');
+      expect(soldier.maxHp).toBe(meleeHp);
+      expect(soldier.damage).toBe(meleeDmg);
+      expect(soldier.canTargetAir).toBe(false);
+    });
+
+    it('should calculate hybrid damage properly when target is immune to physical or magic', () => {
+      const golemBp = ENEMY_BLUEPRINTS['ROCK_GOLEM']; // Immune to Physical
+      const golem: EnemyEntity = {
+        id: 'e-golem',
+        typeId: golemBp.typeId,
+        name: golemBp.name,
+        x: 0,
+        y: 0,
+        hp: golemBp.hp,
+        maxHp: golemBp.hp,
+        speed: 25,
+        baseSpeed: 25,
+        damage: 25,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 25,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: golemBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 20,
+        facing: 0
+      };
+
+      // Hybrid payload: 50 Physical + 30 Water
+      const hybridRes = TargetingRuleEngine.calculateDamage(
+        {
+          amount: 50,
+          element: 'PHYSICAL',
+          secondaryAmount: 30,
+          secondaryElement: 'WATER',
+          sourceId: 'archer-1'
+        },
+        golem
+      );
+
+      // Golem is immune to physical, but takes 1.75x from water!
+      expect(hybridRes.isImmune).toBe(false);
+      expect(hybridRes.finalDamage).toBeGreaterThan(0);
+      expect(hybridRes.finalDamage).toBe(Math.round(30 * 1.75));
     });
 
     it('should refund 70% invested gold and remove soldiers upon selling', () => {

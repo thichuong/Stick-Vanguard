@@ -4,14 +4,22 @@ import {
   Particle,
   ProjectileEntity,
   SoldierEntity,
+  SoldierCombatMode,
   TowerEntity,
   TowerSlot,
   TowerType,
   TowerBranch,
   Vector2D
 } from '../types/entities.types.js';
+import { MagicalElementType } from '../types/elements.types.js';
 import { MAP_CONFIG } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
+import {
+  ELEMENT_IMBUE_COST,
+  MAGE_SECOND_ELEMENT_COST,
+  ELEMENT_ICONS,
+  ELEMENT_NAMES
+} from '../config/elements.config.js';
 
 export class GameState {
   public gold: number = 320;
@@ -127,19 +135,25 @@ export class GameState {
           y: initialY,
           hp: bp.soldierHp || 100,
           maxHp: bp.soldierHp || 100,
+          baseMaxHp: bp.soldierHp || 100,
           damage: bp.damage,
+          baseDamage: bp.damage,
           attackSpeed: bp.fireRate,
           attackCooldown: 0.5,
-          element: bp.element,
+          element: 'PHYSICAL',
+          secondaryElement: null,
+          combatMode: 'MELEE',
           state: 'IDLE',
           engagedEnemyId: null,
           rallyPoint: { x: initialX, y: initialY },
           targetPos: { x: initialX, y: initialY },
           armor: bp.soldierArmor || 0.1,
+          baseArmor: bp.soldierArmor || 0.1,
           magicResist: 0.1,
           respawnTimer: 0,
           respawnDelay: bp.soldierRespawn || 8,
-          tier: 1
+          tier: 1,
+          rangedRange: 145
         });
       }
     }
@@ -157,7 +171,9 @@ export class GameState {
       damage: bp.damage,
       fireRate: bp.fireRate,
       attackCooldown: 0.5,
-      element: bp.element,
+      element: bp.type === 'MAGE' ? 'DARK' : 'PHYSICAL',
+      secondaryElement: null,
+      soldierMode: bp.type === 'BARRACKS' ? 'MELEE' : undefined,
       targetingFilter: { ...bp.targetingFilter },
       placement: slot.placement,
       cost: bp.cost,
@@ -212,8 +228,17 @@ export class GameState {
     tower.damage = nextBp.damage;
     tower.range = nextBp.range;
     tower.fireRate = nextBp.fireRate;
-    tower.element = nextBp.element;
-    tower.targetingFilter = { ...nextBp.targetingFilter };
+    // Elements are preserved independently! Mage keeps primary element, others keep physical base
+    if (tower.type !== 'MAGE') {
+      tower.element = 'PHYSICAL';
+    }
+    // targeting filter: if barracks is ranged, keep air & water targeting
+    if (tower.type === 'BARRACKS' && tower.soldierMode === 'RANGED') {
+      tower.targetingFilter = { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
+    } else {
+      tower.targetingFilter = { ...nextBp.targetingFilter };
+    }
+
     tower.totalInvested += nextBp.cost;
     if (nextBp.aoeRadius) tower.aoeRadius = nextBp.aoeRadius;
 
@@ -224,17 +249,125 @@ export class GameState {
         if (soldier) {
           soldier.tier = nextTier;
           soldier.branch = branch;
-          soldier.maxHp = nextBp.soldierHp || soldier.maxHp;
+          soldier.baseMaxHp = nextBp.soldierHp || soldier.baseMaxHp;
+          soldier.baseDamage = nextBp.damage;
+          soldier.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : soldier.baseArmor;
+          soldier.secondaryElement = tower.secondaryElement || null;
+
+          if (soldier.combatMode === 'RANGED') {
+            soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
+            soldier.damage = Math.max(1, Math.round(soldier.baseDamage * 0.7));
+            soldier.armor = Math.round(soldier.baseArmor * 0.5 * 100) / 100;
+            soldier.canTargetAir = true;
+            soldier.rangedRange = 135 + nextTier * 12;
+          } else {
+            soldier.maxHp = soldier.baseMaxHp;
+            soldier.damage = soldier.baseDamage;
+            soldier.armor = soldier.baseArmor;
+            soldier.canTargetAir = false;
+          }
+
           soldier.hp = soldier.maxHp; // full heal on upgrade!
-          soldier.damage = nextBp.damage;
-          soldier.armor = nextBp.soldierArmor || soldier.armor;
-          soldier.element = nextBp.element;
-          soldier.canTargetAir = nextBp.canTargetAir;
         }
       }
     }
 
     this.addFloatingText(`CẤP ${nextTier}! -${nextBp.cost} 🪙`, tower.x, tower.y - 20, '#38bdf8');
+    return true;
+  }
+
+  /**
+   * Set or change elemental attribute for a tower
+   */
+  public setTowerElement(
+    towerId: string,
+    element: MagicalElementType,
+    slotIndex: 1 | 2 = 1
+  ): boolean {
+    const tower = this.towers.find((t) => t.id === towerId);
+    if (!tower) return false;
+
+    const cost = tower.type === 'MAGE' && slotIndex === 2 ? MAGE_SECOND_ELEMENT_COST : ELEMENT_IMBUE_COST;
+
+    if (this.gold < cost) {
+      this.addFloatingText('Không đủ vàng gắn nguyên tố!', tower.x, tower.y, '#ef4444');
+      return false;
+    }
+
+    this.gold -= cost;
+    tower.totalInvested += cost;
+
+    if (tower.type === 'MAGE') {
+      if (slotIndex === 1) {
+        tower.element = element;
+      } else {
+        tower.secondaryElement = element;
+      }
+    } else {
+      // Archer, Artillery, Barracks
+      tower.secondaryElement = element;
+      if (tower.type === 'BARRACKS' && tower.soldierIds) {
+        for (const sid of tower.soldierIds) {
+          const soldier = this.soldiers.find((s) => s.id === sid);
+          if (soldier) {
+            soldier.secondaryElement = element;
+          }
+        }
+      }
+    }
+
+    const icon = ELEMENT_ICONS[element];
+    const name = ELEMENT_NAMES[element];
+    this.addFloatingText(`${icon} Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
+    return true;
+  }
+
+  /**
+   * Toggle between Melee (Foot soldier) and Ranged (Archer soldier) for Barracks
+   */
+  public setBarracksSoldierMode(towerId: string, mode: SoldierCombatMode): boolean {
+    const tower = this.towers.find((t) => t.id === towerId);
+    if (!tower || tower.type !== 'BARRACKS') return false;
+
+    tower.soldierMode = mode;
+    tower.targetingFilter =
+      mode === 'MELEE'
+        ? { allowedMovement: ['WALK'] }
+        : { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
+
+    if (tower.soldierIds) {
+      for (const sid of tower.soldierIds) {
+        const soldier = this.soldiers.find((s) => s.id === sid);
+        if (soldier) {
+          const hpRatio = soldier.maxHp > 0 ? soldier.hp / soldier.maxHp : 1;
+          soldier.combatMode = mode;
+
+          if (mode === 'MELEE') {
+            soldier.maxHp = soldier.baseMaxHp;
+            soldier.damage = soldier.baseDamage;
+            soldier.armor = soldier.baseArmor;
+            soldier.canTargetAir = false;
+          } else {
+            soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
+            soldier.damage = Math.max(1, Math.round(soldier.baseDamage * 0.7));
+            soldier.armor = Math.round(soldier.baseArmor * 0.5 * 100) / 100;
+            soldier.canTargetAir = true;
+            soldier.rangedRange = 135 + soldier.tier * 12;
+          }
+
+          soldier.hp = Math.max(1, Math.round(soldier.maxHp * hpRatio));
+          soldier.engagedEnemyId = null;
+          soldier.state = 'MOVING_TO_RALLY';
+        }
+      }
+    }
+
+    this.addFloatingText(
+      `Chuyển sang: ${mode === 'MELEE' ? '⚔️ Lính Cận Chiến' : '🏹 Lính Bắn Tên'}!`,
+      tower.x,
+      tower.y - 15,
+      '#38bdf8'
+    );
     return true;
   }
 

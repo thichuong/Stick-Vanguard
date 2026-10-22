@@ -113,28 +113,95 @@ export class ProjectileSystem {
       const calc = TargetingRuleEngine.calculateDamage(p.damagePayload, target);
       if (!calc.isImmune) {
         target.hp -= calc.finalDamage;
-        if (p.damagePayload.element === 'FIRE') {
-          TargetingRuleEngine.applyStatusEffect(target, { type: 'BURN', duration: 2.5, value: 6 });
-        } else if (p.damagePayload.element === 'ICE') {
-          TargetingRuleEngine.applyStatusEffect(target, { type: 'SLOW', duration: 3.0, value: 0.5 });
-        } else if (p.damagePayload.element === 'WIND' && target.movementType === 'FLY') {
-          // Wind knocks back flying enemies
-          target.pathDistance = Math.max(0, target.pathDistance - 25);
+
+        // Apply primary element hit effect if magical
+        if (p.damagePayload.element !== 'PHYSICAL') {
+          TargetingRuleEngine.applyElementalHitEffects(target, p.damagePayload.element, p.damagePayload.amount);
+        }
+
+        // Apply secondary element hit effect if present
+        if (p.damagePayload.secondaryElement && p.damagePayload.secondaryAmount) {
+          TargetingRuleEngine.applyElementalHitEffects(
+            target,
+            p.damagePayload.secondaryElement,
+            p.damagePayload.secondaryAmount
+          );
         }
       }
+
+      const displayColor = p.damagePayload.secondaryElement
+        ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
+        : ELEMENT_COLORS[p.damagePayload.element];
 
       onHit({
         enemy: target,
         damage: calc.finalDamage,
         isImmune: calc.isImmune,
         label: calc.label,
-        color: ELEMENT_COLORS[p.damagePayload.element],
+        color: displayColor,
         x: target.x,
         y: target.y - (target.altitude || 0)
       });
 
       if (target.hp <= 0) {
         target.state = 'DEAD';
+      }
+
+      // Chain lightning bounce for Mage Tier 4 Branch B
+      if (p.chainCount && p.chainCount > 0) {
+        let remainingBounces = p.chainCount;
+        let prevTarget = target;
+        const hitSet = new Set<string>([target.id]);
+
+        for (const nextEnemy of enemies) {
+          if (remainingBounces <= 0) break;
+          if (nextEnemy.hp <= 0 || nextEnemy.state === 'DEAD' || hitSet.has(nextEnemy.id)) continue;
+
+          const dist = Math.hypot(nextEnemy.x - prevTarget.x, nextEnemy.y - prevTarget.y);
+          if (dist <= 130) {
+            hitSet.add(nextEnemy.id);
+            remainingBounces--;
+
+            const chainPayload = {
+              ...p.damagePayload,
+              amount: Math.round(p.damagePayload.amount * 0.7),
+              secondaryAmount: p.damagePayload.secondaryAmount
+                ? Math.round(p.damagePayload.secondaryAmount * 0.7)
+                : undefined
+            };
+
+            const chainCalc = TargetingRuleEngine.calculateDamage(chainPayload, nextEnemy);
+            if (!chainCalc.isImmune) {
+              nextEnemy.hp -= chainCalc.finalDamage;
+              if (chainPayload.element !== 'PHYSICAL') {
+                TargetingRuleEngine.applyElementalHitEffects(nextEnemy, chainPayload.element, chainPayload.amount);
+              }
+              if (chainPayload.secondaryElement && chainPayload.secondaryAmount) {
+                TargetingRuleEngine.applyElementalHitEffects(
+                  nextEnemy,
+                  chainPayload.secondaryElement,
+                  chainPayload.secondaryAmount
+                );
+              }
+            }
+
+            onHit({
+              enemy: nextEnemy,
+              damage: chainCalc.finalDamage,
+              isImmune: chainCalc.isImmune,
+              label: chainCalc.label,
+              color: displayColor,
+              x: nextEnemy.x,
+              y: nextEnemy.y - (nextEnemy.altitude || 0)
+            });
+
+            if (nextEnemy.hp <= 0) {
+              nextEnemy.state = 'DEAD';
+            }
+
+            prevTarget = nextEnemy;
+          }
+        }
       }
     }
   }
@@ -145,7 +212,9 @@ export class ProjectileSystem {
     onHit: (params: any) => void,
     onExplosion: (x: number, y: number, color: string, aoeRadius: number) => void
   ): void {
-    const color = ELEMENT_COLORS[p.damagePayload.element];
+    const color = p.damagePayload.secondaryElement
+      ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
+      : ELEMENT_COLORS[p.damagePayload.element];
     onExplosion(p.targetX, p.targetY, color, p.aoeRadius);
 
     for (const enemy of enemies) {
@@ -161,16 +230,25 @@ export class ProjectileSystem {
         const falloff = Math.max(0.4, 1 - (dist / p.aoeRadius) * 0.6);
         const payload = {
           ...p.damagePayload,
-          amount: Math.round(p.damagePayload.amount * falloff)
+          amount: Math.round(p.damagePayload.amount * falloff),
+          secondaryAmount: p.damagePayload.secondaryAmount
+            ? Math.round(p.damagePayload.secondaryAmount * falloff)
+            : undefined
         };
 
         const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
         if (!calc.isImmune) {
           enemy.hp -= calc.finalDamage;
-          if (p.damagePayload.element === 'FIRE') {
-            TargetingRuleEngine.applyStatusEffect(enemy, { type: 'BURN', duration: 3, value: 7 });
-          } else if (p.damagePayload.element === 'LIGHTNING') {
-            TargetingRuleEngine.applyStatusEffect(enemy, { type: 'SLOW', duration: 1.5, value: 0.6 });
+
+          if (payload.element !== 'PHYSICAL') {
+            TargetingRuleEngine.applyElementalHitEffects(enemy, payload.element, payload.amount);
+          }
+          if (payload.secondaryElement && payload.secondaryAmount) {
+            TargetingRuleEngine.applyElementalHitEffects(
+              enemy,
+              payload.secondaryElement,
+              payload.secondaryAmount
+            );
           }
         }
 
