@@ -645,7 +645,33 @@ export class UIManager {
       this.confirmingSellTowerId = null;
     }
 
-    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${Math.floor(this.state.gold / 25)}_${this.confirmingSellTowerId}`;
+    let goldAffordKey = '';
+    if (tower) {
+      if (this.confirmingSellTowerId === tower.id) {
+        // While confirming sell, gold changes should never trigger a re-render
+        goldAffordKey = 'confirming_sell';
+      } else if (tower.tier < 3) {
+        const nextBp = TOWER_BLUEPRINTS[`${tower.type}_${tower.tier + 1}`];
+        goldAffordKey = `${nextBp ? this.state.gold >= nextBp.cost : false}`;
+      } else if (tower.tier === 3) {
+        const bpA = TOWER_BLUEPRINTS[`${tower.type}_4_A`];
+        const bpB = TOWER_BLUEPRINTS[`${tower.type}_4_B`];
+        goldAffordKey = `${bpA ? this.state.gold >= bpA.cost : false}_${bpB ? this.state.gold >= bpB.cost : false}`;
+      }
+    } else if (buildPt) {
+      const isTrapArea = buildPt.validFor === 'TRAP';
+      const availableTypes: TowerType[] = isTrapArea
+        ? ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET']
+        : ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
+      goldAffordKey = availableTypes
+        .map((t) => {
+          const bpKey = t.startsWith('TRAP_') ? t : `${t}_1`;
+          return (TOWER_BLUEPRINTS[bpKey]?.cost ?? 0) <= this.state.gold ? '1' : '0';
+        })
+        .join('');
+    }
+
+    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
