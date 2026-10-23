@@ -20,69 +20,69 @@ export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   },
   {
     waveNumber: 3,
-    name: 'Đợt 3: Tiên Phong Thạch Nham (Đi Bộ)',
+    name: 'Đợt 3: Tiên Phong Mộc Tinh (Đi Bộ)',
     rewardGold: 80,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 5, interval: 1.8, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 2, interval: 3.0, delay: 4 }
+      { typeId: 'STICK_WARRIOR', count: 4, interval: 1.8, delay: 0 },
+      { typeId: 'TREANT_GUARD', count: 3, interval: 2.5, delay: 3 }
     ]
   },
   // Wave 4: Chỉ quái bay
   {
     waveNumber: 4,
-    name: 'Đợt 4: Tập Kích Không Gian (Chỉ Quái Bay)',
+    name: 'Đợt 4: Tiên Linh Hoa Gió Không Kích (Chỉ Quái Bay)',
     rewardGold: 95,
     enemies: [
-      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 2.0, delay: 0 }
+      { typeId: 'FAIRY_SPRITE', count: 7, interval: 1.7, delay: 0 }
     ]
   },
   // Wave 5: Chỉ quái dưới nước
   {
     waveNumber: 5,
-    name: 'Đợt 5: Sóng Ngầm Thủy Tộc (Chỉ Quái Bơi)',
+    name: 'Đợt 5: Rùa Rêu Suối Nguồn (Chỉ Quái Bơi)',
     rewardGold: 110,
     enemies: [
-      { typeId: 'AQUA_SERPENT', count: 5, interval: 2.2, delay: 0 }
+      { typeId: 'MOSS_TURTLE', count: 6, interval: 2.0, delay: 0 }
     ]
   },
   // Sau wave 5: Xuất hiện nhiều hơn 1 loại đường
   {
     waveNumber: 6,
-    name: 'Đợt 6: Hỗn Hợp Thủy Lục (Bộ & Nước)',
+    name: 'Đợt 6: Hỗn Hợp Thủy Lục Rừng Xanh (Bộ & Nước)',
     rewardGold: 120,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 6, interval: 1.5, delay: 0 },
-      { typeId: 'AQUA_SERPENT', count: 4, interval: 2.0, delay: 3 }
+      { typeId: 'TREANT_GUARD', count: 5, interval: 1.8, delay: 0 },
+      { typeId: 'MOSS_TURTLE', count: 4, interval: 2.0, delay: 3 }
     ]
   },
   {
     waveNumber: 7,
-    name: 'Đợt 7: Bão Tố Song Hành (Bộ & Bay)',
+    name: 'Đợt 7: Vũ Khúc Tiên Linh (Bộ & Bay)',
     rewardGold: 135,
     enemies: [
-      { typeId: 'FIRE_IMP', count: 8, interval: 1.2, delay: 0 },
-      { typeId: 'WINGED_GARGOYLE', count: 5, interval: 2.0, delay: 3 }
+      { typeId: 'TREANT_GUARD', count: 6, interval: 1.5, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 6, interval: 1.8, delay: 3 }
     ]
   },
   {
     waveNumber: 8,
-    name: 'Đợt 8: Tổng Lực Tam Giới (Bộ, Bay & Nước)',
+    name: 'Đợt 8: Tổng Lực Tam Tuyến Thung Lũng (Bộ, Bay & Nước)',
     rewardGold: 150,
     enemies: [
-      { typeId: 'ROCK_GOLEM', count: 3, interval: 2.8, delay: 0 },
-      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.8, delay: 2 },
-      { typeId: 'AQUA_SERPENT', count: 5, interval: 2.0, delay: 5 }
+      { typeId: 'TREANT_GUARD', count: 4, interval: 2.2, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 7, interval: 1.6, delay: 2 },
+      { typeId: 'MOSS_TURTLE', count: 5, interval: 2.0, delay: 5 }
     ]
   },
   {
     waveNumber: 9,
-    name: 'Đợt 9: Quân Đoàn Ác Mộng (Hỗn Hợp Đa Tuyến)',
+    name: 'Đợt 9: Đại Quân Rừng Rậm Trỗi Dậy (Hỗn Hợp)',
     rewardGold: 175,
     enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 6, interval: 1.6, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 4, interval: 2.5, delay: 3 },
-      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.5, delay: 6 },
-      { typeId: 'AQUA_SERPENT', count: 6, interval: 1.8, delay: 8 }
+      { typeId: 'TREANT_GUARD', count: 6, interval: 1.6, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 8, interval: 1.4, delay: 3 },
+      { typeId: 'MOSS_TURTLE', count: 6, interval: 1.7, delay: 6 },
+      { typeId: 'ROCK_GOLEM', count: 3, interval: 2.5, delay: 8 }
     ]
   },
   {
@@ -90,8 +90,8 @@ export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
     name: 'Đợt 10: Tiền Trạm Trùm - Đại Hắc Long',
     rewardGold: 300,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 8, interval: 1.2, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 3, interval: 2.5, delay: 3 },
+      { typeId: 'TREANT_GUARD', count: 6, interval: 1.5, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 6, interval: 1.5, delay: 3 },
       { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   },
@@ -149,6 +149,12 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
     { id: 'slot-w1', x: 410, y: 210, placement: 'WATER_TRAP', currentTowerId: null }
   ],
   waves: WAVES_VALLEY_ORIGIN,
-  laneBadges: ['1 Tuyến Bộ Uốn S', '1 Dòng Suối', '1 Hành Lang Bay']
+  laneBadges: ['1 Tuyến Bộ Uốn S', '1 Dòng Suối', '1 Hành Lang Bay'],
+  tribe: {
+    name: 'Tộc Mộc Tinh & Tiên Linh',
+    icon: '🌿🧚',
+    elements: ['GRASS', 'FAIRY', 'PHYSICAL'],
+    description: 'Thung lũng ngập tràn sức sống cỏ cây với Mộc Tinh Chiến Binh, Tiên Linh Hoa Gió và Rùa Rêu Suối Nguồn.'
+  }
 };
 

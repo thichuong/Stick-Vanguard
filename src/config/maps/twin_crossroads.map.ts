@@ -1,53 +1,98 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_VALLEY_ORIGIN } from './valley_origin.map.js';
 import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
-  ...WAVES_VALLEY_ORIGIN.slice(0, 5), // Wave 1-3: WALK, Wave 4: FLY, Wave 5: SWIM
+  // Wave 1-3: WALK
+  {
+    waveNumber: 1,
+    name: 'Đợt 1: Tiền Đồn Thiết Binh (Đi Bộ)',
+    rewardGold: 50,
+    enemies: [{ typeId: 'STICK_RUNNER', count: 8, interval: 1.4, delay: 0 }]
+  },
+  {
+    waveNumber: 2,
+    name: 'Đợt 2: Dân Binh Giáp Sắt (Đi Bộ)',
+    rewardGold: 65,
+    enemies: [
+      { typeId: 'STICK_RUNNER', count: 6, interval: 1.2, delay: 0 },
+      { typeId: 'STEEL_VANGUARD', count: 3, interval: 2.2, delay: 3 }
+    ]
+  },
+  {
+    waveNumber: 3,
+    name: 'Đợt 3: Binh Đoàn Thiết Giáp (Đi Bộ)',
+    rewardGold: 80,
+    enemies: [
+      { typeId: 'STEEL_VANGUARD', count: 5, interval: 1.8, delay: 0 },
+      { typeId: 'IRON_COLOSSUS', count: 1, interval: 3.0, delay: 5 }
+    ]
+  },
+  // Wave 4: FLY ONLY
+  {
+    waveNumber: 4,
+    name: 'Đợt 4: Phi Đội Sấm Sét (Chỉ Quái Bay)',
+    rewardGold: 95,
+    enemies: [
+      { typeId: 'WINGED_GARGOYLE', count: 7, interval: 1.8, delay: 0 }
+    ]
+  },
+  // Wave 5: SWIM ONLY
+  {
+    waveNumber: 5,
+    name: 'Đợt 5: Lươn Điện Thủy Tộc (Chỉ Quái Bơi)',
+    rewardGold: 110,
+    enemies: [
+      { typeId: 'SPARK_EEL', count: 6, interval: 1.8, delay: 0 }
+    ]
+  },
+  // Wave 6-10: Mixed
   {
     waveNumber: 6,
     name: 'Đợt 6: Xung Đột Thủy Lục (Bộ & Nước)',
-    rewardGold: 110,
+    rewardGold: 120,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 6, interval: 1.5, delay: 0 },
-      { typeId: 'AQUA_SERPENT', count: 6, interval: 1.8, delay: 3 }
+      { typeId: 'STEEL_VANGUARD', count: 6, interval: 1.5, delay: 0 },
+      { typeId: 'SPARK_EEL', count: 6, interval: 1.8, delay: 3 }
     ]
   },
   {
     waveNumber: 7,
-    name: 'Đợt 7: Bão Tố Song Hành (Bộ & Bay)',
-    rewardGold: 120,
+    name: 'Đợt 7: Thiết Giáp & Lôi Điện (Bộ & Bay)',
+    rewardGold: 135,
     enemies: [
-      { typeId: 'FIRE_IMP', count: 8, interval: 1.0, delay: 0 },
-      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.8, delay: 4 }
+      { typeId: 'STEEL_VANGUARD', count: 7, interval: 1.5, delay: 0 },
+      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.6, delay: 3 }
     ]
   },
   {
     waveNumber: 8,
-    name: 'Đợt 8: Thiết Giáp Thạch Nham (Bộ & Bay)',
-    rewardGold: 135,
+    name: 'Đợt 8: Khổng Lồ Cơ Giới (Bộ, Bay & Nước)',
+    rewardGold: 155,
     enemies: [
-      { typeId: 'ROCK_GOLEM', count: 5, interval: 2.6, delay: 0 },
-      { typeId: 'WINGED_GARGOYLE', count: 5, interval: 1.8, delay: 2 }
+      { typeId: 'IRON_COLOSSUS', count: 2, interval: 3.0, delay: 0 },
+      { typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.5, delay: 3 },
+      { typeId: 'SPARK_EEL', count: 5, interval: 1.8, delay: 5 }
     ]
   },
   {
     waveNumber: 9,
-    name: 'Đợt 9: Thủy Quái Đột Kích (Nước & Bộ)',
-    rewardGold: 150,
+    name: 'Đợt 9: Quân Đoàn Thép Tràn Ngập (Tam Tuyến)',
+    rewardGold: 180,
     enemies: [
-      { typeId: 'AQUA_SERPENT', count: 8, interval: 1.5, delay: 0 },
-      { typeId: 'SHADOW_WRAITH', count: 5, interval: 2.0, delay: 4 }
+      { typeId: 'STEEL_VANGUARD', count: 8, interval: 1.3, delay: 0 },
+      { typeId: 'IRON_COLOSSUS', count: 2, interval: 2.8, delay: 2 },
+      { typeId: 'WINGED_GARGOYLE', count: 8, interval: 1.3, delay: 5 },
+      { typeId: 'SPARK_EEL', count: 8, interval: 1.5, delay: 7 }
     ]
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tinh Nhuệ Hắc Ám (Tam Tuyến)',
-    rewardGold: 170,
+    name: 'Đợt 10: Tinh Nhuệ Cơ Giới Hắc Ám (Tam Tuyến)',
+    rewardGold: 320,
     enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 7, interval: 1.5, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 4, interval: 2.2, delay: 3 },
-      { typeId: 'WINGED_GARGOYLE', count: 7, interval: 1.6, delay: 6 }
+      { typeId: 'IRON_COLOSSUS', count: 3, interval: 2.5, delay: 0 },
+      { typeId: 'STEEL_VANGUARD', count: 8, interval: 1.3, delay: 3 },
+      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   },
   ...WAVES_EXTENDED_POST_10
@@ -97,6 +142,12 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
   waterSpawn: { x: 500, y: 0 },
   towerSlots: [],
   waves: WAVES_TWIN_CROSSROADS,
-  laneBadges: ['1 Tuyến Bộ Cắt Sông', '1 Thủy Lộ Xuyên Tâm', 'Giao Điểm Cầu']
+  laneBadges: ['1 Tuyến Bộ Cắt Sông', '1 Thủy Lộ Xuyên Tâm', 'Giao Điểm Cầu'],
+  tribe: {
+    name: 'Tộc Thiết Giáp Cơ Giới',
+    icon: '⚙️⚡',
+    elements: ['STEEL', 'LIGHTNING', 'PHYSICAL'],
+    description: 'Binh đoàn cơ giới giáp sắt dày cộm, chỉ huy bởi Khổng Lồ Thép Sét kết hợp cùng Lươn Điện dưới sông.'
+  }
 };
 

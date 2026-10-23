@@ -19,27 +19,27 @@ export const WAVES_PLAGUE_MORASS: WaveConfig[] = [
   },
   {
     waveNumber: 3,
-    name: 'Đợt 3: Khối Nham Thạch Ô Nhiễm (Đi Bộ)',
+    name: 'Đợt 3: Nhện Độc Đầm Lầy (Đi Bộ)',
     rewardGold: 90,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 6, interval: 1.5, delay: 0 },
-      { typeId: 'MAGMA_SLIME', count: 4, interval: 2.2, delay: 3 }
+      { typeId: 'STICK_WARRIOR', count: 4, interval: 1.5, delay: 0 },
+      { typeId: 'VENOM_ARACHNID', count: 6, interval: 1.2, delay: 2 }
     ]
   },
   {
     waveNumber: 4,
-    name: 'Đợt 4: Que Dơi Độc Khí (Chỉ Quái Bay)',
+    name: 'Đợt 4: Dơi Huyết Độc Bão Tố (Chỉ Quái Bay)',
     rewardGold: 105,
     enemies: [
-      { typeId: 'WINGED_GARGOYLE', count: 8, interval: 1.6, delay: 0 }
+      { typeId: 'TOXIC_BAT', count: 8, interval: 1.5, delay: 0 }
     ]
   },
   {
     waveNumber: 5,
-    name: 'Đợt 5: Lươn Điện Kênh Bùn (Chỉ Quái Bơi)',
+    name: 'Đợt 5: Thủy Quái Kịch Độc Kênh Bùn (Chỉ Quái Bơi)',
     rewardGold: 120,
     enemies: [
-      { typeId: 'SPARK_EEL', count: 8, interval: 1.6, delay: 0 }
+      { typeId: 'PLAGUE_LEVIATHAN', count: 3, interval: 2.2, delay: 0 }
     ]
   },
   {
@@ -196,6 +196,12 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
     { x: 40, y: 80 },
     { x: 40, y: 570 }
   ],
-  laneBadges: ['2 Tuyến Bộ Đan Chéo', '2 Kênh Bùn Độc', 'Tứ Tuyến Tử Địa']
+  laneBadges: ['2 Tuyến Bộ Đan Chéo', '2 Kênh Bùn Độc', 'Tứ Tuyến Tử Địa'],
+  tribe: {
+    name: 'Tộc Độc Trùng Biến Dị',
+    icon: '☠️🌿',
+    elements: ['POISON', 'GRASS', 'DARK'],
+    description: 'Vùng đầm lầy chết chóc nơi Nhện Độc, Dơi Huyết Độc và Thủy Quái Kịch Độc sinh sôi dưới sự cai trị của Trùm Mãng Xà Hư Không.'
+  }
 };
 

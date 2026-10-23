@@ -363,8 +363,16 @@ export class StickmanRenderer {
       for (const eff of statusEffects) {
         let effIcon = '';
         if (eff.type === 'BURN') effIcon = '🔥';
-        else if (eff.type === 'SLOW' || eff.type === 'FREEZE') effIcon = '❄️';
+        else if (eff.type === 'FREEZE') effIcon = '❄️';
+        else if (eff.type === 'SLOW') effIcon = '🪨';
         else if (eff.type === 'WET') effIcon = '💧';
+        else if (eff.type === 'POISON') effIcon = '☠️';
+        else if (eff.type === 'ROOT') effIcon = '🌿';
+        else if (eff.type === 'SUNDER') effIcon = '⚙️';
+        else if (eff.type === 'SOUL_DRAIN') effIcon = '👻';
+        else if (eff.type === 'DRAGON_AWE') effIcon = '🐉';
+        else if (eff.type === 'CHARM') effIcon = '🧚';
+        else if (eff.type === 'CURSE') effIcon = '🔮';
         if (effIcon) {
           ctx.fillText(effIcon, x + width / 2 + 2 + iconOffset, y + 6);
           iconOffset += 13;

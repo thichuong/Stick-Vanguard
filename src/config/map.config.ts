@@ -1,4 +1,5 @@
 import { Vector2D, TowerSlot } from '../types/entities.types.js';
+import { ElementType } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
   MAP_VALLEY_ORIGIN,
@@ -34,6 +35,13 @@ export interface WaveConfig {
   enemies: WaveEnemyEntry[];
 }
 
+export interface MapTribeConfig {
+  name: string;
+  icon: string;
+  elements: ElementType[];
+  description: string;
+}
+
 export interface MapConfig {
   id: string;
   name: string;
@@ -63,6 +71,7 @@ export interface MapConfig {
   waterSpawns?: Vector2D[];
   airStarts?: Vector2D[];
   laneBadges?: string[];
+  tribe?: MapTribeConfig;
 }
 
 // Distance helper from point (px, py) to segment (x1, y1)-(x2, y2)

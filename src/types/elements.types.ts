@@ -15,18 +15,30 @@ export type ElementType =
   | 'LIGHTNING'
   | 'ICE'
   | 'LIGHT'
-  | 'DARK';
+  | 'DARK'
+  | 'GRASS'
+  | 'POISON'
+  | 'STEEL'
+  | 'GHOST'
+  | 'DRAGON'
+  | 'FAIRY';
 
 export type MagicalElementType = Exclude<ElementType, 'PHYSICAL'>;
 
 export type StatusEffectType =
-  | 'BURN'      // DoT damage
-  | 'WET'       // Vulnerable to lightning / ice
-  | 'SLOW'      // Reduces movement speed
-  | 'FREEZE'    // Completely immobilized
-  | 'SHOCK'     // Stunned & chain electric damage
-  | 'KNOCKBACK' // Pushed backward along path
-  | 'CURSE';    // Takes increased damage from all sources
+  | 'BURN'        // DoT damage
+  | 'WET'         // Vulnerable to lightning / ice / grass
+  | 'SLOW'        // Reduces movement speed
+  | 'FREEZE'      // Completely immobilized
+  | 'SHOCK'       // Stunned & chain electric damage
+  | 'KNOCKBACK'   // Pushed backward along path
+  | 'CURSE'       // Takes increased damage from all sources
+  | 'ROOT'        // Immobilized by vines & drained
+  | 'POISON'      // Stacking DoT & attack speed reduction
+  | 'SUNDER'      // Armor broken, takes increased physical & steel damage
+  | 'SOUL_DRAIN'  // Takes bonus execute damage based on missing HP
+  | 'DRAGON_AWE'  // Intimidated: reduced attack damage, bonus damage vs Bosses
+  | 'CHARM';      // Charmed: slowed move/attack speed & takes bonus magic damage
 
 export interface StatusEffect {
   type: StatusEffectType;

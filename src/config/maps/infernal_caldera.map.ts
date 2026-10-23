@@ -185,6 +185,12 @@ export const MAP_INFERNAL_CALDERA: MapConfig = {
     { x: 40, y: 80 },
     { x: 40, y: 570 }
   ],
-  laneBadges: ['2 Tuyến Bộ Song Cánh', '1 Sông Nham Thạch', '2 Hành Lang Bay']
+  laneBadges: ['2 Tuyến Bộ Song Cánh', '1 Sông Nham Thạch', '2 Hành Lang Bay'],
+  tribe: {
+    name: 'Tộc Hỏa Ngục Viêm Long',
+    icon: '🔥🐉',
+    elements: ['FIRE', 'DRAGON', 'EARTH'],
+    description: 'Bầy Tiểu Quỷ Hỏa Diệm, Khối Dung Nham và Long Nhân Hỏa Nham tràn xuống từ vách núi lửa đỏ rực.'
+  }
 };
 

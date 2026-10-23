@@ -219,6 +219,105 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(waterDmg.isImmune).toBe(false);
       expect(waterDmg.finalDamage).toBeGreaterThan(50); // weakness!
     });
+
+    it('Fairy element must deal 2.0x weakness damage to Dragon enemies and Dragon deals 0 damage against Fairy', () => {
+      const drakeBp = ENEMY_BLUEPRINTS['DRAKE_WARRIOR'];
+      expect(drakeBp).toBeDefined();
+      const drake: EnemyEntity = {
+        id: 'e-drake',
+        typeId: drakeBp.typeId,
+        name: drakeBp.name,
+        x: 0,
+        y: 0,
+        hp: drakeBp.hp,
+        maxHp: drakeBp.hp,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: drakeBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 20,
+        facing: 0
+      };
+
+      // Fairy attack against Dragon
+      const fairyRes = TargetingRuleEngine.calculateDamage(
+        { amount: 50, element: 'FAIRY', sourceId: 'test' },
+        drake
+      );
+      expect(fairyRes.isImmune).toBe(false);
+      expect(fairyRes.multiplier).toBe(2.0);
+      expect(fairyRes.finalDamage).toBe(100);
+
+      // Fairy target receiving Dragon attack -> 0 damage (Immune)
+      const fairyBp = ENEMY_BLUEPRINTS['FAIRY_SPRITE'];
+      expect(fairyBp).toBeDefined();
+      const fairy: EnemyEntity = {
+        ...drake,
+        id: 'e-fairy',
+        typeId: fairyBp.typeId,
+        name: fairyBp.name,
+        elementalProfile: fairyBp.elementalProfile
+      };
+      const dragonRes = TargetingRuleEngine.calculateDamage(
+        { amount: 50, element: 'DRAGON', sourceId: 'test' },
+        fairy
+      );
+      expect(dragonRes.isImmune).toBe(true);
+      expect(dragonRes.finalDamage).toBe(0);
+    });
+
+    it('Elemental reaction combo: Poison status + Fire element triggers COMBUSTION reaction with multiplier', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'e-runner',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 200,
+        maxHp: 200,
+        speed: 60,
+        baseSpeed: 60,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: runnerBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [
+          { type: 'POISON', duration: 4.0, value: 5 }
+        ],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      const result = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FIRE', sourceId: 'test-mage' },
+        enemy
+      );
+      expect(result.reactionTriggered).toBe(true);
+      expect(result.reactionLabel).toBe('💥 BÙNG CHÁY!');
+      expect(result.finalDamage).toBeGreaterThanOrEqual(170); // 1.7x combustion
+    });
   });
 
   describe('GameState (Economy, Barracks & Upgrades)', () => {
@@ -751,6 +850,18 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       const finalWave = waveSys.generateWaveConfig(19, 20);
       const finalWaveTypes = new Set(finalWave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
       expect(finalWaveTypes.size).toBeGreaterThan(1);
+    });
+
+    it('should have dominant tribe configured with name, icon, elements, and description for all 8 maps', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      expect(MAPS_CONFIG.length).toBe(8);
+      for (const map of MAPS_CONFIG) {
+        expect(map.tribe).toBeDefined();
+        expect(map.tribe?.name).toBeTruthy();
+        expect(map.tribe?.icon).toBeTruthy();
+        expect(map.tribe?.elements.length).toBeGreaterThan(0);
+        expect(map.tribe?.description).toBeTruthy();
+      }
     });
   });
 

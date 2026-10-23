@@ -4,13 +4,15 @@ import {
   TargetingFilter
 } from '../types/elements.types.js';
 import { EnemyEntity } from '../types/entities.types.js';
-import { ELEMENTAL_MATCHUPS } from '../config/elements.config.js';
+import { ELEMENTAL_MATCHUPS, ELEMENTAL_REACTIONS } from '../config/elements.config.js';
 
 export interface DamageCalculationResult {
   finalDamage: number;
   isImmune: boolean;
   multiplier: number;
-  label?: string; // 'MIỄN NHIỄM!' | 'KHẮC HỆ!' | 'KHÁNG!'
+  label?: string; // 'MIỄN NHIỄM!' | 'KHẮC HỆ!' | 'KHÁNG!' | '💥 BÙNG CHÁY!' | etc.
+  reactionTriggered?: boolean;
+  reactionLabel?: string;
   primaryDamage?: number;
   secondaryDamage?: number;
 }
@@ -99,16 +101,44 @@ export class TargetingRuleEngine {
       }
     }
 
-    // 4. Status effect interactions
-    const hasWet = enemy.statusEffects.some((s) => s.type === 'WET');
-    const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
+    // 4. Status effect interactions & Elemental Reactions
+    let reactionLabel: string | undefined;
 
-    if (hasWet) {
-      if (element === 'LIGHTNING') multiplier *= 1.75;
-      if (element === 'ICE') multiplier *= 1.5;
+    for (const reaction of ELEMENTAL_REACTIONS) {
+      if (
+        reaction.triggerElement === element &&
+        enemy.statusEffects.some((s) => s.type === reaction.requiredStatus)
+      ) {
+        multiplier *= reaction.damageMultiplier;
+        reactionLabel = reaction.label;
+        break;
+      }
     }
 
+    // Debuff modifiers on target
+    const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
     if (hasCurse) {
+      multiplier *= 1.35;
+    }
+
+    const hasSunder = enemy.statusEffects.some((s) => s.type === 'SUNDER');
+    if (hasSunder) {
+      multiplier *= 1.30;
+    }
+
+    const hasCharm = enemy.statusEffects.some((s) => s.type === 'CHARM');
+    if (hasCharm && element !== 'PHYSICAL') {
+      multiplier *= 1.25;
+    }
+
+    const hasSoulDrain = enemy.statusEffects.some((s) => s.type === 'SOUL_DRAIN');
+    if (hasSoulDrain) {
+      const missingHpRatio = Math.max(0, 1 - enemy.hp / enemy.maxHp);
+      multiplier *= 1 + missingHpRatio * 0.4;
+    }
+
+    // Special bonus: DRAGON against BOSS or ELITE
+    if (element === 'DRAGON' && (enemy.tags.includes('BOSS') || enemy.tags.includes('ELITE'))) {
       multiplier *= 1.35;
     }
 
@@ -129,18 +159,22 @@ export class TargetingRuleEngine {
     const calculatedDamage = Math.max(1, Math.round(amount * multiplier * this.globalDamageMultiplier));
     const finalDamage = calculatedDamage;
 
-    let label: string | undefined;
-    if (multiplier >= 1.4) {
-      label = 'KHẮC HỆ!';
-    } else if (multiplier <= 0.6) {
-      label = 'KHÁNG!';
+    let label: string | undefined = reactionLabel;
+    if (!label) {
+      if (multiplier >= 1.4) {
+        label = 'KHẮC HỆ!';
+      } else if (multiplier <= 0.6) {
+        label = 'KHÁNG!';
+      }
     }
 
     return {
       finalDamage,
       isImmune: false,
       multiplier,
-      label
+      label,
+      reactionTriggered: !!reactionLabel,
+      reactionLabel
     };
   }
 
@@ -155,7 +189,7 @@ export class TargetingRuleEngine {
     let totalBase = payload.amount;
     let allImmune = primary.isImmune;
     let finalDamage = primary.isImmune ? 0 : primary.finalDamage;
-    let hasSuperEffective = primary.label === 'KHẮC HỆ!';
+    let superEffectiveLabel: string | undefined = primary.label && primary.label !== 'KHÁNG!' ? primary.label : undefined;
     let allResist = primary.label === 'KHÁNG!';
     let secondaryDamage = 0;
 
@@ -176,7 +210,9 @@ export class TargetingRuleEngine {
         finalDamage += secondary.finalDamage;
         secondaryDamage = secondary.finalDamage;
       }
-      if (secondary.label === 'KHẮC HỆ!') hasSuperEffective = true;
+      if (secondary.label && secondary.label !== 'KHÁNG!') {
+        superEffectiveLabel = secondary.label;
+      }
       if (secondary.label !== 'KHÁNG!') allResist = false;
     }
 
@@ -194,7 +230,9 @@ export class TargetingRuleEngine {
             allImmune = false;
             finalDamage += bCalc.finalDamage;
           }
-          if (bCalc.label === 'KHẮC HỆ!') hasSuperEffective = true;
+          if (bCalc.label && bCalc.label !== 'KHÁNG!') {
+            superEffectiveLabel = bCalc.label;
+          }
           if (bCalc.label !== 'KHÁNG!') allResist = false;
         }
       }
@@ -212,8 +250,8 @@ export class TargetingRuleEngine {
     let label: string | undefined;
     if (allImmune) {
       label = 'MIỄN NHIỄM!';
-    } else if (hasSuperEffective) {
-      label = 'KHẮC HỆ!';
+    } else if (superEffectiveLabel) {
+      label = superEffectiveLabel;
     } else if (allResist) {
       label = 'KHÁNG!';
     }
@@ -319,8 +357,11 @@ export class TargetingRuleEngine {
         break;
 
       case 'LIGHT':
-        // Holy purification: if enemy is DARK, apply a lingering burn-like holy radiance
-        if (enemy.elementalProfile.primaryElement === 'DARK') {
+        // Holy purification: if enemy is DARK or GHOST, apply a lingering burn-like holy radiance
+        if (
+          enemy.elementalProfile.primaryElement === 'DARK' ||
+          enemy.elementalProfile.primaryElement === 'GHOST'
+        ) {
           this.applyStatusEffect(enemy, {
             type: 'BURN',
             duration: 2.5,
@@ -336,6 +377,66 @@ export class TargetingRuleEngine {
           value: 0.35
         });
         break;
+
+      case 'GRASS':
+        this.applyStatusEffect(enemy, {
+          type: 'SLOW',
+          duration: 3.0,
+          value: 0.3
+        });
+        if (Math.random() < 0.3) {
+          this.applyStatusEffect(enemy, {
+            type: 'ROOT',
+            duration: 1.0,
+            value: 0
+          });
+        }
+        break;
+
+      case 'POISON': {
+        const existingPoison = enemy.statusEffects.find((s) => s.type === 'POISON');
+        const currentStacks = existingPoison ? Math.min(3, (existingPoison.value || 1) + 1) : 1;
+        this.applyStatusEffect(enemy, {
+          type: 'POISON',
+          duration: 4.0,
+          value: currentStacks
+        });
+        break;
+      }
+
+      case 'STEEL':
+        this.applyStatusEffect(enemy, {
+          type: 'SUNDER',
+          duration: 4.0,
+          value: 0.3
+        });
+        break;
+
+      case 'GHOST':
+        this.applyStatusEffect(enemy, {
+          type: 'SOUL_DRAIN',
+          duration: 3.0,
+          value: 0.2
+        });
+        // Slight fear nudge
+        enemy.pathDistance = Math.max(0, enemy.pathDistance - 10);
+        break;
+
+      case 'DRAGON':
+        this.applyStatusEffect(enemy, {
+          type: 'DRAGON_AWE',
+          duration: 3.5,
+          value: 0.25
+        });
+        break;
+
+      case 'FAIRY':
+        this.applyStatusEffect(enemy, {
+          type: 'CHARM',
+          duration: 3.0,
+          value: 0.35
+        });
+        break;
     }
   }
 
@@ -348,7 +449,6 @@ export class TargetingRuleEngine {
   ): void {
     if (!effectPayload) return;
 
-    // Flying enemies cannot be slowed by ground effects unless targeted directly
     const existing = enemy.statusEffects.find((s) => s.type === effectPayload.type);
     if (existing) {
       existing.duration = Math.max(existing.duration, effectPayload.duration);
@@ -382,10 +482,20 @@ export class TargetingRuleEngine {
           const scaledDmg = Math.max(1, Math.round(eff.value * this.globalDamageMultiplier));
           onDotDamage(scaledDmg, 'FIRE');
         }
+      } else if (eff.type === 'POISON') {
+        eff.tickTimer = (eff.tickTimer || 0) + dt;
+        if (eff.tickTimer >= 0.5) {
+          eff.tickTimer = 0;
+          const stacks = eff.value || 1;
+          const poisonDmg = Math.max(3, Math.round(stacks * 4 * this.globalDamageMultiplier));
+          onDotDamage(poisonDmg, 'POISON');
+        }
       } else if (eff.type === 'SLOW') {
         speedMult = Math.min(speedMult, 1 - eff.value);
-      } else if (eff.type === 'FREEZE') {
-        speedMult = 0; // Frozen in place
+      } else if (eff.type === 'FREEZE' || eff.type === 'ROOT') {
+        speedMult = 0; // Frozen or rooted in place
+      } else if (eff.type === 'CHARM') {
+        speedMult = Math.min(speedMult, 1 - eff.value);
       }
 
       if (eff.duration <= 0) {

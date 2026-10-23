@@ -292,6 +292,7 @@ export class UIManager {
       const isSelected = m.id === this.state.currentMapId;
       const totalWaves = this.state.customTotalWaves;
       const badges = m.laneBadges || ['1 Đường Bộ', '1 Đường Thủy'];
+      const tribe = m.tribe;
 
       return `
         <div class="map-card ${isSelected ? 'active-map' : ''}" data-map-id="${m.id}">
@@ -306,6 +307,22 @@ export class UIManager {
           <div class="map-preview-box">
             ${this.generateMiniMapSvg(m)}
           </div>
+
+          ${
+            tribe
+              ? `
+              <div class="map-tribe-box" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(250, 204, 21, 0.35); border-radius: 6px; padding: 6px 8px; margin: 6px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 12px; font-weight: 700; color: #facc15;">${tribe.icon} ${tribe.name}</span>
+                  <div style="display: flex; gap: 4px;">
+                    ${tribe.elements.map((el) => `<span title="${ELEMENT_NAMES[el]}" style="font-size: 13px;">${ELEMENT_ICONS[el]}</span>`).join('')}
+                  </div>
+                </div>
+                <p style="font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.3;">${tribe.description}</p>
+              </div>
+            `
+              : ''
+          }
 
           <div class="map-lane-badges-container">
             ${badges.map((b) => `<span class="map-lane-pill">🛡️ ${b}</span>`).join('')}

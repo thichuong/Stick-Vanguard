@@ -134,12 +134,17 @@ export class CombatSystem {
               currentEnemy.hp -= calc.finalDamage;
               TargetingRuleEngine.applyAllPayloadEffects(currentEnemy, payload);
 
-              // Light holy heal
+              // Light holy heal & Grass root drain
               if (
                 secondaryElement === 'LIGHT' ||
                 soldier.buffedElements?.includes('LIGHT')
               ) {
                 soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+              } else if (
+                secondaryElement === 'GRASS' ||
+                soldier.buffedElements?.includes('GRASS')
+              ) {
+                soldier.hp = Math.min(soldier.maxHp, soldier.hp + 3);
               }
             }
 
@@ -184,8 +189,11 @@ export class CombatSystem {
           if (currentEnemy.attackCooldown <= 0) {
             currentEnemy.attackCooldown = 1 / currentEnemy.attackSpeed;
 
-            // Reduce damage by soldier armor
-            const rawDmg = currentEnemy.damage * (1 - soldier.armor);
+            // Reduce damage by soldier armor & dragon awe
+            const hasDragonAwe = currentEnemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+            let enemyDamage = currentEnemy.damage;
+            if (hasDragonAwe) enemyDamage *= 0.75;
+            const rawDmg = enemyDamage * (1 - soldier.armor);
             const takenDmg = Math.max(1, Math.round(rawDmg));
             soldier.hp -= takenDmg;
 
@@ -352,6 +360,11 @@ export class CombatSystem {
         soldier.buffedElements?.includes('LIGHT')
       ) {
         soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+      } else if (
+        secondaryElement === 'GRASS' ||
+        soldier.buffedElements?.includes('GRASS')
+      ) {
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 3);
       }
     }
 

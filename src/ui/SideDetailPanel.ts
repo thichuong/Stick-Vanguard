@@ -3,10 +3,29 @@ import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import {
   ELEMENT_COLORS,
   ELEMENT_ICONS,
-  ELEMENT_NAMES
+  ELEMENT_NAMES,
+  ELEMENT_CODEX_DETAILS,
+  ELEMENTAL_REACTIONS,
+  SELECTABLE_ELEMENTS
 } from '../config/elements.config.js';
-import { ElementType } from '../types/elements.types.js';
+import { ElementType, StatusEffectType } from '../types/elements.types.js';
 import { TowerType } from '../types/entities.types.js';
+
+const STATUS_TO_ELEMENT: Record<StatusEffectType, ElementType> = {
+  BURN: 'FIRE',
+  WET: 'WATER',
+  SLOW: 'EARTH',
+  KNOCKBACK: 'WIND',
+  SHOCK: 'LIGHTNING',
+  FREEZE: 'ICE',
+  ROOT: 'GRASS',
+  POISON: 'POISON',
+  SUNDER: 'STEEL',
+  SOUL_DRAIN: 'GHOST',
+  DRAGON_AWE: 'DRAGON',
+  CHARM: 'FAIRY',
+  CURSE: 'DARK'
+};
 
 export class SideDetailPanel {
   private backdropEl: HTMLElement;
@@ -18,6 +37,7 @@ export class SideDetailPanel {
   private selectedTierKey: string = 'BARRACKS_1';
   private previewElement: ElementType = 'FIRE';
   private mageSecondaryElement: ElementType = 'LIGHTNING';
+  private currentElementSubTab: string = 'OVERVIEW';
 
   constructor() {
     this.backdropEl = document.getElementById('codex-modal-backdrop')!;
@@ -424,16 +444,7 @@ export class SideDetailPanel {
 
   private renderTowerElementalSim(type: TowerType, bp: TowerBlueprint): string {
     const isMage = type === 'MAGE';
-    const selectableElements: ElementType[] = [
-      'FIRE',
-      'WATER',
-      'EARTH',
-      'WIND',
-      'LIGHTNING',
-      'ICE',
-      'LIGHT',
-      'DARK'
-    ];
+    const selectableElements: ElementType[] = SELECTABLE_ELEMENTS;
 
     if (isMage) {
       // Mage Tower dual element simulator
@@ -444,34 +455,20 @@ export class SideDetailPanel {
       const totalDmg = primaryDmg + secondaryDmg;
       const totalDps = Math.round(totalDmg * bp.fireRate);
 
-      // Synergy check
+      // Synergy check from reactions
+      const reaction = ELEMENTAL_REACTIONS.find(
+        (r) =>
+          (STATUS_TO_ELEMENT[r.requiredStatus] === primaryElem && r.triggerElement === secondaryElem) ||
+          (STATUS_TO_ELEMENT[r.requiredStatus] === secondaryElem && r.triggerElement === primaryElem)
+      );
+
       let synergyText = '';
-      if (
-        (primaryElem === 'WATER' && secondaryElem === 'LIGHTNING') ||
-        (primaryElem === 'LIGHTNING' && secondaryElem === 'WATER')
-      ) {
-        synergyText =
-          '⚡ COMBO SỐC ĐIỆN HỦY DIỆT: Trạng thái Ẩm Ướt (Wet) kích hoạt đòn Sét tăng thêm +75% SÁT THƯƠNG và phóng tia điện giật lan cực mạnh!';
-      } else if (
-        (primaryElem === 'WATER' && secondaryElem === 'ICE') ||
-        (primaryElem === 'ICE' && secondaryElem === 'WATER')
-      ) {
-        synergyText =
-          '❄️ COMBO ĐÓNG BĂNG TUYỆT ĐỐI: Ẩm Ướt giúp đòn Băng nhận thêm +50% SÁT THƯƠNG và tăng mạnh xác suất Đóng Băng bất động 1.2s!';
-      } else if (
-        (primaryElem === 'DARK' && secondaryElem === 'FIRE') ||
-        (primaryElem === 'FIRE' && secondaryElem === 'DARK')
-      ) {
-        synergyText =
-          '🔥 COMBO HỎA NGỤC HẮC ÁM: Nguyền Rủa (Curse) tăng +35% sát thương nhận vào, khuếch đại DoT thiêu đốt bùng cháy dữ dội!';
-      } else if (
-        (primaryElem === 'LIGHT' && secondaryElem === 'DARK') ||
-        (primaryElem === 'DARK' && secondaryElem === 'LIGHT')
-      ) {
-        synergyText =
-          '✨ COMBO LƯỠNG CỰC QUANG ÁM: Xuyên thủng mọi loại kháng ma pháp, xóa sổ boss và quái tinh anh!';
+      if (reaction) {
+        synergyText = `${reaction.label} ${reaction.name.toUpperCase()} (x${reaction.damageMultiplier} Sát thương): ${reaction.description}`;
+      } else if (primaryElem === secondaryElem) {
+        synergyText = `🔥 CỘNG HƯỞNG THUẦN HỆ: Tối đa hóa hiệu lực và sát thương đơn hệ [${ELEMENT_NAMES[primaryElem]}] lên mục tiêu!`;
       } else {
-        synergyText = `🌟 SONG HỆ PHỐI HỢP: Đòn đánh gây đồng thời cả 2 loại sát thương ma pháp [${ELEMENT_NAMES[primaryElem]}] + [${ELEMENT_NAMES[secondaryElem]}] và áp dụng cả 2 hiệu ứng trạng thái lên mục tiêu!`;
+        synergyText = `🌟 SONG HỆ PHỐI HỢP: Đòn đánh gây đồng thời cả 2 loại sát thương ma pháp [${ELEMENT_NAMES[primaryElem]}] + [${ELEMENT_NAMES[secondaryElem]}] và kích hoạt cả 2 hiệu ứng trạng thái lên mục tiêu!`;
       }
 
       return `
@@ -668,6 +665,42 @@ export class SideDetailPanel {
               desc: 'Khắc dấu ấn Nguyền Rủa 3.5s lên quái vật bị lính tấn công. Kẻ địch bị nguyền rủa sẽ nhận thêm +35% sát thương từ MỌI NGUỒN (Tháp Cung, Pháo Cối, Bẫy và chính lính).',
               tag: '🔮 Quái nhận thêm +35% Sát Thương từ Mọi Nguồn trong 3.5s'
             };
+          case 'GRASS':
+            return {
+              title: 'Rễ Cây Trói Chân & Hồi Máu (Root & Bloom)',
+              desc: 'Lính chém khiến quái bị rễ trói giảm 30% tốc độ chạy và nhận DoT trong 3.0s. Mỗi đòn chém hồi +3 HP cho chiến binh!',
+              tag: '🌿 Trói rễ giảm 30% Tốc độ • Lính hồi phục +3 HP mỗi đòn'
+            };
+          case 'POISON':
+            return {
+              title: 'Lưỡi Gươm Kịch Độc Ăn Mòn (Poison DoT)',
+              desc: 'Đòn đánh tiêm nọc độc cực mạnh rút máu DoT liên tục trong 4.0s (mỗi 0.5s rút 15% Base DMG). Sát thương độc hoàn toàn bỏ qua giáp.',
+              tag: '☠️ DoT Kịch Độc 4s • 8 lần tick • Bỏ qua 100% giáp'
+            };
+          case 'STEEL':
+            return {
+              title: 'Nhát Chém Bổ Giáp Xé Vỡ (Sunder Armor)',
+              desc: 'Gây hiệu ứng Xé Giáp (Sunder) trong 4.0s, làm giảm giáp của mục tiêu đi 40%, giúp toàn bộ tháp và lính vật lý đánh cực đau.',
+              tag: '⚙️ Xé giáp giảm 40% Phòng ngự kẻ địch trong 4s'
+            };
+          case 'GHOST':
+            return {
+              title: 'U Hồn Hút Phách Giảm Công (Soul Drain)',
+              desc: 'Áp đặt U Linh khiến quái vật bị rút hồn, giảm 20% sát thương tấn công của quái và làm chậm 25% bước di chuyển trong 3.5s.',
+              tag: '👻 Hút hồn: Giảm 20% sát thương quái & chậm 25%'
+            };
+          case 'DRAGON':
+            return {
+              title: 'Long Uy Áp Chế Toàn Diện (Dragon Awe)',
+              desc: 'Phát tỏa uy áp loài rồng khiến quái vật kinh hãi: Giảm 25% sát thương và giảm 25% tốc chạy trong 3.0s, nhận x1.5 DMG từ Rồng.',
+              tag: '🐉 Uy áp loài rồng • Giảm 25% sát thương & 25% tốc chạy quái'
+            };
+          case 'FAIRY':
+            return {
+              title: 'Mê Hoặc Yêu Tinh & Tê Liệt (Charm)',
+              desc: 'Bụi tiên mê hoặc làm kẻ địch mất phương hướng, giảm mạnh 40% tốc chạy quái và gây x2.0 sát thương hủy diệt lên loài rồng!',
+              tag: '🧚 Mê hoặc làm chậm 40% • x2.0 Sát thương Quái Rồng'
+            };
         }
         break;
 
@@ -721,6 +754,42 @@ export class SideDetailPanel {
               desc: 'Bắn vào quái đầu đàn để gắn dấu ấn Nguyền Rủa (+35% sát thương nhận vào), tạo điều kiện cho Pháo cối và Lính dồn sát thương kết liễu cực nhanh.',
               tag: '🔮 Tăng +35% Sát thương nhận vào từ Mọi Nguồn'
             };
+          case 'GRASS':
+            return {
+              title: 'Mưa Tên Gai Dây Leo (Root)',
+              desc: 'Tốc độ bắn cao liên tục trói chân mục tiêu, làm chậm 30% vĩnh viễn và rút máu DoT cỏ dại.',
+              tag: '🌿 Trói rễ làm chậm 30% liên tục • Rút máu tự nhiên'
+            };
+          case 'POISON':
+            return {
+              title: 'Mũi Tên Tẩm Kịch Độc (Poison)',
+              desc: 'Bắn liên tục duy trì độc tính DoT 4s không thể giải trừ, ăn mòn máu quái vật trâu bò và Boss từ xa.',
+              tag: '☠️ Duy trì độc tố DoT 4s liên tục • Rút cạn máu quái'
+            };
+          case 'STEEL':
+            return {
+              title: 'Tên Thép Xuyên Phá Xé Giáp (Sunder)',
+              desc: 'Bắn phá làm vỡ vụn giáp trụ quái vật (-40% giáp), mở đường cho lính và pháo dồn sát thương kết liễu.',
+              tag: '⚙️ Xé 40% giáp từ xa • Duy trì debuff liên tục'
+            };
+          case 'GHOST':
+            return {
+              title: 'Tên Âm Hồn Đoạt Phách (Soul Drain)',
+              desc: 'Bắn xuyên linh hồn làm suy nhược quái vật (-20% công, -25% tốc), làm mất đà tiến của quái tinh anh.',
+              tag: '👻 Giảm 20% công & 25% tốc • Bắn tỉa làm suy yếu quái'
+            };
+          case 'DRAGON':
+            return {
+              title: 'Tên Long Lực Tàn Phá (Dragon Awe)',
+              desc: 'Mũi tên mang long hồn phát nổ uy áp, giảm 25% công và tốc của quái vật, khắc chế mạnh mẽ quái Rồng.',
+              tag: '🐉 Long Uy áp chế từ xa • Giảm 25% công & tốc chạy'
+            };
+          case 'FAIRY':
+            return {
+              title: 'Mũi Tên Bụi Tiên Mê Hoặc (Charm)',
+              desc: 'Bắn tỉa làm chậm sâu 40% mục tiêu, khắc chế tuyệt đối quái Rồng (x2.0 DMG) và quái Ám.',
+              tag: '🧚 x2.0 Sát thương Quái Rồng • Làm chậm mê hoặc 40%'
+            };
         }
         break;
 
@@ -773,6 +842,42 @@ export class SideDetailPanel {
               title: 'Vụ Nổ Hắc Ám Nguyền Rủa (AoE Curse)',
               desc: 'Phát nổ hắc ám khắc dấu ấn Nguyền Rủa (+35% sát thương từ mọi nguồn) lên toàn bộ quái vật nằm trong vùng nổ!',
               tag: '🔮 Nguyền rủa diện rộng • Toàn bộ quái nhận +35% DMG'
+            };
+          case 'GRASS':
+            return {
+              title: 'Đại Pháo Gai Rễ Diện Rộng (AoE Root)',
+              desc: `Đạn pháo phát nổ trùm rễ cây lên bán kính ${bp.aoeRadius || 75}px làm chậm 30% và rút máu DoT cả bầy quái.`,
+              tag: `🌿 Trói chân diện rộng ${bp.aoeRadius || 75}px • DoT tự nhiên cả bầy`
+            };
+          case 'POISON':
+            return {
+              title: 'Hơi Cay Độc Tố Ô Nhiễm (AoE Poison)',
+              desc: `Tạo vùng khí độc lưu lại trên diện rộng, khiến mọi quái vật bước qua đều trúng độc rút máu liên tục.`,
+              tag: '☠️ Độc tố diện rộng • Rút máu bỏ qua giáp cả đàn quái'
+            };
+          case 'STEEL':
+            return {
+              title: 'Mảnh Văng Kim Loại Xé Giáp (AoE Sunder)',
+              desc: `Vụ nổ mảnh thép xé toạc giáp (-40% giáp) của TOÀN BỘ quái vật trong vùng nổ, cực kỳ hữu hiệu trước quái bọc thép.`,
+              tag: '⚙️ Xé 40% giáp toàn bộ quái trong vùng nổ'
+            };
+          case 'GHOST':
+            return {
+              title: 'Oán Hồn Bùng Phát Đoạt Mệnh (AoE Soul Drain)',
+              desc: `Sóng âm hồn làm suy nhược toàn bộ đám đông quái vật, làm giảm 20% sát thương tấn công và làm chậm 25%.`,
+              tag: '👻 Hút hồn diện rộng • Suy yếu sức tấn công cả đoàn quái'
+            };
+          case 'DRAGON':
+            return {
+              title: 'Long Hống Địa Chấn Hủy Diệt (AoE Dragon Awe)',
+              desc: `Tiếng gầm của loài rồng gây chấn động diện rộng, áp đặt hiệu ứng Long Uy giảm 25% công và 25% tốc cả bầy.`,
+              tag: '🐉 Uy áp gầm thét diện rộng • Giảm 25% công và tốc'
+            };
+          case 'FAIRY':
+            return {
+              title: 'Bão Tinh Thể Mê Hoặc (AoE Charm)',
+              desc: `Phát tán bụi tiên diện rộng làm mê hoặc và chậm 40% cả đàn quái, gây x2.0 sát thương hủy diệt lên loài rồng!`,
+              tag: '🧚 Bụi tiên diện rộng • x2.0 Sát thương Quái Rồng AoE'
             };
         }
         break;
@@ -1313,129 +1418,16 @@ export class SideDetailPanel {
   }
 
   // ==========================================
-  // 5. ELEMENTAL MATRIX & STATUS EFFECTS
+  // 5. ELEMENTAL MATRIX & STATUS EFFECTS (15 ELEMENTS CODEX)
   // ==========================================
   private renderElementsCategory(highlightElem?: string): void {
-    this.titleEl.textContent = 'Hệ Thống Nguyên Tố & Hiệu Ứng Trạng Thái';
-    this.iconEl.textContent = '✨';
-    this.badgeEl.textContent = 'Ma Trận 9 Hệ & 8 Hiệu Ứng Chiến Đấu';
+    if (highlightElem) {
+      this.currentElementSubTab = highlightElem;
+    } else if (!this.currentElementSubTab) {
+      this.currentElementSubTab = 'OVERVIEW';
+    }
 
-    const statusEffects = [
-      {
-        type: 'BURN',
-        nameVi: 'Thiêu Đốt (Burn)',
-        element: 'FIRE' as ElementType,
-        icon: '🔥',
-        duration: '3.0 giây',
-        tick: 'Mỗi 0.5s (Tổng 6 lần)',
-        value: '20% Base DMG / lần (Tổng 120% DMG)',
-        desc: 'Đốt cháy mục tiêu bằng ngọn lửa ma thuật, gây sát thương Lửa liên tục theo thời gian (DoT) hoàn toàn bỏ qua giáp vật lý.',
-        synergy: '🔗 Khi kết hợp với Nguyền Rủa (Curse), sát thương thiêu đốt được tăng thêm +35%!'
-      },
-      {
-        type: 'WET',
-        nameVi: 'Ẩm Ướt & Trì Hoãn (Wet)',
-        element: 'WATER' as ElementType,
-        icon: '💧',
-        duration: '4.0 giây',
-        tick: 'Hiệu ứng duy trì',
-        value: 'Giảm 20% Tốc độ chạy trong 2.5s',
-        desc: 'Bao phủ kẻ địch trong màn nước áp lực cao, làm chậm bước tiến và đóng vai trò như chất dẫn phản ứng ma thuật cực mạnh.',
-        synergy: '⚡ KÍCH HOẠT PHẢN ỨNG: Quái vật Ẩm Ướt nhận thêm +75% Sát thương Sét (Lightning) và +50% Sát thương Băng (Ice)!'
-      },
-      {
-        type: 'SLOW',
-        nameVi: 'Địa Chấn & Làm Chậm (Slow)',
-        element: 'EARTH' as ElementType,
-        icon: '🪨',
-        duration: '2.5 giây',
-        tick: 'Hiệu ứng duy trì',
-        value: 'Giảm 35% Tốc độ di chuyển',
-        desc: 'Rung chấn địa tầng làm nứt nẻ mặt đất dưới chân quái vật, cản trở tốc độ di chuyển và khiến quái bị dồn tụ lại một điểm.',
-        synergy: '🪨 ĐẶC QUYỀN ĐỊA CHẤN: Tăng thêm +20% sát thương trực tiếp lên quái Đi Bộ (WALK)!'
-      },
-      {
-        type: 'KNOCKBACK',
-        nameVi: 'Cuồng Phong Đẩy Lùi (Knockback)',
-        element: 'WIND' as ElementType,
-        icon: '🌪️',
-        duration: 'Tức thì (Instant)',
-        tick: 'Mỗi đòn đánh',
-        value: 'Đẩy lùi 15 px (Bộ) / 25 px (Bay)',
-        desc: 'Luồng gió lốc cực mạnh thổi bạt kẻ địch ngược lại trên lộ trình hành quân, bẻ gãy đà tiến công của quái vật.',
-        synergy: '🦅 KHẮC TINH QUÁI BAY: Gây thêm +50% sát thương hủy diệt lên quái Bay (FLY)!'
-      },
-      {
-        type: 'SHOCK',
-        nameVi: 'Tê Liệt & Giật Lan (Shock)',
-        element: 'LIGHTNING' as ElementType,
-        icon: '⚡',
-        duration: '0.35 giây Choáng',
-        tick: 'Tức thì khi trúng đòn',
-        value: 'Choáng 0.35s + 35% Sát thương lan',
-        desc: 'Dòng điện cao thế đánh xuyên qua cơ thể quái vật, làm gián đoạn nhịp di chuyển và phóng tia điện giật lan sang 1 kẻ địch gần nhất.',
-        synergy: '💧 KẾT HỢP NƯỚC: Nếu mục tiêu đang Ẩm Ướt (Wet), đòn Sét được khuếch đại tăng thêm +75% Sát thương!'
-      },
-      {
-        type: 'FREEZE',
-        nameVi: 'Hàn Băng & Đóng Băng (Freeze)',
-        element: 'ICE' as ElementType,
-        icon: '❄️',
-        duration: '3.0s Làm chậm / 1.2s Đóng băng',
-        tick: '25% tỉ lệ Đóng Băng',
-        value: 'Giảm 45% Tốc độ / Tốc độ = 0 khi Đóng Băng',
-        desc: 'Hàn khí cực độ làm chậm sâu 45% tốc độ di chuyển và có 25% cơ hội phong ấn quái vật trong khối băng bất động hoàn toàn.',
-        synergy: '❄️ ĐÓNG BĂNG HOÀN TOÀN: Khi bị đóng băng, quái vật đứng yên 100% tại chỗ, không thể di chuyển cũng không thể tấn công lính!'
-      },
-      {
-        type: 'HOLY',
-        nameVi: 'Thánh Quang & Thanh Tẩy (Holy)',
-        element: 'LIGHT' as ElementType,
-        icon: '✨',
-        duration: '2.5 giây',
-        tick: 'Hiệu ứng bị động',
-        value: 'Hồi phục +5 HP / đòn đánh cho Lính',
-        desc: 'Hào quang thần thánh thanh tẩy bóng tối, gây sát thương x2.0 lên quái Hắc Ám và tạo hào quang bảo hộ đồng minh.',
-        synergy: '🛡️ BẢO HỘ CHIẾN BINH: Đòn đánh của Lính Nhà Lính tự động hồi +5 HP mỗi đòn, biến chiến binh thành tanker bất tử!'
-      },
-      {
-        type: 'CURSE',
-        nameVi: 'Nguyền Rủa Suy Yếu (Curse)',
-        element: 'DARK' as ElementType,
-        icon: '🔮',
-        duration: '3.5 giây',
-        tick: 'Duy trì ấn nguyền rủa',
-        value: 'Nhận thêm +35% Sát thương từ MỌI NGUỒN',
-        desc: 'Ấn chú hắc ám ăn mòn lớp phòng ngự tâm linh của quái vật, khiến mục tiêu trở nên cực kỳ mỏng manh trước mọi đòn tấn công.',
-        synergy: '💥 KHUẾCH ĐẠI TOÀN BỘ: Tăng 35% sát thương nhận vào từ tất cả Cung, Kiếm, Pháo cối, Phép thuật và Bẫy!'
-      }
-    ];
-
-    const effectsHtml = statusEffects
-      .map((eff) => {
-        const color = ELEMENT_COLORS[eff.element];
-        return `
-        <div class="effect-card" style="border-left-color: ${color}">
-          <div class="effect-header">
-            <span class="effect-icon">${eff.icon}</span>
-            <span class="effect-name">${eff.nameVi}</span>
-            <span class="effect-elem-badge" style="background: ${color}20; color: ${color}; border: 1px solid ${color}40">
-              Hệ ${ELEMENT_NAMES[eff.element]}
-            </span>
-          </div>
-          <p class="effect-desc">${eff.desc}</p>
-          <div class="effect-stats-row">
-            <span>Thời gian: <b>${eff.duration}</b></span>
-            <span>Cơ chế: <b>${eff.tick}</b></span>
-            <span>Thông số: <b style="color: ${color}">${eff.value}</b></span>
-          </div>
-          <div class="effect-synergy">${eff.synergy}</div>
-        </div>
-      `;
-      })
-      .join('');
-
-    const elementsList: ElementType[] = [
+    const allElements: ElementType[] = [
       'PHYSICAL',
       'FIRE',
       'WATER',
@@ -1444,150 +1436,340 @@ export class SideDetailPanel {
       'LIGHTNING',
       'ICE',
       'LIGHT',
-      'DARK'
+      'DARK',
+      'GRASS',
+      'POISON',
+      'STEEL',
+      'GHOST',
+      'DRAGON',
+      'FAIRY'
     ];
 
-    const elementExplanations: Record<
-      ElementType,
-      { nameVi: string; strongAgainst: string; weakAgainst: string; desc: string; sample: string }
-    > = {
-      PHYSICAL: {
-        nameVi: 'Vật Lý',
-        strongAgainst: 'Gây sát thương ổn định lên đa số quái vật.',
-        weakAgainst: 'Bị giảm 30% sát thương lên quái Đất (EARTH); hoàn toàn bất lực trước Khổng Lồ Đá.',
-        desc: 'Sát thương cơ bản từ kiếm, khiên, cung nỏ và đá cối thô sơ.',
-        sample: 'Chiến Binh, Chòi Cung, Pháo Cối'
-      },
-      FIRE: {
-        nameVi: 'Lửa (Hỏa)',
-        strongAgainst: 'Khắc chế Băng (ICE) x1.75 và Gió (WIND) x1.3; gây sát thương thiêu đốt theo thời gian (DoT).',
-        weakAgainst: 'Bị Nước (WATER) giảm còn 0.5x, Lửa 0.3x; Quỷ Lửa (Fire Imp) miễn nhiễm 100%!',
-        desc: 'Sức nóng thiêu rụi mục tiêu, gây nổ bùng phát và duy trì ngọn lửa thiêu đốt.',
-        sample: 'Pháp Sư Hỏa Ngục, Đại Bác Dung Nham, Mìn Lửa'
-      },
-      WATER: {
-        nameVi: 'Nước (Thủy)',
-        strongAgainst: 'Khắc chế cực mạnh Lửa (FIRE) x2.0 và Đất (EARTH) x1.5.',
-        weakAgainst: 'Bị Sét (LIGHTNING) dẫn điện gây phản tác dụng (0.5x), Nước 0.3x.',
-        desc: 'Áp lực nước cuốn trôi bùn đất, dập tắt ngọn lửa thiêu rụi.',
-        sample: 'Thủy Lôi Sông, Kênh Nước Phòng Ngự'
-      },
-      EARTH: {
-        nameVi: 'Đất (Thổ)',
-        strongAgainst: 'Khắc chế Sét (LIGHTNING) x1.5 và Gió (WIND) x1.25.',
-        weakAgainst: 'Bị Đất 0.5x, dễ bị Nước làm mềm hóa.',
-        desc: 'Trọng lượng địa chấn nghiền nát vật thể, chống chịu vật lý cao.',
-        sample: 'Pháo Cối Đá, Bẫy Chông Đất'
-      },
-      WIND: {
-        nameVi: 'Gió (Phong)',
-        strongAgainst: 'Khắc chế Đất (EARTH) x1.5 và Vật Lý x1.2; đẩy lùi quái bay.',
-        weakAgainst: 'Bị Lửa thiêu đốt lan tỏa.',
-        desc: 'Tốc độ xé gió, xuyên thấu không trung, chuyên trị quái bay.',
-        sample: 'Cung Bão Tố, Xạ Thủ Thần Phong'
-      },
-      LIGHTNING: {
-        nameVi: 'Sét (Lôi)',
-        strongAgainst: 'Khắc chế hủy diệt Nước (WATER) x2.0 và Gió (WIND) x1.5; gây tê liệt/choáng.',
-        weakAgainst: 'Bị Đất (EARTH) hấp thụ (0.3x), quái Đất miễn nhiễm sét.',
-        desc: 'Tốc độ truyền điện tức thì, nảy tia điện qua các mục tiêu lân cận.',
-        sample: 'Chiến Binh Phong Lôi, Cọc Lưới Sét, Pháo Từ Trường'
-      },
-      ICE: {
-        nameVi: 'Băng (Hàn)',
-        strongAgainst: 'Khắc chế Nước (WATER) x1.5; làm chậm tốc độ chạy 50% và đóng băng quái.',
-        weakAgainst: 'Bị Lửa làm tan chảy (0.5x), Băng 0.2x.',
-        desc: 'Làm chậm bước tiến của quái vật, tạo thời gian cho các tháp khác tiêu diệt.',
-        sample: 'Nỏ Hàn Băng, Thủy Lôi Băng Giá'
-      },
-      LIGHT: {
-        nameVi: 'Ánh Sáng (Quang)',
-        strongAgainst: 'Khắc chế tuyệt đối Hắc Ám (DARK) x2.0; phá hủy quỷ dữ và Hắc Long!',
-        weakAgainst: 'Bị Ánh Sáng 0.3x.',
-        desc: 'Hào quang thần thánh thanh tẩy bóng tối, hồi phục sinh lực đồng minh.',
-        sample: 'Thánh Kỵ Sĩ Paladin, Quang Điện Tinh Cầu'
-      },
-      DARK: {
-        nameVi: 'Hắc Ám (Ám)',
-        strongAgainst: 'Khắc chế Ánh Sáng (LIGHT) x1.8; xuyên thủng mọi lớp giáp vật lý.',
-        weakAgainst: 'Bị Hắc Ám 0.3x, sợ ánh sáng thần thánh.',
-        desc: 'Năng lượng bóng đêm ăn mòn mục tiêu từ bên trong, bỏ qua phòng thủ.',
-        sample: 'Tháp Pháp Sư, Quả Cầu Hắc Ám'
-      }
-    };
+    this.titleEl.textContent = 'Hệ Thống Nguyên Tố & Ma Trận Khắc Chế (15 Hệ)';
+    this.iconEl.textContent = '✨';
+    this.badgeEl.textContent = '15 Nguyên Tố • 14 Hiệu Ứng • 11 Phản Ứng Phối Hợp';
 
-    const cardsHtml = elementsList
-      .map((elem) => {
-        const info = elementExplanations[elem];
-        const color = ELEMENT_COLORS[elem];
-        const icon = ELEMENT_ICONS[elem];
-        const isHighlighted = highlightElem === elem;
-
-        return `
-        <div class="elem-card ${isHighlighted ? 'highlighted-elem' : ''}" style="border-left-color: ${color}">
-          <div class="elem-card-top">
-            <span class="elem-badge" style="background-color: ${color}20; color: ${color}; border-color: ${color}40">
-              ${icon} ${info.nameVi} (${elem})
-            </span>
-          </div>
-          <div class="elem-matchups">
-            <div class="match-strong">
-              <span class="m-title">⚔️ Khắc chế (Mạnh):</span>
-              <span class="m-text">${info.strongAgainst}</span>
-            </div>
-            <div class="match-weak">
-              <span class="m-title">🛡️ Bị kháng (Yếu):</span>
-              <span class="m-text">${info.weakAgainst}</span>
-            </div>
-          </div>
-          <div class="elem-sample"><b>Đại diện:</b> ${info.sample}</div>
-        </div>
-      `;
-      })
-      .join('');
-
-    this.contentEl.innerHTML = `
-      <!-- PHẦN 1: CHI TIẾT 8 HIỆU ỨNG TRẠNG THÁI -->
-      <div class="sp-section sp-card" style="border-left: 5px solid #38bdf8;">
-        <h4 class="sp-sec-title">🔥 CHI TIẾT 8 LOẠI HIỆU ỨNG CHIẾN ĐẤU (STATUS EFFECTS)</h4>
-        <p class="sp-desc">
-          Khi tháp, lính hoặc bẫy được trang bị nguyên tố ma thuật, các đòn tấn công sẽ kích hoạt các hiệu ứng trạng thái đặc biệt lên kẻ địch. Dưới đây là thông số cụ thể của từng loại hiệu ứng:
-        </p>
-        <div class="effects-grid-modal">${effectsHtml}</div>
-      </div>
-
-      <!-- PHẦN 2: QUY TẮC MA TRẬN NGUYÊN TỐ CỐT LÕI -->
-      <div class="sp-section sp-card">
-        <h4 class="sp-sec-title">⚖️ QUY TẮC MA TRẬN NGUYÊN TỐ CỐT LÕI</h4>
-        <div class="rule-box weakness-rule">
-          <span class="r-icon">💥</span>
-          <div>
-            <b>Ưu thế Tương Khắc (x1.5 -> x2.0 Sát thương):</b>
-            <p>Khi dùng nguyên tố khắc chế đánh vào quái mang hệ yếu điểm (như Nước đánh Lửa, Lửa đánh Băng, Ánh Sáng đánh Bóng Tối), sát thương tăng vọt tới 200%!</p>
-          </div>
-        </div>
-        <div class="rule-box resist-rule">
-          <span class="r-icon">🛡️</span>
-          <div>
-            <b>Bị Kháng Cự (x0.3 -> x0.5 Sát thương):</b>
-            <p>Đánh cùng hệ hoặc hệ bị kháng khiến sát thương bị giảm tới 70%.</p>
-          </div>
-        </div>
-        <div class="rule-box immune-rule">
-          <span class="r-icon">🚫</span>
-          <div>
-            <b>Miễn Nhiễm Tuyệt Đối (0 Sát thương):</b>
-            <p>Quái vật mang bản thể nguyên tố thuần khiết (Ví dụ: Yêu tinh Lửa miễn nhiễm Lửa; Khổng lồ đá miễn nhiễm Vật lý & Sét). Cần đổi tháp hoặc bẫy khắc chế!</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- PHẦN 3: CHI TIẾT 9 HỆ NGUYÊN TỐ -->
-      <div class="sp-section">
-        <h4 class="sp-sec-title">✨ CHI TIẾT 9 HỆ NGUYÊN TỐ & TƯƠNG KHẮC</h4>
-        <div class="elements-grid-modal">${cardsHtml}</div>
+    // Sub-navigation bar
+    const subNavHtml = `
+      <div class="elem-sub-nav">
+        <button class="elem-sub-btn ${this.currentElementSubTab === 'OVERVIEW' ? 'active' : ''}" data-sub-elem="OVERVIEW">
+          🌟 Tổng Quan
+        </button>
+        ${allElements
+          .map((elem) => {
+            const isActive = this.currentElementSubTab === elem;
+            const color = ELEMENT_COLORS[elem];
+            const icon = ELEMENT_ICONS[elem];
+            const shortName = ELEMENT_NAMES[elem].split(' ')[0];
+            return `
+              <button class="elem-sub-btn ${isActive ? 'active' : ''}" data-sub-elem="${elem}"
+                style="${isActive ? `border-color: ${color}; color: ${color}; background: ${color}22; box-shadow: 0 0 10px ${color}40;` : ''}">
+                <span>${icon}</span>
+                <span>${shortName}</span>
+              </button>
+            `;
+          })
+          .join('')}
       </div>
     `;
+
+    if (this.currentElementSubTab === 'OVERVIEW') {
+      // 1. OVERVIEW VIEW
+      const reactionCardsHtml = ELEMENTAL_REACTIONS.map((rx) => {
+        const e1 = STATUS_TO_ELEMENT[rx.requiredStatus] || 'PHYSICAL';
+        const e2 = rx.triggerElement;
+        const e1Color = ELEMENT_COLORS[e1];
+        const e2Color = ELEMENT_COLORS[e2];
+        return `
+          <div class="reaction-card sp-card">
+            <div class="reaction-card-header">
+              <span class="rx-icon">${rx.label.split(' ')[0]}</span>
+              <div class="rx-title-group">
+                <h4 class="rx-name">${rx.name}</h4>
+                <div class="rx-elements-row">
+                  <span class="rx-pill" style="border-color: ${e1Color}; color: ${e1Color}">${ELEMENT_ICONS[e1]} ${ELEMENT_NAMES[e1]}</span>
+                  <span class="rx-plus">+</span>
+                  <span class="rx-pill" style="border-color: ${e2Color}; color: ${e2Color}">${ELEMENT_ICONS[e2]} ${ELEMENT_NAMES[e2]}</span>
+                </div>
+              </div>
+              <span class="rx-mult-badge">x${rx.damageMultiplier} DMG</span>
+            </div>
+            <p class="rx-desc">${rx.description}</p>
+          </div>
+        `;
+      }).join('');
+
+      const quickElemCardsHtml = allElements
+        .map((elem) => {
+          const data = ELEMENT_CODEX_DETAILS[elem];
+          const color = ELEMENT_COLORS[elem];
+          const icon = ELEMENT_ICONS[elem];
+          const strongText = data.strongAgainst.map((s) => `${ELEMENT_ICONS[s.element]} ${ELEMENT_NAMES[s.element]} (x${s.mult})`).join(', ');
+          const weakText = data.weakAgainstAttack.map((w) => `${ELEMENT_ICONS[w.element]} ${ELEMENT_NAMES[w.element]} (x${w.mult})`).join(', ');
+
+          return `
+            <div class="elem-overview-card sp-card elem-quick-jump" data-sub-elem="${elem}" style="border-left-color: ${color}">
+              <div class="elem-overview-header">
+                <span class="elem-overview-icon" style="background: ${color}20; color: ${color}; border: 1px solid ${color}40">${icon}</span>
+                <div>
+                  <h4 class="elem-overview-name" style="color: ${color}">${data.nameVi}</h4>
+                  <span class="elem-overview-badge">${data.badge}</span>
+                </div>
+                <button class="btn-elem-inspect">Xem Hồ Sơ ➔</button>
+              </div>
+              <div class="elem-overview-matchup-row">
+                <div class="match-strong">
+                  <span class="m-label">⚔️ Khắc chế:</span>
+                  <span class="m-val">${strongText || 'Ổn định'}</span>
+                </div>
+                <div class="match-weak">
+                  <span class="m-label">🛡️ Bị kháng:</span>
+                  <span class="m-val">${weakText || 'Không'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      this.contentEl.innerHTML = `
+        ${subNavHtml}
+
+        <!-- SUMMARY RULES BANNER -->
+        <div class="sp-section sp-card" style="border-left: 5px solid #38bdf8;">
+          <h4 class="sp-sec-title">⚖️ NGUYÊN TẮC MA TRẬN 15 HỆ & TƯƠNG TÁC CHIẾN ĐẤU</h4>
+          <p class="sp-desc">
+            Stick Vanguard mở rộng toàn diện hệ thống nguyên tố lên <b>15 hệ độc lập</b>. Mỗi quái vật, công trình và đòn tấn công đều tương tác lẫn nhau thông qua sát thương khắc chế và các hiệu ứng trạng thái đặc thù:
+          </p>
+          <div class="matrix-rules-grid">
+            <div class="rule-box weakness-rule">
+              <span class="r-icon">💥</span>
+              <div>
+                <b>Ưu thế Tấn Công (x1.5 -> x2.0 Sát thương):</b>
+                <p>Đánh đúng khắc tinh (Nước dập Lửa, Tiên diệt Rồng, Sét chập Nước, Quang thanh tẩy Ám) gây sát thương cực lớn.</p>
+              </div>
+            </div>
+            <div class="rule-box resist-rule">
+              <span class="r-icon">🛡️</span>
+              <div>
+                <b>Bị Kháng Cự (x0.3 -> x0.7 Sát thương):</b>
+                <p>Đánh vào hệ kháng hoặc cùng nguyên tố bị tiêu hao sát thương nặng nề.</p>
+              </div>
+            </div>
+            <div class="rule-box immune-rule">
+              <span class="r-icon">🚫</span>
+              <div>
+                <b>Miễn Nhiễm & Phối Hợp Combo (x1.3 -> x1.8 DMG):</b>
+                <p>Khai thác 11 Phản Ứng Nguyên Tố bằng Tháp Phù Thủy (Song Hệ) hoặc phối hợp nhiều loại tháp trên trận địa!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 11 COMBOS & REACTIONS -->
+        <div class="sp-section">
+          <h4 class="sp-sec-title">💥 11 PHẢN ỨNG NGUYÊN TỐ PHỐI HỢP CHIẾN THUẬT (REACTIONS)</h4>
+          <p class="sp-desc" style="margin-bottom: 12px;">
+            Khi mục tiêu trúng liên tiếp 2 nguyên tố tương thích, một phản ứng bộc phát sẽ được kích hoạt tức thì kèm sát thương khuếch đại:
+          </p>
+          <div class="reactions-grid">${reactionCardsHtml}</div>
+        </div>
+
+        <!-- QUICK ELEMENT CARDS GRID -->
+        <div class="sp-section">
+          <h4 class="sp-sec-title">🧭 DANH SÁCH 15 HỆ NGUYÊN TỐ (BẤM ĐỂ XEM CHI TIẾT MỤC CON)</h4>
+          <div class="elem-overview-grid">${quickElemCardsHtml}</div>
+        </div>
+      `;
+    } else {
+      // 2. DEDICATED ELEMENT SUB-TAB VIEW (MỖI NGUYÊN TỐ LÀ 1 MỤC CON)
+      const currentElem = this.currentElementSubTab as ElementType;
+      const data = ELEMENT_CODEX_DETAILS[currentElem] || ELEMENT_CODEX_DETAILS['PHYSICAL'];
+      const color = ELEMENT_COLORS[currentElem];
+      const icon = ELEMENT_ICONS[currentElem];
+
+      // Strong against list
+      const strongHtml = data.strongAgainst
+        .map((s) => {
+          const sColor = ELEMENT_COLORS[s.element];
+          const sIcon = ELEMENT_ICONS[s.element];
+          return `
+            <div class="matchup-detail-row strong-row">
+              <span class="m-elem-badge" style="border-color: ${sColor}; color: ${sColor}">
+                ${sIcon} Hệ ${ELEMENT_NAMES[s.element]}
+              </span>
+              <span class="m-mult-tag mult-strong">x${s.mult} Sát thương</span>
+              <span class="m-note">${s.note}</span>
+            </div>
+          `;
+        })
+        .join('');
+
+      // Weak against attack (Offensive resistance)
+      const weakAttackHtml = data.weakAgainstAttack
+        .map((w) => {
+          const wColor = ELEMENT_COLORS[w.element];
+          const wIcon = ELEMENT_ICONS[w.element];
+          return `
+            <div class="matchup-detail-row weak-row">
+              <span class="m-elem-badge" style="border-color: ${wColor}; color: ${wColor}">
+                ${wIcon} Hệ ${ELEMENT_NAMES[w.element]}
+              </span>
+              <span class="m-mult-tag mult-weak">x${w.mult} Sát thương</span>
+              <span class="m-note">${w.note}</span>
+            </div>
+          `;
+        })
+        .join('');
+
+      // Weak against defense (Defensive vulnerability)
+      const weakDefenseHtml = data.weakAgainstDefense
+        .map((w) => {
+          const wColor = ELEMENT_COLORS[w.element];
+          const wIcon = ELEMENT_ICONS[w.element];
+          return `
+            <div class="matchup-detail-row weak-def-row">
+              <span class="m-elem-badge" style="border-color: ${wColor}; color: ${wColor}">
+                ${wIcon} Hệ ${ELEMENT_NAMES[w.element]}
+              </span>
+              <span class="m-mult-tag mult-def-danger">Nhận x${w.mult} DMG</span>
+              <span class="m-note">${w.note}</span>
+            </div>
+          `;
+        })
+        .join('');
+
+      // Combos list
+      const combosHtml = data.combos
+        .map((c) => {
+          const pColor = ELEMENT_COLORS[c.partner];
+          const pIcon = ELEMENT_ICONS[c.partner];
+          return `
+            <div class="elem-combo-box sp-card">
+              <div class="elem-combo-header">
+                <span class="combo-partner" style="border-color: ${pColor}; color: ${pColor}">
+                  ${icon} + ${pIcon} Hệ ${ELEMENT_NAMES[c.partner]}
+                </span>
+                <span class="combo-title" style="color: #facc15">⚡ ${c.reaction}</span>
+              </div>
+              <p class="combo-desc">${c.desc}</p>
+            </div>
+          `;
+        })
+        .join('');
+
+      this.contentEl.innerHTML = `
+        ${subNavHtml}
+
+        <!-- ELEMENT SUB-ITEM DOSSIER -->
+        <div class="elem-dossier-hero sp-card" style="border-left: 6px solid ${color};">
+          <div class="elem-dossier-top">
+            <span class="elem-dossier-icon" style="background: ${color}25; color: ${color}; border: 2px solid ${color}60;">${icon}</span>
+            <div class="elem-dossier-titles">
+              <div class="elem-title-row">
+                <h3 class="elem-dossier-name" style="color: ${color}">Hệ ${data.nameVi} (${currentElem})</h3>
+                <span class="elem-badge" style="background: ${color}20; color: ${color}; border-color: ${color}40">${data.badge}</span>
+              </div>
+              <p class="elem-nature-text">${data.nature}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. HIỆU ỨNG CHIẾN ĐẤU & CÔNG TRÌNH -->
+        <div class="sp-section sp-card">
+          <h4 class="sp-sec-title" style="color: #38bdf8;">🔮 1. HIỆU ỨNG TRẠNG THÁI & ỨNG DỤNG LÊN 4 CÔNG TRÌNH</h4>
+          <div class="status-effect-dossier-box" style="border-left-color: ${color}">
+            <div class="status-eff-header">
+              <span class="status-eff-title" style="color: ${color}">${icon} Trạng Thái Đặc Trưng: <b>${data.statusEffectName}</b></span>
+            </div>
+            <p class="status-eff-desc">${data.statusEffectDesc}</p>
+          </div>
+
+          <div class="towers-element-effect-grid">
+            <div class="tower-effect-col">
+              <div class="t-eff-header">🛡️ Trại Dân Quân (Barracks)</div>
+              <p class="t-eff-p">${data.buildingEffects.barracks}</p>
+            </div>
+            <div class="tower-effect-col">
+              <div class="t-eff-header">🏹 Tháp Cung (Archer)</div>
+              <p class="t-eff-p">${data.buildingEffects.archer}</p>
+            </div>
+            <div class="tower-effect-col">
+              <div class="t-eff-header">🔮 Tháp Phù Thủy (Mage)</div>
+              <p class="t-eff-p">${data.buildingEffects.mage}</p>
+            </div>
+            <div class="tower-effect-col">
+              <div class="t-eff-header">💣 Pháo Cối (Artillery)</div>
+              <p class="t-eff-p">${data.buildingEffects.artillery}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. KHẮC CHẾ (ƯU THẾ TẤN CÔNG) -->
+        <div class="sp-section sp-card" style="border-left: 5px solid #22c55e;">
+          <h4 class="sp-sec-title" style="color: #4ade80;">⚔️ 2. KHẮC CHẾ - ƯU THẾ TẤN CÔNG (STRONG AGAINST)</h4>
+          <p class="sp-desc">Khi sử dụng Hệ ${data.nameVi} tấn công các quái vật thuộc các hệ dưới đây, đòn đánh sẽ gây sát thương bộc phát:</p>
+          <div class="matchup-list">${strongHtml || '<p class="sp-desc">Gây sát thương cân bằng lên mọi hệ.</p>'}</div>
+        </div>
+
+        <!-- 3. YẾU THẾ (BỊ KHÁNG & ĐIỂM YẾU PHÒNG THỦ) -->
+        <div class="sp-section sp-card" style="border-left: 5px solid #ef4444;">
+          <h4 class="sp-sec-title" style="color: #f87171;">🛡️ 3. YẾU THẾ - BỊ KHÁNG & ĐIỂM YẾU PHÒNG THỦ (WEAK AGAINST)</h4>
+          <div class="weakness-split-grid">
+            <div class="weakness-subcol">
+              <h5 class="subcol-title">⚔️ Khi Tấn Công (Bị Kháng Sát Thương):</h5>
+              <div class="matchup-list">${weakAttackHtml || '<p class="sp-desc">Không bị suy giảm sát thương.</p>'}</div>
+            </div>
+            <div class="weakness-subcol">
+              <h5 class="subcol-title">🛡️ Khi Phòng Thủ (Quái Hệ Này Sợ Nhất):</h5>
+              <div class="matchup-list">${weakDefenseHtml || '<p class="sp-desc">Không có điểm yếu phòng thủ đặc thù.</p>'}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. PHỐI HỢP & PHẢN ỨNG NGUYÊN TỐ -->
+        <div class="sp-section sp-card" style="border-left: 5px solid #eab308;">
+          <h4 class="sp-sec-title" style="color: #facc15;">🔗 4. PHỐI HỢP & PHẢN ỨNG NGUYÊN TỐ (COMBOS & SYNERGIES)</h4>
+          <p class="sp-desc">Ghép cặp Hệ ${data.nameVi} với các hệ sau để tạo ra các hiệu ứng bộc phá sát thương và khống chế:</p>
+          <div class="combos-grid">${combosHtml || '<p class="sp-desc">Không có phản ứng ma pháp trực tiếp.</p>'}</div>
+        </div>
+
+        <!-- 5. QUÁI VẬT ĐẠI DIỆN & KHUYÊN DÙNG -->
+        <div class="sp-section sp-card">
+          <h4 class="sp-sec-title">👾 5. QUÁI VẬT ĐẠI DIỆN & LỜI KHUYÊN CHIẾN THUẬT</h4>
+          <div class="sample-monsters-box">
+            <b>Quái vật sở hữu hệ này:</b> ${data.sampleMonsters.join(', ')}
+          </div>
+          <p class="sp-tip-text" style="margin-top: 10px;">
+            💡 Mẹo: Khi bước vào bản đồ có tộc quái chủ đạo mang Hệ ${data.nameVi}, hãy ưu tiên trang bị tháp mang các hệ khắc chế ở mục 2 và tránh các hệ bị giảm sát thương ở mục 3!
+          </p>
+        </div>
+      `;
+    }
+
+    // Bind click events on sub-navigation buttons
+    this.contentEl.querySelectorAll('.elem-sub-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const sub = (e.currentTarget as HTMLElement).getAttribute('data-sub-elem');
+        if (sub) {
+          this.currentElementSubTab = sub;
+          this.renderElementsCategory();
+          this.contentEl.scrollTop = 0;
+        }
+      });
+    });
+
+    // Bind click events on quick jump cards in overview
+    this.contentEl.querySelectorAll('.elem-quick-jump').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        const sub = (e.currentTarget as HTMLElement).getAttribute('data-sub-elem');
+        if (sub) {
+          this.currentElementSubTab = sub;
+          this.renderElementsCategory();
+          this.contentEl.scrollTop = 0;
+        }
+      });
+    });
   }
 
   // ==========================================

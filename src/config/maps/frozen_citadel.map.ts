@@ -28,10 +28,10 @@ export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
   },
   {
     waveNumber: 4,
-    name: 'Đợt 4: Que Dơi Bão Tuyết (Chỉ Quái Bay)',
+    name: 'Đợt 4: Tiên Linh Bão Tuyết (Chỉ Quái Bay)',
     rewardGold: 105,
     enemies: [
-      { typeId: 'WINGED_GARGOYLE', count: 8, interval: 1.7, delay: 0 }
+      { typeId: 'FAIRY_SPRITE', count: 8, interval: 1.6, delay: 0 }
     ]
   },
   {
@@ -185,6 +185,12 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
     { x: 40, y: 60 },
     { x: 40, y: 590 }
   ],
-  laneBadges: ['1 Tuyến Bộ Uốn Z', '2 Dòng Sông Băng', 'Song Thủy Đột Kích']
+  laneBadges: ['1 Tuyến Bộ Uốn Z', '2 Dòng Sông Băng', 'Song Thủy Đột Kích'],
+  tribe: {
+    name: 'Tộc Hàn Băng Tuyết Linh',
+    icon: '❄️🧚',
+    elements: ['ICE', 'FAIRY', 'WATER'],
+    description: 'Quân đoàn băng giá Khổng Lồ Băng Nham phối hợp cùng Tiên Linh Băng Tuyết và Thủy Xà Băng Đảo.'
+  }
 };
 

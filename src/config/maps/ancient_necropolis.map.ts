@@ -19,19 +19,19 @@ export const WAVES_ANCIENT_NECROPOLIS: WaveConfig[] = [
   },
   {
     waveNumber: 3,
-    name: 'Đợt 3: Hồn Ma & Pháp Sư Chiêu Hồn (Đi Bộ)',
+    name: 'Đợt 3: U Hồn Tử Thần & Pháp Sư Chiêu Hồn (Đi Bộ)',
     rewardGold: 90,
     enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 5, interval: 2.0, delay: 0 },
+      { typeId: 'PHANTOM_REAPER', count: 4, interval: 2.0, delay: 0 },
       { typeId: 'NECRO_WARLOCK', count: 2, interval: 3.0, delay: 4 }
     ]
   },
   {
     waveNumber: 4,
-    name: 'Đợt 4: Que Dơi Ma Ám (Chỉ Quái Bay)',
+    name: 'Đợt 4: Oán Hồn Không Trung Tiếng Thét (Chỉ Quái Bay)',
     rewardGold: 105,
     enemies: [
-      { typeId: 'WINGED_GARGOYLE', count: 8, interval: 1.6, delay: 0 }
+      { typeId: 'SPECTRAL_BANSHEE', count: 7, interval: 1.7, delay: 0 }
     ]
   },
   {
@@ -194,6 +194,12 @@ export const MAP_ANCIENT_NECROPOLIS: MapConfig = {
     { x: 40, y: 60 },
     { x: 40, y: 580 }
   ],
-  laneBadges: ['3 Tuyến Bộ Riêng Biệt', '1 Kênh Năng Lượng', 'Tam Lộ Giáp Kẹp']
+  laneBadges: ['3 Tuyến Bộ Riêng Biệt', '1 Kênh Năng Lượng', 'Tam Lộ Giáp Kẹp'],
+  tribe: {
+    name: 'Tộc Vong Linh U Hồn',
+    icon: '👻🔮',
+    elements: ['GHOST', 'DARK', 'ICE'],
+    description: 'Binh đoàn u hồn tử thần và oán hồn không trung xuyên thấu mọi lớp giáp vật lý cùng Pháp Sư Chiêu Hồn.'
+  }
 };
 

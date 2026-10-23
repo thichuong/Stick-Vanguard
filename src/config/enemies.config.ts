@@ -199,11 +199,11 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     color: '#a855f7'
   },
 
-  // 8. Trùm Rồng Que Hắc Ám (Bay, Nhiều Kháng Hệ, Boss)
+  // 8. Trùm Rồng Que Hắc Ám (Bay, Long Tộc + Hắc Ám, Boss)
   'DARK_DRAGON_BOSS': {
     typeId: 'DARK_DRAGON_BOSS',
     name: 'Đại Hắc Long Ma Vương',
-    description: 'Trùm Bay Tối Thượng! Máu cực lớn, miễn nhiễm Đất & Lửa, đòi hỏi phối hợp toàn quân.',
+    description: 'Trùm Bay Tối Thượng! Hệ Rồng + Hắc Ám (DRAGON + DARK). Máu cực lớn, miễn nhiễm Đất & Lửa, cực sợ Băng & Tiên.',
     hp: 1200,
     speed: 32,
     damage: 55,
@@ -212,9 +212,12 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     movementType: 'FLY',
     navigationMode: 'AIR_WAYPOINTS',
     elementalProfile: {
-      primaryElement: 'DARK',
+      primaryElement: 'DRAGON',
+      secondaryElement: 'DARK',
       immunities: ['EARTH', 'FIRE'],
       damageMultipliers: {
+        FAIRY: 2.2,
+        ICE: 2.0,
         LIGHT: 1.6,
         PHYSICAL: 0.7,
         DARK: 0.3
@@ -460,11 +463,11 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     color: '#0ea5e9'
   },
 
-  // 17. Trùm Mãng Xà Hư Không (2 Thuộc tính: Bóng Tối + Lửa, Triệu hồi quái và Phân tách khi chết)
+  // 17. Trùm Mãng Xà Hư Không (2 Thuộc tính: Rồng + Độc, Triệu hồi quái và Phân tách khi chết)
   'VOID_HYDRA_BOSS': {
     typeId: 'VOID_HYDRA_BOSS',
     name: 'Trùm Mãng Xà Hư Không',
-    description: 'Đại Trùm Mặt Đất! Hệ Bóng Tối + Lửa (DARK + FIRE). Vừa triệu hồi quái vừa phân tách khi bị tiêu diệt!',
+    description: 'Đại Trùm Mặt Đất! Hệ Rồng + Độc (DRAGON + POISON). Vừa triệu hồi quái vừa phân tách khi bị tiêu diệt!',
     hp: 1500,
     speed: 30,
     damage: 60,
@@ -473,13 +476,14 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     movementType: 'WALK',
     navigationMode: 'GROUND_PATH',
     elementalProfile: {
-      primaryElement: 'DARK',
-      secondaryElement: 'FIRE',
-      immunities: ['FIRE'],
+      primaryElement: 'DRAGON',
+      secondaryElement: 'POISON',
+      immunities: ['POISON', 'FIRE'],
       damageMultipliers: {
-        LIGHT: 1.8,
-        WATER: 1.5,
-        DARK: 0.3
+        FAIRY: 2.2,
+        ICE: 1.8,
+        EARTH: 1.5,
+        DRAGON: 1.5
       }
     },
     tags: ['BOSS', 'SUMMONER', 'SPLITTER'],
@@ -494,6 +498,383 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     deathSpawn: {
       typeId: 'MAGMA_SLIME',
       count: 2
+    }
+  },
+
+  // === CÁC CHỦNG LOẠI QUÁI THEO HỆ MỚI & TỘC BẢN ĐỒ ===
+
+  // 18. Mộc Tinh Chiến Binh (Hệ Cỏ - WALK, Tộc Thung Lũng Rừng Xanh)
+  'TREANT_GUARD': {
+    typeId: 'TREANT_GUARD',
+    name: 'Mộc Tinh Chiến Binh',
+    description: 'Hệ Cỏ (GRASS). Thể xác vỏ cây cổ thụ cứng cáp, kháng Đất & Nước, sợ Lửa & Băng.',
+    hp: 240,
+    speed: 36,
+    damage: 18,
+    attackSpeed: 0.9,
+    rewardGold: 22,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'GRASS',
+      immunities: [],
+      damageMultipliers: {
+        FIRE: 2.2,
+        ICE: 1.8,
+        POISON: 1.8,
+        WATER: 0.5,
+        EARTH: 0.5
+      }
+    },
+    tags: ['ARMORED'],
+    altitude: 0,
+    size: 21,
+    color: '#16a34a'
+  },
+
+  // 19. Tiên Linh Hoa Gió (Hệ Tiên + Gió - FLY, Tộc Thung Lũng & Cực Bắc)
+  'FAIRY_SPRITE': {
+    typeId: 'FAIRY_SPRITE',
+    name: 'Tiên Linh Hoa Gió',
+    description: 'Hệ Tiên + Gió (FAIRY + WIND). Bay lượn nhanh thoăn thoắt, né tránh lính chặn, sợ Thép & Độc.',
+    hp: 120,
+    speed: 62,
+    damage: 15,
+    attackSpeed: 1.2,
+    rewardGold: 18,
+    movementType: 'FLY',
+    navigationMode: 'AIR_DIRECT',
+    elementalProfile: {
+      primaryElement: 'FAIRY',
+      secondaryElement: 'WIND',
+      immunities: ['DRAGON'],
+      damageMultipliers: {
+        STEEL: 2.2,
+        POISON: 2.0,
+        FIRE: 1.4
+      }
+    },
+    tags: ['FLYING', 'FAST'],
+    altitude: 28,
+    size: 16,
+    color: '#f472b6'
+  },
+
+  // 20. Rùa Rêu Suối Nguồn (Hệ Cỏ + Nước - SWIM, Tộc Thung Lũng)
+  'MOSS_TURTLE': {
+    typeId: 'MOSS_TURTLE',
+    name: 'Rùa Rêu Suối Nguồn',
+    description: 'Hệ Cỏ + Nước (GRASS + WATER). Bơi theo dòng suối, mai rêu giảm sát thương vật lý, sợ Lửa & Băng.',
+    hp: 250,
+    speed: 38,
+    damage: 16,
+    attackSpeed: 0.8,
+    rewardGold: 24,
+    movementType: 'SWIM',
+    navigationMode: 'WATER_PATH',
+    elementalProfile: {
+      primaryElement: 'GRASS',
+      secondaryElement: 'WATER',
+      immunities: [],
+      damageMultipliers: {
+        FIRE: 2.0,
+        ICE: 1.8,
+        POISON: 1.6
+      }
+    },
+    tags: ['AQUATIC', 'ARMORED'],
+    altitude: 0,
+    size: 22,
+    color: '#15803d'
+  },
+
+  // 21. Chiến Binh Thiết Giáp (Hệ Thép - WALK, Tộc Giao Lộ & Pháo Đài)
+  'STEEL_VANGUARD': {
+    typeId: 'STEEL_VANGUARD',
+    name: 'Chiến Binh Thiết Giáp',
+    description: 'Hệ Thép (STEEL). Toàn thân bọc giáp sắt kiên cố, miễn nhiễm sát thương Thép & Độc, sợ Lửa & Đất.',
+    hp: 260,
+    speed: 34,
+    damage: 22,
+    attackSpeed: 0.9,
+    rewardGold: 26,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'STEEL',
+      immunities: ['POISON'],
+      damageMultipliers: {
+        FIRE: 2.2,
+        EARTH: 1.8,
+        LIGHTNING: 1.4,
+        STEEL: 0.3,
+        PHYSICAL: 0.5
+      }
+    },
+    tags: ['ARMORED'],
+    altitude: 0,
+    size: 20,
+    color: '#64748b'
+  },
+
+  // 22. Khổng Lồ Thép (Hệ Thép + Sét - WALK, Tộc Thiết Giáp)
+  'IRON_COLOSSUS': {
+    typeId: 'IRON_COLOSSUS',
+    name: 'Khổng Lồ Thép Sét',
+    description: 'Hệ Thép + Sét (STEEL + LIGHTNING). Pháo đài thép di động, phân tách thành 2 Chiến Binh Thiết Giáp khi ngã xuống!',
+    hp: 440,
+    speed: 24,
+    damage: 34,
+    attackSpeed: 0.7,
+    rewardGold: 45,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'STEEL',
+      secondaryElement: 'LIGHTNING',
+      immunities: ['POISON', 'LIGHTNING'],
+      damageMultipliers: {
+        FIRE: 2.0,
+        EARTH: 2.0,
+        PHYSICAL: 0.4
+      }
+    },
+    tags: ['ARMORED', 'SPLITTER'],
+    altitude: 0,
+    size: 28,
+    color: '#475569',
+    deathSpawn: {
+      typeId: 'STEEL_VANGUARD',
+      count: 2
+    }
+  },
+
+  // 23. Long Nhân Chiến Sĩ (Hệ Rồng + Lửa - WALK, Tộc Hẻm Núi & Núi Lửa)
+  'DRAKE_WARRIOR': {
+    typeId: 'DRAKE_WARRIOR',
+    name: 'Long Nhân Hỏa Nham',
+    description: 'Hệ Rồng + Lửa (DRAGON + FIRE). Chiến binh mang dòng máu loài rồng, hung hãn và trâu máu, sợ Băng & Tiên.',
+    hp: 280,
+    speed: 42,
+    damage: 26,
+    attackSpeed: 1.1,
+    rewardGold: 28,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'DRAGON',
+      secondaryElement: 'FIRE',
+      immunities: ['FIRE'],
+      damageMultipliers: {
+        ICE: 2.0,
+        FAIRY: 2.0,
+        WATER: 1.6
+      }
+    },
+    tags: [],
+    altitude: 0,
+    size: 22,
+    color: '#ea580c'
+  },
+
+  // 24. Phi Long Xung Kích (Hệ Rồng + Gió - FLY, Tộc Hẻm Núi Mãng Xà)
+  'WYVERN_RAIDER': {
+    typeId: 'WYVERN_RAIDER',
+    name: 'Phi Long Cuồng Phong',
+    description: 'Hệ Rồng + Gió (DRAGON + WIND). Quái bay tinh nhuệ tốc độ cao, sải cánh lướt qua mọi bẫy đất, sợ Băng & Tiên.',
+    hp: 170,
+    speed: 58,
+    damage: 20,
+    attackSpeed: 1.2,
+    rewardGold: 25,
+    movementType: 'FLY',
+    navigationMode: 'AIR_WAYPOINTS',
+    elementalProfile: {
+      primaryElement: 'DRAGON',
+      secondaryElement: 'WIND',
+      immunities: ['EARTH'],
+      damageMultipliers: {
+        ICE: 2.2,
+        FAIRY: 2.0,
+        LIGHTNING: 1.6
+      }
+    },
+    tags: ['FLYING', 'FAST'],
+    altitude: 30,
+    size: 20,
+    color: '#d97706'
+  },
+
+  // 25. Giao Long Sông Sâu (Hệ Rồng + Nước - SWIM, Tộc Hẻm Núi)
+  'RIVER_DRAKE': {
+    typeId: 'RIVER_DRAKE',
+    name: 'Giao Long Đáy Vực',
+    description: 'Hệ Rồng + Nước (DRAGON + WATER). Thủy quái rồng bơi lội dưới lòng sông hẻm núi, chống chịu cao, sợ Băng & Tiên.',
+    hp: 310,
+    speed: 44,
+    damage: 25,
+    attackSpeed: 0.9,
+    rewardGold: 32,
+    movementType: 'SWIM',
+    navigationMode: 'WATER_PATH',
+    elementalProfile: {
+      primaryElement: 'DRAGON',
+      secondaryElement: 'WATER',
+      immunities: ['WATER', 'FIRE'],
+      damageMultipliers: {
+        ICE: 1.8,
+        FAIRY: 1.8,
+        LIGHTNING: 1.8,
+        GRASS: 1.5
+      }
+    },
+    tags: ['AQUATIC'],
+    altitude: 0,
+    size: 24,
+    color: '#0284c7'
+  },
+
+  // 26. U Hồn Tử Thần (Hệ Ma + Bóng Tối - WALK, Tộc Cổ Thành Hư Vô)
+  'PHANTOM_REAPER': {
+    typeId: 'PHANTOM_REAPER',
+    name: 'U Hồn Tử Thần',
+    description: 'Hệ Ma + Hắc Ám (GHOST + DARK). Lướt qua lính bộ binh (Không thể bị chặn), miễn nhiễm Vật Lý, sợ Ánh Sáng.',
+    hp: 185,
+    speed: 46,
+    damage: 28,
+    attackSpeed: 1.0,
+    rewardGold: 30,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'GHOST',
+      secondaryElement: 'DARK',
+      immunities: ['PHYSICAL', 'POISON'],
+      damageMultipliers: {
+        LIGHT: 2.2,
+        FAIRY: 1.8,
+        GHOST: 1.8
+      }
+    },
+    tags: ['UNBLOCKABLE', 'GHOST'],
+    altitude: 8,
+    size: 20,
+    color: '#c084fc'
+  },
+
+  // 27. Oán Hồn Không Trung (Hệ Ma + Băng - FLY, Tộc Cổ Thành)
+  'SPECTRAL_BANSHEE': {
+    typeId: 'SPECTRAL_BANSHEE',
+    name: 'Oán Hồn Không Trung',
+    description: 'Hệ Ma + Băng (GHOST + ICE). Tiếng thét linh hồn vang vọng trên bầu trời, miễn nhiễm Vật Lý, sợ Ánh Sáng & Lửa.',
+    hp: 145,
+    speed: 54,
+    damage: 22,
+    attackSpeed: 1.1,
+    rewardGold: 25,
+    movementType: 'FLY',
+    navigationMode: 'AIR_DIRECT',
+    elementalProfile: {
+      primaryElement: 'GHOST',
+      secondaryElement: 'ICE',
+      immunities: ['PHYSICAL', 'ICE'],
+      damageMultipliers: {
+        LIGHT: 2.2,
+        FIRE: 2.0
+      }
+    },
+    tags: ['FLYING', 'GHOST'],
+    altitude: 30,
+    size: 18,
+    color: '#a855f7'
+  },
+
+  // 28. Nhện Độc Đầm Lầy (Hệ Độc + Cỏ - WALK, Tộc Đầm Lầy Tử Khí)
+  'VENOM_ARACHNID': {
+    typeId: 'VENOM_ARACHNID',
+    name: 'Nhện Độc Đầm Lầy',
+    description: 'Hệ Độc + Cỏ (POISON + GRASS). Di chuyển nhanh, đi theo đàn đông đúc, miễn nhiễm Độc, cực sợ Lửa.',
+    hp: 110,
+    speed: 64,
+    damage: 14,
+    attackSpeed: 1.3,
+    rewardGold: 14,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'POISON',
+      secondaryElement: 'GRASS',
+      immunities: ['POISON'],
+      damageMultipliers: {
+        FIRE: 2.2,
+        ICE: 1.8,
+        WIND: 1.5
+      }
+    },
+    tags: ['SWARM', 'FAST'],
+    altitude: 0,
+    size: 15,
+    color: '#84cc16'
+  },
+
+  // 29. Dơi Huyết Độc (Hệ Độc + Gió - FLY, Tộc Đầm Lầy)
+  'TOXIC_BAT': {
+    typeId: 'TOXIC_BAT',
+    name: 'Dơi Huyết Độc',
+    description: 'Hệ Độc + Gió (POISON + WIND). Quái bay gieo rắc dịch bệnh, tấn công nhanh nhẹn, sợ Đá & Băng.',
+    hp: 130,
+    speed: 60,
+    damage: 17,
+    attackSpeed: 1.2,
+    rewardGold: 20,
+    movementType: 'FLY',
+    navigationMode: 'AIR_DIRECT',
+    elementalProfile: {
+      primaryElement: 'POISON',
+      secondaryElement: 'WIND',
+      immunities: ['POISON', 'EARTH'],
+      damageMultipliers: {
+        ICE: 1.8,
+        LIGHTNING: 1.6,
+        FIRE: 1.4
+      }
+    },
+    tags: ['FLYING', 'FAST'],
+    altitude: 28,
+    size: 16,
+    color: '#65a30d'
+  },
+
+  // 30. Thủy Quái Kịch Độc (Hệ Độc + Nước - SWIM, Tộc Đầm Lầy)
+  'PLAGUE_LEVIATHAN': {
+    typeId: 'PLAGUE_LEVIATHAN',
+    name: 'Thủy Quái Kịch Độc',
+    description: 'Hệ Độc + Nước (POISON + WATER). Quái vật khổng lồ bơi dưới kênh bùn, triệu hồi Nhện Độc và miễn nhiễm nọc độc.',
+    hp: 340,
+    speed: 38,
+    damage: 26,
+    attackSpeed: 0.9,
+    rewardGold: 40,
+    movementType: 'SWIM',
+    navigationMode: 'WATER_PATH',
+    elementalProfile: {
+      primaryElement: 'POISON',
+      secondaryElement: 'WATER',
+      immunities: ['POISON', 'WATER'],
+      damageMultipliers: {
+        EARTH: 1.8,
+        LIGHTNING: 1.8,
+        ICE: 1.4
+      }
+    },
+    tags: ['AQUATIC', 'SUMMONER'],
+    altitude: 0,
+    size: 24,
+    color: '#4d7c0f',
+    summonConfig: {
+      typeId: 'VENOM_ARACHNID',
+      count: 2,
+      interval: 6.0
     }
   }
 };

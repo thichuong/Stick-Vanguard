@@ -100,11 +100,25 @@ export class WaveSystem {
     }
 
     if (waveNum === 3) {
-      enemies.push({ typeId: 'STICK_WARRIOR', count: 6, interval: 1.6, delay: 0 });
-      enemies.push({ typeId: 'FIRE_IMP', count: 5, interval: 1.4, delay: 3 });
+      const mapId = this.currentMap?.id || '';
+      const walker3 =
+        mapId === 'valley_origin'
+          ? 'TREANT_GUARD'
+          : mapId === 'twin_crossroads'
+          ? 'STEEL_VANGUARD'
+          : mapId === 'serpent_canyon'
+          ? 'DRAKE_WARRIOR'
+          : mapId === 'ancient_necropolis'
+          ? 'PHANTOM_REAPER'
+          : mapId === 'plague_morass'
+          ? 'VENOM_ARACHNID'
+          : 'FIRE_IMP';
+
+      enemies.push({ typeId: 'STICK_WARRIOR', count: 5, interval: 1.6, delay: 0 });
+      enemies.push({ typeId: walker3, count: 4, interval: 1.6, delay: 3 });
       return {
         waveNumber: 3,
-        name: 'Đợt 3: Tiên Phong Hỏa Diệm (Đi Bộ)',
+        name: `Đợt 3: Tiên Phong ${this.currentMap?.tribe?.name || 'Chiến Binh'} (Đi Bộ)`,
         rewardGold: baseReward,
         enemies
       };
@@ -112,8 +126,20 @@ export class WaveSystem {
 
     // --- Wave 4: 1 wave kế CHỈ quái bay (FLY only) ---
     if (waveNum === 4) {
+      const mapId = this.currentMap?.id || '';
+      const flyer =
+        mapId === 'valley_origin' || mapId === 'frozen_citadel'
+          ? 'FAIRY_SPRITE'
+          : mapId === 'serpent_canyon'
+          ? 'WYVERN_RAIDER'
+          : mapId === 'ancient_necropolis'
+          ? 'SPECTRAL_BANSHEE'
+          : mapId === 'plague_morass'
+          ? 'TOXIC_BAT'
+          : 'WINGED_GARGOYLE';
+
       enemies.push({
-        typeId: 'WINGED_GARGOYLE',
+        typeId: flyer,
         count: 6 + Math.min(6, Math.floor(totalWaves / 4)),
         interval: 1.8,
         delay: 0
@@ -128,8 +154,20 @@ export class WaveSystem {
 
     // --- Wave 5: 1 wave kế CHỈ quái dưới nước (SWIM only) ---
     if (waveNum === 5) {
+      const mapId = this.currentMap?.id || '';
+      const swimmer =
+        mapId === 'valley_origin'
+          ? 'MOSS_TURTLE'
+          : mapId === 'twin_crossroads'
+          ? 'SPARK_EEL'
+          : mapId === 'serpent_canyon'
+          ? 'RIVER_DRAKE'
+          : mapId === 'plague_morass'
+          ? 'PLAGUE_LEVIATHAN'
+          : 'AQUA_SERPENT';
+
       enemies.push({
-        typeId: 'AQUA_SERPENT',
+        typeId: swimmer,
         count: 5 + Math.min(5, Math.floor(totalWaves / 4)),
         interval: 2.0,
         delay: 0

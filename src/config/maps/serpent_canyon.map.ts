@@ -1,17 +1,98 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_TWIN_CROSSROADS } from './twin_crossroads.map.js';
 import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_SERPENT_CANYON: WaveConfig[] = [
-  ...WAVES_TWIN_CROSSROADS.slice(0, 9), // Wave 1-3: WALK, Wave 4: FLY, Wave 5: SWIM, Wave 6-9: Mixed
+  // Wave 1-3: WALK
+  {
+    waveNumber: 1,
+    name: 'Đợt 1: Dân Binh Vách Đá (Đi Bộ)',
+    rewardGold: 50,
+    enemies: [{ typeId: 'STICK_RUNNER', count: 8, interval: 1.4, delay: 0 }]
+  },
+  {
+    waveNumber: 2,
+    name: 'Đợt 2: Tiền Trạm Long Nhân (Đi Bộ)',
+    rewardGold: 65,
+    enemies: [
+      { typeId: 'STICK_RUNNER', count: 6, interval: 1.2, delay: 0 },
+      { typeId: 'DRAKE_WARRIOR', count: 3, interval: 2.2, delay: 3 }
+    ]
+  },
+  {
+    waveNumber: 3,
+    name: 'Đợt 3: Long Nhân & Thạch Nham (Đi Bộ)',
+    rewardGold: 80,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 4, interval: 1.8, delay: 0 },
+      { typeId: 'ROCK_GOLEM', count: 3, interval: 2.5, delay: 3 }
+    ]
+  },
+  // Wave 4: FLY ONLY
+  {
+    waveNumber: 4,
+    name: 'Đợt 4: Phi Long Xung Kích Đáy Vực (Chỉ Quái Bay)',
+    rewardGold: 95,
+    enemies: [
+      { typeId: 'WYVERN_RAIDER', count: 6, interval: 1.8, delay: 0 }
+    ]
+  },
+  // Wave 5: SWIM ONLY
+  {
+    waveNumber: 5,
+    name: 'Đợt 5: Giao Long Sông Sâu Cuộn Sóng (Chỉ Quái Bơi)',
+    rewardGold: 110,
+    enemies: [
+      { typeId: 'RIVER_DRAKE', count: 5, interval: 2.0, delay: 0 }
+    ]
+  },
+  // Wave 6-10: Mixed
+  {
+    waveNumber: 6,
+    name: 'Đợt 6: Huyết Thạch Hợp Lưu (Bộ & Nước)',
+    rewardGold: 125,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 6, interval: 1.6, delay: 0 },
+      { typeId: 'RIVER_DRAKE', count: 4, interval: 2.0, delay: 3 }
+    ]
+  },
+  {
+    waveNumber: 7,
+    name: 'Đợt 7: Long Huyết Không Gian (Bộ & Bay)',
+    rewardGold: 140,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 6, interval: 1.5, delay: 0 },
+      { typeId: 'WYVERN_RAIDER', count: 6, interval: 1.6, delay: 3 }
+    ]
+  },
+  {
+    waveNumber: 8,
+    name: 'Đợt 8: Thạch Long Hộ Thân (Bộ, Bay & Nước)',
+    rewardGold: 160,
+    enemies: [
+      { typeId: 'ROCK_GOLEM', count: 4, interval: 2.2, delay: 0 },
+      { typeId: 'WYVERN_RAIDER', count: 6, interval: 1.5, delay: 3 },
+      { typeId: 'RIVER_DRAKE', count: 5, interval: 1.8, delay: 5 }
+    ]
+  },
+  {
+    waveNumber: 9,
+    name: 'Đợt 9: Quân Đoàn Long Huyết Cuồng Nộ (Tam Tuyến)',
+    rewardGold: 185,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 8, interval: 1.4, delay: 0 },
+      { typeId: 'ROCK_GOLEM', count: 4, interval: 2.4, delay: 2 },
+      { typeId: 'WYVERN_RAIDER', count: 8, interval: 1.3, delay: 5 },
+      { typeId: 'RIVER_DRAKE', count: 6, interval: 1.6, delay: 7 }
+    ]
+  },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tiền Trạm Trùm - Khổng Lồ Nham Thạch',
-    rewardGold: 180,
+    name: 'Đợt 10: Tiền Trạm Trùm - Khổng Lồ Nham Thạch & Phi Long',
+    rewardGold: 320,
     enemies: [
-      { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 0 },
-      { typeId: 'FIRE_IMP', count: 12, interval: 0.8, delay: 3 },
-      { typeId: 'WINGED_GARGOYLE', count: 4, interval: 2.0, delay: 5 }
+      { typeId: 'DRAKE_WARRIOR', count: 8, interval: 1.4, delay: 0 },
+      { typeId: 'ROCK_GOLEM', count: 5, interval: 2.0, delay: 3 },
+      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   },
   ...WAVES_EXTENDED_POST_10
@@ -59,6 +140,12 @@ export const MAP_SERPENT_CANYON: MapConfig = {
   waterSpawn: { x: 0, y: 300 },
   towerSlots: [],
   waves: WAVES_SERPENT_CANYON,
-  laneBadges: ['1 Tuyến Bộ 3 Tầng', '1 Thủy Lộ Đáy Vực', 'Đường Dài Tập Kích']
+  laneBadges: ['1 Tuyến Bộ 3 Tầng', '1 Thủy Lộ Đáy Vực', 'Đường Dài Tập Kích'],
+  tribe: {
+    name: 'Tộc Long Huyết Thạch Nham',
+    icon: '🐉🪨',
+    elements: ['DRAGON', 'EARTH', 'WIND'],
+    description: 'Chiến binh Long Nhân Hỏa Nham, Phi Long Cuồng Phong và Giao Long Đáy Vực chực chờ phục kích.'
+  }
 };
 
