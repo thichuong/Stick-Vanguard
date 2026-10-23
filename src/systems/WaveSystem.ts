@@ -356,6 +356,10 @@ export class WaveSystem {
   public startWave(waveNum?: number): boolean {
     if (waveNum !== undefined) {
       this.currentWaveIndex = waveNum - 1;
+    } else {
+      if (this.currentWaveIndex >= this.getTotalWaves()) {
+        return false;
+      }
     }
 
     const config = this.getCurrentWaveConfig();

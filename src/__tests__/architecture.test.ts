@@ -2083,6 +2083,76 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(intakeBoss2.percentage).toBe(80);
       expect(intakeBoss2.category).toBe('RESIST');
     });
+
+    it('should configure next wave button states correctly and not show HP buff on button', async () => {
+      const { HUDManager } = await import('../ui/hud/HUDManager.js');
+      const { GameState } = await import('../core/GameState.js');
+
+      const mockElements: Record<string, any> = {
+        'message-banner': { classList: { add: () => {}, remove: () => {} }, innerHTML: '', addEventListener: () => {} },
+        'btn-next-wave': { textContent: '', innerHTML: '', disabled: false, addEventListener: () => {} },
+        'hud-gold': { textContent: '' },
+        'hud-lives': { textContent: '' },
+        'hud-wave': { textContent: '', title: '' },
+        'hud-wave-hp-buff': { textContent: '', style: {}, classList: { add: () => {}, remove: () => {} } },
+        'hud-map-name': { textContent: '' },
+        'hud-map-waves': { textContent: '', innerHTML: '' },
+      };
+
+      const originalDocument = (globalThis as any).document;
+      (globalThis as any).document = {
+        getElementById: (id: string) => mockElements[id] || null,
+        addEventListener: () => {},
+      };
+
+      try {
+        const state = new GameState();
+        const hud = new HUDManager(state, {
+          onCallWave: () => {},
+          onRestart: () => {},
+          onOpenMapModal: () => {},
+          onSelectMap: () => {},
+        });
+
+        const btn = mockElements['btn-next-wave'];
+
+        // Wave 1, not running
+        hud.updateHUD(1, 15, false);
+        expect(btn.disabled).toBe(false);
+        expect(btn.textContent).toBe('⚔️ Bắt đầu Đợt Quái');
+        expect(btn.textContent).not.toContain('% Máu');
+
+        // Wave 1, running
+        hud.updateHUD(1, 15, true);
+        expect(btn.disabled).toBe(false);
+        expect(btn.textContent).toBe('⚡ Gọi đợt kế tiếp (+ Vàng)');
+        expect(btn.textContent).not.toContain('% Máu');
+
+        // Wave 12 (> 10), running, current < total
+        hud.updateHUD(12, 15, true);
+        expect(btn.disabled).toBe(false);
+        expect(btn.textContent).toBe('⚡ Gọi đợt kế tiếp (+ Vàng)');
+        expect(btn.textContent).not.toContain('% Máu');
+
+        // Wave 15 (last wave, full waves), running: button must be disabled!
+        hud.updateHUD(15, 15, true);
+        expect(btn.disabled).toBe(true);
+        expect(btn.textContent).toBe('⚔️ Đang diễn ra đợt cuối');
+        expect(btn.textContent).not.toContain('% Máu');
+      } finally {
+        (globalThis as any).document = originalDocument;
+      }
+    });
+
+    it('should not allow starting wave beyond totalWaves in WaveSystem', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const waveSys = new WaveSystem(undefined, 15);
+      waveSys.currentWaveIndex = 14; // Wave 15
+      expect(waveSys.startWave()).toBe(true);
+
+      waveSys.currentWaveIndex = 15; // Beyond wave 15
+      expect(waveSys.startWave()).toBe(false);
+    });
   });
 });
 

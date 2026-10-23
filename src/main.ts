@@ -106,6 +106,10 @@ class GameApp {
     if (this.state.isGameOver || this.state.isVictory) return;
 
     if (this.waveSystem.isWaveInProgress) {
+      // Đã ở đợt quái cuối cùng (đầy waves) thì không thể gọi thêm đợt nữa
+      if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
+        return;
+      }
       const baseBonus = 25;
       const bonus = Math.max(1, Math.round(baseBonus * this.state.goldMultiplier));
       this.state.gold += bonus;
@@ -113,6 +117,9 @@ class GameApp {
       this.waveSystem.currentWaveIndex++;
       this.waveSystem.startWave();
     } else {
+      if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves()) {
+        return;
+      }
       this.waveSystem.startWave();
     }
 

@@ -182,7 +182,7 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     typeId: 'DARK_DRAGON_BOSS',
     name: 'Đại Hắc Long Ma Vương',
     description: 'Trùm Bay Tối Thượng! Hệ Rồng + Hắc Ám (DRAGON + DARK). Máu cực lớn, miễn nhiễm Đất & Lửa, cực sợ Băng & Tiên.',
-    hp: 1200,
+    hp: 2400,
     speed: 32,
     damage: 55,
     attackSpeed: 1.2,

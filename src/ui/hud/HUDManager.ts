@@ -137,19 +137,24 @@ export class HUDManager {
     }
 
     if (nextWaveBtn) {
-      if (isWaveRunning) {
-        if (currentWave > 10 && currentWave < totalWaves) {
-          const nextBonusPct = (currentWave + 1 - 10) * 10;
-          nextWaveBtn.innerHTML = `⚡ Gọi đợt kế tiếp (+ Vàng)<span class="wave-btn-hp-sub">Đợt ${currentWave + 1}: ❤️ +${nextBonusPct}% Máu</span>`;
+      if (this.state.isGameOver || this.state.isVictory) {
+        nextWaveBtn.disabled = true;
+        nextWaveBtn.textContent = this.state.isVictory ? '🏆 Đã hoàn thành' : '💀 Trận đấu kết thúc';
+      } else if (isWaveRunning) {
+        if (currentWave >= totalWaves) {
+          nextWaveBtn.disabled = true;
+          nextWaveBtn.textContent = '⚔️ Đang diễn ra đợt cuối';
         } else {
+          nextWaveBtn.disabled = false;
           nextWaveBtn.textContent = '⚡ Gọi đợt kế tiếp (+ Vàng)';
         }
       } else {
-        if (currentWave > 10) {
-          const bonusPct = (currentWave - 10) * 10;
-          nextWaveBtn.innerHTML = `⚔️ Bắt đầu Đợt ${currentWave}<span class="wave-btn-hp-sub">❤️ Quái +${bonusPct}% Máu</span>`;
+        if (currentWave > totalWaves) {
+          nextWaveBtn.disabled = true;
+          nextWaveBtn.textContent = '🏆 Đã hết đợt quái';
         } else {
-          nextWaveBtn.textContent = '⚔️ Bắt đầu Đợt Quái';
+          nextWaveBtn.disabled = false;
+          nextWaveBtn.textContent = currentWave === 1 ? '⚔️ Bắt đầu Đợt Quái' : `⚔️ Bắt đầu Đợt ${currentWave}`;
         }
       }
     }
