@@ -7,6 +7,7 @@ import {
 } from '../../config/elements.config.js';
 import { ElementType } from '../../types/elements.types.js';
 import { StickmanRenderer } from '../../render/StickmanRenderer.js';
+import { EnemyArchetypeRenderer } from '../../render/EnemyArchetypeRenderer.js';
 import { ALL_15_ELEMENTS } from './CodexTypes.js';
 
 export class CodexEnemies {
@@ -88,6 +89,7 @@ export class CodexEnemies {
         const pIcon = ELEMENT_ICONS[pElem] || '⚔️';
         const sIcon = sElem ? ELEMENT_ICONS[sElem] : '';
         const moveIcon = bp.movementType === 'FLY' ? '✈️' : bp.movementType === 'SWIM' ? '🏊' : '🚶';
+        const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
         const isCurrent = bp.typeId === selectedBp.typeId;
 
         let badges = '';
@@ -110,7 +112,7 @@ export class CodexEnemies {
                 <span>${pIcon}${sIcon} ${bp.name}</span>
               </div>
               <div class="cmi-sub">
-                <span>${moveIcon} ${bp.speed} px/s</span>
+                <span>${archInfo.icon} ${moveIcon} ${bp.speed} px/s</span>
                 <span style="color: #ef4444;">${bp.hp} ❤️</span>
                 <span style="color: #facc15;">+${bp.rewardGold}🪙</span>
               </div>
@@ -247,9 +249,11 @@ export class CodexEnemies {
     const sName = sElem ? ` + ${ELEMENT_NAMES[sElem]}` : '';
 
     const moveText = bp.movementType === 'FLY' ? '✈️ Đường Bay (Air)' : bp.movementType === 'SWIM' ? '🏊 Kênh Sông (Water)' : '🚶 Đường Bộ (Ground)';
+    const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
 
     // Badges
     let abilityBadges = '';
+    abilityBadges += `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(147, 51, 234, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;" title="${archInfo.description}">${archInfo.icon} ${archInfo.name}</span>`;
     if (bp.tags.includes('BOSS')) {
       abilityBadges += `<span style="background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800;">👑 TRÙM CUỐI (BOSS)</span>`;
     } else if (bp.tags.includes('ELITE')) {
@@ -329,7 +333,10 @@ export class CodexEnemies {
       <div class="codex-monster-hero">
         <div class="codex-monster-canvas-box">
           <canvas id="codex-enemy-canvas" width="240" height="200"></canvas>
-          <span class="codex-monster-canvas-hint">Mô phỏng hình ảnh thực tế</span>
+          <span class="codex-monster-canvas-hint">Mô phỏng đồ họa chiến đấu thực tế</span>
+          <div style="margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #7dd3fc; font-weight: 700;" title="${archInfo.description}">
+            ${archInfo.icon} ${archInfo.name}
+          </div>
         </div>
 
         <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
@@ -592,7 +599,12 @@ export class CodexEnemies {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const cx = canvas.width / 2;
-      const cy = canvas.height * 0.72;
+      const isBoss = bp.tags.includes('BOSS');
+      const isFlying = bp.movementType === 'FLY';
+      const isSwimmer = bp.movementType === 'SWIM';
+
+      // For bosses or large creatures, adjust center so health bar & wings don't get cut off at top
+      const cy = isBoss ? canvas.height * 0.76 : canvas.height * 0.72;
       const elemColor = ELEMENT_COLORS[bp.elementalProfile.primaryElement] || '#60a5fa';
 
       // Subtle ambient glow
@@ -603,21 +615,28 @@ export class CodexEnemies {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Floor reference line
-      ctx.strokeStyle = bp.movementType === 'SWIM' ? 'rgba(56, 189, 248, 0.4)' : 'rgba(71, 85, 105, 0.4)';
+      ctx.strokeStyle = isSwimmer ? 'rgba(56, 189, 248, 0.4)' : 'rgba(71, 85, 105, 0.4)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(cx - 70, cy + 8);
-      ctx.lineTo(cx + 70, cy + 8);
+      ctx.moveTo(cx - 75, cy + 8);
+      ctx.lineTo(cx + 75, cy + 8);
       ctx.stroke();
+
+      const alt = isFlying ? (isBoss ? 26 : 24) : 0;
+
+      // Cycle animation between moving and periodic attack showcase
+      const cycle = animTime % 4.0;
+      const isPreviewAttacking = cycle > 2.8;
 
       const mockEnemy: any = {
         id: 'preview',
+        typeId: bp.typeId,
         type: bp.typeId,
         name: bp.name,
         x: cx,
         y: cy,
-        size: Math.min(Math.max(bp.size * 1.35, 18), 34),
-        altitude: bp.movementType === 'FLY' ? 30 : 0,
+        size: bp.size,
+        altitude: alt,
         movementType: bp.movementType,
         navigationMode: bp.navigationMode,
         elementalProfile: bp.elementalProfile,
@@ -625,10 +644,17 @@ export class CodexEnemies {
         hp: bp.hp,
         maxHp: bp.hp,
         speed: bp.speed,
+        baseSpeed: bp.speed,
         damage: bp.damage,
-        color: bp.color,
-        state: 'MOVING',
-        statusEffects: []
+        attackSpeed: bp.attackSpeed,
+        attackCooldown: 0,
+        rewardGold: bp.rewardGold,
+        pathDistance: 0,
+        pathTotalLength: 100,
+        state: isPreviewAttacking ? 'ATTACKING' : (isFlying ? 'FLYING' : isSwimmer ? 'SWIMMING' : 'WALKING'),
+        engagedBySoldierId: null,
+        statusEffects: [],
+        facing: 0 // Face forward/right
       };
 
       StickmanRenderer.renderEnemy(ctx, mockEnemy, animTime);

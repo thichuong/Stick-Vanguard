@@ -4,6 +4,7 @@ import {
 } from '../types/entities.types.js';
 import { ELEMENT_COLORS, ELEMENT_ICONS } from '../config/elements.config.js';
 import { ElementType } from '../types/elements.types.js';
+import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
 
 export class StickmanRenderer {
   /**
@@ -18,8 +19,6 @@ export class StickmanRenderer {
 
     const { x, y, size, altitude, elementalProfile } = enemy;
     const drawY = y - altitude;
-    const isEngaged = enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING';
-    const isAttacking = enemy.state === 'ATTACKING';
 
     ctx.save();
 
@@ -30,31 +29,7 @@ export class StickmanRenderer {
     ctx.ellipse(x, y + 4, (size * 0.7) * shadowScale, (size * 0.35) * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Wings for Flying Enemy
-    if (enemy.movementType === 'FLY') {
-      const wingFlap = Math.sin(animTime * 14) * 0.45;
-      ctx.save();
-      ctx.translate(x, drawY);
-      ctx.strokeStyle = '#34d399';
-      ctx.lineWidth = 2.5;
-
-      // Left wing
-      ctx.beginPath();
-      ctx.moveTo(-4, -6);
-      ctx.lineTo(-20, -18 + wingFlap * 14);
-      ctx.lineTo(-12, -4 + wingFlap * 8);
-      ctx.stroke();
-
-      // Right wing
-      ctx.beginPath();
-      ctx.moveTo(4, -6);
-      ctx.lineTo(20, -18 + wingFlap * 14);
-      ctx.lineTo(12, -4 + wingFlap * 8);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 3. Water ripples for Swimming Enemy
+    // 2. Water ripples for Swimming Enemy
     if (enemy.movementType === 'SWIM') {
       ctx.save();
       ctx.strokeStyle = 'rgba(125, 211, 252, 0.6)';
@@ -66,18 +41,14 @@ export class StickmanRenderer {
       ctx.restore();
     }
 
-    // 4. Ghost translucency for Shadow Wraith
+    // 3. Ghost translucency for Shadow Wraith
     if (enemy.tags.includes('GHOST')) {
       ctx.globalAlpha = 0.75 + Math.sin(animTime * 5) * 0.15;
     }
 
-    // 5. Procedural Stickman Skeleton
+    // 4. Colors & Elemental aura
     const elemColor = ELEMENT_COLORS[elementalProfile.primaryElement] || '#ffffff';
     const secColor = elementalProfile.secondaryElement ? ELEMENT_COLORS[elementalProfile.secondaryElement] : elemColor;
-    ctx.strokeStyle = elemColor;
-    ctx.lineWidth = enemy.size > 22 ? 3.5 : 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
 
     // Aura for dual-element or summoner enemies
     if (elementalProfile.secondaryElement || enemy.tags.includes('SUMMONER')) {
@@ -90,58 +61,15 @@ export class StickmanRenderer {
       ctx.restore();
     }
 
-    const walkCycle = isEngaged ? 0 : Math.sin(animTime * 8);
-    const attackSwing = isAttacking ? Math.sin(animTime * 12) * 16 : 0;
-
-    // Head
-    const headRadius = size * 0.3;
-    const headY = drawY - size * 0.7;
-    ctx.beginPath();
-    ctx.arc(x, headY, headRadius, 0, Math.PI * 2);
-    ctx.fillStyle = elemColor;
-    ctx.fill();
-    ctx.stroke();
-
-    // Eyes
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    const faceDir = enemy.facing > -Math.PI / 2 && enemy.facing < Math.PI / 2 ? 1 : -1;
-    ctx.arc(x + faceDir * (headRadius * 0.4), headY - 1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Spine
-    const neckY = headY + headRadius;
-    const pelvisY = drawY + size * 0.2;
-    ctx.beginPath();
-    ctx.moveTo(x, neckY);
-    ctx.lineTo(x, pelvisY);
-    ctx.stroke();
-
-    // Arms
-    const shoulderY = neckY + 4;
-    ctx.beginPath();
-    ctx.moveTo(x - 8, shoulderY + walkCycle * 4);
-    ctx.lineTo(x, shoulderY);
-    ctx.lineTo(x + 10 + attackSwing, shoulderY - walkCycle * 4);
-    ctx.stroke();
-
-    // Legs (only if not swimming deep)
-    if (enemy.movementType !== 'SWIM') {
-      ctx.beginPath();
-      // Left leg
-      ctx.moveTo(x, pelvisY);
-      ctx.lineTo(x - 6 - walkCycle * 6, drawY + size * 0.8);
-      // Right leg
-      ctx.moveTo(x, pelvisY);
-      ctx.lineTo(x + 6 + walkCycle * 6, drawY + size * 0.8);
-      ctx.stroke();
-    }
+    // 5. Render Creature Body via Stick Archetype Rigging (Dragon, Serpent, Bat, Spider, etc.)
+    EnemyArchetypeRenderer.renderEnemyBody(ctx, enemy, animTime, elemColor, secColor);
 
     // 6. Health bar & Elemental icons
+    const headY = drawY - size * 0.75;
     this.renderHealthBar(
       ctx,
       x,
-      headY - 10,
+      headY - 12,
       enemy.hp,
       enemy.maxHp,
       elementalProfile.primaryElement,
