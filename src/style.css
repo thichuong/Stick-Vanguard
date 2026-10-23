@@ -3407,3 +3407,324 @@ html, body {
   color: #94a3b8;
   line-height: 1.35;
 }
+
+/* ==========================================================================
+   CODEX LOOKUP TABLES & ELEMENTAL REACTIONS SEARCH
+   ========================================================================== */
+
+/* 1. Combat Highlight List */
+.combat-highlight-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-highlight-list li {
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+/* 2. 4-Building Imbue Breakdown */
+.building-imbue-breakdown-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.lookup-sec-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.towers-imbue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.tower-imbue-col {
+  background: #090e1a;
+  border: 1px solid #23354e;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ti-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.ti-desc {
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 3. Lookup Tables */
+.lookup-table-wrap {
+  margin-top: 6px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #090e1a;
+}
+
+.lookup-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lookup-table th {
+  background: #111a2e;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #23354e;
+  text-align: left;
+}
+
+.lookup-row {
+  border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+  transition: background 0.15s ease;
+}
+
+.lookup-row:hover {
+  background: rgba(30, 58, 138, 0.15);
+}
+
+.lookup-elem-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.lookup-elem-cell .le-icon {
+  font-size: 16px;
+}
+
+.lookup-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.badge-super-weak {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.badge-weak {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-normal {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.badge-resist {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.badge-immune {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.lookup-bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lookup-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #1e293b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lookup-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.lookup-bar-pct {
+  font-size: 12px;
+  font-weight: 800;
+  width: 42px;
+  text-align: right;
+}
+
+.lookup-note-cell {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.45;
+  padding: 8px 12px;
+}
+
+.lookup-role-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.lookup-role-badge.role-setup {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.lookup-role-badge.role-trigger {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* 4. Reaction Rules Box & Badges */
+.reaction-rules-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.reaction-rule-pill {
+  background: #090e1a;
+  border: 1px solid #23354e;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.reaction-cat-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.reaction-cat-badge.dragon-cat {
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.45);
+}
+
+.reaction-cat-badge.fairy-cat {
+  background: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.45);
+}
+
+.reaction-cat-badge.dark-cat {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.45);
+}
+
+.reaction-cat-badge.natural-cat {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+}
+
+/* 5. Reaction Search and Filter Bar */
+.reaction-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, #121c2d 0%, #0d1522 100%);
+  border: 1px solid #23354e;
+}
+
+.reaction-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.reaction-input-wrap {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  background: #090e1a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0 10px;
+}
+
+.reaction-search-icon {
+  font-size: 16px;
+  color: #64748b;
+  margin-right: 6px;
+}
+
+.reaction-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 13px;
+  padding: 9px 0;
+}
+
+.reaction-search-input::placeholder {
+  color: #64748b;
+}
+
+.reaction-filter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.reaction-count-tag {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-weight: 800;
+}
+
+.reaction-tip-tag {
+  color: #94a3b8;
+  font-size: 11.5px;
+}
+

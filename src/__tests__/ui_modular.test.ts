@@ -83,27 +83,47 @@ describe('Modular UI Architecture Tests', () => {
   });
 
   describe('CodexElements', () => {
-    it('should render overview cards for all 15 elements', () => {
+    it('should render sidebar with 15 elements and reactions without redundant overview table', () => {
       const elements = new CodexElements();
-      const html = elements.getElementsOverviewHtml();
+      const mockContent = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [] } as any;
+      const mockTitle = { textContent: '' } as any;
+      const mockIcon = { textContent: '' } as any;
+      const mockBadge = { textContent: '' } as any;
+
+      elements.renderElementsCategory(mockContent, mockTitle, mockIcon, mockBadge);
+
+      // Verify all 15 elements are present in the sidebar
       for (const elem of ALL_15_ELEMENTS) {
-        expect(html).toContain(`data-sub-elem="${elem}"`);
+        expect(mockContent.innerHTML).toContain(`data-sub-elem="${elem}"`);
       }
+      expect(mockContent.innerHTML).toContain('data-sub-elem="REACTIONS"');
+      // Ensure redundant OVERVIEW is removed
+      expect(mockContent.innerHTML).not.toContain('data-sub-elem="OVERVIEW"');
     });
 
-    it('should render elemental reactions combo list', () => {
+    it('should render elemental reactions with search bar and filter controls', () => {
       const elements = new CodexElements();
       const html = elements.getElementalReactionsHtml();
       expect(html).toContain('PHẢN ỨNG NGUYÊN TỐ');
-      expect(html).toContain('formula-elem');
+      expect(html).toContain('codex-reaction-search');
+      expect(html).toContain('codex-reaction-cat-filter');
+      expect(html).toContain('codex-reaction-elem-filter');
+      expect(html).toContain('Long Uy Khuếch Đại');
+      expect(html).toContain('Tiên Linh Tăng Phúc');
+      expect(html).toContain('Hắc Ám Thôn Phệ');
     });
 
-    it('should render single element detail with matchups', () => {
+    it('should render single element detail with 3 lookup tables and 4-building breakdown', () => {
       const elements = new CodexElements();
       const html = elements.getSingleElementDetailHtml('FIRE');
       expect(html).toContain('Lửa (Hỏa)');
-      expect(html).toContain('Khắc Chế');
-      expect(html).toContain('Bị Giảm Sát Thương');
+      expect(html).toContain('BẢNG TRA CỨU GÂY SÁT THƯƠNG');
+      expect(html).toContain('BẢNG TRA CỨU NHẬN SÁT THƯƠNG');
+      expect(html).toContain('BẢNG PHỐI HỢP HIỆU ỨNG');
+      expect(html).toContain('Trại Dân Quân');
+      expect(html).toContain('Tháp Cung');
+      expect(html).toContain('Tháp Phù Thủy');
+      expect(html).toContain('Pháo Cối');
     });
   });
 

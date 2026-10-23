@@ -298,7 +298,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         navigationMode: 'GROUND_PATH',
         pathDistance: 0,
         pathTotalLength: 500,
-        elementalProfile: runnerBp.elementalProfile,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
         state: 'WALKING',
         engagedBySoldierId: null,
         statusEffects: [
@@ -317,6 +317,236 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(result.reactionTriggered).toBe(true);
       expect(result.reactionLabel).toBe('💥 BÙNG CHÁY!');
       expect(result.finalDamage).toBeGreaterThanOrEqual(170); // 1.7x combustion
+    });
+
+    it('Dragon synergy: DRAGON_AWE status boosts other elements power', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'e-runner-dragon',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 300,
+        maxHp: 300,
+        speed: 60,
+        baseSpeed: 60,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [
+          { type: 'DRAGON_AWE', duration: 3.5, value: 0.25 }
+        ],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Lightning against enemy with DRAGON_AWE triggers DRAGON_OVERLOAD (1.75x)
+      const resLightning = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'LIGHTNING', sourceId: 'test' },
+        enemy
+      );
+      expect(resLightning.reactionTriggered).toBe(true);
+      expect(resLightning.reactionLabel).toBe('🐉 LONG LÔI!');
+      expect(resLightning.finalDamage).toBeGreaterThanOrEqual(175);
+
+      // Fire against enemy with DRAGON_AWE triggers DRAGON_FLAME (1.7x)
+      const resFire = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FIRE', sourceId: 'test' },
+        enemy
+      );
+      expect(resFire.reactionTriggered).toBe(true);
+      expect(resFire.reactionLabel).toBe('🐉 HỎA LONG!');
+      expect(resFire.finalDamage).toBeGreaterThanOrEqual(170);
+    });
+
+    it('Fairy blessing: CHARM boosts elemental skills EXCEPT Dark, Ghost, Poison, and Physical', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'e-runner-charm',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 300,
+        maxHp: 300,
+        speed: 60,
+        baseSpeed: 60,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [
+          { type: 'CHARM', duration: 3.0, value: 0.35 }
+        ],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Fire under charm gets boosted (FAIRY_FIRE 1.6x)
+      const resFire = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FIRE', sourceId: 'test' },
+        enemy
+      );
+      expect(resFire.reactionTriggered).toBe(true);
+      expect(resFire.reactionLabel).toBe('🧚 TIÊN HỎA!');
+
+      // Dark under charm is NOT boosted by Fairy
+      const resDark = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'DARK', sourceId: 'test' },
+        enemy
+      );
+      expect(resDark.reactionTriggered).toBeFalsy();
+
+      // Ghost under charm is NOT boosted by Fairy
+      const resGhost = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'GHOST', sourceId: 'test' },
+        enemy
+      );
+      expect(resGhost.reactionTriggered).toBeFalsy();
+
+      // Poison under charm is NOT boosted by Fairy
+      const resPoison = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'POISON', sourceId: 'test' },
+        enemy
+      );
+      expect(resPoison.reactionTriggered).toBeFalsy();
+    });
+
+    it('Dark synergies: Dark + Ghost triggers Abyssal Soul, and Dark + other elements boosts EXCEPT Fairy and Light', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'e-runner-curse',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 400,
+        maxHp: 400,
+        speed: 60,
+        baseSpeed: 60,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [
+          { type: 'CURSE', duration: 3.5, value: 0.35 }
+        ],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Ám + Ma: CURSE + GHOST triggers ABYSSAL_SOUL (1.85x)
+      const resGhost = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'GHOST', sourceId: 'test' },
+        enemy
+      );
+      expect(resGhost.reactionTriggered).toBe(true);
+      expect(resGhost.reactionLabel).toBe('🔮 MINH GIỚI ÁM HỒN!');
+      expect(resGhost.finalDamage).toBeGreaterThanOrEqual(185);
+
+      // Ám + Lửa: CURSE + FIRE triggers ABYSSAL_FIRE (1.65x)
+      const resFire = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FIRE', sourceId: 'test' },
+        enemy
+      );
+      expect(resFire.reactionTriggered).toBe(true);
+      expect(resFire.reactionLabel).toBe('🔥 HỎA NGỤC ÁM!');
+
+      // Ám + Độc: CURSE + POISON triggers ABYSSAL_POISON (1.7x)
+      const resPoison = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'POISON', sourceId: 'test' },
+        enemy
+      );
+      expect(resPoison.reactionTriggered).toBe(true);
+      expect(resPoison.reactionLabel).toBe('☠️ HẮC ĐỘC!');
+
+      // Ám does NOT trigger dark synergy for FAIRY
+      const resFairy = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FAIRY', sourceId: 'test' },
+        enemy
+      );
+      expect(resFairy.reactionTriggered).toBeFalsy();
+    });
+
+    it('Modular Elements Architecture & Lookup Tables generation', async () => {
+      const {
+        ALL_15_ELEMENTS,
+        ALL_ELEMENT_DEFINITIONS,
+        getElementOffensiveTable,
+        getElementDefensiveTable,
+        getElementSynergyTable,
+        searchElementalReactions
+      } = await import('../config/elements/index.js');
+
+      // 1. All 15 element modules exist and have valid structure
+      expect(ALL_15_ELEMENTS).toHaveLength(15);
+      for (const elem of ALL_15_ELEMENTS) {
+        const def = ALL_ELEMENT_DEFINITIONS[elem];
+        expect(def).toBeDefined();
+        expect(def.element).toBe(elem);
+        expect(def.buildingEffects.barracks).toBeDefined();
+        expect(def.buildingEffects.archer).toBeDefined();
+        expect(def.buildingEffects.mage).toBeDefined();
+        expect(def.buildingEffects.artillery).toBeDefined();
+      }
+
+      // 2. Offensive Lookup Table: Exactly 15 rows for any element
+      const fireOffensive = getElementOffensiveTable('FIRE');
+      expect(fireOffensive).toHaveLength(15);
+      expect(fireOffensive.some((r) => r.targetElement === 'GRASS' && r.multiplier === 2.0)).toBe(true);
+      expect(fireOffensive.some((r) => r.targetElement === 'ICE' && r.multiplier === 1.75)).toBe(true);
+
+      // 3. Defensive Lookup Table: Exactly 15 rows for any element
+      const fireDefensive = getElementDefensiveTable('FIRE');
+      expect(fireDefensive).toHaveLength(15);
+      expect(fireDefensive.some((r) => r.attackerElement === 'WATER' && r.multiplier === 2.0)).toBe(true);
+
+      // 4. Synergy Lookup Table: Combos exist for DRAGON, FAIRY, DARK
+      const dragonSynergies = getElementSynergyTable('DRAGON');
+      expect(dragonSynergies.length).toBeGreaterThan(5);
+
+      const darkSynergies = getElementSynergyTable('DARK');
+      expect(darkSynergies.some((s) => s.reaction.id === 'ABYSSAL_SOUL')).toBe(true);
+
+      // 5. Search function works with queries and category filters
+      const dragonReactions = searchElementalReactions('', 'ALL', 'DRAGON_BOOST');
+      expect(dragonReactions.length).toBeGreaterThanOrEqual(10);
+
+      const fairyReactions = searchElementalReactions('', 'ALL', 'FAIRY_BLESS');
+      expect(fairyReactions.length).toBeGreaterThanOrEqual(8);
+
+      const queryResults = searchElementalReactions('Bùng Cháy');
+      expect(queryResults.length).toBeGreaterThanOrEqual(1);
+      expect(queryResults[0].id).toBe('COMBUSTION');
     });
   });
 
@@ -582,7 +812,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         navigationMode: 'GROUND_PATH',
         pathDistance: 0,
         pathTotalLength: 500,
-        elementalProfile: runnerBp.elementalProfile,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
         state: 'WALKING',
         engagedBySoldierId: null,
         statusEffects: [],
@@ -1052,7 +1282,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         navigationMode: 'GROUND_PATH',
         pathDistance: 0,
         pathTotalLength: 500,
-        elementalProfile: runnerBp.elementalProfile,
+        elementalProfile: { primaryElement: 'WIND', immunities: [] },
         state: 'WALKING',
         engagedBySoldierId: null,
         statusEffects: [],

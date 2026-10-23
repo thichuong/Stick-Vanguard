@@ -103,22 +103,31 @@ export class TargetingRuleEngine {
 
     // 4. Status effect interactions & Elemental Reactions
     let reactionLabel: string | undefined;
+    let bestReaction: (typeof ELEMENTAL_REACTIONS)[0] | undefined;
 
     for (const reaction of ELEMENTAL_REACTIONS) {
       if (
         reaction.triggerElement === element &&
         enemy.statusEffects.some((s) => s.type === reaction.requiredStatus)
       ) {
-        multiplier *= reaction.damageMultiplier;
-        reactionLabel = reaction.label;
-        break;
+        if (!bestReaction || reaction.damageMultiplier > bestReaction.damageMultiplier) {
+          bestReaction = reaction;
+        }
       }
     }
 
-    // Debuff modifiers on target
+    if (bestReaction) {
+      multiplier *= bestReaction.damageMultiplier;
+      reactionLabel = bestReaction.label;
+    }
+
+    // Debuff modifiers on target:
+    // Ám (CURSE): Khuếch đại sát thương từ các nguồn khác, trừ Tiên (FAIRY) và Quang (LIGHT)
     const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
-    if (hasCurse) {
-      multiplier *= 1.35;
+    if (hasCurse && !['FAIRY', 'LIGHT'].includes(element)) {
+      if (!bestReaction || bestReaction.requiredStatus !== 'CURSE') {
+        multiplier *= 1.35;
+      }
     }
 
     const hasSunder = enemy.statusEffects.some((s) => s.type === 'SUNDER');
@@ -126,9 +135,20 @@ export class TargetingRuleEngine {
       multiplier *= 1.30;
     }
 
+    // Tiên (CHARM): Tăng phúc mọi chiêu nguyên tố, trừ Hắc Ám (DARK), Ma (GHOST), Độc (POISON) và Vật Lý (PHYSICAL)
     const hasCharm = enemy.statusEffects.some((s) => s.type === 'CHARM');
-    if (hasCharm && element !== 'PHYSICAL') {
-      multiplier *= 1.25;
+    if (hasCharm && !['PHYSICAL', 'DARK', 'GHOST', 'POISON'].includes(element)) {
+      if (!bestReaction || bestReaction.requiredStatus !== 'CHARM') {
+        multiplier *= 1.25;
+      }
+    }
+
+    // Rồng (DRAGON_AWE): Tăng uy lực cho các nguyên tố khác
+    const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+    if (hasDragonAwe && element !== 'DRAGON') {
+      if (!bestReaction || bestReaction.requiredStatus !== 'DRAGON_AWE') {
+        multiplier *= 1.25;
+      }
     }
 
     const hasSoulDrain = enemy.statusEffects.some((s) => s.type === 'SOUL_DRAIN');

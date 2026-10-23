@@ -95,8 +95,10 @@ export class SideDetailPanel {
       }
     } else if (category === 'ELEMENTS') {
       this.currentCategory = 'ELEMENTS';
-      if (targetSubId) {
+      if (targetSubId && targetSubId !== 'OVERVIEW') {
         this.elementsCodex.currentElementSubTab = targetSubId;
+      } else if (!this.elementsCodex.currentElementSubTab || this.elementsCodex.currentElementSubTab === 'OVERVIEW') {
+        this.elementsCodex.currentElementSubTab = 'FIRE';
       }
     } else if (category === 'ENEMIES') {
       this.currentCategory = 'ENEMIES';
