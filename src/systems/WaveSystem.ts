@@ -519,7 +519,13 @@ export class WaveSystem {
       facing: 0,
       deathSpawn: bp.deathSpawn ? { ...bp.deathSpawn } : undefined,
       summonConfig: bp.summonConfig ? { ...bp.summonConfig } : undefined,
-      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined
+      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined,
+      ccResistance: bp.ccResistance
+        ? {
+            hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
+            softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
+          }
+        : undefined
     };
   }
 
@@ -576,7 +582,13 @@ export class WaveSystem {
       facing: 0,
       deathSpawn: bp.deathSpawn ? { ...bp.deathSpawn } : undefined,
       summonConfig: bp.summonConfig ? { ...bp.summonConfig } : undefined,
-      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined
+      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined,
+      ccResistance: bp.ccResistance
+        ? {
+            hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
+            softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
+          }
+        : undefined
     };
   }
 }

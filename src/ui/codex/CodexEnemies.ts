@@ -399,11 +399,18 @@ export class CodexEnemies {
 
       <!-- 2. Special Traits Breakdown (if any) -->
       ${
-        bp.deathSpawn || bp.summonConfig || sElem
+        bp.deathSpawn || bp.summonConfig || sElem || bp.tags.includes('BOSS') || bp.tags.includes('ELITE')
           ? `
           <div class="sp-section sp-card" style="border-left: 4px solid #a855f7; background: #0c1424;">
             <h4 class="sp-sec-title" style="color: #c084fc; margin-bottom: 8px;">🔮 ĐẶC TÍNH CHIẾN ĐẤU & KỸ NĂNG ĐẶC BIỆT</h4>
             <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: #cbd5e1;">
+              ${
+                bp.tags.includes('BOSS')
+                  ? `<div>👑 <b>Kháng Khống Chế Trùm (Boss):</b> Miễn nhiễm 100% Khống chế cứng (Đóng băng, Choáng, Đẩy lùi). Khống chế mềm (Làm chậm) chỉ nhận 50% hiệu quả & 50% thời gian!</div>`
+                  : bp.tags.includes('ELITE')
+                  ? `<div>⭐ <b>Kháng Khống Chế Tinh Anh (Elite):</b> Khống chế cứng (Đóng băng, Choáng, Trói, Đẩy lùi) chỉ nhận 50% hiệu quả & 50% thời gian duy trì!</div>`
+                  : ''
+              }
               ${
                 bp.deathSpawn
                   ? `<div>💥 <b>Kỹ Năng Phân Tách:</b> Khi bị hạ gục, lập tức phân tách thành <b>x${bp.deathSpawn.count} ${ENEMY_BLUEPRINTS[bp.deathSpawn.typeId]?.name || bp.deathSpawn.typeId}</b> tiếp tục hành trình xâm lăng!</div>`

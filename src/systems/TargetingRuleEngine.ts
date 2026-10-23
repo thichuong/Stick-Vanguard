@@ -6,6 +6,13 @@ import {
 } from '../types/elements.types.js';
 import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
 import { ELEMENTAL_MATCHUPS, ELEMENTAL_REACTIONS, ALL_ELEMENT_DEFINITIONS } from '../config/elements.config.js';
+import {
+  ENEMY_CC_CONFIG,
+  HARD_CC_STATUS_TYPES,
+  SOFT_CC_STATUS_TYPES,
+  TierCCConfig,
+  EnemyTierCategory
+} from '../config/enemies.config.js';
 
 export interface DamageCalculationResult {
   finalDamage: number;
@@ -372,7 +379,7 @@ export class TargetingRuleEngine {
         const chance = isFly ? (stats?.knockbackChanceFly ?? 0.55) : (stats?.knockbackChanceGround ?? 0.25);
         if (Math.random() < chance) {
           const dist = isFly ? (stats?.knockbackDistanceFly ?? 20) : (stats?.knockbackDistanceGround ?? 12);
-          enemy.pathDistance = Math.max(0, enemy.pathDistance - dist);
+          this.applyKnockback(enemy, dist);
         }
         break;
       }
@@ -465,7 +472,7 @@ export class TargetingRuleEngine {
         });
         // Slight fear nudge
         if (Math.random() < (stats?.knockbackChanceGround ?? 1.0)) {
-          enemy.pathDistance = Math.max(0, enemy.pathDistance - (stats?.knockbackDistanceGround ?? 10));
+          this.applyKnockback(enemy, stats?.knockbackDistanceGround ?? 10);
         }
         break;
 
@@ -570,7 +577,7 @@ export class TargetingRuleEngine {
     // 7. SWIRL: BURN + WIND -> Extra knockback and spreads fire duration
     if (element === 'WIND' && enemy.statusEffects.some((s) => s.type === 'BURN')) {
       const extraPush = enemy.movementType === 'FLY' ? 10 : 10;
-      enemy.pathDistance = Math.max(0, enemy.pathDistance - extraPush);
+      this.applyKnockback(enemy, extraPush);
       const burnEff = enemy.statusEffects.find((s) => s.type === 'BURN');
       if (burnEff) {
         burnEff.duration = Math.max(burnEff.duration, 3.5);
@@ -579,13 +586,55 @@ export class TargetingRuleEngine {
 
     // 8. ABYSSAL_SOUL: CURSE + GHOST -> Extra soul drain duration and knockback
     if (element === 'GHOST' && enemy.statusEffects.some((s) => s.type === 'CURSE')) {
-      enemy.pathDistance = Math.max(0, enemy.pathDistance - 15);
+      this.applyKnockback(enemy, 15);
       this.applyStatusEffect(enemy, {
         type: 'SOUL_DRAIN',
         duration: 4.5,
         value: 0.25
       });
     }
+  }
+
+  /**
+   * Helper to resolve crowd control modifiers (hard and soft CC) for an enemy
+   */
+  public static getCrowdControlModifiers(enemy: EnemyEntity): TierCCConfig {
+    const tier: EnemyTierCategory = enemy.tags.includes('BOSS')
+      ? 'BOSS'
+      : enemy.tags.includes('ELITE')
+      ? 'ELITE'
+      : 'NORMAL';
+
+    const baseConfig = ENEMY_CC_CONFIG[tier];
+    const custom = enemy.ccResistance;
+
+    return {
+      hardCC: {
+        effectEfficiency: custom?.hardCC?.effectEfficiency ?? baseConfig.hardCC.effectEfficiency,
+        durationEfficiency: custom?.hardCC?.durationEfficiency ?? baseConfig.hardCC.durationEfficiency
+      },
+      softCC: {
+        effectEfficiency: custom?.softCC?.effectEfficiency ?? baseConfig.softCC.effectEfficiency,
+        durationEfficiency: custom?.softCC?.durationEfficiency ?? baseConfig.softCC.durationEfficiency
+      }
+    };
+  }
+
+  /**
+   * Applies knockback to an enemy taking into account hard crowd control resistance
+   * Returns the actual distance knocked back
+   */
+  public static applyKnockback(enemy: EnemyEntity, baseDistance: number): number {
+    const { hardCC } = this.getCrowdControlModifiers(enemy);
+    if (hardCC.effectEfficiency <= 0 || hardCC.durationEfficiency <= 0) {
+      return 0; // Boss / Immune to hard CC
+    }
+
+    const actualDist = baseDistance * hardCC.effectEfficiency;
+    if (actualDist > 0) {
+      enemy.pathDistance = Math.max(0, enemy.pathDistance - actualDist);
+    }
+    return actualDist;
   }
 
   /**
@@ -629,6 +678,7 @@ export class TargetingRuleEngine {
 
   /**
    * Applies or refreshes a status effect on an enemy
+   * Taking into account Hard CC and Soft CC modifiers (Boss & Elite scaling)
    */
   public static applyStatusEffect(
     enemy: EnemyEntity,
@@ -636,13 +686,36 @@ export class TargetingRuleEngine {
   ): void {
     if (!effectPayload) return;
 
+    const { hardCC, softCC } = this.getCrowdControlModifiers(enemy);
+    let finalDuration = effectPayload.duration;
+    let finalValue = effectPayload.value;
+
+    // 1. Check Hard CC (FREEZE, SHOCK, ROOT)
+    if (HARD_CC_STATUS_TYPES.includes(effectPayload.type)) {
+      if (hardCC.durationEfficiency <= 0 || hardCC.effectEfficiency <= 0) {
+        return; // Complete immunity (Boss)
+      }
+      finalDuration = effectPayload.duration * hardCC.durationEfficiency;
+      finalValue = effectPayload.value * hardCC.effectEfficiency;
+    }
+    // 2. Check Soft CC (SLOW, CHARM)
+    else if (SOFT_CC_STATUS_TYPES.includes(effectPayload.type)) {
+      if (softCC.durationEfficiency <= 0 || softCC.effectEfficiency <= 0) {
+        return; // Complete immunity
+      }
+      finalDuration = effectPayload.duration * softCC.durationEfficiency;
+      finalValue = effectPayload.value * softCC.effectEfficiency;
+    }
+
     const existing = enemy.statusEffects.find((s) => s.type === effectPayload.type);
     if (existing) {
-      existing.duration = Math.max(existing.duration, effectPayload.duration);
-      existing.value = Math.max(existing.value, effectPayload.value);
+      existing.duration = Math.max(existing.duration, finalDuration);
+      existing.value = Math.max(existing.value, finalValue);
     } else {
       enemy.statusEffects.push({
         ...effectPayload,
+        duration: finalDuration,
+        value: finalValue,
         tickTimer: 0
       });
     }

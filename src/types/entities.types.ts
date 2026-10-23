@@ -118,6 +118,10 @@ export interface EnemyEntity {
   deathSpawn?: DeathSpawnConfig;
   summonConfig?: SummonAbilityConfig;
   summonTimer?: number;
+  ccResistance?: {
+    hardCC?: { effectEfficiency?: number; durationEfficiency?: number };
+    softCC?: { effectEfficiency?: number; durationEfficiency?: number };
+  };
 }
 
 export interface TowerEntity {

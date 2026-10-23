@@ -2154,5 +2154,233 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(waveSys.startWave()).toBe(false);
     });
   });
+
+  describe('Crowd Control & Elite/Boss CC Resistance Architecture', () => {
+    it('should tag non-boss summoners and splitters with ELITE tag', () => {
+      const eliteIds = [
+        'MAGMA_SLIME',
+        'FROST_CRYSTAL_GOLEM',
+        'NECRO_WARLOCK',
+        'STORM_CALLER_SIREN',
+        'IRON_COLOSSUS',
+        'PLAGUE_LEVIATHAN'
+      ];
+
+      for (const id of eliteIds) {
+        const bp = ENEMY_BLUEPRINTS[id];
+        expect(bp).toBeDefined();
+        expect(bp.tags).toContain('ELITE');
+        expect(bp.tags).not.toContain('BOSS');
+      }
+
+      // Bosses must NOT be tagged with ELITE
+      const bossIds = ['DARK_DRAGON_BOSS', 'VOID_HYDRA_BOSS'];
+      for (const id of bossIds) {
+        const bp = ENEMY_BLUEPRINTS[id];
+        expect(bp).toBeDefined();
+        expect(bp.tags).toContain('BOSS');
+        expect(bp.tags).not.toContain('ELITE');
+      }
+    });
+
+    it('BOSS must be 100% immune to Hard CC (Freeze, Shock, Root, Knockback)', () => {
+      const bossBp = ENEMY_BLUEPRINTS['DARK_DRAGON_BOSS'];
+      const boss: EnemyEntity = {
+        id: 'test-boss-cc',
+        typeId: bossBp.typeId,
+        name: bossBp.name,
+        x: 100,
+        y: 100,
+        hp: bossBp.hp,
+        maxHp: bossBp.hp,
+        speed: bossBp.speed,
+        baseSpeed: bossBp.speed,
+        damage: bossBp.damage,
+        attackSpeed: bossBp.attackSpeed,
+        attackCooldown: 1,
+        rewardGold: bossBp.rewardGold,
+        movementType: bossBp.movementType,
+        navigationMode: bossBp.navigationMode,
+        pathDistance: 100,
+        pathTotalLength: 500,
+        elementalProfile: bossBp.elementalProfile,
+        state: 'FLYING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [...bossBp.tags],
+        altitude: bossBp.altitude,
+        size: bossBp.size,
+        facing: 0
+      };
+
+      // 1. Attempt FREEZE
+      TargetingRuleEngine.applyStatusEffect(boss, { type: 'FREEZE', duration: 1.0, value: 0 });
+      expect(boss.statusEffects.some((s) => s.type === 'FREEZE')).toBe(false);
+
+      // 2. Attempt SHOCK
+      TargetingRuleEngine.applyStatusEffect(boss, { type: 'SHOCK', duration: 0.5, value: 0.35 });
+      expect(boss.statusEffects.some((s) => s.type === 'SHOCK')).toBe(false);
+
+      // 3. Attempt ROOT
+      TargetingRuleEngine.applyStatusEffect(boss, { type: 'ROOT', duration: 1.5, value: 0 });
+      expect(boss.statusEffects.some((s) => s.type === 'ROOT')).toBe(false);
+
+      // 4. Attempt KNOCKBACK
+      const distKnocked = TargetingRuleEngine.applyKnockback(boss, 30);
+      expect(distKnocked).toBe(0);
+      expect(boss.pathDistance).toBe(100); // unmoved
+    });
+
+    it('BOSS must take 0.5 effect and 0.5 duration for Soft CC (Slow, Charm)', () => {
+      const bossBp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS'];
+      const boss: EnemyEntity = {
+        id: 'test-boss-soft-cc',
+        typeId: bossBp.typeId,
+        name: bossBp.name,
+        x: 100,
+        y: 100,
+        hp: bossBp.hp,
+        maxHp: bossBp.hp,
+        speed: bossBp.speed,
+        baseSpeed: bossBp.speed,
+        damage: bossBp.damage,
+        attackSpeed: bossBp.attackSpeed,
+        attackCooldown: 1,
+        rewardGold: bossBp.rewardGold,
+        movementType: bossBp.movementType,
+        navigationMode: bossBp.navigationMode,
+        pathDistance: 100,
+        pathTotalLength: 500,
+        elementalProfile: bossBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [...bossBp.tags],
+        altitude: bossBp.altitude,
+        size: bossBp.size,
+        facing: 0
+      };
+
+      // Apply SLOW: 40% slow for 4.0s -> Boss gets 20% slow (0.4 * 0.5 = 0.2) for 2.0s (4.0 * 0.5 = 2.0)
+      TargetingRuleEngine.applyStatusEffect(boss, { type: 'SLOW', duration: 4.0, value: 0.4 });
+      const slowEff = boss.statusEffects.find((s) => s.type === 'SLOW');
+      expect(slowEff).toBeDefined();
+      expect(slowEff?.duration).toBe(2.0);
+      expect(slowEff?.value).toBe(0.2);
+
+      // Apply CHARM: 30% for 3.0s -> Boss gets 15% for 1.5s
+      TargetingRuleEngine.applyStatusEffect(boss, { type: 'CHARM', duration: 3.0, value: 0.3 });
+      const charmEff = boss.statusEffects.find((s) => s.type === 'CHARM');
+      expect(charmEff).toBeDefined();
+      expect(charmEff?.duration).toBe(1.5);
+      expect(charmEff?.value).toBe(0.15);
+    });
+
+    it('ELITE enemies must take 0.5 effect and 0.5 duration for Hard CC, and 1.0 for Soft CC', () => {
+      const eliteBp = ENEMY_BLUEPRINTS['MAGMA_SLIME']; // ELITE
+      const elite: EnemyEntity = {
+        id: 'test-elite-cc',
+        typeId: eliteBp.typeId,
+        name: eliteBp.name,
+        x: 100,
+        y: 100,
+        hp: eliteBp.hp,
+        maxHp: eliteBp.hp,
+        speed: eliteBp.speed,
+        baseSpeed: eliteBp.speed,
+        damage: eliteBp.damage,
+        attackSpeed: eliteBp.attackSpeed,
+        attackCooldown: 1,
+        rewardGold: eliteBp.rewardGold,
+        movementType: eliteBp.movementType,
+        navigationMode: eliteBp.navigationMode,
+        pathDistance: 100,
+        pathTotalLength: 500,
+        elementalProfile: eliteBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [...eliteBp.tags],
+        altitude: eliteBp.altitude,
+        size: eliteBp.size,
+        facing: 0
+      };
+
+      // 1. FREEZE on Elite: 1.0s duration -> 0.5s duration
+      TargetingRuleEngine.applyStatusEffect(elite, { type: 'FREEZE', duration: 1.0, value: 0 });
+      const freezeEff = elite.statusEffects.find((s) => s.type === 'FREEZE');
+      expect(freezeEff).toBeDefined();
+      expect(freezeEff?.duration).toBe(0.5);
+
+      // 2. SHOCK on Elite: 0.4s duration -> 0.2s duration
+      TargetingRuleEngine.applyStatusEffect(elite, { type: 'SHOCK', duration: 0.4, value: 0.35 });
+      const shockEff = elite.statusEffects.find((s) => s.type === 'SHOCK');
+      expect(shockEff).toBeDefined();
+      expect(shockEff?.duration).toBe(0.2);
+
+      // 3. KNOCKBACK on Elite: 20px distance -> 10px distance
+      const distKnocked = TargetingRuleEngine.applyKnockback(elite, 20);
+      expect(distKnocked).toBe(10);
+      expect(elite.pathDistance).toBe(90);
+
+      // 4. SLOW on Elite: 1.0 effect, 1.0 duration
+      TargetingRuleEngine.applyStatusEffect(elite, { type: 'SLOW', duration: 3.0, value: 0.35 });
+      const slowEff = elite.statusEffects.find((s) => s.type === 'SLOW');
+      expect(slowEff).toBeDefined();
+      expect(slowEff?.duration).toBe(3.0);
+      expect(slowEff?.value).toBe(0.35);
+    });
+
+    it('Configurable CC: Custom enemy ccResistance overrides tier default', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-custom-cc',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 100,
+        y: 100,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 100,
+        pathTotalLength: 500,
+        elementalProfile: runnerBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0,
+        ccResistance: {
+          hardCC: { effectEfficiency: 0.25, durationEfficiency: 0.25 },
+          softCC: { effectEfficiency: 0.75, durationEfficiency: 0.75 }
+        }
+      };
+
+      const mods = TargetingRuleEngine.getCrowdControlModifiers(enemy);
+      expect(mods.hardCC.effectEfficiency).toBe(0.25);
+      expect(mods.hardCC.durationEfficiency).toBe(0.25);
+      expect(mods.softCC.effectEfficiency).toBe(0.75);
+      expect(mods.softCC.durationEfficiency).toBe(0.75);
+
+      // Apply FREEZE (duration 2.0 -> 2.0 * 0.25 = 0.5)
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'FREEZE', duration: 2.0, value: 0 });
+      const freezeEff = enemy.statusEffects.find((s) => s.type === 'FREEZE');
+      expect(freezeEff?.duration).toBe(0.5);
+
+      // Apply Knockback (40 * 0.25 = 10)
+      const knocked = TargetingRuleEngine.applyKnockback(enemy, 40);
+      expect(knocked).toBe(10);
+      expect(enemy.pathDistance).toBe(90);
+    });
+  });
 });
 
