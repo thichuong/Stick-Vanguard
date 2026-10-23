@@ -28,6 +28,9 @@ class GameApp {
     this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
     this.state = new GameState();
+    this.state.loadSettingsFromStorage();
+    TargetingRuleEngine.globalDamageMultiplier = this.state.damageMultiplier;
+
     this.navSystem = new NavigationSystem(this.state.currentMap);
     this.waveSystem = new WaveSystem(this.state.currentMap, this.state.customTotalWaves);
 
@@ -50,12 +53,16 @@ class GameApp {
     const keepWaves = this.state.customTotalWaves;
     const keepGoldMult = this.state.goldMultiplier;
     const keepDmgMult = this.state.damageMultiplier;
+    const keepSpeed = this.state.gameSpeed;
 
     this.state.setMap(mapId);
     this.state.customTotalWaves = keepWaves;
     this.state.goldMultiplier = keepGoldMult;
     this.state.damageMultiplier = keepDmgMult;
+    this.state.gameSpeed = keepSpeed;
     TargetingRuleEngine.globalDamageMultiplier = keepDmgMult;
+
+    this.state.saveSettingsToStorage();
 
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
@@ -120,11 +127,13 @@ class GameApp {
     const keepWaves = this.state.customTotalWaves;
     const keepGoldMult = this.state.goldMultiplier;
     const keepDmgMult = this.state.damageMultiplier;
+    const keepSpeed = this.state.gameSpeed;
 
     this.state.reset();
     this.state.customTotalWaves = keepWaves;
     this.state.goldMultiplier = keepGoldMult;
     this.state.damageMultiplier = keepDmgMult;
+    this.state.gameSpeed = keepSpeed;
     TargetingRuleEngine.globalDamageMultiplier = keepDmgMult;
 
     this.navSystem.setMap(this.state.currentMap);

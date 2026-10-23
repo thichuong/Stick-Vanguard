@@ -26,6 +26,7 @@ import {
   ELEMENT_ICONS,
   ELEMENT_NAMES
 } from '../config/elements.config.js';
+import { StorageService } from './StorageService.js';
 
 export class GameState {
   public gold: number = 320;
@@ -80,7 +81,10 @@ export class GameState {
   public reset(): void {
     this.gold = 320;
     this.lives = 20;
-    this.gameSpeed = 1;
+    // Keep user's gameSpeed preference instead of hard resetting to 1
+    if (this.gameSpeed !== 1 && this.gameSpeed !== 2) {
+      this.gameSpeed = 1;
+    }
     this.isPaused = false;
     this.isGameOver = false;
     this.isVictory = false;
@@ -731,6 +735,20 @@ export class GameState {
         }
       }
     }
+  }
+
+  /**
+   * Load saved settings from StorageService into this GameState instance.
+   */
+  public loadSettingsFromStorage(): void {
+    StorageService.applyToGameState(this);
+  }
+
+  /**
+   * Save current custom settings from this GameState instance to StorageService.
+   */
+  public saveSettingsToStorage(): void {
+    StorageService.saveFromGameState(this);
   }
 
   public addFloatingText(

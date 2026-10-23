@@ -1509,5 +1509,112 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(dragonBoss.tags).toContain('BOSS');
     });
   });
+
+  describe('StorageService & Auto-Save System', () => {
+    it('should clamp and sanitize invalid or out-of-bound settings', async () => {
+      const { StorageService, DEFAULT_SETTINGS } = await import('../core/StorageService.js');
+
+      // Clamping customTotalWaves
+      const lowWaves = StorageService.sanitizeSettings({ customTotalWaves: -5 });
+      expect(lowWaves.customTotalWaves).toBe(1);
+
+      const highWaves = StorageService.sanitizeSettings({ customTotalWaves: 999 });
+      expect(highWaves.customTotalWaves).toBe(100);
+
+      // Clamping multipliers
+      const lowGold = StorageService.sanitizeSettings({ goldMultiplier: 0.01 });
+      expect(lowGold.goldMultiplier).toBe(0.1);
+
+      const highGold = StorageService.sanitizeSettings({ goldMultiplier: 99.9 });
+      expect(highGold.goldMultiplier).toBe(10.0);
+
+      const invalidDmg = StorageService.sanitizeSettings({ damageMultiplier: -1 });
+      expect(invalidDmg.damageMultiplier).toBe(0.1);
+
+      // Invalid map fallback
+      const invalidMap = StorageService.sanitizeSettings({ currentMapId: 'non_existent_map' });
+      expect(invalidMap.currentMapId).toBe(DEFAULT_SETTINGS.currentMapId);
+
+      // Valid settings preservation
+      const valid = StorageService.sanitizeSettings({
+        customTotalWaves: 35,
+        goldMultiplier: 2.5,
+        damageMultiplier: 1.5,
+        gameSpeed: 2,
+        currentMapId: 'infernal_caldera'
+      });
+      expect(valid.customTotalWaves).toBe(35);
+      expect(valid.goldMultiplier).toBe(2.5);
+      expect(valid.damageMultiplier).toBe(1.5);
+      expect(valid.gameSpeed).toBe(2);
+      expect(valid.currentMapId).toBe('infernal_caldera');
+    });
+
+    it('should save and load settings to localStorage safely', async () => {
+      const { StorageService } = await import('../core/StorageService.js');
+
+      // Clean start
+      StorageService.clear();
+
+      StorageService.saveSettings({
+        customTotalWaves: 25,
+        goldMultiplier: 3.0,
+        damageMultiplier: 2.0,
+        gameSpeed: 2,
+        currentMapId: 'twin_crossroads'
+      });
+
+      const loaded = StorageService.loadSettings();
+      expect(loaded.customTotalWaves).toBe(25);
+      expect(loaded.goldMultiplier).toBe(3.0);
+      expect(loaded.damageMultiplier).toBe(2.0);
+      expect(loaded.gameSpeed).toBe(2);
+      expect(loaded.currentMapId).toBe('twin_crossroads');
+
+      // Reset
+      StorageService.resetSettings();
+      const afterReset = StorageService.loadSettings();
+      expect(afterReset.customTotalWaves).toBe(15);
+      expect(afterReset.goldMultiplier).toBe(1.0);
+      expect(afterReset.damageMultiplier).toBe(1.0);
+      expect(afterReset.gameSpeed).toBe(1);
+
+      StorageService.clear();
+    });
+
+    it('should apply settings to GameState and preserve gameSpeed upon GameState.reset()', async () => {
+      const { StorageService } = await import('../core/StorageService.js');
+      const state = new GameState();
+
+      // Mock save
+      StorageService.saveSettings({
+        customTotalWaves: 40,
+        goldMultiplier: 2.0,
+        damageMultiplier: 3.0,
+        gameSpeed: 2,
+        currentMapId: 'serpent_canyon'
+      });
+
+      state.loadSettingsFromStorage();
+      expect(state.customTotalWaves).toBe(40);
+      expect(state.goldMultiplier).toBe(2.0);
+      expect(state.damageMultiplier).toBe(3.0);
+      expect(state.gameSpeed).toBe(2);
+      expect(state.currentMapId).toBe('serpent_canyon');
+
+      // Call reset() - gameSpeed and settings should persist!
+      state.reset();
+      expect(state.gameSpeed).toBe(2);
+
+      // Save from GameState
+      state.goldMultiplier = 5.0;
+      state.saveSettingsToStorage();
+      const updated = StorageService.loadSettings();
+      expect(updated.goldMultiplier).toBe(5.0);
+
+      // Cleanup
+      StorageService.clear();
+    });
+  });
 });
 
