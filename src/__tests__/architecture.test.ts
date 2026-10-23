@@ -1160,5 +1160,33 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       }
     });
   });
+
+  describe('Codex & Monster Damage Intake Matrix Tests', () => {
+    it('should correctly calculate monster damage intake according to targeting rule engine and elemental matchups', async () => {
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const { ELEMENTAL_MATCHUPS } = await import('../config/elements.config.js');
+
+      // Test Rock Golem immunities & multipliers
+      const rockGolem = ENEMY_BLUEPRINTS['ROCK_GOLEM'];
+      expect(rockGolem.elementalProfile.immunities).toContain('PHYSICAL');
+      expect(rockGolem.elementalProfile.immunities).toContain('LIGHTNING');
+      expect(rockGolem.elementalProfile.damageMultipliers?.WATER).toBe(1.75);
+      expect(rockGolem.elementalProfile.damageMultipliers?.ICE).toBe(1.5);
+
+      // Test Fire Imp immunity to Fire & weakness to Water
+      const fireImp = ENEMY_BLUEPRINTS['FIRE_IMP'];
+      expect(fireImp.elementalProfile.immunities).toContain('FIRE');
+      const waterVsFire = ELEMENTAL_MATCHUPS['WATER']?.['FIRE'];
+      expect(waterVsFire).toBe(2.0);
+
+      // Test Winged Gargoyle: FLY movement type
+      const gargoyle = ENEMY_BLUEPRINTS['WINGED_GARGOYLE'];
+      expect(gargoyle.movementType).toBe('FLY');
+
+      // Test Dark Dragon Boss: BOSS tag
+      const dragonBoss = ENEMY_BLUEPRINTS['DARK_DRAGON_BOSS'];
+      expect(dragonBoss.tags).toContain('BOSS');
+    });
+  });
 });
 
