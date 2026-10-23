@@ -35,7 +35,10 @@
             <span class="hud-icon">🌊</span>
             <div class="hud-item-content">
               <span class="hud-lbl">ĐỢT QUÁI</span>
-              <span id="hud-wave" class="hud-val">1/10</span>
+              <div class="hud-wave-val-wrapper">
+                <span id="hud-wave" class="hud-val">1/15</span>
+                <span id="hud-wave-hp-buff" class="hud-hp-buff-tag hidden" style="display: none;"></span>
+              </div>
             </div>
           </div>
 
@@ -50,7 +53,7 @@
           <div class="current-map-card">
             <div class="map-info-text">
               <span id="hud-map-name" class="current-map-name">Thung Lũng Khởi Nguyên</span>
-              <span id="hud-map-waves" class="current-map-waves">Tối đa: 10 đợt</span>
+              <span id="hud-map-waves" class="current-map-waves">Tối đa: 15 đợt</span>
             </div>
             <button id="btn-select-map" class="hud-btn highlight-btn map-select-btn" title="Đổi bản đồ chiến thuật">
               🗺️ Chọn Bản Đồ
@@ -78,7 +81,7 @@
           <div class="quick-settings-summary">
             <div class="qss-row">
               <span class="qss-lbl">Số đợt quái:</span>
-              <span id="quick-hud-waves" class="qss-val">10 đợt</span>
+              <span id="quick-hud-waves" class="qss-val">15 đợt</span>
             </div>
             <div class="qss-row">
               <span class="qss-lbl">Tỉ lệ vàng:</span>
@@ -320,23 +323,23 @@
                       <span class="sc-sub">Thay đổi độ dài và quy mô chiến dịch</span>
                     </div>
                   </div>
-                  <span id="lbl-custom-waves" class="sc-badge-val">10 đợt</span>
+                  <span id="lbl-custom-waves" class="sc-badge-val">15 đợt</span>
                 </div>
                 <p class="sc-desc">
                   Áp dụng cho mọi bản đồ chiến trường. Hệ thống sẽ tự động cân bằng tiến trình quái vật, phân bổ các chủng loại quái mới và bố trí Đại Trùm ở các đợt mốc và đợt cuối cùng.
                 </p>
                 <div class="sc-control-box">
-                  <input type="range" id="input-waves-range" min="1" max="100" step="1" value="10" class="cs-slider waves-slider" />
+                  <input type="range" id="input-waves-range" min="1" max="100" step="1" value="15" class="cs-slider waves-slider" />
                   <div class="sc-input-group">
                     <label>Nhập số đợt:</label>
-                    <input type="number" id="input-waves-num" min="1" max="100" value="10" class="cs-num-input-large" />
+                    <input type="number" id="input-waves-num" min="1" max="100" value="15" class="cs-num-input-large" />
                   </div>
                 </div>
                 <div class="sc-preset-buttons">
                   <span class="preset-label">Mốc nhanh:</span>
                   <button class="preset-btn" data-type="waves" data-val="5">5 đợt (Thử nghiệm)</button>
-                  <button class="preset-btn active" data-type="waves" data-val="10">10 đợt (Tiêu chuẩn)</button>
-                  <button class="preset-btn" data-type="waves" data-val="15">15 đợt (Mở rộng)</button>
+                  <button class="preset-btn" data-type="waves" data-val="10">10 đợt (Cơ bản)</button>
+                  <button class="preset-btn active" data-type="waves" data-val="15">15 đợt (Mặc định)</button>
                   <button class="preset-btn" data-type="waves" data-val="25">25 đợt (Chiến dịch dài)</button>
                   <button class="preset-btn" data-type="waves" data-val="50">50 đợt (Vô tận)</button>
                 </div>

@@ -852,6 +852,15 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(warlockBp.elementalProfile.secondaryElement).toBe('ICE');
     });
 
+    it('should have default 15 waves configured across GameState and WaveSystem', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const gs = new GameState();
+      expect(gs.customTotalWaves).toBe(15);
+
+      const waveSys = new WaveSystem();
+      expect(waveSys.getTotalWaves()).toBe(15);
+    });
+
     it('should scale waves procedurally up to any configured wave count', async () => {
       const { WaveSystem } = await import('../systems/WaveSystem.js');
       const waveSys = new WaveSystem();
@@ -1388,6 +1397,88 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         }
         prevTotalCount = totalEnemies;
       }
+    });
+
+    it('should scale enemy maxHp by 10% per wave after wave 10', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const waveSys = new WaveSystem(undefined, 25);
+
+      // 1. Verify getWaveHpMultiplier values
+      // Waves 1 to 10: strictly 1.0 (no HP increase)
+      for (let w = 1; w <= 10; w++) {
+        expect(waveSys.getWaveHpMultiplier(w - 1)).toBe(1.0);
+      }
+      // Waves 11+: increases by 10% (0.1) each wave
+      expect(waveSys.getWaveHpMultiplier(10)).toBeCloseTo(1.1); // Wave 11
+      expect(waveSys.getWaveHpMultiplier(11)).toBeCloseTo(1.2); // Wave 12
+      expect(waveSys.getWaveHpMultiplier(12)).toBeCloseTo(1.3); // Wave 13
+      expect(waveSys.getWaveHpMultiplier(14)).toBeCloseTo(1.5); // Wave 15
+      expect(waveSys.getWaveHpMultiplier(19)).toBeCloseTo(2.0); // Wave 20 (+100% max HP)
+      expect(waveSys.getWaveHpMultiplier(24)).toBeCloseTo(2.5); // Wave 25 (+150% max HP)
+
+      // 2. Verify spawned enemies have scaled hp and maxHp
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER']; // base hp = 45
+      const golemBp = ENEMY_BLUEPRINTS['ROCK_GOLEM']; // base hp = 280
+      const bossBp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS']; // base hp = 1500
+      expect(bossBp.hp).toBe(1500);
+
+      // Test Wave 10 spawn (no increase)
+      waveSys.startWave(10);
+      const spawnedWave10: any[] = [];
+      waveSys.update(1.0, (enemy) => spawnedWave10.push(enemy), () => {}, 0);
+      if (spawnedWave10.length > 0) {
+        const firstEnemy = spawnedWave10[0];
+        const baseHp = ENEMY_BLUEPRINTS[firstEnemy.typeId].hp;
+        expect(firstEnemy.hp).toBe(baseHp);
+        expect(firstEnemy.maxHp).toBe(baseHp);
+      }
+
+      // Test Wave 11 spawn (+10% max HP)
+      waveSys.startWave(11);
+      const spawnedWave11: any[] = [];
+      waveSys.update(1.0, (enemy) => spawnedWave11.push(enemy), () => {}, 0);
+      if (spawnedWave11.length > 0) {
+        const firstEnemy = spawnedWave11[0];
+        const baseHp = ENEMY_BLUEPRINTS[firstEnemy.typeId].hp;
+        expect(firstEnemy.hp).toBe(Math.round(baseHp * 1.1));
+        expect(firstEnemy.maxHp).toBe(Math.round(baseHp * 1.1));
+      }
+
+      // Test Wave 12 spawn (+20% max HP)
+      waveSys.startWave(12);
+      const spawnedWave12: any[] = [];
+      waveSys.update(1.0, (enemy) => spawnedWave12.push(enemy), () => {}, 0);
+      if (spawnedWave12.length > 0) {
+        const firstEnemy = spawnedWave12[0];
+        const baseHp = ENEMY_BLUEPRINTS[firstEnemy.typeId].hp;
+        expect(firstEnemy.hp).toBe(Math.round(baseHp * 1.2));
+        expect(firstEnemy.maxHp).toBe(Math.round(baseHp * 1.2));
+      }
+
+      // Test Wave 20 spawn (+100% max HP -> 2.0x)
+      waveSys.startWave(20);
+      const spawnedWave20: any[] = [];
+      waveSys.update(1.0, (enemy) => spawnedWave20.push(enemy), () => {}, 0);
+      if (spawnedWave20.length > 0) {
+        const firstEnemy = spawnedWave20[0];
+        const baseHp = ENEMY_BLUEPRINTS[firstEnemy.typeId].hp;
+        expect(firstEnemy.hp).toBe(Math.round(baseHp * 2.0));
+        expect(firstEnemy.maxHp).toBe(Math.round(baseHp * 2.0));
+      }
+
+      // 3. Verify minion/split spawn (spawnMinionAt) at Wave 11 and Wave 12
+      waveSys.startWave(11);
+      const minionW11 = waveSys.spawnMinionAt('STICK_RUNNER', 100, 50, 50);
+      expect(minionW11).toBeDefined();
+      expect(minionW11?.maxHp).toBe(Math.round(runnerBp.hp * 1.1));
+      expect(minionW11?.hp).toBe(Math.round(runnerBp.hp * 1.1));
+
+      waveSys.startWave(12);
+      const minionW12 = waveSys.spawnMinionAt('ROCK_GOLEM', 100, 50, 50);
+      expect(minionW12).toBeDefined();
+      expect(minionW12?.maxHp).toBe(Math.round(golemBp.hp * 1.2));
+      expect(minionW12?.hp).toBe(Math.round(golemBp.hp * 1.2));
     });
   });
 

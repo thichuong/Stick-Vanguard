@@ -74,7 +74,7 @@ export class SettingsModal {
       wavesRange.addEventListener('input', () => updateWaves(parseInt(wavesRange.value, 10)));
     }
     if (wavesNum) {
-      wavesNum.addEventListener('change', () => updateWaves(parseInt(wavesNum.value, 10) || 10));
+      wavesNum.addEventListener('change', () => updateWaves(parseInt(wavesNum.value, 10) || 15));
     }
     if (goldRange) {
       goldRange.addEventListener('input', () => updateGold(parseFloat(goldRange.value)));
@@ -97,7 +97,7 @@ export class SettingsModal {
 
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        updateWaves(10);
+        updateWaves(15);
         updateGold(1.0);
         updateDmg(1.0);
       });

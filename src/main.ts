@@ -108,6 +108,12 @@ class GameApp {
     } else {
       this.waveSystem.startWave();
     }
+
+    const currentWave = this.waveSystem.currentWaveIndex + 1;
+    if (currentWave > 10) {
+      const bonusPct = (currentWave - 10) * 10;
+      this.state.addFloatingText(`⚠️ Đợt ${currentWave}: Quái tăng +${bonusPct}% Máu!`, 480, 50, '#ef4444', 18);
+    }
   }
 
   private restartGame(): void {

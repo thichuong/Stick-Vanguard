@@ -92,24 +92,63 @@ export class HUDManager {
     const goldEl = document.getElementById('hud-gold');
     const livesEl = document.getElementById('hud-lives');
     const waveEl = document.getElementById('hud-wave');
+    const waveHpBuffEl = document.getElementById('hud-wave-hp-buff');
     const nextWaveBtn = document.getElementById('btn-next-wave') as HTMLButtonElement;
 
     if (goldEl) goldEl.textContent = `${this.state.gold}`;
     if (livesEl) livesEl.textContent = `${this.state.lives}/${this.state.maxLives}`;
-    if (waveEl) waveEl.textContent = `${currentWave}/${totalWaves}`;
+    if (waveEl) {
+      waveEl.textContent = `${currentWave}/${totalWaves}`;
+      if (currentWave > 10) {
+        const bonusPct = (currentWave - 10) * 10;
+        waveEl.title = `Đợt ${currentWave}: Quái tăng +${bonusPct}% máu tối đa!`;
+      } else {
+        waveEl.title = '';
+      }
+    }
+
+    // Hiển thị trực tiếp trên HUD nhãn tăng máu của quái sau Wave 10
+    if (waveHpBuffEl) {
+      if (currentWave > 10) {
+        const bonusPct = (currentWave - 10) * 10;
+        waveHpBuffEl.textContent = `❤️ +${bonusPct}% Máu`;
+        waveHpBuffEl.title = `Sau Wave 10, mỗi wave quái tăng 10% máu tối đa (Đợt ${currentWave}: +${bonusPct}%)`;
+        waveHpBuffEl.style.display = 'inline-flex';
+        waveHpBuffEl.classList.remove('hidden');
+      } else {
+        waveHpBuffEl.textContent = '';
+        waveHpBuffEl.style.display = 'none';
+        waveHpBuffEl.classList.add('hidden');
+      }
+    }
 
     if (this.hudMapNameEl) {
       this.hudMapNameEl.textContent = this.state.currentMap.name;
     }
     if (this.hudMapWavesEl) {
-      this.hudMapWavesEl.textContent = `Mục tiêu: ${totalWaves} đợt`;
+      if (currentWave > 10) {
+        const bonusPct = (currentWave - 10) * 10;
+        this.hudMapWavesEl.innerHTML = `Mục tiêu: ${totalWaves} đợt <span class="map-hp-sub-note">(Quái +${bonusPct}% Máu)</span>`;
+      } else {
+        this.hudMapWavesEl.textContent = `Mục tiêu: ${totalWaves} đợt`;
+      }
     }
 
     if (nextWaveBtn) {
       if (isWaveRunning) {
-        nextWaveBtn.textContent = '⚡ Gọi đợt kế tiếp (+ Vàng)';
+        if (currentWave > 10 && currentWave < totalWaves) {
+          const nextBonusPct = (currentWave + 1 - 10) * 10;
+          nextWaveBtn.innerHTML = `⚡ Gọi đợt kế tiếp (+ Vàng)<span class="wave-btn-hp-sub">Đợt ${currentWave + 1}: ❤️ +${nextBonusPct}% Máu</span>`;
+        } else {
+          nextWaveBtn.textContent = '⚡ Gọi đợt kế tiếp (+ Vàng)';
+        }
       } else {
-        nextWaveBtn.textContent = '⚔️ Bắt đầu Đợt Quái';
+        if (currentWave > 10) {
+          const bonusPct = (currentWave - 10) * 10;
+          nextWaveBtn.innerHTML = `⚔️ Bắt đầu Đợt ${currentWave}<span class="wave-btn-hp-sub">❤️ Quái +${bonusPct}% Máu</span>`;
+        } else {
+          nextWaveBtn.textContent = '⚔️ Bắt đầu Đợt Quái';
+        }
       }
     }
 

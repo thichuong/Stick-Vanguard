@@ -13,7 +13,7 @@ export class WaveSystem {
   public currentWaveIndex = 0; // 0-based
   public isWaveInProgress = false;
   public waveTime = 0;
-  public customTotalWaves: number = 10;
+  public customTotalWaves: number = 15;
   private currentMap: MapConfig;
   private activeSpawners: ActiveSpawner[] = [];
   private enemyCounter = 0;
@@ -21,7 +21,7 @@ export class WaveSystem {
   private waterLaneIndex = 0;
   private airLaneIndex = 0;
 
-  constructor(mapConfig: MapConfig = MAP_CONFIG, totalWaves: number = 10) {
+  constructor(mapConfig: MapConfig = MAP_CONFIG, totalWaves: number = 15) {
     this.currentMap = mapConfig;
     this.customTotalWaves = totalWaves;
   }
@@ -413,11 +413,29 @@ export class WaveSystem {
     }
   }
 
+  /**
+   * Tính toán hệ số máu tối đa của quái vật theo wave:
+   * Sau wave 10, mỗi wave quái tăng 10% máu tối đa.
+   * - Wave 1 đến 10: 1.0 (100% máu cơ bản)
+   * - Wave 11: 1.1 (+10% máu tối đa)
+   * - Wave 12: 1.2 (+20% máu tối đa)
+   * - Wave n (>10): 1.0 + (n - 10) * 0.1
+   */
+  public getWaveHpMultiplier(waveIndex: number = this.currentWaveIndex): number {
+    const waveNum = waveIndex + 1;
+    if (waveNum <= 10) return 1.0;
+    const extraWaves = waveNum - 10;
+    return 1.0 + extraWaves * 0.1;
+  }
+
   private createEnemy(typeId: string, forcedLaneIndex?: number): EnemyEntity | null {
     const bp = ENEMY_BLUEPRINTS[typeId];
     if (!bp) return null;
 
     this.enemyCounter++;
+
+    const hpMultiplier = this.getWaveHpMultiplier();
+    const finalHp = Math.max(1, Math.round(bp.hp * hpMultiplier));
 
     let laneIndex = 0;
     let startX = this.currentMap.groundSpawn.x;
@@ -467,8 +485,8 @@ export class WaveSystem {
       name: bp.name,
       x: startX,
       y: startY,
-      hp: bp.hp,
-      maxHp: bp.hp,
+      hp: finalHp,
+      maxHp: finalHp,
       speed: bp.speed,
       baseSpeed: bp.speed,
       damage: bp.damage,
@@ -515,14 +533,17 @@ export class WaveSystem {
     if (!bp) return null;
 
     this.enemyCounter++;
+    const hpMultiplier = this.getWaveHpMultiplier();
+    const finalHp = Math.max(1, Math.round(bp.hp * hpMultiplier));
+
     return {
       id: `enemy-${this.enemyCounter}`,
       typeId: bp.typeId,
       name: bp.name,
       x,
       y,
-      hp: bp.hp,
-      maxHp: bp.hp,
+      hp: finalHp,
+      maxHp: finalHp,
       speed: bp.speed,
       baseSpeed: bp.speed,
       damage: bp.damage,
