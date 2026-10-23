@@ -18,6 +18,12 @@ export const LIGHTNING_ELEMENT: ElementDefinition = {
     'Sát thương giật lan: Phóng tia sét nảy sang kẻ địch lân cận với 35% sát thương gốc.',
     'Khắc tinh tuyệt đối của Thủy quái (2.0x) và dẫn điện qua Giáp Thép (1.3x).'
   ],
+  combatStats: {
+    statusDuration: 0.35,
+    statusValue: 0.35,
+    chainDamageRatio: 0.35,
+    chainRange: 110
+  },
   buildingEffects: {
     barracks: 'Mỗi cú chém hoặc mũi tên làm tê liệt quái vật và giật tia sét sang mục tiêu bên cạnh.',
     archer: 'Bắn tỉa lôi điện liên hoàn, dọn dẹp bầy quái nhỏ siêu tốc.',

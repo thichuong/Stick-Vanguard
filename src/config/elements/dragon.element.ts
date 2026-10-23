@@ -18,6 +18,13 @@ export const DRAGON_ELEMENT: ElementDefinition = {
     'Sát Thủ Diệt Boss: Gây thêm +35% sát thương lên quái Boss và Tinh Anh (ELITE).',
     'Long Uy Khuếch Đại: Giúp tăng uy lực cho mọi nguyên tố khác khi phối hợp (Long Hỏa, Long Thủy, Long Lôi, Hàn Long, Phong Long, Địa Long, Thiết Long...).'
   ],
+  combatStats: {
+    statusDuration: 3.5,
+    statusValue: 0.25,
+    enemyDamageReduction: 0.25,
+    damageAmp: 0.25,
+    vsBossEliteMultiplier: 1.35
+  },
   buildingEffects: {
     barracks: 'Hào quang rồng bảo hộ chiến binh, giảm 25% đòn đánh của quái và dập tan Boss mặt đất.',
     archer: 'Bắn ra những mũi tên hình đầu rồng gầm thét, xé toạc các sinh vật khổng lồ.',

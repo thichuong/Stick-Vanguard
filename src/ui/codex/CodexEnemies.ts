@@ -2,7 +2,8 @@ import { ENEMY_BLUEPRINTS, EnemyBlueprint } from '../../config/enemies.config.js
 import {
   ELEMENT_COLORS,
   ELEMENT_ICONS,
-  ELEMENT_NAMES
+  ELEMENT_NAMES,
+  ALL_ELEMENT_DEFINITIONS
 } from '../../config/elements.config.js';
 import { ElementType } from '../../types/elements.types.js';
 import { StickmanRenderer } from '../../render/StickmanRenderer.js';
@@ -483,15 +484,16 @@ export class CodexEnemies {
       };
     }
 
-    // 2. Movement and Tag bonuses
+    // 2. Movement and Tag bonuses from Element combatStats
+    const elemStats = ALL_ELEMENT_DEFINITIONS[attackerElement]?.combatStats;
     if (attackerElement === 'WIND' && bp.movementType === 'FLY') {
-      multiplier *= 1.5;
+      multiplier *= elemStats?.vsFlyMultiplier ?? 1.0;
     }
     if (attackerElement === 'EARTH' && bp.movementType === 'WALK') {
-      multiplier *= 1.2;
+      multiplier *= elemStats?.vsWalkMultiplier ?? 1.2;
     }
     if (attackerElement === 'DRAGON' && (bp.tags.includes('BOSS') || bp.tags.includes('ELITE'))) {
-      multiplier *= 1.35;
+      multiplier *= elemStats?.vsBossEliteMultiplier ?? 1.35;
     }
 
     multiplier = Math.round(multiplier * 100) / 100;

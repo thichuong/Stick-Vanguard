@@ -18,6 +18,12 @@ export const STEEL_ELEMENT: ElementDefinition = {
     'Vô hiệu hóa chỉ số kháng vật lý của quái vật bọc thép.',
     'Khắc tinh số 1 của Tiên Linh (2.0x) và Băng Tuyết (1.8x).'
   ],
+  combatStats: {
+    statusDuration: 4.0,
+    statusValue: 0.3,
+    damageAmp: 0.3,
+    bypassPhysicalResist: true
+  },
   buildingEffects: {
     barracks: 'Chiến binh vung đại đao phá vỡ giáp quái, tạo cơ hội cho đồng minh dứt điểm nhanh.',
     archer: 'Bắn tên xuyên giáp phá hủy lớp vỏ cứng của quái thiết giáp.',

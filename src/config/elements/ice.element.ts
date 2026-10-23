@@ -10,14 +10,20 @@ export const ICE_ELEMENT: ElementDefinition = {
   nature: 'Độ không tuyệt đối làm chậm sâu bước tiến quân địch và phong ấn quái vật đứng bất động trong băng giá.',
   statusEffectType: 'FREEZE',
   effectName: 'Hàn Băng & Đóng Băng (Freeze)',
-  effectDescription: 'Làm chậm 45% tốc độ trong 3s và có 25% tỉ lệ đóng băng bất động trong 1.2s.',
+  effectDescription: 'Làm chậm 45% tốc độ trong 3s và có 25% tỉ lệ đóng băng bất động trong 0.6s.',
   statusEffectName: 'Hàn Băng & Đóng Băng (Freeze)',
-  statusEffectDesc: 'Làm chậm 45% trong 3.0s và có 25% tỉ lệ đóng băng hoàn toàn trong 1.2s (quái đứng yên, không đánh trả).',
+  statusEffectDesc: 'Làm chậm 45% trong 3.0s và có 25% tỉ lệ đóng băng hoàn toàn trong 0.6s (quái đứng yên, không đánh trả).',
   combatHighlights: [
     'Khống chế mạnh: Làm chậm 45% tốc độ di chuyển trong 3.0 giây.',
-    'Phong ấn hoàn toàn: 25% tỉ lệ đóng băng bất động 1.2s (quái đứng yên, không thể tung đòn).',
+    'Phong ấn băng giá: 25% tỉ lệ đóng băng bất động 0.6s (quái đứng yên, không thể tung đòn).',
     'Khắc tinh số 1 của loài Rồng (2.0x) và Mộc tinh (1.8x).'
   ],
+  combatStats: {
+    slowDuration: 3.0,
+    slowRatio: 0.45,
+    procChance: 0.25,
+    procDuration: 0.6
+  },
   buildingEffects: {
     barracks: 'Lính chốt chặn đóng băng quái vật ngay trước mặt, không cho quái vật cơ hội tấn công.',
     archer: 'Bắn tỉa khóa chân vĩnh cửu, làm chậm 45% liên tục không cho quái chạy thoát.',

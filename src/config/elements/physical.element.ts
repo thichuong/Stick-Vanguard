@@ -17,6 +17,7 @@ export const PHYSICAL_ELEMENT: ElementDefinition = {
     'Chịu giảm trừ trực tiếp bởi chỉ số Giáp (% Armor) của quái vật.',
     'Bị giảm sát thương nghiêm trọng trước quái Đất (0.7x), Thép (0.5x) và gần như vô hiệu trước U Hồn (0.2x).'
   ],
+  combatStats: {},
   buildingEffects: {
     barracks: 'Chiến binh chém kiếm 1v1 hoặc xạ thủ bắn tên lao tầm xa gây 100% sát thương cơ bản.',
     archer: 'Bắn tên vật lý tốc độ cao liên tục vào mục tiêu gần nhất hoặc đi đầu.',

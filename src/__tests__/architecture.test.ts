@@ -1804,9 +1804,9 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         facing: 0
       };
 
-      // 1. PERMAFROST: ICE hitting WET must 100% guarantee FREEZE (1.2s)
+      // 1. PERMAFROST: ICE hitting WET must 100% guarantee FREEZE (0.8s)
       TargetingRuleEngine.applyElementalHitEffects(enemy, 'ICE', 40);
-      expect(enemy.statusEffects.some((s) => s.type === 'FREEZE' && s.duration === 1.2)).toBe(true);
+      expect(enemy.statusEffects.some((s) => s.type === 'FREEZE' && s.duration === 0.8)).toBe(true);
 
       // 2. SHATTER: STEEL hitting FREEZE must consume FREEZE and apply SUNDER
       TargetingRuleEngine.applyElementalHitEffects(enemy, 'STEEL', 50);
@@ -1819,6 +1819,65 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(poisonEff).toBeDefined();
       expect(poisonEff?.value).toBeGreaterThanOrEqual(2);
       expect(poisonEff?.duration).toBe(5.0);
+    });
+
+    it('Configurable Elemental Mechanics: Same-element resistance, Wind nerf, and Ice freeze duration', async () => {
+      const { ALL_15_ELEMENTS, ALL_ELEMENT_DEFINITIONS, ELEMENTAL_MATCHUPS } = await import('../config/elements.config.js');
+
+      // 1. Same-element resistance must be <= 0.3 for all elements except self-countering (GHOST, DRAGON) and PHYSICAL
+      for (const elem of ALL_15_ELEMENTS) {
+        if (elem === 'PHYSICAL' || elem === 'GHOST' || elem === 'DRAGON') continue;
+        const selfMult = ELEMENTAL_MATCHUPS[elem]?.[elem];
+        expect(selfMult).toBeDefined();
+        expect(selfMult).toBeLessThanOrEqual(0.3);
+      }
+
+      // GHOST and DRAGON counter themselves (1.8x)
+      expect(ELEMENTAL_MATCHUPS['GHOST']?.['GHOST']).toBe(1.8);
+      expect(ELEMENTAL_MATCHUPS['DRAGON']?.['DRAGON']).toBe(1.8);
+
+      // 2. Wind element nerf verification
+      const windStats = ALL_ELEMENT_DEFINITIONS.WIND.combatStats!;
+      expect(windStats.vsFlyMultiplier).toBe(1.0); // no extra damage to flying
+      expect(windStats.knockbackChanceFly).toBeGreaterThan(windStats.knockbackChanceGround!);
+
+      // Flying enemy taking wind damage has no bonus damage multiplier
+      const flyEnemy: EnemyEntity = {
+        id: 'test-fly-enemy',
+        typeId: 'WINGED_GARGOYLE',
+        name: 'Gargoyle',
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'FLY',
+        navigationMode: 'AIR_DIRECT',
+        pathDistance: 50,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'EARTH', immunities: [] },
+        state: 'FLYING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: ['FLYING'],
+        altitude: 25,
+        size: 15,
+        facing: 0
+      };
+
+      const windDmg = TargetingRuleEngine.calculateDamage({ amount: 100, element: 'WIND', sourceId: 'test' }, flyEnemy);
+      // Wind vs Earth is 1.5x from matchup table, NO additional 1.5x fly bonus! (Previously 1.5 * 1.5 = 2.25x)
+      expect(windDmg.multiplier).toBe(1.5);
+      expect(windDmg.finalDamage).toBe(150);
+
+      // 3. Ice freeze duration verification
+      const iceStats = ALL_ELEMENT_DEFINITIONS.ICE.combatStats!;
+      expect(iceStats.procDuration).toBe(0.6); // Reduced from 1.2s to 0.6s
     });
 
     it('Crowd-control and debuffs must properly hinder enemy attack capabilities', () => {

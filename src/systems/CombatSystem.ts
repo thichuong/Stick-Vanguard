@@ -4,6 +4,7 @@ import {
   Vector2D
 } from '../types/entities.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
+import { ALL_ELEMENT_DEFINITIONS } from '../config/elements.config.js';
 
 export interface CombatEvent {
   type: 'MELEE_HIT' | 'RANGED_JAVELIN' | 'SOLDIER_DEATH' | 'ENEMY_DEATH';
@@ -139,12 +140,14 @@ export class CombatSystem {
                 secondaryElement === 'LIGHT' ||
                 soldier.buffedElements?.includes('LIGHT')
               ) {
-                soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+                const healAmt = ALL_ELEMENT_DEFINITIONS.LIGHT?.combatStats?.soldierHealOnHit ?? 5;
+                soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
               } else if (
                 secondaryElement === 'GRASS' ||
                 soldier.buffedElements?.includes('GRASS')
               ) {
-                soldier.hp = Math.min(soldier.maxHp, soldier.hp + 3);
+                const healAmt = ALL_ELEMENT_DEFINITIONS.GRASS?.combatStats?.soldierHealOnHit ?? 3;
+                soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
               }
             }
 
@@ -185,7 +188,8 @@ export class CombatSystem {
 
             // Lightning chain shock bounce to 1 nearby enemy
             if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
-              this.triggerLightningChain(soldier.id, currentEnemy, enemies, Math.max(1, Math.round(soldier.damage * 0.35)), onCombatEvent);
+              const chainRatio = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainDamageRatio ?? 0.35;
+              this.triggerLightningChain(soldier.id, currentEnemy, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent);
             }
           }
 
@@ -364,12 +368,14 @@ export class CombatSystem {
         secondaryElement === 'LIGHT' ||
         soldier.buffedElements?.includes('LIGHT')
       ) {
-        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 5);
+        const healAmt = ALL_ELEMENT_DEFINITIONS.LIGHT?.combatStats?.soldierHealOnHit ?? 5;
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
       } else if (
         secondaryElement === 'GRASS' ||
         soldier.buffedElements?.includes('GRASS')
       ) {
-        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 3);
+        const healAmt = ALL_ELEMENT_DEFINITIONS.GRASS?.combatStats?.soldierHealOnHit ?? 3;
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
       }
     }
 
@@ -406,7 +412,8 @@ export class CombatSystem {
 
     // Lightning chain shock bounce to 1 nearby enemy
     if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
-      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * 0.35)), onCombatEvent);
+      const chainRatio = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainDamageRatio ?? 0.35;
+      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent);
     }
   }
 
@@ -418,7 +425,7 @@ export class CombatSystem {
     onCombatEvent: (evt: CombatEvent) => void
   ): void {
     let closestCandidate: EnemyEntity | null = null;
-    let minDist = 110;
+    let minDist = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainRange ?? 110;
 
     for (const other of enemies) {
       if (other.id === originTarget.id || other.hp <= 0 || other.state === 'DEAD') continue;

@@ -18,6 +18,11 @@ export const EARTH_ELEMENT: ElementDefinition = {
     'Nội tại Địa Chấn: Tự động gây thêm +20% sát thương lên quái vật Đi Bộ (WALK).',
     'Khắc tinh cứng của quái hệ Sét, Lửa, Độc và Thiết Giáp.'
   ],
+  combatStats: {
+    vsWalkMultiplier: 1.2,
+    slowDuration: 2.5,
+    slowRatio: 0.35
+  },
   buildingEffects: {
     barracks: 'Chiến binh dộng đất tạo chấn động giữ chân và kìm chặt quái vật trên lộ trình.',
     archer: 'Bắn tên đá đè nặng bước tiến quái vật, giảm 35% tốc độ chạy.',
@@ -30,7 +35,7 @@ export const EARTH_ELEMENT: ElementDefinition = {
     { element: 'POISON', mult: 1.5, note: 'Đất hấp thu độc tố làm trung hòa nọc độc.' },
     { element: 'STEEL', mult: 1.75, note: 'Khối lượng thạch nham nghiền nát giáp sắt.' },
     { element: 'WIND', mult: 1.25, note: 'Đá tảng vững chãi trước cuồng phong.' },
-    { element: 'EARTH', mult: 0.5, note: 'Quái Đất có lớp da đá kháng chấn động.' },
+    { element: 'EARTH', mult: 0.3, note: 'Quái Đất hấp thu chấn động cùng hệ, giảm 70% sát thương.' },
     { element: 'GRASS', mult: 0.5, note: 'Rễ cây đâm xuyên qua tầng đất làm suy giảm sát thương.' }
   ],
   defensiveNotes: {

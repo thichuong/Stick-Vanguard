@@ -18,6 +18,11 @@ export const WATER_ELEMENT: ElementDefinition = {
     'Kèm hiệu ứng làm chậm tốc độ di chuyển 20% trong 2.5s.',
     'Là chất dẫn truyền cốt lõi của đội hình đóng băng và sốc điện diện rộng.'
   ],
+  combatStats: {
+    statusDuration: 4.0,
+    slowDuration: 2.5,
+    slowRatio: 0.2
+  },
   buildingEffects: {
     barracks: 'Đòn đánh phủ ướt kẻ địch, mở đường cho Tháp Sét hoặc Tháp Băng phía sau xả sát thương combo.',
     archer: 'Bắn tỉa phủ Ẩm Ướt liên tục lên quái đầu đàn với tầm bắn cực xa.',

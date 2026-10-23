@@ -18,6 +18,12 @@ export const FIRE_ELEMENT: ElementDefinition = {
     'Sát thương thiêu đốt bỏ qua hoàn toàn chỉ số Giáp của quái vật.',
     'Kích nổ cực mạnh khi gặp trạng thái Độc (Bùng Cháy +70%) hoặc Dây Leo (Rực Lửa +65%).'
   ],
+  combatStats: {
+    statusDuration: 3.0,
+    dotTickInterval: 0.5,
+    dotDamageRatio: 0.2,
+    dotMinDamage: 5
+  },
   buildingEffects: {
     barracks: 'Lưỡi kiếm và mũi tên rực lửa liên tục duy trì trạng thái bốc cháy lên quái bị chặn.',
     archer: 'Mưa tên lửa duy trì thiêu đốt 100% thời gian, bào mòn cực nhanh quái trâu máu.',

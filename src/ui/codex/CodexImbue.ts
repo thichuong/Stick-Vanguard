@@ -37,7 +37,7 @@ export class CodexImbue {
               <b>✨ Ánh Sáng (Light) - Bí Thuật Bất Tử:</b> Mỗi đòn đánh của lính <b>tự động hồi phục +5 HP</b> cho bản thân. Lính đánh gần trở thành bức tường thành không thể xuyên thủng!
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #06b6d4">
-              <b>❄️ Băng (Ice) - Chốt Chặn Băng Giá:</b> Đòn đánh làm chậm quái 45% và có <b>25% tỉ lệ Đóng Băng 1.2s</b>, bắt quái vật đứng im chịu trận.
+              <b>❄️ Băng (Ice) - Chốt Chặn Băng Giá:</b> Đòn đánh làm chậm quái 45% và có <b>25% tỉ lệ Đóng Băng 0.6s</b>, bắt quái vật đứng im chịu trận.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #f59e0b">
               <b>⚡ Sét (Lightning) - Sốc Điện Liên Hoàn:</b> Đòn đánh gây choáng 0.35s ngắt đòn quái và phóng tia sét nảy sang kẻ địch bên cạnh gây 35% DMG.
@@ -73,7 +73,7 @@ export class CodexImbue {
               <b>⚔️ Cung Thép (Armor Sunder):</b> Bắn phá nát giáp sắt của Golem và quái bọc thép, tăng thêm <b>+30% sát thương nhận vào</b>.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #10b981">
-              <b>🌪️ Cung Gió (Wind Gale):</b> Gây thêm <b>+50% sát thương lên quái Bay (FLY)</b> và liên tục đẩy lùi quái bay về sau!
+              <b>🌪️ Cung Gió (Wind Gale):</b> Đẩy lùi quái ngược lộ trình tiến công với tỉ lệ cao (55% quái bay / 25% quái bộ)!
             </div>
           </div>
         </div>

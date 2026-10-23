@@ -214,7 +214,7 @@ export class CodexNavigation {
             <div class="sp-mechanic-box" style="border-left-color: #10b981;">
               <p><b>🚫 Miễn dịch mặt đất:</b> Không bị lính cận chiến chặn đường, không dẫm phải bẫy chông hay mìn lửa, và <b>Pháo cối hoàn toàn không bắn được</b>!</p>
               <p><b>🎯 Vũ khí tiêu diệt:</b> <b>Tháp Cung</b> tốc độ cao, <b>Tháp Phù Thủy</b> sát thương diện rộng và chuyển Nhà Lính sang <b>Lính Bắn Tên</b>.</p>
-              <p><b>🌪️ Điểm yếu chí mạng:</b> Nhận thêm <b>+50% sát thương từ hệ Gió (WIND)</b> và bị cuồng phong đẩy lùi xa 25px!</p>
+              <p><b>🌪️ Điểm yếu chí mạng:</b> Rất dễ bị cuồng phong hệ Gió (WIND) đẩy lùi ngược lại lộ trình với tỉ lệ thành công cao (55%)!</p>
             </div>
           </div>
         `;

@@ -18,6 +18,11 @@ export const DARK_ELEMENT: ElementDefinition = {
     'Phối hợp Ám + Ma: Bùng nổ sát thương Minh Giới Ám Hồn, cường hóa trảm sát cực mạnh.',
     'Phối hợp Ám + Các nguyên tố khác (trừ Tiên, Quang): Tạo hiệu ứng Hắc Ám Thôn Phệ tăng sát thương và ăn mòn.'
   ],
+  combatStats: {
+    statusDuration: 3.5,
+    statusValue: 0.35,
+    damageAmp: 0.35
+  },
   buildingEffects: {
     barracks: 'Chiến binh nguyền rủa quái vật bị chặn, hỗ trợ toàn bộ tháp khác dồn sát thương kết liễu.',
     archer: 'Bắn tỉa điểm huyệt nguyền rủa quái đầu đàn từ xa.',

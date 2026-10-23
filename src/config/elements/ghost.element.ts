@@ -18,6 +18,13 @@ export const GHOST_ELEMENT: ElementDefinition = {
     'Hoảng sợ giật lùi: Đẩy lùi kẻ địch ngược lại 10px trên lộ trình.',
     'Phối hợp cực mạnh với Hắc Ám (Ám + Ma) tạo phản ứng Minh Giới Ám Hồn hủy diệt.'
   ],
+  combatStats: {
+    statusDuration: 3.0,
+    statusValue: 0.2,
+    missingHpDamageRatio: 0.4,
+    knockbackChanceGround: 1.0,
+    knockbackDistanceGround: 10
+  },
   buildingEffects: {
     barracks: 'Lưỡi kiếm ma thuật chém trực tiếp vào linh hồn, quái càng mất nhiều máu chém càng đau.',
     archer: 'Mũi tên u hồn xuyên thấu qua lớp giáp dày, gieo rắc nỗi sợ hãi.',

@@ -5,7 +5,7 @@ import {
   TargetingFilter
 } from '../types/elements.types.js';
 import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
-import { ELEMENTAL_MATCHUPS, ELEMENTAL_REACTIONS } from '../config/elements.config.js';
+import { ELEMENTAL_MATCHUPS, ELEMENTAL_REACTIONS, ALL_ELEMENT_DEFINITIONS } from '../config/elements.config.js';
 
 export interface DamageCalculationResult {
   finalDamage: number;
@@ -127,58 +127,65 @@ export class TargetingRuleEngine {
     // Debuff modifiers on target:
     // SUNDER: Armor broken - neutralizes physical resistance and amplifies damage
     const hasSunder = enemy.statusEffects.some((s) => s.type === 'SUNDER');
+    const steelStats = ALL_ELEMENT_DEFINITIONS.STEEL?.combatStats;
     if (hasSunder) {
-      if (element === 'PHYSICAL' && multiplier < 1.0) {
+      if (element === 'PHYSICAL' && multiplier < 1.0 && steelStats?.bypassPhysicalResist) {
         multiplier = 1.0; // Bypasses physical resistance of armored foes
       }
       if (!bestReaction || bestReaction.requiredStatus !== 'SUNDER') {
-        multiplier *= 1.30;
+        multiplier *= 1 + (steelStats?.damageAmp ?? 0.30);
       }
     }
 
     // Ám (CURSE): Khuếch đại sát thương từ các nguồn khác, trừ Tiên (FAIRY) và Quang (LIGHT)
     const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
+    const darkStats = ALL_ELEMENT_DEFINITIONS.DARK?.combatStats;
     if (hasCurse && !['FAIRY', 'LIGHT'].includes(element)) {
       if (!bestReaction || bestReaction.requiredStatus !== 'CURSE') {
-        multiplier *= 1.35;
+        multiplier *= 1 + (darkStats?.damageAmp ?? 0.35);
       }
     }
 
     // Tiên (CHARM): Tăng phúc mọi chiêu nguyên tố, trừ Hắc Ám (DARK), Ma (GHOST), Độc (POISON) và Vật Lý (PHYSICAL)
     const hasCharm = enemy.statusEffects.some((s) => s.type === 'CHARM');
+    const fairyStats = ALL_ELEMENT_DEFINITIONS.FAIRY?.combatStats;
     if (hasCharm && !['PHYSICAL', 'DARK', 'GHOST', 'POISON'].includes(element)) {
       if (!bestReaction || bestReaction.requiredStatus !== 'CHARM') {
-        multiplier *= 1.25;
+        multiplier *= 1 + (fairyStats?.damageAmp ?? 0.25);
       }
     }
 
     // Rồng (DRAGON_AWE): Tăng uy lực cho các nguyên tố khác
     const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+    const dragonStats = ALL_ELEMENT_DEFINITIONS.DRAGON?.combatStats;
     if (hasDragonAwe && element !== 'DRAGON') {
       if (!bestReaction || bestReaction.requiredStatus !== 'DRAGON_AWE') {
-        multiplier *= 1.25;
+        multiplier *= 1 + (dragonStats?.damageAmp ?? 0.25);
       }
     }
 
     const hasSoulDrain = enemy.statusEffects.some((s) => s.type === 'SOUL_DRAIN');
+    const ghostStats = ALL_ELEMENT_DEFINITIONS.GHOST?.combatStats;
     if (hasSoulDrain) {
       const missingHpRatio = Math.max(0, 1 - enemy.hp / enemy.maxHp);
-      multiplier *= 1 + missingHpRatio * 0.4;
+      multiplier *= 1 + missingHpRatio * (ghostStats?.missingHpDamageRatio ?? 0.4);
     }
 
     // Special bonus: DRAGON against BOSS or ELITE
     if (element === 'DRAGON' && (enemy.tags.includes('BOSS') || enemy.tags.includes('ELITE'))) {
-      multiplier *= 1.35;
+      multiplier *= dragonStats?.vsBossEliteMultiplier ?? 1.35;
     }
 
     // Special bonus: WIND against flying enemies
+    const windStats = ALL_ELEMENT_DEFINITIONS.WIND?.combatStats;
     if (element === 'WIND' && enemy.movementType === 'FLY') {
-      multiplier *= 1.5;
+      multiplier *= windStats?.vsFlyMultiplier ?? 1.0;
     }
 
     // Special bonus: EARTH against walking enemies
+    const earthStats = ALL_ELEMENT_DEFINITIONS.EARTH?.combatStats;
     if (element === 'EARTH' && enemy.movementType === 'WALK') {
-      multiplier *= 1.2;
+      multiplier *= earthStats?.vsWalkMultiplier ?? 1.2;
     }
 
     if (isCrit) {
@@ -327,62 +334,67 @@ export class TargetingRuleEngine {
     // Check and trigger mechanical reaction bonus effects before applying base status
     this.applyReactionBonusEffects(enemy, element, baseDamage);
 
+    const elemDef = ALL_ELEMENT_DEFINITIONS[element];
+    const stats = elemDef?.combatStats;
+
     switch (element) {
       case 'FIRE':
         this.applyStatusEffect(enemy, {
           type: 'BURN',
-          duration: 3.0,
-          value: Math.max(5, Math.round(baseDamage * 0.2))
+          duration: stats?.statusDuration ?? 3.0,
+          value: Math.max(stats?.dotMinDamage ?? 5, Math.round(baseDamage * (stats?.dotDamageRatio ?? 0.2)))
         });
         break;
 
       case 'WATER':
         this.applyStatusEffect(enemy, {
           type: 'WET',
-          duration: 4.0,
+          duration: stats?.statusDuration ?? 4.0,
           value: 0
         });
         this.applyStatusEffect(enemy, {
           type: 'SLOW',
-          duration: 2.5,
-          value: 0.2
+          duration: stats?.slowDuration ?? 2.5,
+          value: stats?.slowRatio ?? 0.2
         });
         break;
 
       case 'EARTH':
         this.applyStatusEffect(enemy, {
           type: 'SLOW',
-          duration: 2.5,
-          value: 0.35
+          duration: stats?.slowDuration ?? 2.5,
+          value: stats?.slowRatio ?? 0.35
         });
         break;
 
-      case 'WIND':
-        if (enemy.movementType === 'FLY') {
-          enemy.pathDistance = Math.max(0, enemy.pathDistance - 25);
-        } else {
-          enemy.pathDistance = Math.max(0, enemy.pathDistance - 15);
+      case 'WIND': {
+        const isFly = enemy.movementType === 'FLY';
+        const chance = isFly ? (stats?.knockbackChanceFly ?? 0.55) : (stats?.knockbackChanceGround ?? 0.25);
+        if (Math.random() < chance) {
+          const dist = isFly ? (stats?.knockbackDistanceFly ?? 20) : (stats?.knockbackDistanceGround ?? 12);
+          enemy.pathDistance = Math.max(0, enemy.pathDistance - dist);
         }
         break;
+      }
 
       case 'LIGHTNING':
         this.applyStatusEffect(enemy, {
           type: 'SHOCK',
-          duration: 0.35, // mini shock stun
-          value: 0.35
+          duration: stats?.statusDuration ?? 0.35, // mini shock stun
+          value: stats?.statusValue ?? 0.35
         });
         break;
 
       case 'ICE':
         this.applyStatusEffect(enemy, {
           type: 'SLOW',
-          duration: 3.0,
-          value: 0.45
+          duration: stats?.slowDuration ?? 3.0,
+          value: stats?.slowRatio ?? 0.45
         });
-        if (Math.random() < 0.25) {
+        if (Math.random() < (stats?.procChance ?? 0.25)) {
           this.applyStatusEffect(enemy, {
             type: 'FREEZE',
-            duration: 1.2,
+            duration: stats?.procDuration ?? 0.6,
             value: 0
           });
         }
@@ -396,8 +408,8 @@ export class TargetingRuleEngine {
         ) {
           this.applyStatusEffect(enemy, {
             type: 'BURN',
-            duration: 2.5,
-            value: Math.max(6, Math.round(baseDamage * 0.25))
+            duration: stats?.statusDuration ?? 2.5,
+            value: Math.max(stats?.dotMinDamage ?? 6, Math.round(baseDamage * (stats?.dotDamageRatio ?? 0.25)))
           });
         }
         break;
@@ -405,21 +417,21 @@ export class TargetingRuleEngine {
       case 'DARK':
         this.applyStatusEffect(enemy, {
           type: 'CURSE',
-          duration: 3.5,
-          value: 0.35
+          duration: stats?.statusDuration ?? 3.5,
+          value: stats?.statusValue ?? 0.35
         });
         break;
 
       case 'GRASS':
         this.applyStatusEffect(enemy, {
           type: 'SLOW',
-          duration: 3.0,
-          value: 0.3
+          duration: stats?.slowDuration ?? 3.0,
+          value: stats?.slowRatio ?? 0.3
         });
-        if (Math.random() < 0.3) {
+        if (Math.random() < (stats?.procChance ?? 0.3)) {
           this.applyStatusEffect(enemy, {
             type: 'ROOT',
-            duration: 1.0,
+            duration: stats?.procDuration ?? 1.0,
             value: 0
           });
         }
@@ -427,10 +439,11 @@ export class TargetingRuleEngine {
 
       case 'POISON': {
         const existingPoison = enemy.statusEffects.find((s) => s.type === 'POISON');
-        const currentStacks = existingPoison ? Math.min(3, (existingPoison.value || 1) + 1) : 1;
+        const maxSt = stats?.maxStacks ?? 3;
+        const currentStacks = existingPoison ? Math.min(maxSt, (existingPoison.value || 1) + 1) : 1;
         this.applyStatusEffect(enemy, {
           type: 'POISON',
-          duration: 4.0,
+          duration: stats?.statusDuration ?? 4.0,
           value: currentStacks
         });
         break;
@@ -439,34 +452,36 @@ export class TargetingRuleEngine {
       case 'STEEL':
         this.applyStatusEffect(enemy, {
           type: 'SUNDER',
-          duration: 4.0,
-          value: 0.3
+          duration: stats?.statusDuration ?? 4.0,
+          value: stats?.statusValue ?? 0.3
         });
         break;
 
       case 'GHOST':
         this.applyStatusEffect(enemy, {
           type: 'SOUL_DRAIN',
-          duration: 3.0,
-          value: 0.2
+          duration: stats?.statusDuration ?? 3.0,
+          value: stats?.statusValue ?? 0.2
         });
         // Slight fear nudge
-        enemy.pathDistance = Math.max(0, enemy.pathDistance - 10);
+        if (Math.random() < (stats?.knockbackChanceGround ?? 1.0)) {
+          enemy.pathDistance = Math.max(0, enemy.pathDistance - (stats?.knockbackDistanceGround ?? 10));
+        }
         break;
 
       case 'DRAGON':
         this.applyStatusEffect(enemy, {
           type: 'DRAGON_AWE',
-          duration: 3.5,
-          value: 0.25
+          duration: stats?.statusDuration ?? 3.5,
+          value: stats?.statusValue ?? 0.25
         });
         break;
 
       case 'FAIRY':
         this.applyStatusEffect(enemy, {
           type: 'CHARM',
-          duration: 3.0,
-          value: 0.35
+          duration: stats?.statusDuration ?? 3.0,
+          value: stats?.slowRatio ?? 0.35
         });
         break;
     }
@@ -480,11 +495,12 @@ export class TargetingRuleEngine {
     element: ElementType,
     baseDamage: number
   ): void {
-    // 1. PERMAFROST: WET + ICE -> 100% Guaranteed Freeze for 1.2s
+    // 1. PERMAFROST: WET + ICE -> 100% Guaranteed Freeze
     if (element === 'ICE' && enemy.statusEffects.some((s) => s.type === 'WET')) {
+      const iceStats = ALL_ELEMENT_DEFINITIONS.ICE?.combatStats;
       this.applyStatusEffect(enemy, {
         type: 'FREEZE',
-        duration: 1.2,
+        duration: Math.max(0.8, (iceStats?.procDuration ?? 0.6) * 1.33),
         value: 0
       });
     }
@@ -584,11 +600,13 @@ export class TargetingRuleEngine {
    */
   public static getEnemyAttackSpeedMultiplier(enemy: EnemyEntity): number {
     let mult = 1.0;
+    const poisonStats = ALL_ELEMENT_DEFINITIONS.POISON?.combatStats;
+    const fairyStats = ALL_ELEMENT_DEFINITIONS.FAIRY?.combatStats;
     if (enemy.statusEffects.some((s) => s.type === 'POISON')) {
-      mult = Math.min(mult, 0.8); // -20% attack speed
+      mult = Math.min(mult, 1 - (poisonStats?.attackSpeedReduction ?? 0.2));
     }
     if (enemy.statusEffects.some((s) => s.type === 'CHARM')) {
-      mult = Math.min(mult, 0.7); // -30% attack speed
+      mult = Math.min(mult, 1 - (fairyStats?.attackSpeedReduction ?? 0.3));
     }
     return mult;
   }
@@ -602,8 +620,9 @@ export class TargetingRuleEngine {
     soldier: SoldierEntity
   ): number {
     const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+    const dragonStats = ALL_ELEMENT_DEFINITIONS.DRAGON?.combatStats;
     let enemyDamage = enemy.damage;
-    if (hasDragonAwe) enemyDamage *= 0.75;
+    if (hasDragonAwe) enemyDamage *= 1 - (dragonStats?.enemyDamageReduction ?? 0.25);
     const rawDmg = enemyDamage * (1 - soldier.armor);
     return Math.max(1, Math.round(rawDmg));
   }
@@ -645,17 +664,23 @@ export class TargetingRuleEngine {
 
       if (eff.type === 'BURN') {
         eff.tickTimer = (eff.tickTimer || 0) + dt;
-        if (eff.tickTimer >= 0.5) {
+        const burnStats = ALL_ELEMENT_DEFINITIONS.FIRE?.combatStats;
+        const tickInt = burnStats?.dotTickInterval ?? 0.5;
+        if (eff.tickTimer >= tickInt) {
           eff.tickTimer = 0;
           const scaledDmg = Math.max(1, Math.round(eff.value * this.globalDamageMultiplier));
           onDotDamage(scaledDmg, 'FIRE');
         }
       } else if (eff.type === 'POISON') {
         eff.tickTimer = (eff.tickTimer || 0) + dt;
-        if (eff.tickTimer >= 0.5) {
+        const poisonStats = ALL_ELEMENT_DEFINITIONS.POISON?.combatStats;
+        const tickInt = poisonStats?.dotTickInterval ?? 0.5;
+        if (eff.tickTimer >= tickInt) {
           eff.tickTimer = 0;
           const stacks = eff.value || 1;
-          const poisonDmg = Math.max(3, Math.round(stacks * 4 * this.globalDamageMultiplier));
+          const dmgPerStack = poisonStats?.damagePerStack ?? 4;
+          const minDmg = poisonStats?.dotMinDamage ?? 3;
+          const poisonDmg = Math.max(minDmg, Math.round(stacks * dmgPerStack * this.globalDamageMultiplier));
           onDotDamage(poisonDmg, 'POISON');
         }
       } else if (eff.type === 'SLOW') {

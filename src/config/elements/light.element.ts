@@ -17,6 +17,13 @@ export const LIGHT_ELEMENT: ElementDefinition = {
     'Thanh tẩy bóng tối: Gây x2.0 sát thương và áp dụng thiêu đốt thánh quang 2.5s lên quái hệ Tối và Ma.',
     'Là khắc tinh tối thượng của quân đoàn Hư Vô, Chiêu Hồn Sư và Tử Thần.'
   ],
+  combatStats: {
+    soldierHealOnHit: 5,
+    statusDuration: 2.5,
+    dotTickInterval: 0.5,
+    dotDamageRatio: 0.25,
+    dotMinDamage: 6
+  },
   buildingEffects: {
     barracks: 'Mỗi đòn chém hoặc mũi tên tự động hồi +5 HP cho Lính, biến lính thành pháo đài bất tử.',
     archer: 'Bắn tỉa thanh tẩy quái Hắc Ám từ khoảng cách an toàn.',

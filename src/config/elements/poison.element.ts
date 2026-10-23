@@ -19,6 +19,14 @@ export const POISON_ELEMENT: ElementDefinition = {
     'Làm giảm 20% tốc độ đánh của kẻ địch, bảo vệ lính đỡ đòn.',
     'Khắc tinh của hệ Cỏ (2.0x) và Tiên Tộc (1.8x).'
   ],
+  combatStats: {
+    statusDuration: 4.0,
+    maxStacks: 3,
+    damagePerStack: 4,
+    dotMinDamage: 3,
+    dotTickInterval: 0.5,
+    attackSpeedReduction: 0.2
+  },
   buildingEffects: {
     barracks: 'Lưỡi kiếm tẩm nọc độc làm suy yếu sức mạnh của quái, giảm sát thương quái đánh vào lính.',
     archer: 'Bắn liên hoàn tích lũy 3 tầng kịch độc nhanh chóng lên mục tiêu đơn lẻ.',

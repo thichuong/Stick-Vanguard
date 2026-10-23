@@ -42,7 +42,7 @@ export const ELEMENTAL_REACTIONS: ElementalReaction[] = [
     triggerElement: 'ICE',
     damageMultiplier: 1.5,
     label: '❄️ ĐÓNG BĂNG!',
-    description: 'Màn nước biến thành khối băng buốt giá, tăng +50% sát thương và chắc chắn Đóng Băng bất động 1.2s.'
+    description: 'Màn nước biến thành khối băng buốt giá, tăng +50% sát thương và chắc chắn Đóng Băng bất động 0.8s.'
   },
   {
     id: 'OVERGROWTH',

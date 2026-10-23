@@ -18,6 +18,13 @@ export const GRASS_ELEMENT: ElementDefinition = {
     'Hút nhựa sống: Đòn đánh của Lính tự động hồi +3 HP cho bản thân.',
     'Khắc tinh tuyệt hảo của Thủy quái (1.8x) và Khổng Lồ Đất (1.75x).'
   ],
+  combatStats: {
+    slowDuration: 3.0,
+    slowRatio: 0.3,
+    procChance: 0.3,
+    procDuration: 1.0,
+    soldierHealOnHit: 3
+  },
   buildingEffects: {
     barracks: 'Dây leo gai góc mọc lên dưới chân quái, vừa trói chân vừa hút máu hồi phục cho 3 chiến binh.',
     archer: 'Mũi tên mộc tinh cắm rễ làm chậm và trói chặt quái chạy nhanh trên đường.',
