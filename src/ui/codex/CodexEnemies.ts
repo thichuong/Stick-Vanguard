@@ -2,12 +2,12 @@ import { ENEMY_BLUEPRINTS, EnemyBlueprint } from '../../config/enemies.config.js
 import {
   ELEMENT_COLORS,
   ELEMENT_ICONS,
-  ELEMENT_NAMES,
-  ELEMENTAL_MATCHUPS
+  ELEMENT_NAMES
 } from '../../config/elements.config.js';
 import { ElementType } from '../../types/elements.types.js';
 import { StickmanRenderer } from '../../render/StickmanRenderer.js';
 import { EnemyArchetypeRenderer } from '../../render/EnemyArchetypeRenderer.js';
+import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
 import { ALL_15_ELEMENTS } from './CodexTypes.js';
 
 export class CodexEnemies {
@@ -469,8 +469,11 @@ export class CodexEnemies {
   } {
     const profile = bp.elementalProfile;
 
-    // 1. Complete immunity
-    if (profile.immunities.includes(attackerElement)) {
+    // 1. Calculate elemental matchup automatically from matrix (Primary x Secondary)
+    let multiplier = TargetingRuleEngine.calculateElementalMatchup(attackerElement, profile);
+
+    // If completely immune
+    if (multiplier === 0) {
       return {
         multiplier: 0,
         percentage: 0,
@@ -480,23 +483,7 @@ export class CodexEnemies {
       };
     }
 
-    let multiplier = 1.0;
-
-    // 2. Custom override
-    if (profile.damageMultipliers && profile.damageMultipliers[attackerElement] !== undefined) {
-      multiplier = profile.damageMultipliers[attackerElement]!;
-    } else {
-      // 3. Matchup against primary and secondary
-      const pMatch = ELEMENTAL_MATCHUPS[attackerElement]?.[profile.primaryElement] ?? 1.0;
-      if (profile.secondaryElement && profile.secondaryElement !== 'PHYSICAL') {
-        const sMatch = ELEMENTAL_MATCHUPS[attackerElement]?.[profile.secondaryElement] ?? 1.0;
-        multiplier = (pMatch + sMatch) / 2;
-      } else {
-        multiplier = pMatch;
-      }
-    }
-
-    // 4. Movement and Tag bonuses
+    // 2. Movement and Tag bonuses
     if (attackerElement === 'WIND' && bp.movementType === 'FLY') {
       multiplier *= 1.5;
     }

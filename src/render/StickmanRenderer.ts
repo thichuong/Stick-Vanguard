@@ -292,6 +292,7 @@ export class StickmanRenderer {
         let effIcon = '';
         if (eff.type === 'BURN') effIcon = '🔥';
         else if (eff.type === 'FREEZE') effIcon = '❄️';
+        else if (eff.type === 'SHOCK') effIcon = '⚡';
         else if (eff.type === 'SLOW') effIcon = '🪨';
         else if (eff.type === 'WET') effIcon = '💧';
         else if (eff.type === 'POISON') effIcon = '☠️';

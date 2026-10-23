@@ -1,9 +1,10 @@
 import {
   DamagePayload,
   ElementType,
+  ElementalProfile,
   TargetingFilter
 } from '../types/elements.types.js';
-import { EnemyEntity } from '../types/entities.types.js';
+import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
 import { ELEMENTAL_MATCHUPS, ELEMENTAL_REACTIONS } from '../config/elements.config.js';
 
 export interface DamageCalculationResult {
@@ -57,6 +58,29 @@ export class TargetingRuleEngine {
   }
 
   /**
+   * Automatically calculates elemental matchup multiplier from matrix for single or dual-element profile.
+   * Multiplicative combination: Mult(Atk -> Primary) * Mult(Atk -> Secondary), clamped safely [0.1, 3.0].
+   */
+  public static calculateElementalMatchup(
+    attacker: ElementType,
+    profile: ElementalProfile
+  ): number {
+    if (profile.immunities.includes(attacker)) {
+      return 0;
+    }
+
+    const pMatch = ELEMENTAL_MATCHUPS[attacker]?.[profile.primaryElement] ?? 1.0;
+
+    if (profile.secondaryElement && profile.secondaryElement !== 'PHYSICAL') {
+      const sMatch = ELEMENTAL_MATCHUPS[attacker]?.[profile.secondaryElement] ?? 1.0;
+      const combined = pMatch * sMatch;
+      return Math.round(Math.min(3.0, Math.max(0.1, combined)) * 100) / 100;
+    }
+
+    return pMatch;
+  }
+
+  /**
    * Calculates damage for a single element component
    */
   public static calculateSingleDamage(
@@ -77,31 +101,10 @@ export class TargetingRuleEngine {
       };
     }
 
-    let multiplier = 1.0;
+    // 2. Calculate elemental matchup automatically from matrix (Primary x Secondary)
+    let multiplier = this.calculateElementalMatchup(element, profile);
 
-    // 2. Enemy-specific custom damage multiplier
-    if (
-      profile.damageMultipliers &&
-      profile.damageMultipliers[element] !== undefined
-    ) {
-      multiplier *= profile.damageMultipliers[element]!;
-    } else {
-      // 3. Global elemental matchup against primary element
-      const matchup = ELEMENTAL_MATCHUPS[element]?.[profile.primaryElement];
-      if (matchup !== undefined) {
-        multiplier *= matchup;
-      }
-
-      // If enemy has secondary element, factor it in
-      if (profile.secondaryElement && profile.secondaryElement !== 'PHYSICAL') {
-        const secMatchup = ELEMENTAL_MATCHUPS[element]?.[profile.secondaryElement];
-        if (secMatchup !== undefined) {
-          multiplier = (multiplier + secMatchup) / 2;
-        }
-      }
-    }
-
-    // 4. Status effect interactions & Elemental Reactions
+    // 3. Status effect interactions & Elemental Reactions
     let reactionLabel: string | undefined;
     let bestReaction: (typeof ELEMENTAL_REACTIONS)[0] | undefined;
 
@@ -122,17 +125,23 @@ export class TargetingRuleEngine {
     }
 
     // Debuff modifiers on target:
+    // SUNDER: Armor broken - neutralizes physical resistance and amplifies damage
+    const hasSunder = enemy.statusEffects.some((s) => s.type === 'SUNDER');
+    if (hasSunder) {
+      if (element === 'PHYSICAL' && multiplier < 1.0) {
+        multiplier = 1.0; // Bypasses physical resistance of armored foes
+      }
+      if (!bestReaction || bestReaction.requiredStatus !== 'SUNDER') {
+        multiplier *= 1.30;
+      }
+    }
+
     // Ám (CURSE): Khuếch đại sát thương từ các nguồn khác, trừ Tiên (FAIRY) và Quang (LIGHT)
     const hasCurse = enemy.statusEffects.some((s) => s.type === 'CURSE');
     if (hasCurse && !['FAIRY', 'LIGHT'].includes(element)) {
       if (!bestReaction || bestReaction.requiredStatus !== 'CURSE') {
         multiplier *= 1.35;
       }
-    }
-
-    const hasSunder = enemy.statusEffects.some((s) => s.type === 'SUNDER');
-    if (hasSunder) {
-      multiplier *= 1.30;
     }
 
     // Tiên (CHARM): Tăng phúc mọi chiêu nguyên tố, trừ Hắc Ám (DARK), Ma (GHOST), Độc (POISON) và Vật Lý (PHYSICAL)
@@ -313,7 +322,10 @@ export class TargetingRuleEngine {
     element: ElementType,
     baseDamage: number
   ): void {
-    if (element === 'PHYSICAL') return;
+    if (element === 'PHYSICAL' || enemy.elementalProfile.immunities.includes(element)) return;
+
+    // Check and trigger mechanical reaction bonus effects before applying base status
+    this.applyReactionBonusEffects(enemy, element, baseDamage);
 
     switch (element) {
       case 'FIRE':
@@ -355,9 +367,9 @@ export class TargetingRuleEngine {
 
       case 'LIGHTNING':
         this.applyStatusEffect(enemy, {
-          type: 'FREEZE',
+          type: 'SHOCK',
           duration: 0.35, // mini shock stun
-          value: 0
+          value: 0.35
         });
         break;
 
@@ -461,6 +473,142 @@ export class TargetingRuleEngine {
   }
 
   /**
+   * Applies secondary mechanical bonus effects when an elemental reaction occurs
+   */
+  public static applyReactionBonusEffects(
+    enemy: EnemyEntity,
+    element: ElementType,
+    baseDamage: number
+  ): void {
+    // 1. PERMAFROST: WET + ICE -> 100% Guaranteed Freeze for 1.2s
+    if (element === 'ICE' && enemy.statusEffects.some((s) => s.type === 'WET')) {
+      this.applyStatusEffect(enemy, {
+        type: 'FREEZE',
+        duration: 1.2,
+        value: 0
+      });
+    }
+
+    // 2. OVERGROWTH: WET + GRASS -> 100% Guaranteed Root for 1.5s
+    if (element === 'GRASS' && enemy.statusEffects.some((s) => s.type === 'WET')) {
+      this.applyStatusEffect(enemy, {
+        type: 'ROOT',
+        duration: 1.5,
+        value: 0
+      });
+    }
+
+    // 3. ELECTRO_CHARGED: WET + LIGHTNING -> Extended shock stun duration
+    if (element === 'LIGHTNING' && enemy.statusEffects.some((s) => s.type === 'WET')) {
+      this.applyStatusEffect(enemy, {
+        type: 'SHOCK',
+        duration: 0.7,
+        value: 0.35
+      });
+    }
+
+    // 4. COMBUSTION & BURNING_VINES: POISON/ROOT + FIRE -> Enhanced DoT
+    if (element === 'FIRE') {
+      if (enemy.statusEffects.some((s) => s.type === 'POISON' || s.type === 'ROOT')) {
+        this.applyStatusEffect(enemy, {
+          type: 'BURN',
+          duration: 3.5,
+          value: Math.max(8, Math.round(baseDamage * 0.3))
+        });
+      }
+    }
+
+    // 5. SHATTER / SHATTER_EARTH: FREEZE + STEEL / EARTH -> Consumes ice block and sunders/slows
+    if ((element === 'STEEL' || element === 'EARTH') && enemy.statusEffects.some((s) => s.type === 'FREEZE')) {
+      // Remove freeze effect
+      const fIndex = enemy.statusEffects.findIndex((s) => s.type === 'FREEZE');
+      if (fIndex !== -1) {
+        enemy.statusEffects.splice(fIndex, 1);
+      }
+      if (element === 'STEEL') {
+        this.applyStatusEffect(enemy, {
+          type: 'SUNDER',
+          duration: 4.0,
+          value: 0.3
+        });
+      } else {
+        this.applyStatusEffect(enemy, {
+          type: 'SLOW',
+          duration: 3.0,
+          value: 0.45
+        });
+      }
+    }
+
+    // 6. CORROSION: SUNDER + POISON -> Instantly stacks poison +2 and extends duration
+    if (element === 'POISON' && enemy.statusEffects.some((s) => s.type === 'SUNDER')) {
+      const existingPoison = enemy.statusEffects.find((s) => s.type === 'POISON');
+      const newStacks = existingPoison ? Math.min(3, (existingPoison.value || 1) + 2) : 2;
+      this.applyStatusEffect(enemy, {
+        type: 'POISON',
+        duration: 5.0,
+        value: newStacks
+      });
+    }
+
+    // 7. SWIRL: BURN + WIND -> Extra knockback and spreads fire duration
+    if (element === 'WIND' && enemy.statusEffects.some((s) => s.type === 'BURN')) {
+      const extraPush = enemy.movementType === 'FLY' ? 10 : 10;
+      enemy.pathDistance = Math.max(0, enemy.pathDistance - extraPush);
+      const burnEff = enemy.statusEffects.find((s) => s.type === 'BURN');
+      if (burnEff) {
+        burnEff.duration = Math.max(burnEff.duration, 3.5);
+      }
+    }
+
+    // 8. ABYSSAL_SOUL: CURSE + GHOST -> Extra soul drain duration and knockback
+    if (element === 'GHOST' && enemy.statusEffects.some((s) => s.type === 'CURSE')) {
+      enemy.pathDistance = Math.max(0, enemy.pathDistance - 15);
+      this.applyStatusEffect(enemy, {
+        type: 'SOUL_DRAIN',
+        duration: 4.5,
+        value: 0.25
+      });
+    }
+  }
+
+  /**
+   * Helper to check if enemy is stunned or frozen (cannot move or attack)
+   */
+  public static isEnemyStunnedOrFrozen(enemy: EnemyEntity): boolean {
+    return enemy.statusEffects.some((s) => s.type === 'FREEZE' || s.type === 'SHOCK');
+  }
+
+  /**
+   * Calculates enemy attack speed multiplier based on active debuffs (POISON, CHARM)
+   */
+  public static getEnemyAttackSpeedMultiplier(enemy: EnemyEntity): number {
+    let mult = 1.0;
+    if (enemy.statusEffects.some((s) => s.type === 'POISON')) {
+      mult = Math.min(mult, 0.8); // -20% attack speed
+    }
+    if (enemy.statusEffects.some((s) => s.type === 'CHARM')) {
+      mult = Math.min(mult, 0.7); // -30% attack speed
+    }
+    return mult;
+  }
+
+  /**
+   * Standardized calculation for damage dealt by an Enemy to a Soldier
+   * Incorporates debuffs (e.g. DRAGON_AWE) and soldier armor mitigation
+   */
+  public static calculateEnemyDamageToSoldier(
+    enemy: EnemyEntity,
+    soldier: SoldierEntity
+  ): number {
+    const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+    let enemyDamage = enemy.damage;
+    if (hasDragonAwe) enemyDamage *= 0.75;
+    const rawDmg = enemyDamage * (1 - soldier.armor);
+    return Math.max(1, Math.round(rawDmg));
+  }
+
+  /**
    * Applies or refreshes a status effect on an enemy
    */
   public static applyStatusEffect(
@@ -512,8 +660,8 @@ export class TargetingRuleEngine {
         }
       } else if (eff.type === 'SLOW') {
         speedMult = Math.min(speedMult, 1 - eff.value);
-      } else if (eff.type === 'FREEZE' || eff.type === 'ROOT') {
-        speedMult = 0; // Frozen or rooted in place
+      } else if (eff.type === 'FREEZE' || eff.type === 'ROOT' || eff.type === 'SHOCK') {
+        speedMult = 0; // Frozen, rooted, or shocked in place
       } else if (eff.type === 'CHARM') {
         speedMult = Math.min(speedMult, 1 - eff.value);
       }

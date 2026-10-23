@@ -128,6 +128,20 @@ export class TowerSystem {
         }));
       }
 
+      const hasLightning =
+        primaryElement === 'LIGHTNING' ||
+        secondaryElement === 'LIGHTNING' ||
+        (bonusElements && bonusElements.some((b) => b.element === 'LIGHTNING'));
+
+      let chainCount = 0;
+      if (hasLightning) {
+        if (tower.type === 'MAGE') {
+          chainCount = tower.tier === 4 && tower.branch === 'B' ? 4 : 2;
+        } else {
+          chainCount = 1;
+        }
+      }
+
       const proj: ProjectileEntity = {
         id: `proj-${this.projectileCounter}`,
         sourceTowerId: tower.id,
@@ -151,7 +165,7 @@ export class TowerSystem {
         isParabolic,
         arcHeight: isParabolic ? 70 : 0,
         progress: 0,
-        chainCount: 0
+        chainCount
       };
 
       onSpawnProjectile(proj);

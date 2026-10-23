@@ -72,28 +72,13 @@ export class TrapSystem {
 
           if (!calc.isImmune) {
             enemy.hp -= calc.finalDamage;
-            if (trap.element === 'FIRE') {
-              TargetingRuleEngine.applyStatusEffect(enemy, {
-                type: 'BURN',
-                duration: 3,
-                value: 8
-              });
-            } else if (trap.element === 'ICE') {
-              TargetingRuleEngine.applyStatusEffect(enemy, {
-                type: 'SLOW',
-                duration: 3.5,
-                value: 0.5
-              });
+            TargetingRuleEngine.applyElementalHitEffects(enemy, trap.element, trap.damage);
+            // Special extra effect for TRAP_FROST (Bẫy Băng & Thủy Lôi)
+            if (trap.type === 'TRAP_FROST') {
               TargetingRuleEngine.applyStatusEffect(enemy, {
                 type: 'WET',
-                duration: 4,
+                duration: 4.0,
                 value: 1
-              });
-            } else if (trap.element === 'LIGHTNING') {
-              TargetingRuleEngine.applyStatusEffect(enemy, {
-                type: 'SLOW',
-                duration: 2.0,
-                value: 0.7
               });
             }
           }

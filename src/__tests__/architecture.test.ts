@@ -4,7 +4,7 @@ import { TargetingRuleEngine } from '../systems/TargetingRuleEngine.js';
 import { GameState } from '../core/GameState.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
-import { EnemyEntity } from '../types/entities.types.js';
+import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
 import { DamagePayload } from '../types/elements.types.js';
 
 describe('Stick Vanguard - Core Architecture Tests', () => {
@@ -251,14 +251,32 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         facing: 0
       };
 
-      // Fairy attack against Dragon
-      const fairyRes = TargetingRuleEngine.calculateDamage(
+      // Wyvern Raider (Dragon + Wind) takes 2.0x weakness damage from Fairy element (2.0 x 1.0 = 2.0x)
+      const wyvernBp = ENEMY_BLUEPRINTS['WYVERN_RAIDER'];
+      expect(wyvernBp).toBeDefined();
+      const wyvern: EnemyEntity = {
+        ...drake,
+        id: 'e-wyvern',
+        typeId: wyvernBp.typeId,
+        name: wyvernBp.name,
+        elementalProfile: wyvernBp.elementalProfile
+      };
+      const fairyResWyvern = TargetingRuleEngine.calculateDamage(
+        { amount: 50, element: 'FAIRY', sourceId: 'test' },
+        wyvern
+      );
+      expect(fairyResWyvern.isImmune).toBe(false);
+      expect(fairyResWyvern.multiplier).toBe(2.0);
+      expect(fairyResWyvern.finalDamage).toBe(100);
+
+      // Drake Warrior (Dragon + Fire) takes 1.0x from Fairy because Fire resists Fairy (2.0 x 0.5 = 1.0x)
+      const fairyResDrake = TargetingRuleEngine.calculateDamage(
         { amount: 50, element: 'FAIRY', sourceId: 'test' },
         drake
       );
-      expect(fairyRes.isImmune).toBe(false);
-      expect(fairyRes.multiplier).toBe(2.0);
-      expect(fairyRes.finalDamage).toBe(100);
+      expect(fairyResDrake.isImmune).toBe(false);
+      expect(fairyResDrake.multiplier).toBe(1.0);
+      expect(fairyResDrake.finalDamage).toBe(50);
 
       // Fairy target receiving Dragon attack -> 0 damage (Immune)
       const fairyBp = ENEMY_BLUEPRINTS['FAIRY_SPRITE'];
@@ -702,10 +720,10 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         golem
       );
 
-      // Golem is immune to physical, but takes 1.75x from water!
+      // Golem is immune to physical, but takes 1.5x from water according to matrix!
       expect(hybridRes.isImmune).toBe(false);
       expect(hybridRes.finalDamage).toBeGreaterThan(0);
-      expect(hybridRes.finalDamage).toBe(Math.round(30 * 1.75));
+      expect(hybridRes.finalDamage).toBe(Math.round(30 * 1.5));
     });
 
     it('should refund 70% invested gold and remove soldiers upon selling', () => {
@@ -1487,12 +1505,13 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
       const { ELEMENTAL_MATCHUPS } = await import('../config/elements.config.js');
 
-      // Test Rock Golem immunities & multipliers
+      // Test Rock Golem immunities & matrix calculated matchups
       const rockGolem = ENEMY_BLUEPRINTS['ROCK_GOLEM'];
       expect(rockGolem.elementalProfile.immunities).toContain('PHYSICAL');
       expect(rockGolem.elementalProfile.immunities).toContain('LIGHTNING');
-      expect(rockGolem.elementalProfile.damageMultipliers?.WATER).toBe(1.75);
-      expect(rockGolem.elementalProfile.damageMultipliers?.ICE).toBe(1.5);
+      expect(TargetingRuleEngine.calculateElementalMatchup('WATER', rockGolem.elementalProfile)).toBe(1.5);
+      expect(TargetingRuleEngine.calculateElementalMatchup('ICE', rockGolem.elementalProfile)).toBe(1.0);
+      expect(TargetingRuleEngine.calculateElementalMatchup('LIGHTNING', rockGolem.elementalProfile)).toBe(0);
 
       // Test Fire Imp immunity to Fire & weakness to Water
       const fireImp = ENEMY_BLUEPRINTS['FIRE_IMP'];
@@ -1614,6 +1633,396 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
 
       // Cleanup
       StorageService.clear();
+    });
+  });
+
+  describe('Damage & Elemental System Rework Verification Tests', () => {
+    it('LIGHTNING element must apply SHOCK instead of FREEZE', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-shock-runner',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      TargetingRuleEngine.applyElementalHitEffects(enemy, 'LIGHTNING', 30);
+      expect(enemy.statusEffects.some((s) => s.type === 'SHOCK')).toBe(true);
+      expect(enemy.statusEffects.some((s) => s.type === 'FREEZE')).toBe(false);
+
+      // Verify updateStatusEffects halts enemy speed
+      TargetingRuleEngine.updateStatusEffects(enemy, 0.1, () => {});
+      expect(enemy.speed).toBe(0);
+    });
+
+    it('Immune enemy must NEVER receive status effects from the immune element', () => {
+      const fireImpBp = ENEMY_BLUEPRINTS['FIRE_IMP']; // Immune to FIRE
+      const fireImp: EnemyEntity = {
+        id: 'test-immune-imp',
+        typeId: fireImpBp.typeId,
+        name: fireImpBp.name,
+        x: 0,
+        y: 0,
+        hp: fireImpBp.hp,
+        maxHp: fireImpBp.hp,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: fireImpBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Hybrid attack: Physical 30 + Fire 20
+      const payload: DamagePayload = {
+        amount: 30,
+        element: 'PHYSICAL',
+        secondaryAmount: 20,
+        secondaryElement: 'FIRE',
+        sourceId: 'archer-1'
+      };
+
+      TargetingRuleEngine.applyAllPayloadEffects(fireImp, payload);
+      // FireImp is immune to Fire -> BURN must NOT be applied!
+      expect(fireImp.statusEffects.some((s) => s.type === 'BURN')).toBe(false);
+    });
+
+    it('SUNDER status must neutralize physical resistance on armored enemies', () => {
+      const vanguardBp = ENEMY_BLUEPRINTS['STEEL_VANGUARD']; // Steel has 0.5x physical resistance
+      const vanguard: EnemyEntity = {
+        id: 'test-vanguard-sunder',
+        typeId: vanguardBp.typeId,
+        name: vanguardBp.name,
+        x: 0,
+        y: 0,
+        hp: vanguardBp.hp,
+        maxHp: vanguardBp.hp,
+        speed: 35,
+        baseSpeed: 35,
+        damage: 20,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 20,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: vanguardBp.elementalProfile,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 20,
+        facing: 0
+      };
+
+      // Without SUNDER: 0.5x physical resistance
+      const resNormal = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'PHYSICAL', sourceId: 'barracks-1' },
+        vanguard
+      );
+      expect(resNormal.finalDamage).toBe(50); // 100 * 0.5
+
+      // Apply SUNDER
+      TargetingRuleEngine.applyStatusEffect(vanguard, {
+        type: 'SUNDER',
+        duration: 4.0,
+        value: 0.3
+      });
+
+      // With SUNDER: physical resistance neutralized to 1.0x, then multiplied by 1.3x = 130 damage!
+      const resSundered = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'PHYSICAL', sourceId: 'barracks-1' },
+        vanguard
+      );
+      expect(resSundered.finalDamage).toBe(130);
+    });
+
+    it('Elemental reaction secondary bonus effects must execute properly', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-reaction-enemy',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 200,
+        maxHp: 200,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 100,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [
+          { type: 'WET', duration: 4.0, value: 0 }
+        ],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // 1. PERMAFROST: ICE hitting WET must 100% guarantee FREEZE (1.2s)
+      TargetingRuleEngine.applyElementalHitEffects(enemy, 'ICE', 40);
+      expect(enemy.statusEffects.some((s) => s.type === 'FREEZE' && s.duration === 1.2)).toBe(true);
+
+      // 2. SHATTER: STEEL hitting FREEZE must consume FREEZE and apply SUNDER
+      TargetingRuleEngine.applyElementalHitEffects(enemy, 'STEEL', 50);
+      expect(enemy.statusEffects.some((s) => s.type === 'FREEZE')).toBe(false); // consumed!
+      expect(enemy.statusEffects.some((s) => s.type === 'SUNDER')).toBe(true);
+
+      // 3. CORROSION: POISON hitting SUNDER must stack poison by +2
+      TargetingRuleEngine.applyElementalHitEffects(enemy, 'POISON', 40);
+      const poisonEff = enemy.statusEffects.find((s) => s.type === 'POISON');
+      expect(poisonEff).toBeDefined();
+      expect(poisonEff?.value).toBeGreaterThanOrEqual(2);
+      expect(poisonEff?.duration).toBe(5.0);
+    });
+
+    it('Crowd-control and debuffs must properly hinder enemy attack capabilities', () => {
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-cc-enemy',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // Normal state
+      expect(TargetingRuleEngine.isEnemyStunnedOrFrozen(enemy)).toBe(false);
+      expect(TargetingRuleEngine.getEnemyAttackSpeedMultiplier(enemy)).toBe(1.0);
+
+      // Freeze state
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'FREEZE', duration: 1.2, value: 0 });
+      expect(TargetingRuleEngine.isEnemyStunnedOrFrozen(enemy)).toBe(true);
+
+      // Shock state
+      enemy.statusEffects = [];
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'SHOCK', duration: 0.35, value: 0.35 });
+      expect(TargetingRuleEngine.isEnemyStunnedOrFrozen(enemy)).toBe(true);
+
+      // Poison debuff reduces attack speed by 20% (0.8x)
+      enemy.statusEffects = [];
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'POISON', duration: 4.0, value: 1 });
+      expect(TargetingRuleEngine.getEnemyAttackSpeedMultiplier(enemy)).toBe(0.8);
+
+      // Charm debuff reduces attack speed by 30% (0.7x)
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'CHARM', duration: 3.0, value: 0.35 });
+      expect(TargetingRuleEngine.getEnemyAttackSpeedMultiplier(enemy)).toBe(0.7);
+    });
+
+    it('TargetingRuleEngine.calculateEnemyDamageToSoldier must properly apply DRAGON_AWE debuff and soldier armor', () => {
+      const enemy: EnemyEntity = {
+        id: 'e-test',
+        typeId: 'STICK_RUNNER',
+        name: 'Test Enemy',
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 40,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 20,
+        facing: 0
+      };
+
+      const soldier: SoldierEntity = {
+        id: 's-test',
+        towerId: 't-1',
+        name: 'Test Soldier',
+        x: 0,
+        y: 0,
+        hp: 100,
+        maxHp: 100,
+        damage: 15,
+        attackSpeed: 1,
+        attackCooldown: 0,
+        element: 'PHYSICAL',
+        combatMode: 'MELEE',
+        state: 'IDLE',
+        engagedEnemyId: null,
+        rallyPoint: { x: 0, y: 0 },
+        targetPos: { x: 0, y: 0 },
+        armor: 0.25, // 25% armor reduction
+        magicResist: 0,
+        respawnTimer: 0,
+        respawnDelay: 8,
+        tier: 1,
+        baseMaxHp: 100,
+        baseDamage: 15,
+        baseArmor: 0.25
+      };
+
+      // Base: 40 * (1 - 0.25) = 30
+      const dmgNormal = TargetingRuleEngine.calculateEnemyDamageToSoldier(enemy, soldier);
+      expect(dmgNormal).toBe(30);
+
+      // Enemy affected by DRAGON_AWE (-25% damage): 40 * 0.75 * (1 - 0.25) = 22.5 -> 23
+      TargetingRuleEngine.applyStatusEffect(enemy, { type: 'DRAGON_AWE', duration: 3.5, value: 0.25 });
+      const dmgAwed = TargetingRuleEngine.calculateEnemyDamageToSoldier(enemy, soldier);
+      expect(dmgAwed).toBe(23);
+    });
+
+    it('DARK_DRAGON_BOSS and VOID_HYDRA_BOSS damage calculated strictly via Elemental Matrix and Dual-Element principles', async () => {
+      const boss1Bp = ENEMY_BLUEPRINTS['DARK_DRAGON_BOSS'];
+      const boss2Bp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS'];
+
+      expect(boss1Bp).toBeDefined();
+      expect(boss2Bp).toBeDefined();
+
+      // Ensure NO hardcoded damageMultipliers exist in blueprints
+      expect(boss1Bp.elementalProfile.damageMultipliers).toBeUndefined();
+      expect(boss2Bp.elementalProfile.damageMultipliers).toBeUndefined();
+
+      // In-game calculation check for Boss 1 (Dark Dragon Boss: DRAGON + DARK)
+      // Fairy vs Dragon = 2.0x, Fairy vs Dark = 1.75x -> Combined = 2.0 * 1.75 = 3.5 -> Clamped to 3.0x
+      const boss1: EnemyEntity = {
+        id: 'b1',
+        typeId: boss1Bp.typeId,
+        name: boss1Bp.name,
+        x: 0,
+        y: 0,
+        hp: boss1Bp.hp,
+        maxHp: boss1Bp.hp,
+        speed: boss1Bp.speed,
+        baseSpeed: boss1Bp.speed,
+        damage: boss1Bp.damage,
+        attackSpeed: boss1Bp.attackSpeed,
+        attackCooldown: 1,
+        rewardGold: boss1Bp.rewardGold,
+        movementType: boss1Bp.movementType,
+        navigationMode: boss1Bp.navigationMode,
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: boss1Bp.elementalProfile,
+        state: 'FLYING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: boss1Bp.tags,
+        altitude: boss1Bp.altitude,
+        size: boss1Bp.size,
+        facing: 0
+      };
+
+      const resBoss1 = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FAIRY', sourceId: 'test-fairy' },
+        boss1
+      );
+      expect(resBoss1.isImmune).toBe(false);
+      expect(resBoss1.multiplier).toBe(3.0);
+      expect(resBoss1.finalDamage).toBe(300); // 300% of 100
+      expect(resBoss1.label).toBe('KHẮC HỆ!');
+
+      // In-game calculation check for Boss 2 (Void Hydra Boss: DRAGON + POISON)
+      // Fairy vs Dragon = 2.0x, Fairy vs Poison = 0.4x -> Combined = 2.0 * 0.4 = 0.8x
+      const boss2: EnemyEntity = {
+        ...boss1,
+        id: 'b2',
+        typeId: boss2Bp.typeId,
+        name: boss2Bp.name,
+        movementType: boss2Bp.movementType,
+        elementalProfile: boss2Bp.elementalProfile,
+        state: 'WALKING'
+      };
+
+      const resBoss2 = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FAIRY', sourceId: 'test-fairy' },
+        boss2
+      );
+      expect(resBoss2.isImmune).toBe(false);
+      expect(resBoss2.multiplier).toBe(0.8);
+      expect(resBoss2.finalDamage).toBe(80); // 80% of 100
+      expect(resBoss2.label).toBeUndefined(); // 0.8 is slight resistance, no floating battle text banner
+
+      // CodexEnemies verification
+      const { CodexEnemies } = await import('../ui/codex/CodexEnemies.js');
+      const codex = new CodexEnemies(() => true, () => 'ENEMIES');
+      const intakeBoss1 = codex.calculateDamageIntake(boss1Bp, 'FAIRY');
+      expect(intakeBoss1.multiplier).toBe(3.0);
+      expect(intakeBoss1.percentage).toBe(300);
+      expect(intakeBoss1.category).toBe('SUPER_WEAK');
+
+      const intakeBoss2 = codex.calculateDamageIntake(boss2Bp, 'FAIRY');
+      expect(intakeBoss2.multiplier).toBe(0.8);
+      expect(intakeBoss2.percentage).toBe(80);
+      expect(intakeBoss2.category).toBe('RESIST');
     });
   });
 });

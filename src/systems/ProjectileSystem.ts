@@ -163,16 +163,7 @@ export class ProjectileSystem {
             const chainCalc = TargetingRuleEngine.calculateDamage(chainPayload, nextEnemy);
             if (!chainCalc.isImmune) {
               nextEnemy.hp -= chainCalc.finalDamage;
-              if (chainPayload.element !== 'PHYSICAL') {
-                TargetingRuleEngine.applyElementalHitEffects(nextEnemy, chainPayload.element, chainPayload.amount);
-              }
-              if (chainPayload.secondaryElement && chainPayload.secondaryAmount) {
-                TargetingRuleEngine.applyElementalHitEffects(
-                  nextEnemy,
-                  chainPayload.secondaryElement,
-                  chainPayload.secondaryAmount
-                );
-              }
+              TargetingRuleEngine.applyAllPayloadEffects(nextEnemy, chainPayload);
             }
 
             onHit({

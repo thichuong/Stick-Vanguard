@@ -182,48 +182,51 @@ export class CombatSystem {
               });
               continue;
             }
+
+            // Lightning chain shock bounce to 1 nearby enemy
+            if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
+              this.triggerLightningChain(soldier.id, currentEnemy, enemies, Math.max(1, Math.round(soldier.damage * 0.35)), onCombatEvent);
+            }
           }
 
-          // Enemy attacks soldier
-          currentEnemy.attackCooldown -= dt;
-          if (currentEnemy.attackCooldown <= 0) {
-            currentEnemy.attackCooldown = 1 / currentEnemy.attackSpeed;
+          // Enemy attacks soldier (if not stunned/frozen)
+          if (!TargetingRuleEngine.isEnemyStunnedOrFrozen(currentEnemy)) {
+            currentEnemy.attackCooldown -= dt;
+            if (currentEnemy.attackCooldown <= 0) {
+              const atkMult = TargetingRuleEngine.getEnemyAttackSpeedMultiplier(currentEnemy);
+              currentEnemy.attackCooldown = 1 / Math.max(0.1, currentEnemy.attackSpeed * atkMult);
 
-            // Reduce damage by soldier armor & dragon awe
-            const hasDragonAwe = currentEnemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
-            let enemyDamage = currentEnemy.damage;
-            if (hasDragonAwe) enemyDamage *= 0.75;
-            const rawDmg = enemyDamage * (1 - soldier.armor);
-            const takenDmg = Math.max(1, Math.round(rawDmg));
-            soldier.hp -= takenDmg;
+              const takenDmg = TargetingRuleEngine.calculateEnemyDamageToSoldier(currentEnemy, soldier);
+              soldier.hp -= takenDmg;
 
-            onCombatEvent({
-              type: 'MELEE_HIT',
-              sourceId: currentEnemy.id,
-              targetId: soldier.id,
-              x: soldier.x,
-              y: soldier.y,
-              damage: takenDmg,
-              isImmune: false,
-              element: 'PHYSICAL'
-            });
-
-            if (soldier.hp <= 0) {
-              soldier.state = 'DEAD';
-              soldier.respawnTimer = soldier.respawnDelay;
-              soldier.engagedEnemyId = null;
-              currentEnemy.engagedBySoldierId = null;
-              currentEnemy.state = 'WALKING';
               onCombatEvent({
-                type: 'SOLDIER_DEATH',
+                type: 'MELEE_HIT',
                 sourceId: currentEnemy.id,
                 targetId: soldier.id,
                 x: soldier.x,
                 y: soldier.y,
-                damage: 0,
+                damage: takenDmg,
                 isImmune: false,
                 element: 'PHYSICAL'
               });
+
+              if (soldier.hp <= 0) {
+                soldier.state = 'DEAD';
+                soldier.respawnTimer = soldier.respawnDelay;
+                soldier.engagedEnemyId = null;
+                currentEnemy.engagedBySoldierId = null;
+                currentEnemy.state = 'WALKING';
+                onCombatEvent({
+                  type: 'SOLDIER_DEATH',
+                  sourceId: currentEnemy.id,
+                  targetId: soldier.id,
+                  x: soldier.x,
+                  y: soldier.y,
+                  damage: 0,
+                  isImmune: false,
+                  element: 'PHYSICAL'
+                });
+              }
             }
           }
         }
@@ -271,36 +274,38 @@ export class CombatSystem {
       if (enemy.hp <= 0 || enemy.state === 'DEAD' || enemy.movementType !== 'WALK') continue;
       const d = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
       if (d <= 22) {
-        enemy.attackCooldown -= dt;
-        if (enemy.attackCooldown <= 0) {
-          enemy.attackCooldown = 1 / enemy.attackSpeed;
-          const rawDmg = enemy.damage * (1 - soldier.armor);
-          const takenDmg = Math.max(1, Math.round(rawDmg));
-          soldier.hp -= takenDmg;
-          onCombatEvent({
-            type: 'MELEE_HIT',
-            sourceId: enemy.id,
-            targetId: soldier.id,
-            x: soldier.x,
-            y: soldier.y,
-            damage: takenDmg,
-            isImmune: false,
-            element: 'PHYSICAL'
-          });
-          if (soldier.hp <= 0) {
-            soldier.state = 'DEAD';
-            soldier.respawnTimer = soldier.respawnDelay;
+        if (!TargetingRuleEngine.isEnemyStunnedOrFrozen(enemy)) {
+          enemy.attackCooldown -= dt;
+          if (enemy.attackCooldown <= 0) {
+            const atkMult = TargetingRuleEngine.getEnemyAttackSpeedMultiplier(enemy);
+            enemy.attackCooldown = 1 / Math.max(0.1, enemy.attackSpeed * atkMult);
+            const takenDmg = TargetingRuleEngine.calculateEnemyDamageToSoldier(enemy, soldier);
+            soldier.hp -= takenDmg;
             onCombatEvent({
-              type: 'SOLDIER_DEATH',
+              type: 'MELEE_HIT',
               sourceId: enemy.id,
               targetId: soldier.id,
               x: soldier.x,
               y: soldier.y,
-              damage: 0,
+              damage: takenDmg,
               isImmune: false,
               element: 'PHYSICAL'
             });
-            return;
+            if (soldier.hp <= 0) {
+              soldier.state = 'DEAD';
+              soldier.respawnTimer = soldier.respawnDelay;
+              onCombatEvent({
+                type: 'SOLDIER_DEATH',
+                sourceId: enemy.id,
+                targetId: soldier.id,
+                x: soldier.x,
+                y: soldier.y,
+                damage: 0,
+                isImmune: false,
+                element: 'PHYSICAL'
+              });
+              return;
+            }
           }
         }
       }
@@ -398,6 +403,63 @@ export class CombatSystem {
         element: secondaryElement || 'PHYSICAL'
       });
     }
+
+    // Lightning chain shock bounce to 1 nearby enemy
+    if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
+      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * 0.35)), onCombatEvent);
+    }
+  }
+
+  private static triggerLightningChain(
+    sourceId: string,
+    originTarget: EnemyEntity,
+    enemies: EnemyEntity[],
+    chainDamage: number,
+    onCombatEvent: (evt: CombatEvent) => void
+  ): void {
+    let closestCandidate: EnemyEntity | null = null;
+    let minDist = 110;
+
+    for (const other of enemies) {
+      if (other.id === originTarget.id || other.hp <= 0 || other.state === 'DEAD') continue;
+      const d = Math.hypot(other.x - originTarget.x, other.y - originTarget.y);
+      if (d <= minDist) {
+        minDist = d;
+        closestCandidate = other;
+      }
+    }
+
+    if (closestCandidate) {
+      const calc = TargetingRuleEngine.calculateDamage(
+        {
+          amount: chainDamage,
+          element: 'LIGHTNING',
+          sourceId
+        },
+        closestCandidate
+      );
+
+      if (!calc.isImmune) {
+        closestCandidate.hp -= calc.finalDamage;
+        TargetingRuleEngine.applyElementalHitEffects(closestCandidate, 'LIGHTNING', chainDamage);
+      }
+
+      onCombatEvent({
+        type: 'RANGED_JAVELIN',
+        sourceId,
+        targetId: closestCandidate.id,
+        x: closestCandidate.x,
+        y: closestCandidate.y - (closestCandidate.altitude || 0),
+        damage: calc.finalDamage,
+        isImmune: calc.isImmune,
+        label: calc.label,
+        element: 'LIGHTNING'
+      });
+
+      if (closestCandidate.hp <= 0) {
+        closestCandidate.state = 'DEAD';
+      }
+    }
   }
 
   private static findUnengagedEnemyNear(
@@ -453,11 +515,7 @@ export class CombatSystem {
 
           if (!calc.isImmune) {
             enemy.hp -= calc.finalDamage;
-            TargetingRuleEngine.applyStatusEffect(enemy, {
-              type: 'SLOW',
-              duration: 1.5,
-              value: 0.4
-            });
+            TargetingRuleEngine.applyElementalHitEffects(enemy, 'LIGHTNING', soldier.damage * 0.9);
           }
 
           onCombatEvent({

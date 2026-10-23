@@ -82,11 +82,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'EARTH',
       immunities: ['PHYSICAL', 'LIGHTNING'], // 100% IMMUNE to Physical & Lightning!
-      damageMultipliers: {
-        WATER: 1.75,
-        ICE: 1.5,
-        EARTH: 0.2
-      }
     },
     tags: ['ARMORED'],
     altitude: 0,
@@ -109,10 +104,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'FIRE',
       immunities: ['FIRE'], // Immune to fire
-      damageMultipliers: {
-        WATER: 2.0,
-        ICE: 1.4
-      }
     },
     tags: ['FAST'],
     altitude: 0,
@@ -135,10 +126,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'WIND',
       immunities: ['EARTH'], // Earth artillery can't hit it
-      damageMultipliers: {
-        LIGHTNING: 1.6,
-        WIND: 0.4
-      }
     },
     tags: ['FLYING'],
     altitude: 28,
@@ -161,11 +148,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'WATER',
       immunities: ['FIRE'],
-      damageMultipliers: {
-        LIGHTNING: 2.0,
-        EARTH: 1.3,
-        WATER: 0.2
-      }
     },
     tags: ['AQUATIC'],
     altitude: 0,
@@ -188,10 +170,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'DARK',
       immunities: ['PHYSICAL'], // Melee weapons do zero damage!
-      damageMultipliers: {
-        LIGHT: 2.0,
-        DARK: 0.2
-      }
     },
     tags: ['UNBLOCKABLE', 'GHOST'],
     altitude: 6,
@@ -215,13 +193,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DRAGON',
       secondaryElement: 'DARK',
       immunities: ['EARTH', 'FIRE'],
-      damageMultipliers: {
-        FAIRY: 2.2,
-        ICE: 2.0,
-        LIGHT: 1.6,
-        PHYSICAL: 0.7,
-        DARK: 0.3
-      }
     },
     tags: ['BOSS', 'FLYING'],
     altitude: 35,
@@ -245,10 +216,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'FIRE',
       secondaryElement: 'EARTH',
       immunities: ['FIRE'],
-      damageMultipliers: {
-        WATER: 2.2,
-        ICE: 1.5
-      }
     },
     tags: ['SPLITTER'],
     altitude: 0,
@@ -276,9 +243,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'FIRE',
       secondaryElement: 'EARTH',
       immunities: ['FIRE'],
-      damageMultipliers: {
-        WATER: 1.8
-      }
     },
     tags: ['SWARM'],
     altitude: 0,
@@ -302,10 +266,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'ICE',
       secondaryElement: 'EARTH',
       immunities: ['PHYSICAL', 'ICE'],
-      damageMultipliers: {
-        FIRE: 2.2,
-        LIGHTNING: 0.5
-      }
     },
     tags: ['ARMORED', 'SPLITTER'],
     altitude: 0,
@@ -333,9 +293,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'ICE',
       secondaryElement: 'WIND',
       immunities: [],
-      damageMultipliers: {
-        FIRE: 2.0
-      }
     },
     tags: ['FAST', 'SWARM'],
     altitude: 0,
@@ -359,10 +316,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DARK',
       secondaryElement: 'ICE',
       immunities: ['PHYSICAL'],
-      damageMultipliers: {
-        LIGHT: 2.2,
-        FIRE: 1.6
-      }
     },
     tags: ['SUMMONER', 'MAGE'],
     altitude: 0,
@@ -395,9 +348,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DARK',
       secondaryElement: 'PHYSICAL',
       immunities: [],
-      damageMultipliers: {
-        LIGHT: 2.0
-      }
     },
     tags: ['SWARM', 'MINION'],
     altitude: 0,
@@ -421,10 +371,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'WATER',
       secondaryElement: 'LIGHTNING',
       immunities: ['WATER', 'FIRE'],
-      damageMultipliers: {
-        EARTH: 1.8,
-        ICE: 1.3
-      }
     },
     tags: ['AQUATIC', 'SUMMONER'],
     altitude: 0,
@@ -453,9 +399,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'WATER',
       secondaryElement: 'LIGHTNING',
       immunities: ['WATER'],
-      damageMultipliers: {
-        EARTH: 1.7
-      }
     },
     tags: ['AQUATIC', 'FAST', 'MINION'],
     altitude: 0,
@@ -479,12 +422,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DRAGON',
       secondaryElement: 'POISON',
       immunities: ['POISON', 'FIRE'],
-      damageMultipliers: {
-        FAIRY: 2.2,
-        ICE: 1.8,
-        EARTH: 1.5,
-        DRAGON: 1.5
-      }
     },
     tags: ['BOSS', 'SUMMONER', 'SPLITTER'],
     altitude: 0,
@@ -518,13 +455,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'GRASS',
       immunities: [],
-      damageMultipliers: {
-        FIRE: 2.2,
-        ICE: 1.8,
-        POISON: 1.8,
-        WATER: 0.5,
-        EARTH: 0.5
-      }
     },
     tags: ['ARMORED'],
     altitude: 0,
@@ -548,11 +478,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'FAIRY',
       secondaryElement: 'WIND',
       immunities: ['DRAGON'],
-      damageMultipliers: {
-        STEEL: 2.2,
-        POISON: 2.0,
-        FIRE: 1.4
-      }
     },
     tags: ['FLYING', 'FAST'],
     altitude: 28,
@@ -576,11 +501,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'GRASS',
       secondaryElement: 'WATER',
       immunities: [],
-      damageMultipliers: {
-        FIRE: 2.0,
-        ICE: 1.8,
-        POISON: 1.6
-      }
     },
     tags: ['AQUATIC', 'ARMORED'],
     altitude: 0,
@@ -603,13 +523,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
     elementalProfile: {
       primaryElement: 'STEEL',
       immunities: ['POISON'],
-      damageMultipliers: {
-        FIRE: 2.2,
-        EARTH: 1.8,
-        LIGHTNING: 1.4,
-        STEEL: 0.3,
-        PHYSICAL: 0.5
-      }
     },
     tags: ['ARMORED'],
     altitude: 0,
@@ -633,11 +546,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'STEEL',
       secondaryElement: 'LIGHTNING',
       immunities: ['POISON', 'LIGHTNING'],
-      damageMultipliers: {
-        FIRE: 2.0,
-        EARTH: 2.0,
-        PHYSICAL: 0.4
-      }
     },
     tags: ['ARMORED', 'SPLITTER'],
     altitude: 0,
@@ -665,11 +573,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DRAGON',
       secondaryElement: 'FIRE',
       immunities: ['FIRE'],
-      damageMultipliers: {
-        ICE: 2.0,
-        FAIRY: 2.0,
-        WATER: 1.6
-      }
     },
     tags: [],
     altitude: 0,
@@ -693,11 +596,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DRAGON',
       secondaryElement: 'WIND',
       immunities: ['EARTH'],
-      damageMultipliers: {
-        ICE: 2.2,
-        FAIRY: 2.0,
-        LIGHTNING: 1.6
-      }
     },
     tags: ['FLYING', 'FAST'],
     altitude: 30,
@@ -721,12 +619,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'DRAGON',
       secondaryElement: 'WATER',
       immunities: ['WATER', 'FIRE'],
-      damageMultipliers: {
-        ICE: 1.8,
-        FAIRY: 1.8,
-        LIGHTNING: 1.8,
-        GRASS: 1.5
-      }
     },
     tags: ['AQUATIC'],
     altitude: 0,
@@ -750,11 +642,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'GHOST',
       secondaryElement: 'DARK',
       immunities: ['PHYSICAL', 'POISON'],
-      damageMultipliers: {
-        LIGHT: 2.2,
-        FAIRY: 1.8,
-        GHOST: 1.8
-      }
     },
     tags: ['UNBLOCKABLE', 'GHOST'],
     altitude: 8,
@@ -778,10 +665,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'GHOST',
       secondaryElement: 'ICE',
       immunities: ['PHYSICAL', 'ICE'],
-      damageMultipliers: {
-        LIGHT: 2.2,
-        FIRE: 2.0
-      }
     },
     tags: ['FLYING', 'GHOST'],
     altitude: 30,
@@ -805,11 +688,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'POISON',
       secondaryElement: 'GRASS',
       immunities: ['POISON'],
-      damageMultipliers: {
-        FIRE: 2.2,
-        ICE: 1.8,
-        WIND: 1.5
-      }
     },
     tags: ['SWARM', 'FAST'],
     altitude: 0,
@@ -833,11 +711,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'POISON',
       secondaryElement: 'WIND',
       immunities: ['POISON', 'EARTH'],
-      damageMultipliers: {
-        ICE: 1.8,
-        LIGHTNING: 1.6,
-        FIRE: 1.4
-      }
     },
     tags: ['FLYING', 'FAST'],
     altitude: 28,
@@ -861,11 +734,6 @@ export const ENEMY_BLUEPRINTS: Record<string, EnemyBlueprint> = {
       primaryElement: 'POISON',
       secondaryElement: 'WATER',
       immunities: ['POISON', 'WATER'],
-      damageMultipliers: {
-        EARTH: 1.8,
-        LIGHTNING: 1.8,
-        ICE: 1.4
-      }
     },
     tags: ['AQUATIC', 'SUMMONER'],
     altitude: 0,
