@@ -852,21 +852,24 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       TargetingRuleEngine.globalDamageMultiplier = 1.0;
     });
 
-    it('should support dual-element enemy matchup calculation', () => {
+    it('should support dual-element enemy matchup calculation and death-spawn ability', () => {
       // MAGMA_SLIME is FIRE + EARTH
       const slimeBp = ENEMY_BLUEPRINTS['MAGMA_SLIME'];
       expect(slimeBp.elementalProfile.secondaryElement).toBe('EARTH');
-      expect(slimeBp.deathSpawn).toBeDefined();
-      expect(slimeBp.deathSpawn?.typeId).toBe('EMBER_BLOB');
-      expect(slimeBp.deathSpawn?.count).toBe(2);
+      const deathSpawnAbility = slimeBp.abilities?.find((a) => a.type === 'DEATH_SPAWN');
+      expect(deathSpawnAbility).toBeDefined();
+      expect(deathSpawnAbility?.spawnTypeId).toBe('EMBER_BLOB');
+      expect(deathSpawnAbility?.count).toBe(2);
     });
 
-    it('should support summoner enemy blueprint config', () => {
+    it('should support summoner enemy blueprint config as skills', () => {
       // NECRO_WARLOCK summons SKELETON_MINION and spawns on death
       const warlockBp = ENEMY_BLUEPRINTS['NECRO_WARLOCK'];
-      expect(warlockBp.summonConfig).toBeDefined();
-      expect(warlockBp.summonConfig?.typeId).toBe('SKELETON_MINION');
-      expect(warlockBp.deathSpawn?.typeId).toBe('SKELETON_MINION');
+      const summonAbility = warlockBp.abilities?.find((a) => a.type === 'SUMMON');
+      const deathSpawnAbility = warlockBp.abilities?.find((a) => a.type === 'DEATH_SPAWN');
+      expect(summonAbility).toBeDefined();
+      expect(summonAbility?.spawnTypeId).toBe('SKELETON_MINION');
+      expect(deathSpawnAbility?.spawnTypeId).toBe('SKELETON_MINION');
       expect(warlockBp.elementalProfile.secondaryElement).toBe('ICE');
     });
 
@@ -899,14 +902,14 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       // Wave 15 (wave > 10, divisible by 5): Wave 9 + Wave 10, n = 1
       const wave15 = waveSys.generateWaveConfig(14, 25);
       expect(wave15.waveNumber).toBe(15);
-      // Boss from wave 10 is present
-      expect(wave15.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
+      // Boss from wave 10 is present (ANCIENT_TREANT_BOSS on MAP_VALLEY_ORIGIN)
+      expect(wave15.enemies.some((e) => e.typeId === 'ANCIENT_TREANT_BOSS')).toBe(true);
 
       // Wave 20 (wave > 10, divisible by 5): Wave 9 + Wave 10, n = 2
       const wave20 = waveSys.generateWaveConfig(19, 25);
       expect(wave20.waveNumber).toBe(20);
-      expect(wave20.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
-      const bossEntry = wave20.enemies.find((e) => e.typeId === 'DARK_DRAGON_BOSS')!;
+      expect(wave20.enemies.some((e) => e.typeId === 'ANCIENT_TREANT_BOSS')).toBe(true);
+      const bossEntry = wave20.enemies.find((e) => e.typeId === 'ANCIENT_TREANT_BOSS')!;
       expect(bossEntry.count).toBe(2); // 1 * n (n = 2)
     });
   });
@@ -1376,7 +1379,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
 
       // Wave 15: n = 1, Wave 9 + Wave 10
       const wave15 = waveSys.generateWaveConfig(14, 30);
-      expect(wave15.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
+      expect(wave15.enemies.some((e) => e.typeId === 'ANCIENT_TREANT_BOSS')).toBe(true);
 
       // Waves 21 to 24: n = 2, Wave 9 * 2
       const wave21 = waveSys.generateWaveConfig(20, 30);
@@ -1388,7 +1391,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
 
       // Wave 25: n = 2, (Wave 9 + Wave 10) * 2
       const wave25 = waveSys.generateWaveConfig(24, 30);
-      const boss = wave25.enemies.find((e) => e.typeId === 'DARK_DRAGON_BOSS')!;
+      const boss = wave25.enemies.find((e) => e.typeId === 'ANCIENT_TREANT_BOSS')!;
       expect(boss.count).toBe(2);
     });
 
@@ -1413,8 +1416,8 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       // 2. Verify spawned enemies have scaled hp and maxHp
       const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER']; // base hp = 45
       const golemBp = ENEMY_BLUEPRINTS['ROCK_GOLEM']; // base hp = 280
-      const bossBp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS']; // base hp = 1500
-      expect(bossBp.hp).toBe(1500);
+      const bossBp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS']; // base hp = 3000
+      expect(bossBp.hp).toBe(3000);
 
       // Test Wave 10 spawn (no increase)
       waveSys.startWave(10);
@@ -2149,7 +2152,18 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       }
 
       // Bosses must NOT be tagged with ELITE
-      const bossIds = ['DARK_DRAGON_BOSS', 'VOID_HYDRA_BOSS'];
+      const bossIds = [
+        'ANCIENT_TREANT_BOSS',
+        'IRON_OVERLORD_BOSS',
+        'DARK_DRAGON_BOSS',
+        'TEMPEST_LEVIATHAN_BOSS',
+        'INFERNO_MONARCH_BOSS',
+        'GLACIAL_TITAN_BOSS',
+        'SOUL_EMPEROR_BOSS',
+        'VOID_HYDRA_BOSS',
+        'ARCHANGEL_MONARCH_BOSS',
+        'CHRONO_DESTROYER_BOSS'
+      ];
       for (const id of bossIds) {
         const bp = ENEMY_BLUEPRINTS[id];
         expect(bp).toBeDefined();
@@ -2563,6 +2577,64 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(paladin.magicShield).toBe(0);
       expect(magicResult.hpLost).toBeGreaterThan(0);
       expect(paladin.hp).toBeLessThan(250);
+    });
+
+    it('should verify all 10 maps have 1 unique boss each at Wave 10', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      expect(MAPS_CONFIG.length).toBe(10);
+
+      const wave10BossIds = MAPS_CONFIG.map((m) => {
+        const wave10 = m.waves[9];
+        expect(wave10).toBeDefined();
+        const bossEnemy = wave10.enemies.find((e) => ENEMY_BLUEPRINTS[e.typeId]?.tags.includes('BOSS'));
+        expect(bossEnemy).toBeDefined();
+        return bossEnemy!.typeId;
+      });
+
+      // Verify all 10 bosses are distinct
+      const uniqueBosses = new Set(wave10BossIds);
+      expect(uniqueBosses.size).toBe(10);
+
+      // Verify each boss blueprint has skills configured (abilities)
+      for (const bossId of uniqueBosses) {
+        const bp = ENEMY_BLUEPRINTS[bossId];
+        expect(bp).toBeDefined();
+        expect(bp.tags).toContain('BOSS');
+        expect(bp.abilities).toBeDefined();
+        expect(bp.abilities!.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should verify EnemySkillSystem handles SUMMON and DEATH_SPAWN abilities', async () => {
+      const { EnemySkillSystem } = await import('../systems/EnemySkillSystem.js');
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const { NavigationSystem } = await import('../systems/NavigationSystem.js');
+      const { MAP_VALLEY_ORIGIN } = await import('../config/map.config.js');
+      const { GameState } = await import('../core/GameState.js');
+
+      const state = new GameState();
+      const waveSys = new WaveSystem(MAP_VALLEY_ORIGIN);
+      const navSys = new NavigationSystem(MAP_VALLEY_ORIGIN);
+
+      // 1. Test SUMMON ability via EnemySkillSystem.update
+      const summonerEnemy = waveSys.spawnMinionAt('NECRO_WARLOCK', 100, 100, 100, 0)!;
+      expect(summonerEnemy).toBeDefined();
+      expect(summonerEnemy.abilities).toBeDefined();
+      state.enemies = [summonerEnemy];
+
+      // Ready the timer
+      summonerEnemy.abilityTimers = summonerEnemy.abilities!.map(() => 0);
+      EnemySkillSystem.update(state.enemies, state.towers, state, 0.1, navSys, waveSys, 0);
+
+      // SKELETON_MINION should be spawned into state.enemies
+      const minions = state.enemies.filter((e) => e.typeId === 'SKELETON_MINION');
+      expect(minions.length).toBe(2);
+
+      // 2. Test DEATH_SPAWN ability via EnemySkillSystem.handleDeath
+      EnemySkillSystem.handleDeath(summonerEnemy, state, navSys, waveSys, 0);
+      const deathSpawnMinions = state.enemies.filter((e) => e.typeId === 'SKELETON_MINION');
+      expect(deathSpawnMinions.length).toBe(4); // 2 from summon + 2 from death spawn
     });
   });
 });

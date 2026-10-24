@@ -86,12 +86,12 @@ export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tinh Nhuệ Cơ Giới Hắc Ám (Tam Tuyến)',
+    name: 'Đợt 10: Trùm Thiết Giáp Lôi Đế Xuất Trận (Tam Tuyến)',
     rewardGold: 320,
     enemies: [
       { typeId: 'IRON_COLOSSUS', count: 3, interval: 2.5, delay: 0 },
       { typeId: 'STEEL_VANGUARD', count: 8, interval: 1.3, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'IRON_OVERLORD_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];

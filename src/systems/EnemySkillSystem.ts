@@ -1,13 +1,18 @@
 import { EnemyEntity, TowerEntity } from '../types/entities.types.js';
 import { GameState } from '../core/GameState.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
+import { NavigationSystem } from './NavigationSystem.js';
+import { WaveSystem } from './WaveSystem.js';
 
 export class EnemySkillSystem {
   public static update(
     enemies: EnemyEntity[],
     towers: TowerEntity[],
     state: GameState,
-    dt: number
+    dt: number,
+    navSystem?: NavigationSystem,
+    waveSystem?: WaveSystem,
+    totalAnimTime?: number
   ): void {
     for (const enemy of enemies) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
@@ -17,11 +22,57 @@ export class EnemySkillSystem {
 
       for (let i = 0; i < enemy.abilities.length; i++) {
         const ability = enemy.abilities[i];
+        // DEATH_SPAWN is triggered strictly on death, not during time update
+        if (ability.type === 'DEATH_SPAWN') continue;
+
+        const interval = ability.interval ?? 6.0;
         enemy.abilityTimers[i] -= dt;
 
         if (enemy.abilityTimers[i] <= 0) {
-          enemy.abilityTimers[i] = ability.interval;
-          this.executeAbility(enemy, ability, enemies, towers, state);
+          enemy.abilityTimers[i] = interval;
+          this.executeAbility(enemy, ability, enemies, towers, state, navSystem, waveSystem, totalAnimTime);
+        }
+      }
+    }
+  }
+
+  public static handleDeath(
+    enemy: EnemyEntity,
+    state: GameState,
+    navSystem?: NavigationSystem,
+    waveSystem?: WaveSystem,
+    totalAnimTime: number = 0
+  ): void {
+    if (!enemy.abilities || !navSystem || !waveSystem) return;
+
+    for (const ability of enemy.abilities) {
+      if (ability.type === 'DEATH_SPAWN' && ability.spawnTypeId) {
+        const count = ability.count || 1;
+        state.addFloatingText('💥 Phân tách!', enemy.x, enemy.y - 24, '#f97316', 15);
+
+        for (let s = 0; s < count; s++) {
+          const offset = (s - (count - 1) / 2) * 12;
+          const childDist = Math.max(0, enemy.pathDistance + offset);
+          const childNav = navSystem.getPointAlongPath(
+            enemy.navigationMode,
+            childDist,
+            totalAnimTime,
+            enemy.laneIndex ?? 0
+          );
+          const childEnemy = waveSystem.spawnMinionAt(
+            ability.spawnTypeId,
+            childDist,
+            childNav.position.x,
+            childNav.position.y,
+            enemy.laneIndex ?? 0
+          );
+          if (childEnemy) {
+            const pathInfo = navSystem.getPathInfo(childEnemy.navigationMode, childEnemy.laneIndex ?? 0);
+            childEnemy.pathTotalLength = pathInfo.totalLength;
+            childEnemy.facing = childNav.facing;
+            state.enemies.push(childEnemy);
+            state.addExplosionParticles(childNav.position.x, childNav.position.y, '#f97316', 5);
+          }
         }
       }
     }
@@ -32,9 +83,44 @@ export class EnemySkillSystem {
     ability: NonNullable<EnemyEntity['abilities']>[0],
     allEnemies: EnemyEntity[],
     allTowers: TowerEntity[],
-    state: GameState
+    state: GameState,
+    navSystem?: NavigationSystem,
+    waveSystem?: WaveSystem,
+    totalAnimTime: number = 0
   ): void {
     switch (ability.type) {
+      case 'SUMMON': {
+        if (!ability.spawnTypeId || !navSystem || !waveSystem) break;
+        const count = ability.count || 1;
+        state.addFloatingText('🔮 Triệu hồi!', sourceEnemy.x, sourceEnemy.y - 20, '#a855f7', 15);
+        state.addExplosionParticles(sourceEnemy.x, sourceEnemy.y, '#a855f7', 10);
+
+        for (let s = 0; s < count; s++) {
+          const offset = (s + 1) * 14;
+          const minionDist = Math.max(0, sourceEnemy.pathDistance - offset);
+          const mNav = navSystem.getPointAlongPath(
+            sourceEnemy.navigationMode,
+            minionDist,
+            totalAnimTime,
+            sourceEnemy.laneIndex ?? 0
+          );
+          const minion = waveSystem.spawnMinionAt(
+            ability.spawnTypeId,
+            minionDist,
+            mNav.position.x,
+            mNav.position.y,
+            sourceEnemy.laneIndex ?? 0
+          );
+          if (minion) {
+            const pathInfo = navSystem.getPathInfo(minion.navigationMode, minion.laneIndex ?? 0);
+            minion.pathTotalLength = pathInfo.totalLength;
+            minion.facing = mNav.facing;
+            allEnemies.push(minion);
+          }
+        }
+        break;
+      }
+
       case 'DISABLE_TOWER': {
         const maxTargets = ability.maxTargets || 1;
         const radius = ability.radius || 150;
@@ -149,4 +235,3 @@ export class EnemySkillSystem {
     }
   }
 }
-

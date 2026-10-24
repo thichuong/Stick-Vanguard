@@ -308,7 +308,15 @@ class GameApp {
     );
 
     // 2. Update Enemies along Path
-    EnemySkillSystem.update(this.state.enemies, this.state.towers, this.state, dt);
+    EnemySkillSystem.update(
+      this.state.enemies,
+      this.state.towers,
+      this.state,
+      dt,
+      this.navSystem,
+      this.waveSystem,
+      this.totalAnimTime
+    );
     const basePos = this.state.currentMap.playerBase;
     for (let i = this.state.enemies.length - 1; i >= 0; i--) {
       const enemy = this.state.enemies[i];
@@ -328,73 +336,11 @@ class GameApp {
         }
         this.state.addExplosionParticles(enemy.x, enemy.y, ELEMENT_COLORS[enemy.elementalProfile.primaryElement], 8);
 
-        // Check Death-Spawn / Split Mechanic
-        if (enemy.deathSpawn) {
-          const cfg = enemy.deathSpawn;
-          this.state.addFloatingText('💥 Phân tách!', enemy.x, enemy.y - 24, '#f97316', 15);
-          for (let s = 0; s < cfg.count; s++) {
-            const offset = (s - (cfg.count - 1) / 2) * 12;
-            const childDist = Math.max(0, enemy.pathDistance + offset);
-            const childNav = this.navSystem.getPointAlongPath(
-              enemy.navigationMode,
-              childDist,
-              this.totalAnimTime,
-              enemy.laneIndex ?? 0
-            );
-            const childEnemy = this.waveSystem.spawnMinionAt(
-              cfg.typeId,
-              childDist,
-              childNav.position.x,
-              childNav.position.y,
-              enemy.laneIndex ?? 0
-            );
-            if (childEnemy) {
-              const pathInfo = this.navSystem.getPathInfo(childEnemy.navigationMode, childEnemy.laneIndex ?? 0);
-              childEnemy.pathTotalLength = pathInfo.totalLength;
-              childEnemy.facing = childNav.facing;
-              this.state.enemies.push(childEnemy);
-              this.state.addExplosionParticles(childNav.position.x, childNav.position.y, '#f97316', 5);
-            }
-          }
-        }
+        // Check Death-Spawn / Split Mechanic via EnemySkillSystem
+        EnemySkillSystem.handleDeath(enemy, this.state, this.navSystem, this.waveSystem, this.totalAnimTime);
 
         this.state.enemies.splice(i, 1);
         continue;
-      }
-
-      // Enemy Summoning Mechanic along path
-      if (enemy.summonConfig && (enemy.state === 'WALKING' || enemy.state === 'SWIMMING' || enemy.state === 'FLYING' || enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING')) {
-        enemy.summonTimer = (enemy.summonTimer ?? enemy.summonConfig.interval) - dt;
-        if (enemy.summonTimer <= 0) {
-          enemy.summonTimer = enemy.summonConfig.interval;
-          const sCfg = enemy.summonConfig;
-          this.state.addFloatingText('🔮 Triệu hồi!', enemy.x, enemy.y - 20, '#a855f7', 15);
-          this.state.addExplosionParticles(enemy.x, enemy.y, '#a855f7', 10);
-
-          for (let s = 0; s < sCfg.count; s++) {
-            const offset = (s + 1) * 14;
-            const minionDist = Math.max(0, enemy.pathDistance - offset);
-            const mNav = this.navSystem.getPointAlongPath(
-              enemy.navigationMode,
-              minionDist,
-              this.totalAnimTime,
-              enemy.laneIndex ?? 0
-            );
-            const minion = this.waveSystem.spawnMinionAt(
-              sCfg.typeId,
-              minionDist,
-              mNav.position.x,
-              mNav.position.y,
-              enemy.laneIndex ?? 0
-            );
-            if (minion) {
-              const pathInfo = this.navSystem.getPathInfo(minion.navigationMode, minion.laneIndex ?? 0);
-              minion.pathTotalLength = pathInfo.totalLength;
-              minion.facing = mNav.facing;
-              this.state.enemies.push(minion);
-            }
-          }
-        }
       }
 
       if (enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING') {

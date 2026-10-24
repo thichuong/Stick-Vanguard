@@ -76,28 +76,37 @@ export class EnemyArchetypeRenderer {
       return 'SLIME_CRYSTAL';
     }
 
-    // 7. Colossus & Golems & Chrono Destroyer
+    // 7. Colossus & Golems & Boss Titans
     if (
       id === 'ROCK_GOLEM' ||
       id === 'FROST_CRYSTAL_GOLEM' ||
       id === 'IRON_COLOSSUS' ||
-      id === 'CHRONO_DESTROYER_BOSS'
+      id === 'CHRONO_DESTROYER_BOSS' ||
+      id === 'ANCIENT_TREANT_BOSS' ||
+      id === 'IRON_OVERLORD_BOSS' ||
+      id === 'INFERNO_MONARCH_BOSS' ||
+      id === 'GLACIAL_TITAN_BOSS'
     ) {
       return 'COLOSSUS';
     }
 
-    // 8. Wraiths & Reapers & Degrader
+    // 8. Wraiths & Reapers & Degrader & Soul Emperor
     if (
       id === 'SHADOW_WRAITH' ||
       id === 'PHANTOM_REAPER' ||
       id === 'SPECTRAL_BANSHEE' ||
-      id === 'HEX_DEGRADER'
+      id === 'HEX_DEGRADER' ||
+      id === 'SOUL_EMPEROR_BOSS'
     ) {
       return 'WRAITH_REAPER';
     }
 
-    // 9. Siren (Mermaid) & Priestess
-    if (id === 'STORM_CALLER_SIREN' || id === 'TIDAL_PRIESTESS') {
+    // 9. Siren (Mermaid) & Priestess & Tempest Leviathan
+    if (
+      id === 'STORM_CALLER_SIREN' ||
+      id === 'TIDAL_PRIESTESS' ||
+      id === 'TEMPEST_LEVIATHAN_BOSS'
+    ) {
       return 'SIREN';
     }
 

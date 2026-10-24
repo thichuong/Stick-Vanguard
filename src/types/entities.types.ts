@@ -56,6 +56,8 @@ export interface SummonAbilityConfig {
 }
 
 export type EnemyAbilityType =
+  | 'SUMMON'                // Triệu hồi quái hộ tống định kỳ trên đường đi
+  | 'DEATH_SPAWN'           // Phân tách / sinh quái con khi bị tiêu diệt
   | 'DISABLE_TOWER'         // Vô hiệu hóa tháp trong tầm
   | 'DOWNGRADE_TOWER'       // Làm tháp rơi 1 cấp (hoặc phá hủy nếu cấp 1)
   | 'ARMOR_SHIELD_AURA'     // Tạo Giáp Ảo chặn sát thương vật lý cho bản thân & quái xung quanh
@@ -65,11 +67,13 @@ export type EnemyAbilityType =
 
 export interface EnemyAbilityConfig {
   type: EnemyAbilityType;
-  interval: number;       // Chu kỳ kích hoạt (giây)
-  radius: number;         // Bán kính tác dụng lên tháp hoặc đồng minh (px)
-  value: number;          // Lượng giáp/khiên, lượng máu hồi, hoặc % giảm sát thương (0 - 0.6)
+  interval?: number;      // Chu kỳ kích hoạt (giây) - dùng cho các kỹ năng chủ động định kỳ
+  radius?: number;        // Bán kính tác dụng lên tháp hoặc đồng minh (px)
+  value?: number;         // Lượng giáp/khiên, lượng máu hồi, hoặc % giảm sát thương (0 - 0.6)
   duration?: number;      // Thời gian vô hiệu hóa tháp hoặc thời gian tồn tại buff giảm sát thương
   maxTargets?: number;    // Số tháp tối đa bị tác động mỗi lần tung chiêu (mặc định 1)
+  spawnTypeId?: string;   // Mã loại quái được triệu hồi (SUMMON) hoặc phân tách (DEATH_SPAWN)
+  count?: number;         // Số lượng quái sinh ra (SUMMON / DEATH_SPAWN)
 }
 
 export interface SoldierEntity {

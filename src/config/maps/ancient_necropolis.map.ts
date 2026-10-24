@@ -82,12 +82,12 @@ export const WAVES_ANCIENT_NECROPOLIS: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Trùm Hắc Long Hư Vô',
+    name: 'Đợt 10: Trùm U Minh Tử Đế Thức Tỉnh',
     rewardGold: 420,
     enemies: [
       { typeId: 'SHADOW_WRAITH', count: 8, interval: 1.4, delay: 0 },
       { typeId: 'NECRO_WARLOCK', count: 4, interval: 2.2, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'SOUL_EMPEROR_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];

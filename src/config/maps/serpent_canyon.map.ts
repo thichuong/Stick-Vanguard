@@ -86,8 +86,8 @@ export const WAVES_SERPENT_CANYON: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tiền Trạm Trùm - Khổng Lồ Nham Thạch & Phi Long',
-    rewardGold: 320,
+    name: 'Đợt 10: Đại Hắc Long Ma Vương Giáng Lâm',
+    rewardGold: 340,
     enemies: [
       { typeId: 'DRAKE_WARRIOR', count: 8, interval: 1.4, delay: 0 },
       { typeId: 'ROCK_GOLEM', count: 5, interval: 2.0, delay: 3 },

@@ -22,10 +22,9 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 21,
     color: '#ea580c',
-    deathSpawn: {
-      typeId: 'EMBER_BLOB',
-      count: 2
-    }
+    abilities: [
+      { type: 'DEATH_SPAWN', spawnTypeId: 'EMBER_BLOB', count: 2 }
+    ]
   },
 
   // 11. Tinh Thể Băng Nham (2 Thuộc tính: Băng + Đất, chết vỡ thành 3 Mảnh Băng Tinh)
@@ -49,10 +48,9 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 26,
     color: '#0284c7',
-    deathSpawn: {
-      typeId: 'ICE_SHARDLING',
-      count: 3
-    }
+    abilities: [
+      { type: 'DEATH_SPAWN', spawnTypeId: 'ICE_SHARDLING', count: 3 }
+    ]
   },
 
   // 13. Pháp Sư Chiêu Hồn (2 Thuộc tính: Bóng Tối + Băng, triệu hồi Khô Cốt trên đường đi & khi chết)
@@ -76,15 +74,10 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 20,
     color: '#9333ea',
-    summonConfig: {
-      typeId: 'SKELETON_MINION',
-      count: 2,
-      interval: 5.5
-    },
-    deathSpawn: {
-      typeId: 'SKELETON_MINION',
-      count: 2
-    }
+    abilities: [
+      { type: 'SUMMON', spawnTypeId: 'SKELETON_MINION', count: 2, interval: 5.5 },
+      { type: 'DEATH_SPAWN', spawnTypeId: 'SKELETON_MINION', count: 2 }
+    ]
   },
 
   // 15. Tiên Cá Gọi Bão (2 Thuộc tính: Nước + Sét, bơi sông & triệu hồi Lươn Điện)
@@ -108,11 +101,9 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 21,
     color: '#06b6d4',
-    summonConfig: {
-      typeId: 'SPARK_EEL',
-      count: 2,
-      interval: 6.0
-    }
+    abilities: [
+      { type: 'SUMMON', spawnTypeId: 'SPARK_EEL', count: 2, interval: 6.0 }
+    ]
   },
 
   // 22. Khổng Lồ Thép (Hệ Thép + Sét - WALK, Tộc Thiết Giáp)
@@ -136,10 +127,9 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 28,
     color: '#475569',
-    deathSpawn: {
-      typeId: 'STEEL_VANGUARD',
-      count: 2
-    }
+    abilities: [
+      { type: 'DEATH_SPAWN', spawnTypeId: 'STEEL_VANGUARD', count: 2 }
+    ]
   },
 
   // 30. Thủy Quái Kịch Độc (Hệ Độc + Nước - SWIM, Tộc Đầm Lầy)
@@ -163,11 +153,9 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 24,
     color: '#4d7c0f',
-    summonConfig: {
-      typeId: 'VENOM_ARACHNID',
-      count: 2,
-      interval: 6.0
-    }
+    abilities: [
+      { type: 'SUMMON', spawnTypeId: 'VENOM_ARACHNID', count: 2, interval: 6.0 }
+    ]
   },
 
   // 38. Pháp Sư Hủy Cấp (Hệ Bóng Tối + Ma - WALK, Tinh Anh Tộc Hắc Tinh)

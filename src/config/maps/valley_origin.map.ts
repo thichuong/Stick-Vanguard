@@ -86,12 +86,12 @@ export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tiền Trạm Trùm - Đại Hắc Long',
+    name: 'Đợt 10: Trùm Cổ Thụ Tinh Vương Thức Tỉnh',
     rewardGold: 300,
     enemies: [
       { typeId: 'TREANT_GUARD', count: 6, interval: 1.5, delay: 0 },
       { typeId: 'FAIRY_SPRITE', count: 6, interval: 1.5, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'ANCIENT_TREANT_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];

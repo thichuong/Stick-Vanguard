@@ -86,12 +86,12 @@ export const WAVES_DELTA_FORTRESS: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Tiền Trạm Trùm - Hải Thần Bão Tố & Song Quái',
-    rewardGold: 340,
+    name: 'Đợt 10: Trùm Hải Vương Cuồng Lôi Đại Náo (Tam Tuyến)',
+    rewardGold: 360,
     enemies: [
       { typeId: 'STORM_CALLER_SIREN', count: 4, interval: 2.0, delay: 0 },
       { typeId: 'STEEL_VANGUARD', count: 8, interval: 1.3, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'TEMPEST_LEVIATHAN_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];

@@ -80,12 +80,12 @@ export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Trùm Hắc Long Giá Lạnh',
+    name: 'Đợt 10: Trùm Băng Đế Cực Hàn Giáng Thế',
     rewardGold: 400,
     enemies: [
       { typeId: 'FROST_CRYSTAL_GOLEM', count: 5, interval: 2.0, delay: 0 },
       { typeId: 'STORM_CALLER_SIREN', count: 4, interval: 2.0, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'GLACIAL_TITAN_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];

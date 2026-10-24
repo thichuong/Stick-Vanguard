@@ -287,9 +287,6 @@ export class WaveSystem {
       altitude: bp.altitude,
       size: bp.size,
       facing: 0,
-      deathSpawn: bp.deathSpawn ? { ...bp.deathSpawn } : undefined,
-      summonConfig: bp.summonConfig ? { ...bp.summonConfig } : undefined,
-      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined,
       ccResistance: bp.ccResistance
         ? {
             hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
@@ -297,7 +294,7 @@ export class WaveSystem {
           }
         : undefined,
       abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
-      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval) : undefined,
+      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval ?? 0) : undefined,
       armorShield: 0,
       maxArmorShield: 0,
       magicShield: 0,
@@ -358,9 +355,6 @@ export class WaveSystem {
       altitude: bp.altitude,
       size: bp.size,
       facing: 0,
-      deathSpawn: bp.deathSpawn ? { ...bp.deathSpawn } : undefined,
-      summonConfig: bp.summonConfig ? { ...bp.summonConfig } : undefined,
-      summonTimer: bp.summonConfig ? bp.summonConfig.interval : undefined,
       ccResistance: bp.ccResistance
         ? {
             hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
@@ -368,7 +362,7 @@ export class WaveSystem {
           }
         : undefined,
       abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
-      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval) : undefined,
+      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval ?? 0) : undefined,
       armorShield: 0,
       maxArmorShield: 0,
       magicShield: 0,

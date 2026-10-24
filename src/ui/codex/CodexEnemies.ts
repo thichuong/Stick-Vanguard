@@ -61,9 +61,9 @@ export class CodexEnemies {
       // 4. Tag Filter
       if (this.enemyTagFilter !== 'ALL') {
         if (this.enemyTagFilter === 'DEATH_SPAWN') {
-          if (!bp.deathSpawn) return false;
+          if (!bp.abilities?.some((a) => a.type === 'DEATH_SPAWN')) return false;
         } else if (this.enemyTagFilter === 'SUMMONER') {
-          if (!bp.summonConfig && !bp.tags.includes('SUMMONER')) return false;
+          if (!bp.abilities?.some((a) => a.type === 'SUMMON') && !bp.tags.includes('SUMMONER')) return false;
         } else if (this.enemyTagFilter === 'DUAL_ELEMENT') {
           if (!bp.elementalProfile.secondaryElement) return false;
         } else if (this.enemyTagFilter === 'DISABLE_TOWER') {
@@ -107,10 +107,10 @@ export class CodexEnemies {
         } else if (bp.tags.includes('ELITE')) {
           badges += `<span style="font-size: 10px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 1px 4px; border-radius: 3px;">⭐</span>`;
         }
-        if (bp.deathSpawn) {
+        if (bp.abilities?.some((a) => a.type === 'DEATH_SPAWN')) {
           badges += `<span style="font-size: 10px; background: rgba(249, 115, 22, 0.25); color: #f97316; padding: 1px 4px; border-radius: 3px;">💥</span>`;
         }
-        if (bp.summonConfig) {
+        if (bp.abilities?.some((a) => a.type === 'SUMMON')) {
           badges += `<span style="font-size: 10px; background: rgba(168, 85, 247, 0.25); color: #c084fc; padding: 1px 4px; border-radius: 3px;">🔮</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'DOWNGRADE_TOWER')) {
@@ -284,19 +284,17 @@ export class CodexEnemies {
     } else if (bp.tags.includes('ELITE')) {
       abilityBadges += `<span style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800;">⭐ TINH ANH (ELITE)</span>`;
     }
-    if (bp.deathSpawn) {
-      abilityBadges += `<span style="background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">💥 Phân tách x${bp.deathSpawn.count}</span>`;
-    }
-    if (bp.summonConfig) {
-      abilityBadges += `<span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔮 Triệu hồi mỗi ${bp.summonConfig.interval}s</span>`;
-    }
     if (sElem) {
       abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">✨ Song Thuộc Tính</span>`;
     }
 
     if (bp.abilities) {
       for (const ab of bp.abilities) {
-        if (ab.type === 'DOWNGRADE_TOWER') {
+        if (ab.type === 'DEATH_SPAWN') {
+          abilityBadges += `<span style="background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">💥 Phân tách x${ab.count || 1}</span>`;
+        } else if (ab.type === 'SUMMON') {
+          abilityBadges += `<span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔮 Triệu hồi mỗi ${ab.interval || 6}s</span>`;
+        } else if (ab.type === 'DOWNGRADE_TOWER') {
           abilityBadges += `<span style="background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">⬇️ Hạ Cấp Tháp</span>`;
         } else if (ab.type === 'DISABLE_TOWER') {
           abilityBadges += `<span style="background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">⚡ Vô Hiệu Tháp</span>`;
@@ -307,7 +305,7 @@ export class CodexEnemies {
         } else if (ab.type === 'HEAL_AURA') {
           abilityBadges += `<span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">💚 Hồi Máu +${ab.value}</span>`;
         } else if (ab.type === 'DAMAGE_REDUCTION_AURA') {
-          abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔰 Giảm -${Math.round(ab.value * 100)}% Dmg</span>`;
+          abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔰 Giảm -${Math.round((ab.value || 0) * 100)}% Dmg</span>`;
         }
       }
     }
@@ -441,7 +439,7 @@ export class CodexEnemies {
 
       <!-- 2. Special Traits Breakdown (if any) -->
       ${
-        bp.deathSpawn || bp.summonConfig || sElem || bp.tags.includes('BOSS') || bp.tags.includes('ELITE') || (bp.abilities && bp.abilities.length > 0)
+        sElem || bp.tags.includes('BOSS') || bp.tags.includes('ELITE') || (bp.abilities && bp.abilities.length > 0)
           ? `
           <div class="sp-section sp-card" style="border-left: 4px solid #a855f7; background: #0c1424;">
             <h4 class="sp-sec-title" style="color: #c084fc; margin-bottom: 8px;">🔮 ĐẶC TÍNH CHIẾN ĐẤU & KỸ NĂNG ĐẶC BIỆT</h4>
@@ -454,20 +452,14 @@ export class CodexEnemies {
                   : ''
               }
               ${
-                bp.deathSpawn
-                  ? `<div>💥 <b>Kỹ Năng Phân Tách:</b> Khi bị hạ gục, lập tức phân tách thành <b>x${bp.deathSpawn.count} ${ENEMY_BLUEPRINTS[bp.deathSpawn.typeId]?.name || bp.deathSpawn.typeId}</b> tiếp tục hành trình xâm lăng!</div>`
-                  : ''
-              }
-              ${
-                bp.summonConfig
-                  ? `<div>🔮 <b>Kỹ Năng Triệu Hồi:</b> Cứ mỗi <b>${bp.summonConfig.interval} giây</b> trên đường đi, tự động triệu tập <b>x${bp.summonConfig.count} ${ENEMY_BLUEPRINTS[bp.summonConfig.typeId]?.name || bp.summonConfig.typeId}</b> bảo vệ xung quanh!</div>`
-                  : ''
-              }
-              ${
                 bp.abilities
                   ? bp.abilities
                       .map((ab) => {
-                        if (ab.type === 'DISABLE_TOWER') {
+                        if (ab.type === 'DEATH_SPAWN') {
+                          return `<div>💥 <b>Kỹ Năng Phân Tách:</b> Khi bị hạ gục, lập tức phân tách thành <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> tiếp tục hành trình xâm lăng!</div>`;
+                        } else if (ab.type === 'SUMMON') {
+                          return `<div>🔮 <b>Kỹ Năng Triệu Hồi:</b> Cứ mỗi <b>${ab.interval || 6} giây</b> trên đường đi, tự động triệu tập <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> bảo vệ xung quanh!</div>`;
+                        } else if (ab.type === 'DISABLE_TOWER') {
                           return `<div>⚡ <b>Vô Hiệu Hóa Tháp:</b> Mỗi <b>${ab.interval}s</b>, phóng xung điện từ làm tê liệt <b>${ab.maxTargets || 1} tháp</b> trong bán kính <b>${ab.radius}px</b> suốt <b>${ab.duration}s</b>!</div>`;
                         } else if (ab.type === 'DOWNGRADE_TOWER') {
                           return `<div>⬇️ <b>Hạ Cấp / Phá Hủy Tháp:</b> Mỗi <b>${ab.interval}s</b>, bắn tia tà thuật vào tháp trong bán kính <b>${ab.radius}px</b> làm <b>tháp tụt 1 cấp độ</b> (nếu tháp ở Cấp 1 sẽ <b>bị phá hủy hoàn toàn</b>)!</div>`;
@@ -478,7 +470,7 @@ export class CodexEnemies {
                         } else if (ab.type === 'HEAL_AURA') {
                           return `<div>💚 <b>Trận Địa Trị Liệu:</b> Mỗi <b>${ab.interval}s</b>, hồi phục <b>+${ab.value} Máu</b> cho bản thân và tất cả quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'DAMAGE_REDUCTION_AURA') {
-                          return `<div>🔰 <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round(ab.value * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>🔰 <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round((ab.value || 0) * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         }
                         return '';
                       })

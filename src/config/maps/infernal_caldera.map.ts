@@ -82,12 +82,12 @@ export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
   },
   {
     waveNumber: 10,
-    name: 'Đợt 10: Chúa Tể Hỏa Ngục - Song Trùm Ma Vương',
+    name: 'Đợt 10: Chúa Tể Hỏa Ngục - Hỏa Ngục Viêm Đế',
     rewardGold: 380,
     enemies: [
       { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 0 },
       { typeId: 'MAGMA_SLIME', count: 6, interval: 1.6, delay: 3 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
+      { typeId: 'INFERNO_MONARCH_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
   }
 ];
