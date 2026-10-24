@@ -879,24 +879,35 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(waveSys.getTotalWaves()).toBe(15);
     });
 
-    it('should scale waves procedurally up to any configured wave count', async () => {
+    it('should scale waves procedurally up to any configured wave count based on map description', async () => {
       const { WaveSystem } = await import('../systems/WaveSystem.js');
-      const waveSys = new WaveSystem();
+      const { MAP_VALLEY_ORIGIN } = await import('../config/map.config.js');
+      const waveSys = new WaveSystem(MAP_VALLEY_ORIGIN);
       waveSys.setTotalWaves(25);
       expect(waveSys.getTotalWaves()).toBe(25);
 
       const wave1 = waveSys.generateWaveConfig(0, 25);
       expect(wave1.waveNumber).toBe(1);
+      // Map's wave 1 description
+      expect(wave1.enemies.some((e) => e.typeId === 'STICK_RUNNER')).toBe(true);
 
+      // Wave 11 (wave > 10, not divisible by 5): same enemies as Wave 9, n = 1
+      const wave11 = waveSys.generateWaveConfig(10, 25);
+      expect(wave11.waveNumber).toBe(11);
+      expect(wave11.enemies.some((e) => e.typeId === 'TREANT_GUARD')).toBe(true);
+
+      // Wave 15 (wave > 10, divisible by 5): Wave 9 + Wave 10, n = 1
       const wave15 = waveSys.generateWaveConfig(14, 25);
       expect(wave15.waveNumber).toBe(15);
-      // Wave 15 is a milestone boss wave
-      expect(wave15.enemies.some((e) => e.typeId.includes('BOSS'))).toBe(true);
+      // Boss from wave 10 is present
+      expect(wave15.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
 
-      const wave25 = waveSys.generateWaveConfig(24, 25);
-      expect(wave25.waveNumber).toBe(25);
-      // Final wave has final bosses
-      expect(wave25.enemies.some((e) => e.typeId === 'VOID_HYDRA_BOSS')).toBe(true);
+      // Wave 20 (wave > 10, divisible by 5): Wave 9 + Wave 10, n = 2
+      const wave20 = waveSys.generateWaveConfig(19, 25);
+      expect(wave20.waveNumber).toBe(20);
+      expect(wave20.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
+      const bossEntry = wave20.enemies.find((e) => e.typeId === 'DARK_DRAGON_BOSS')!;
+      expect(bossEntry.count).toBe(2); // 1 * n (n = 2)
     });
   });
 
@@ -1338,83 +1349,47 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
     });
   });
 
-  describe('Post Wave 10 High Difficulty & Full Enemy Variety Scaling', () => {
-    it('should have all maps configured with at least 20 waves and high-difficulty extended waves', async () => {
-      const { MAPS_CONFIG, WAVES_CONFIG, WAVES_EXTENDED_POST_10 } = await import('../config/map.config.js');
-      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
-
-      expect(WAVES_EXTENDED_POST_10.length).toBe(10); // Waves 11 to 20
-      expect(WAVES_CONFIG.length).toBeGreaterThanOrEqual(20);
+  describe('Post Wave 10 Map-Themed Enemy Scaling', () => {
+    it('should have all maps configured with 10 detailed tribe-themed waves', async () => {
+      const { MAPS_CONFIG, WAVES_CONFIG } = await import('../config/map.config.js');
+      expect(WAVES_CONFIG.length).toBeGreaterThanOrEqual(10);
 
       for (const map of MAPS_CONFIG) {
-        expect(map.waves.length).toBeGreaterThanOrEqual(20);
-
-        // Check waves 11 to 20
-        const post10Waves = map.waves.filter((w) => w.waveNumber > 10 && w.waveNumber <= 20);
-        expect(post10Waves.length).toBe(10);
-
-        // Verify full variety across multi-domains (WALK, FLY, SWIM)
-        for (const wave of post10Waves) {
-          const types = new Set(wave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
-          expect(types.has('WALK')).toBe(true);
-          expect(types.has('FLY')).toBe(true);
-          expect(types.has('SWIM')).toBe(true);
-        }
-
-        // Verify final wave 20 has both supreme bosses
-        const wave20 = map.waves.find((w) => w.waveNumber === 20)!;
-        expect(wave20.enemies.some((e) => e.typeId === 'VOID_HYDRA_BOSS')).toBe(true);
-        expect(wave20.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
-
-        // Verify enemy count strictly increases wave-over-wave from wave 11 to wave 19
-        for (let w = 11; w < 19; w++) {
-          const currentWave = map.waves.find((item) => item.waveNumber === w)!;
-          const nextWave = map.waves.find((item) => item.waveNumber === w + 1)!;
-
-          const currentTotalCount = currentWave.enemies.reduce((sum, e) => sum + e.count, 0);
-          const nextTotalCount = nextWave.enemies.reduce((sum, e) => sum + e.count, 0);
-
-          // Unless it's wave 15 boss milestone (which has massive boss HP), enemy count generally escalates
-          if (w !== 14) {
-            expect(nextTotalCount).toBeGreaterThan(currentTotalCount);
-          }
-        }
+        expect(map.waves.length).toBe(10);
       }
     });
 
-    it('should scale procedural waves dynamically beyond wave 10 with full enemy roster and increasing quantities', async () => {
+    it('should scale procedural waves beyond wave 10 based on map Wave 9 and Wave 10 with n-multiplier', async () => {
       const { WaveSystem } = await import('../systems/WaveSystem.js');
-      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
-      const waveSys = new WaveSystem(undefined, 30);
+      const { MAP_VALLEY_ORIGIN } = await import('../config/map.config.js');
+      const waveSys = new WaveSystem(MAP_VALLEY_ORIGIN, 30);
 
-      let prevTotalCount = 0;
-      for (let w = 11; w <= 25; w++) {
-        const wave = waveSys.generateWaveConfig(w - 1, 30);
-        expect(wave.waveNumber).toBe(w);
-
-        // Verify full enemy variety (WALK, FLY, SWIM)
-        const types = new Set(wave.enemies.map((e) => ENEMY_BLUEPRINTS[e.typeId].movementType));
-        expect(types.has('WALK')).toBe(true);
-        expect(types.has('FLY')).toBe(true);
-        expect(types.has('SWIM')).toBe(true);
-
-        // Verify high-tier enemy presence (Summoners / Splitters / Wraiths)
-        const typeIds = new Set(wave.enemies.map((e) => e.typeId));
-        if (w % 5 !== 0) {
-          expect(typeIds.has('FROST_CRYSTAL_GOLEM')).toBe(true);
-          expect(typeIds.has('MAGMA_SLIME')).toBe(true);
-          expect(typeIds.has('NECRO_WARLOCK')).toBe(true);
-          expect(typeIds.has('STORM_CALLER_SIREN')).toBe(true);
-          expect(typeIds.has('SHADOW_WRAITH')).toBe(true);
-        }
-
-        const totalEnemies = wave.enemies.reduce((sum, e) => sum + e.count, 0);
-        // Compare regular non-boss wave progression (e.g. wave 12 vs 11, 13 vs 12, 14 vs 13)
-        if (w > 11 && w % 5 !== 0 && (w - 1) % 5 !== 0) {
-          expect(totalEnemies).toBeGreaterThan(prevTotalCount);
-        }
-        prevTotalCount = totalEnemies;
+      // Waves 11 to 14: n = 1, same as Wave 9 of map
+      const wave9Enemies = MAP_VALLEY_ORIGIN.waves[8].enemies;
+      const wave11 = waveSys.generateWaveConfig(10, 30);
+      expect(wave11.enemies.length).toBe(wave9Enemies.length);
+      for (const entry of wave11.enemies) {
+        const orig = wave9Enemies.find((e) => e.typeId === entry.typeId)!;
+        expect(orig).toBeDefined();
+        expect(entry.count).toBe(orig.count * 1);
       }
+
+      // Wave 15: n = 1, Wave 9 + Wave 10
+      const wave15 = waveSys.generateWaveConfig(14, 30);
+      expect(wave15.enemies.some((e) => e.typeId === 'DARK_DRAGON_BOSS')).toBe(true);
+
+      // Waves 21 to 24: n = 2, Wave 9 * 2
+      const wave21 = waveSys.generateWaveConfig(20, 30);
+      for (const entry of wave21.enemies) {
+        const orig = wave9Enemies.find((e) => e.typeId === entry.typeId)!;
+        expect(orig).toBeDefined();
+        expect(entry.count).toBe(orig.count * 2);
+      }
+
+      // Wave 25: n = 2, (Wave 9 + Wave 10) * 2
+      const wave25 = waveSys.generateWaveConfig(24, 30);
+      const boss = wave25.enemies.find((e) => e.typeId === 'DARK_DRAGON_BOSS')!;
+      expect(boss.count).toBe(2);
     });
 
     it('should scale enemy maxHp by 10% per wave after wave 10', async () => {
@@ -2392,11 +2367,11 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
 
       expect(celestial).toBeDefined();
       expect(celestial?.name).toBe('Thánh Điện Thiên Không');
-      expect(celestial?.waves.length).toBeGreaterThanOrEqual(20);
+      expect(celestial?.waves.length).toBe(10);
 
       expect(voidMap).toBeDefined();
       expect(voidMap?.name).toBe('Vực Thẳm Hắc Tinh');
-      expect(voidMap?.waves.length).toBeGreaterThanOrEqual(20);
+      expect(voidMap?.waves.length).toBe(10);
     });
 
     it('should have all 10 new enemy blueprints properly configured with valid stats and abilities', async () => {

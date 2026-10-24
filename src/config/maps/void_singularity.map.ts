@@ -1,5 +1,4 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_VOID_SINGULARITY: WaveConfig[] = [
   {
@@ -99,8 +98,7 @@ export const WAVES_VOID_SINGULARITY: WaveConfig[] = [
       { typeId: 'ABYSSAL_CRAB', count: 5, interval: 1.8, delay: 4 },
       { typeId: 'CHRONO_DESTROYER_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  },
-  ...WAVES_EXTENDED_POST_10
+  }
 ];
 
 export const MAP_VOID_SINGULARITY: MapConfig = {

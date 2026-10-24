@@ -1,5 +1,4 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
   {
@@ -88,8 +87,7 @@ export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
       { typeId: 'STORM_CALLER_SIREN', count: 4, interval: 2.0, delay: 3 },
       { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  },
-  ...WAVES_EXTENDED_POST_10
+  }
 ];
 
 export const MAP_FROZEN_CITADEL: MapConfig = {

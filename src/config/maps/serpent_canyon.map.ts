@@ -1,5 +1,4 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_SERPENT_CANYON: WaveConfig[] = [
   // Wave 1-3: WALK
@@ -94,8 +93,7 @@ export const WAVES_SERPENT_CANYON: WaveConfig[] = [
       { typeId: 'ROCK_GOLEM', count: 5, interval: 2.0, delay: 3 },
       { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  },
-  ...WAVES_EXTENDED_POST_10
+  }
 ];
 
 export const MAP_SERPENT_CANYON: MapConfig = {

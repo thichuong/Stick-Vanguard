@@ -1,5 +1,4 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
-import { WAVES_EXTENDED_POST_10 } from './waves_extended.js';
 
 export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
   {
@@ -99,8 +98,7 @@ export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
       { typeId: 'HEX_DEGRADER', count: 2, interval: 3.0, delay: 5 },
       { typeId: 'ARCHANGEL_MONARCH_BOSS', count: 1, interval: 1.0, delay: 8 }
     ]
-  },
-  ...WAVES_EXTENDED_POST_10
+  }
 ];
 
 export const MAP_CELESTIAL_SANCTUM: MapConfig = {

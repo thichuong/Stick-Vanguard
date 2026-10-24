@@ -49,306 +49,76 @@ export class WaveSystem {
   }
 
   public getCurrentWaveConfig(): WaveConfig {
-    if (
-      this.currentMap &&
-      this.currentMap.waves &&
-      this.currentMap.waves[this.currentWaveIndex] &&
-      this.customTotalWaves === this.currentMap.waves.length
-    ) {
-      return this.currentMap.waves[this.currentWaveIndex];
-    }
     return this.generateWaveConfig(this.currentWaveIndex, this.customTotalWaves);
   }
 
   /**
    * Procedural / Dynamic wave generation scaling with custom wave counts
    * Rule:
-   * - Wave 1-3: ONLY walking (WALK)
-   * - Wave 4: ONLY flying (FLY)
-   * - Wave 5: ONLY swimming/water (SWIM)
-   * - Wave > 5: Multiple movement types (mixed routes)
+   * - Waves 1-10: Đúng theo bản đồ đã mô tả (this.currentMap.waves[0..9])
+   * - Waves > 10:
+   *   + n = Math.floor(waveNum / 10)
+   *   + Nếu waveNum chia hết cho 5: Quái = Wave 9 + Wave 10 của bản đồ, số quái gấp n lần.
+   *   + Nếu waveNum không chia hết cho 5: Quái giống Wave 9 của bản đồ, số quái gấp n lần.
    */
-  public generateWaveConfig(waveIdx: number, totalWaves: number): WaveConfig {
+  public generateWaveConfig(waveIdx: number, _totalWaves?: number): WaveConfig {
     const waveNum = waveIdx + 1;
-    const progress = totalWaves > 1 ? waveIdx / (totalWaves - 1) : 1; // 0.0 to 1.0
-    const isFinalWave = waveNum === totalWaves && waveNum > 5;
-    const isBossWave = (isFinalWave || (totalWaves >= 10 && waveNum % 5 === 0)) && waveNum > 5;
+    const mapWaves = this.currentMap?.waves || [];
 
-    const baseReward = 45 + Math.round(waveNum * 12);
-    const enemies: WaveConfig['enemies'] = [];
-
-    // --- Wave 1, 2, 3: Đảm bảo 3 waves đầu là quái đi bộ (WALK only) ---
-    if (waveNum === 1) {
-      enemies.push({ typeId: 'STICK_RUNNER', count: 8, interval: 1.4, delay: 0 });
+    // --- Waves 1 - 10: Tạo đúng theo bản đồ đã mô tả ---
+    if (waveNum <= 10 && mapWaves[waveIdx]) {
+      const baseWave = mapWaves[waveIdx];
       return {
-        waveNumber: 1,
-        name: 'Đợt 1: Dân Quân Bất Tuân (Đi Bộ)',
-        rewardGold: baseReward,
-        enemies
+        waveNumber: waveNum,
+        name: baseWave.name,
+        rewardGold: baseWave.rewardGold,
+        enemies: baseWave.enemies.map((e) => ({ ...e }))
       };
     }
 
-    if (waveNum === 2) {
-      enemies.push({ typeId: 'STICK_RUNNER', count: 6, interval: 1.2, delay: 0 });
-      enemies.push({ typeId: 'STICK_WARRIOR', count: 4, interval: 2.0, delay: 4 });
-      return {
-        waveNumber: 2,
-        name: 'Đợt 2: Tiền Trạm Kiếm Sĩ (Đi Bộ)',
-        rewardGold: baseReward,
-        enemies
-      };
-    }
+    // --- Waves > 10: Dựa trên Wave 9 và Wave 10 của bản đồ hiện tại ---
+    const n = Math.floor(waveNum / 10);
+    const wave9 = mapWaves[8] || mapWaves[mapWaves.length - 1];
+    const wave10 = mapWaves[9] || wave9;
 
-    if (waveNum === 3) {
-      const mapId = this.currentMap?.id || '';
-      const walker3 =
-        mapId === 'valley_origin'
-          ? 'TREANT_GUARD'
-          : mapId === 'twin_crossroads'
-          ? 'STEEL_VANGUARD'
-          : mapId === 'serpent_canyon'
-          ? 'DRAKE_WARRIOR'
-          : mapId === 'ancient_necropolis'
-          ? 'PHANTOM_REAPER'
-          : mapId === 'plague_morass'
-          ? 'VENOM_ARACHNID'
-          : 'FIRE_IMP';
-
-      enemies.push({ typeId: 'STICK_WARRIOR', count: 5, interval: 1.6, delay: 0 });
-      enemies.push({ typeId: walker3, count: 4, interval: 1.6, delay: 3 });
-      return {
-        waveNumber: 3,
-        name: `Đợt 3: Tiên Phong ${this.currentMap?.tribe?.name || 'Chiến Binh'} (Đi Bộ)`,
-        rewardGold: baseReward,
-        enemies
-      };
-    }
-
-    // --- Wave 4: 1 wave kế CHỈ quái bay (FLY only) ---
-    if (waveNum === 4) {
-      const mapId = this.currentMap?.id || '';
-      const flyer =
-        mapId === 'valley_origin' || mapId === 'frozen_citadel'
-          ? 'FAIRY_SPRITE'
-          : mapId === 'serpent_canyon'
-          ? 'WYVERN_RAIDER'
-          : mapId === 'ancient_necropolis'
-          ? 'SPECTRAL_BANSHEE'
-          : mapId === 'plague_morass'
-          ? 'TOXIC_BAT'
-          : 'WINGED_GARGOYLE';
-
-      enemies.push({
-        typeId: flyer,
-        count: 6 + Math.min(6, Math.floor(totalWaves / 4)),
-        interval: 1.8,
-        delay: 0
-      });
-      return {
-        waveNumber: 4,
-        name: 'Đợt 4: Không Kích Đột Ngột (Chỉ Quái Bay)',
-        rewardGold: baseReward,
-        enemies
-      };
-    }
-
-    // --- Wave 5: 1 wave kế CHỈ quái dưới nước (SWIM only) ---
-    if (waveNum === 5) {
-      const mapId = this.currentMap?.id || '';
-      const swimmer =
-        mapId === 'valley_origin'
-          ? 'MOSS_TURTLE'
-          : mapId === 'twin_crossroads'
-          ? 'SPARK_EEL'
-          : mapId === 'serpent_canyon'
-          ? 'RIVER_DRAKE'
-          : mapId === 'plague_morass'
-          ? 'PLAGUE_LEVIATHAN'
-          : 'AQUA_SERPENT';
-
-      enemies.push({
-        typeId: swimmer,
-        count: 5 + Math.min(5, Math.floor(totalWaves / 4)),
-        interval: 2.0,
-        delay: 0
-      });
-      return {
-        waveNumber: 5,
-        name: 'Đợt 5: Thủy Quái Cuộn Sóng (Chỉ Quái Bơi)',
-        rewardGold: baseReward,
-        enemies
-      };
-    }
-
-    // --- Wave > 5: Mới xuất hiện quái nhiều hơn 1 loại đường (Hỗn Hợp) ---
-    // --- Wave > 10: Độ khó tăng cao, xuất quái đầy đủ, số lượng tăng lên theo mỗi wave ---
-    if (waveNum > 10) {
-      const extraWave = waveNum - 10;
-      const post10Reward = 180 + Math.round(waveNum * 15);
-
-      if (isFinalWave) {
-        // Final Wave (>10): Song Trùm Ma Vương & Đại Quân Đa Tuyến Tinh Nhuệ Tối Thượng
-        enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 }); // WALK
-        enemies.push({ typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 5 }); // FLY
-        enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 6 + Math.floor(extraWave * 0.6), interval: 1.3, delay: 2 }); // WALK
-        enemies.push({ typeId: 'ROCK_GOLEM', count: 6 + Math.floor(extraWave * 0.6), interval: 1.3, delay: 3 }); // WALK
-        enemies.push({ typeId: 'NECRO_WARLOCK', count: 4 + Math.floor(extraWave * 0.5), interval: 1.6, delay: 4 }); // WALK
-        enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 5 + Math.floor(extraWave * 0.5), interval: 1.2, delay: 6 }); // SWIM
-        enemies.push({ typeId: 'WINGED_GARGOYLE', count: 14 + Math.floor(extraWave * 1.5), interval: 0.5, delay: 7 }); // FLY
-        enemies.push({ typeId: 'AQUA_SERPENT', count: 10 + Math.floor(extraWave * 1.0), interval: 0.7, delay: 9 }); // SWIM
-        enemies.push({ typeId: 'SHADOW_WRAITH', count: 8 + Math.floor(extraWave * 1.0), interval: 0.7, delay: 11 }); // WALK
-        enemies.push({ typeId: 'MAGMA_SLIME', count: 8 + Math.floor(extraWave * 0.8), interval: 1.0, delay: 13 }); // WALK
-
-        return {
-          waveNumber: waveNum,
-          name: `Đợt ${waveNum}: Chung Cuộc Tận Diệt - Song Trùm Ma Vương`,
-          rewardGold: Math.round(post10Reward * 2),
-          enemies
-        };
+    if (waveNum % 5 === 0) {
+      // Chia hết cho 5: Quái = Wave 9 + Wave 10 của bản đồ, số quái gấp n lần
+      const mergedMap = new Map<string, { typeId: string; count: number; interval: number; delay: number }>();
+      for (const entry of [...(wave9?.enemies || []), ...(wave10?.enemies || [])]) {
+        const existing = mergedMap.get(entry.typeId);
+        if (existing) {
+          existing.count += entry.count;
+          existing.interval = Math.min(existing.interval, entry.interval);
+          existing.delay = Math.min(existing.delay, entry.delay);
+        } else {
+          mergedMap.set(entry.typeId, { ...entry });
+        }
       }
 
-      if (isBossWave) {
-        // Milestone Boss Wave (15, 20, 25, 30...) - Đầy đủ các hệ và số lượng lớn
-        const bossType = (waveNum % 10 === 0) ? 'VOID_HYDRA_BOSS' : 'DARK_DRAGON_BOSS';
-        enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 });
-        enemies.push({ typeId: 'ROCK_GOLEM', count: 5 + Math.floor(extraWave * 0.5), interval: 1.6, delay: 2 }); // WALK
-        enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 4 + Math.floor(extraWave * 0.5), interval: 1.8, delay: 4 }); // WALK
-        enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 4 + Math.floor(extraWave * 0.5), interval: 1.5, delay: 6 }); // SWIM
-        enemies.push({ typeId: 'WINGED_GARGOYLE', count: 12 + Math.floor(extraWave * 1.2), interval: 0.7, delay: 8 }); // FLY
-        enemies.push({ typeId: 'MAGMA_SLIME', count: 6 + Math.floor(extraWave * 0.8), interval: 1.4, delay: 10 }); // WALK
-        enemies.push({ typeId: 'AQUA_SERPENT', count: 8 + Math.floor(extraWave * 0.8), interval: 1.1, delay: 12 }); // SWIM
-        enemies.push({ typeId: 'NECRO_WARLOCK', count: 3 + Math.floor(extraWave * 0.4), interval: 1.8, delay: 14 }); // WALK
+      const enemies = Array.from(mergedMap.values()).map((entry) => ({
+        ...entry,
+        count: entry.count * n
+      }));
 
-        return {
-          waveNumber: waveNum,
-          name: `Đợt ${waveNum}: Tiền Trạm Trùm Ma Vương (Cấp ${waveNum})`,
-          rewardGold: Math.round(post10Reward * 1.5),
-          enemies
-        };
-      }
-
-      // Regular Wave > 10: Xuất quái đầy đủ 100% chủng loại và số lượng tăng dần theo mỗi wave!
-      enemies.push({
-        typeId: 'FROST_CRYSTAL_GOLEM',
-        count: 3 + Math.floor(extraWave * 0.6),
-        interval: Math.max(1.2, 2.2 - extraWave * 0.05),
-        delay: 0
-      });
-      enemies.push({
-        typeId: 'MAGMA_SLIME',
-        count: 5 + Math.floor(extraWave * 1.0),
-        interval: Math.max(0.8, 1.8 - extraWave * 0.06),
-        delay: 2
-      });
-      enemies.push({
-        typeId: 'WINGED_GARGOYLE',
-        count: 8 + Math.floor(extraWave * 1.5),
-        interval: Math.max(0.5, 1.4 - extraWave * 0.05),
-        delay: 4
-      });
-      enemies.push({
-        typeId: 'AQUA_SERPENT',
-        count: 6 + Math.floor(extraWave * 1.0),
-        interval: Math.max(0.7, 1.6 - extraWave * 0.05),
-        delay: 5
-      });
-      enemies.push({
-        typeId: 'NECRO_WARLOCK',
-        count: 2 + Math.floor(extraWave * 0.5),
-        interval: Math.max(1.5, 2.4 - extraWave * 0.05),
-        delay: 7
-      });
-      enemies.push({
-        typeId: 'STORM_CALLER_SIREN',
-        count: 3 + Math.floor(extraWave * 0.6),
-        interval: Math.max(1.1, 1.8 - extraWave * 0.05),
-        delay: 9
-      });
-      enemies.push({
-        typeId: 'SHADOW_WRAITH',
-        count: 4 + Math.floor(extraWave * 1.1),
-        interval: Math.max(0.6, 1.4 - extraWave * 0.05),
-        delay: 11
-      });
-      enemies.push({
-        typeId: 'SPARK_EEL',
-        count: 4 + Math.floor(extraWave * 0.8),
-        interval: Math.max(0.8, 1.4 - extraWave * 0.04),
-        delay: 12
-      });
-      enemies.push({
-        typeId: 'ROCK_GOLEM',
-        count: 3 + Math.floor(extraWave * 0.6),
-        interval: Math.max(1.2, 2.0 - extraWave * 0.04),
-        delay: 14
-      });
-
+      const baseReward = (wave9?.rewardGold || 175) + (wave10?.rewardGold || 300);
       return {
         waveNumber: waveNum,
-        name: `Đợt ${waveNum}: Đại Quân Đa Chiều Cuồng Nộ (Cấp ${waveNum})`,
-        rewardGold: post10Reward,
+        name: `Đợt ${waveNum}: Tổng Lực Tinh Nhuệ & Trùm (x${n})`,
+        rewardGold: baseReward * n,
         enemies
       };
     }
 
-    // --- Wave 6 - 10 ---
-    if (isFinalWave) {
-      // Final Wave (Wave <= 10): Mega Boss & Elites (Mixed multi-path)
-      enemies.push({ typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 }); // WALK
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.2, delay: 3 }); // WALK
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: Math.min(5, 2 + Math.floor(waveNum / 5)), interval: 2.5, delay: 6 }); // WALK
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: Math.min(6, 2 + Math.floor(waveNum / 4)), interval: 2.0, delay: 7 }); // SWIM
-      enemies.push({ typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 12 }); // FLY
-
-      return {
-        waveNumber: waveNum,
-        name: `Đợt ${waveNum}: Chung Cuộc Đại Thắng - Song Trùm Ma Vương`,
-        rewardGold: baseReward * 2,
-        enemies
-      };
-    }
-
-    if (isBossWave) {
-      // Milestone Boss Wave (Wave 10)
-      const bossType = progress > 0.5 ? 'DARK_DRAGON_BOSS' : 'VOID_HYDRA_BOSS';
-      enemies.push({ typeId: bossType, count: 1, interval: 1.0, delay: 0 }); // FLY or WALK
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 4, interval: 1.6, delay: 3 }); // WALK
-      enemies.push({ typeId: 'AQUA_SERPENT', count: 4, interval: 2.0, delay: 5 }); // SWIM
-
-      return {
-        waveNumber: waveNum,
-        name: `Đợt ${waveNum}: Tiền Trạm Trùm Ma Vương`,
-        rewardGold: Math.round(baseReward * 1.5),
-        enemies
-      };
-    }
-
-    // Regular Waves 6-10 based on tier progress (Mixed multi-path)
-    if (progress < 0.45) {
-      // Early-mid: splitters & elemental flyers/swimmers (WALK + FLY + SWIM)
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 3 + Math.floor(waveNum / 2), interval: 2.0, delay: 0 }); // WALK
-      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 4 + Math.floor(waveNum / 2), interval: 1.8, delay: 3 }); // FLY
-      enemies.push({ typeId: 'AQUA_SERPENT', count: 3 + Math.floor(waveNum / 3), interval: 2.2, delay: 5 }); // SWIM
-    } else if (progress < 0.75) {
-      // Mid-late: summoners & tank splitters (WALK + FLY + SWIM)
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 3 + Math.floor(waveNum / 3), interval: 2.5, delay: 0 }); // WALK
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: 2 + Math.floor(waveNum / 4), interval: 2.8, delay: 3 }); // WALK
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 3 + Math.floor(waveNum / 3), interval: 2.0, delay: 5 }); // SWIM
-      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 5 + Math.floor(waveNum / 3), interval: 1.5, delay: 7 }); // FLY
-    } else {
-      // Late: full horde mix
-      enemies.push({ typeId: 'FROST_CRYSTAL_GOLEM', count: 4, interval: 2.2, delay: 0 }); // WALK
-      enemies.push({ typeId: 'MAGMA_SLIME', count: 5, interval: 1.8, delay: 3 }); // WALK
-      enemies.push({ typeId: 'NECRO_WARLOCK', count: 3, interval: 2.4, delay: 5 }); // WALK
-      enemies.push({ typeId: 'SHADOW_WRAITH', count: 5, interval: 1.5, delay: 7 }); // WALK
-      enemies.push({ typeId: 'WINGED_GARGOYLE', count: 6, interval: 1.4, delay: 9 }); // FLY
-      enemies.push({ typeId: 'STORM_CALLER_SIREN', count: 4, interval: 1.8, delay: 10 }); // SWIM
-    }
+    // Waves > 10 không chia hết cho 5: Quái giống Wave 9 của bản đồ, số quái gấp n lần
+    const enemies = (wave9?.enemies || []).map((entry) => ({
+      ...entry,
+      count: entry.count * n
+    }));
 
     return {
       waveNumber: waveNum,
-      name: `Đợt ${waveNum}: Quân Đoàn Xâm Lăng (Cấp ${waveNum})`,
-      rewardGold: baseReward,
+      name: `${wave9?.name || `Đợt ${waveNum}`} (x${n})`,
+      rewardGold: (wave9?.rewardGold || 175) * n,
       enemies
     };
   }
