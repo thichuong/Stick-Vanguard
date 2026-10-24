@@ -113,6 +113,59 @@ export const FLYING_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 28,
     size: 16,
     color: '#65a30d'
+  },
+
+  // 34. Thiên Sứ Hộ Vệ (Hệ Quang + Gió - FLY, Tộc Thánh Điện)
+  'SERAPH_VALKYRIE': {
+    typeId: 'SERAPH_VALKYRIE',
+    name: 'Thiên Sứ Hộ Vệ',
+    description: 'Hệ Quang Minh + Gió (LIGHT + WIND). Quái bay trên không, định kỳ ban Khiên Phép và hồi máu cho toàn bộ quái xung quanh.',
+    hp: 200,
+    speed: 56,
+    damage: 18,
+    attackSpeed: 1.1,
+    rewardGold: 30,
+    movementType: 'FLY',
+    navigationMode: 'AIR_WAYPOINTS',
+    elementalProfile: {
+      primaryElement: 'LIGHT',
+      secondaryElement: 'WIND',
+      immunities: ['EARTH', 'DARK'],
+    },
+    tags: ['FLYING', 'SUPPORT'],
+    altitude: 30,
+    size: 20,
+    color: '#fef08a',
+    abilities: [
+      { type: 'MAGIC_SHIELD_AURA', interval: 6.0, radius: 120, value: 100 },
+      { type: 'HEAL_AURA', interval: 6.0, radius: 120, value: 60 }
+    ]
+  },
+
+  // 35. Nhãn Cầu Xung Điện (Hệ Thép + Sét - FLY, Tộc Hắc Tinh)
+  'EMP_DRONE': {
+    typeId: 'EMP_DRONE',
+    name: 'Nhãn Cầu Xung Điện',
+    description: 'Hệ Thép + Sét (STEEL + LIGHTNING). Quái bay cơ giới lơ lửng, phát xung điện từ trường làm tê liệt tháp phòng thủ tầm xa.',
+    hp: 160,
+    speed: 60,
+    damage: 16,
+    attackSpeed: 1.2,
+    rewardGold: 28,
+    movementType: 'FLY',
+    navigationMode: 'AIR_DIRECT',
+    elementalProfile: {
+      primaryElement: 'STEEL',
+      secondaryElement: 'LIGHTNING',
+      immunities: ['POISON', 'LIGHTNING', 'EARTH'],
+    },
+    tags: ['FLYING', 'FAST', 'SABOTEUR'],
+    altitude: 32,
+    size: 17,
+    color: '#94a3b8',
+    abilities: [
+      { type: 'DISABLE_TOWER', interval: 5.5, radius: 160, value: 1, duration: 3.0, maxTargets: 1 }
+    ]
   }
 };
 

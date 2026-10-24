@@ -1109,9 +1109,9 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(finalWaveTypes.size).toBeGreaterThan(1);
     });
 
-    it('should have dominant tribe configured with name, icon, elements, and description for all 8 maps', async () => {
+    it('should have dominant tribe configured with name, icon, elements, and description for all maps', async () => {
       const { MAPS_CONFIG } = await import('../config/map.config.js');
-      expect(MAPS_CONFIG.length).toBe(8);
+      expect(MAPS_CONFIG.length).toBeGreaterThanOrEqual(10);
       for (const map of MAPS_CONFIG) {
         expect(map.tribe).toBeDefined();
         expect(map.tribe?.name).toBeTruthy();
@@ -2380,6 +2380,214 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       const knocked = TargetingRuleEngine.applyKnockback(enemy, 40);
       expect(knocked).toBe(10);
       expect(enemy.pathDistance).toBe(90);
+    });
+  });
+
+  describe('New Maps, 10 New Enemies & Enemy Skill System Tests', () => {
+    it('should have 10 maps in MAPS_CONFIG including Celestial Sanctum and Void Singularity', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      expect(MAPS_CONFIG.length).toBe(10);
+      const celestial = MAPS_CONFIG.find((m) => m.id === 'celestial_sanctum');
+      const voidMap = MAPS_CONFIG.find((m) => m.id === 'void_singularity');
+
+      expect(celestial).toBeDefined();
+      expect(celestial?.name).toBe('Thánh Điện Thiên Không');
+      expect(celestial?.waves.length).toBeGreaterThanOrEqual(20);
+
+      expect(voidMap).toBeDefined();
+      expect(voidMap?.name).toBe('Vực Thẳm Hắc Tinh');
+      expect(voidMap?.waves.length).toBeGreaterThanOrEqual(20);
+    });
+
+    it('should have all 10 new enemy blueprints properly configured with valid stats and abilities', async () => {
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const newIds = [
+        'LIGHT_PALADIN',
+        'VOID_SABOTEUR',
+        'DRUID_SHAMAN',
+        'SERAPH_VALKYRIE',
+        'EMP_DRONE',
+        'TIDAL_PRIESTESS',
+        'ABYSSAL_CRAB',
+        'HEX_DEGRADER',
+        'ARCHANGEL_MONARCH_BOSS',
+        'CHRONO_DESTROYER_BOSS'
+      ];
+
+      for (const id of newIds) {
+        const bp = ENEMY_BLUEPRINTS[id];
+        expect(bp).toBeDefined();
+        expect(bp.hp).toBeGreaterThan(0);
+        expect(bp.speed).toBeGreaterThan(0);
+        expect(bp.damage).toBeGreaterThan(0);
+        expect(bp.abilities).toBeDefined();
+        expect(bp.abilities!.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should test DISABLE_TOWER skill disabling towers from shooting', async () => {
+      const { EnemySkillSystem } = await import('../systems/EnemySkillSystem.js');
+      const { TowerSystem } = await import('../systems/TowerSystem.js');
+      const state = new GameState();
+      state.gold = 500;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'ARCHER');
+      const tower = state.towers[0];
+      tower.attackCooldown = 0;
+
+      // Mock enemy with DISABLE_TOWER ability
+      const enemy: EnemyEntity = {
+        id: 'e-saboteur',
+        typeId: 'VOID_SABOTEUR',
+        name: 'Kẻ Phá Hoại',
+        x: tower.x + 50,
+        y: tower.y,
+        hp: 150,
+        maxHp: 150,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 20,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 50,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'DARK', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 18,
+        facing: 0,
+        abilities: [
+          { type: 'DISABLE_TOWER', interval: 5.0, radius: 150, value: 1, duration: 4.0 }
+        ],
+        abilityTimers: [0] // ready to fire immediately
+      };
+
+      EnemySkillSystem.update([enemy], state.towers, state, 0.1);
+      expect(tower.disabledTimer).toBe(4.0);
+
+      // Verify tower cannot shoot while disabled
+      let shotCount = 0;
+      TowerSystem.updateTowers(state.towers, [enemy], 0.5, () => {
+        shotCount++;
+      });
+      expect(shotCount).toBe(0);
+      expect(tower.disabledTimer).toBe(3.5);
+    });
+
+    it('should test DOWNGRADE_TOWER dropping tower tier by 1 and destroying Tier 1 towers', async () => {
+      const state = new GameState();
+      state.gold = 1000;
+      const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
+      state.buildTower(slot.id, 'BARRACKS');
+      const tower = state.towers[0];
+
+      // Upgrade to Tier 2 (max soldiers = 4)
+      state.upgradeTower(tower.id);
+      expect(tower.tier).toBe(2);
+      expect(tower.maxSoldiers).toBe(4);
+      expect(state.soldiers.length).toBe(4);
+
+      // Downgrade from Tier 2 -> drops to Tier 1, soldiers reduced back to 3
+      const resDowngrade = state.downgradeOrDestroyTower(tower.id);
+      expect(resDowngrade).toBe('DOWNGRADED');
+      expect(tower.tier).toBe(1);
+      expect(tower.maxSoldiers).toBe(3);
+      expect(state.soldiers.length).toBe(3);
+
+      // Downgrade from Tier 1 -> DESTROYED completely!
+      const resDestroy = state.downgradeOrDestroyTower(tower.id);
+      expect(resDestroy).toBe('DESTROYED');
+      expect(state.towers.length).toBe(0);
+      expect(state.soldiers.length).toBe(0);
+      expect(slot.currentTowerId).toBe(null);
+    });
+
+    it('should test ARMOR_SHIELD, MAGIC_SHIELD, HEAL_AURA and DAMAGE_REDUCTION_AURA', async () => {
+      const { EnemySkillSystem } = await import('../systems/EnemySkillSystem.js');
+      const state = new GameState();
+
+      const paladin: EnemyEntity = {
+        id: 'e-paladin',
+        typeId: 'LIGHT_PALADIN',
+        name: 'Paladin',
+        x: 100,
+        y: 100,
+        hp: 200,
+        maxHp: 300,
+        speed: 30,
+        baseSpeed: 30,
+        damage: 20,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 30,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 50,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'LIGHT', secondaryElement: 'STEEL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 20,
+        facing: 0,
+        armorShield: 0,
+        magicShield: 0,
+        abilities: [
+          { type: 'ARMOR_SHIELD_AURA', interval: 5.0, radius: 100, value: 80 },
+          { type: 'HEAL_AURA', interval: 5.0, radius: 100, value: 50 },
+          { type: 'DAMAGE_REDUCTION_AURA', interval: 5.0, radius: 100, value: 0.3, duration: 4.0 }
+        ],
+        abilityTimers: [0, 0, 0] // ready
+      };
+
+      // Execute abilities
+      EnemySkillSystem.update([paladin], state.towers, state, 0.1);
+
+      // 1. Armor Shield was applied
+      expect(paladin.armorShield).toBe(80);
+
+      // 2. Heal was applied (200 + 50 = 250)
+      expect(paladin.hp).toBe(250);
+
+      // 3. Damage reduction buff was applied (30% reduction)
+      expect(paladin.damageReductionRatio).toBe(0.3);
+      expect(paladin.damageReductionTimer).toBe(4.0);
+
+      // 4. Physical damage absorption by Armor Shield
+      // 50 Physical damage dealt -> Steel resists Physical (0.5x) * 30% reduction (0.7x) = 17.5 -> 18 damage
+      // Absorbed completely by 80 shield!
+      const physCalc = TargetingRuleEngine.calculateDamage(
+        { amount: 50, element: 'PHYSICAL', sourceId: 'test' },
+        paladin
+      );
+      expect(physCalc.finalDamage).toBe(18);
+
+      const result = TargetingRuleEngine.applyDamageToEnemy(paladin, physCalc, 'PHYSICAL');
+      expect(result.shieldAbsorbed).toBe(18);
+      expect(result.hpLost).toBe(0);
+      expect(paladin.armorShield).toBe(62); // 80 - 18 = 62
+      expect(paladin.hp).toBe(250); // HP remained full!
+
+      // 5. Magic shield absorption
+      paladin.magicShield = 60;
+      const fireCalc = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'FIRE', sourceId: 'test' },
+        paladin
+      );
+      // Fire against Light+Steel takes damage, and damageReductionRatio reduces it by 30%
+      const magicResult = TargetingRuleEngine.applyDamageToEnemy(paladin, fireCalc, 'FIRE');
+      expect(magicResult.shieldAbsorbed).toBe(60);
+      expect(paladin.magicShield).toBe(0);
+      expect(magicResult.hpLost).toBeGreaterThan(0);
+      expect(paladin.hp).toBeLessThan(250);
     });
   });
 });

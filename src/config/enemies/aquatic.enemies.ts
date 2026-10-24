@@ -67,6 +67,60 @@ export const AQUATIC_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 24,
     color: '#0284c7'
+  },
+
+  // 36. Vu Nữ Thủy Triều (Hệ Nước + Tiên - SWIM, Tộc Thánh Điện)
+  'TIDAL_PRIESTESS': {
+    typeId: 'TIDAL_PRIESTESS',
+    name: 'Vu Nữ Thủy Triều',
+    description: 'Hệ Nước + Tiên (WATER + FAIRY). Lướt trên dòng sông, tạo Khiên Phép thanh tẩy và liên tục hồi máu cho thủy quái đồng hành.',
+    hp: 240,
+    speed: 42,
+    damage: 18,
+    attackSpeed: 1.0,
+    rewardGold: 30,
+    movementType: 'SWIM',
+    navigationMode: 'WATER_PATH',
+    elementalProfile: {
+      primaryElement: 'WATER',
+      secondaryElement: 'FAIRY',
+      immunities: ['WATER', 'DRAGON'],
+    },
+    tags: ['AQUATIC', 'SUPPORT', 'HEALER'],
+    altitude: 0,
+    size: 21,
+    color: '#06b6d4',
+    abilities: [
+      { type: 'HEAL_AURA', interval: 5.0, radius: 120, value: 90 },
+      { type: 'MAGIC_SHIELD_AURA', interval: 6.0, radius: 120, value: 80 }
+    ]
+  },
+
+  // 37. Cự Giải Thiết Giáp (Hệ Nước + Thép - SWIM, Tộc Hắc Tinh)
+  'ABYSSAL_CRAB': {
+    typeId: 'ABYSSAL_CRAB',
+    name: 'Cự Giải Thiết Giáp',
+    description: 'Hệ Nước + Thép (WATER + STEEL). Bò dưới đáy kênh sông với lớp mai thép siêu dày, tạo Giáp Ảo và hào quang giảm sát thương cho bầy thủy quái.',
+    hp: 350,
+    speed: 34,
+    damage: 25,
+    attackSpeed: 0.8,
+    rewardGold: 35,
+    movementType: 'SWIM',
+    navigationMode: 'WATER_PATH',
+    elementalProfile: {
+      primaryElement: 'WATER',
+      secondaryElement: 'STEEL',
+      immunities: ['WATER', 'POISON'],
+    },
+    tags: ['AQUATIC', 'ARMORED', 'SUPPORT'],
+    altitude: 0,
+    size: 23,
+    color: '#334155',
+    abilities: [
+      { type: 'ARMOR_SHIELD_AURA', interval: 6.5, radius: 110, value: 130 },
+      { type: 'DAMAGE_REDUCTION_AURA', interval: 6.5, radius: 110, value: 0.3, duration: 4.0 }
+    ]
   }
 };
 

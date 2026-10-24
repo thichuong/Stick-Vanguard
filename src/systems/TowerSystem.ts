@@ -22,6 +22,12 @@ export class TowerSystem {
     onAuraHit?: (params: { enemy: EnemyEntity; damage: number; color: string }) => void
   ): void {
     for (const tower of towers) {
+      if (tower.disabledTimer && tower.disabledTimer > 0) {
+        tower.disabledTimer -= dt;
+        if (tower.disabledTimer < 0) tower.disabledTimer = 0;
+        continue;
+      }
+
       if (tower.attackCooldown > 0) {
         tower.attackCooldown -= dt;
       }
@@ -57,7 +63,13 @@ export class TowerSystem {
             if (dist <= tower.range && TargetingRuleEngine.canTarget(tower.targetingFilter, enemy)) {
               const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
               if (!calc.isImmune) {
-                enemy.hp -= calc.finalDamage;
+                TargetingRuleEngine.applyDamageToEnemy(
+                  enemy,
+                  calc,
+                  payload.element,
+                  payload.secondaryAmount,
+                  payload.secondaryElement
+                );
                 TargetingRuleEngine.applyAllPayloadEffects(enemy, payload);
                 if (onAuraHit) {
                   onAuraHit({

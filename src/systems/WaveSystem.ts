@@ -525,7 +525,15 @@ export class WaveSystem {
             hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
             softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
           }
-        : undefined
+        : undefined,
+      abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
+      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval) : undefined,
+      armorShield: 0,
+      maxArmorShield: 0,
+      magicShield: 0,
+      maxMagicShield: 0,
+      damageReductionRatio: 0,
+      damageReductionTimer: 0
     };
   }
 
@@ -588,7 +596,15 @@ export class WaveSystem {
             hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
             softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
           }
-        : undefined
+        : undefined,
+      abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
+      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval) : undefined,
+      armorShield: 0,
+      maxArmorShield: 0,
+      magicShield: 0,
+      maxMagicShield: 0,
+      damageReductionRatio: 0,
+      damageReductionTimer: 0
     };
   }
 }

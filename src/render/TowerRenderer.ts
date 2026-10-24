@@ -277,6 +277,23 @@ export class TowerRenderer {
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('★'.repeat(tier), x, y + 26);
+
+    // Disabled / Stunned visual ring & timer
+    if (tower.disabledTimer && tower.disabledTimer > 0) {
+      ctx.save();
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.0;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y, 24 + Math.sin(animTime * 8) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f87171';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`⚡ ${tower.disabledTimer.toFixed(1)}s`, x, y - 30);
+      ctx.restore();
+    }
   }
 
   private static renderTrap(

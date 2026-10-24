@@ -168,6 +168,33 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
       count: 2,
       interval: 6.0
     }
+  },
+
+  // 38. Pháp Sư Hủy Cấp (Hệ Bóng Tối + Ma - WALK, Tinh Anh Tộc Hắc Tinh)
+  'HEX_DEGRADER': {
+    typeId: 'HEX_DEGRADER',
+    name: 'Pháp Sư Hủy Cấp',
+    description: 'Quái Tinh Anh Hệ Bóng Tối + Ma (DARK + GHOST). Pháp sư tà thuật sở hữu quyền năng hạ cấp tháp phòng thủ (làm tháp tụt 1 cấp hoặc phá hủy hoàn toàn nếu ở cấp 1).',
+    hp: 420,
+    speed: 30,
+    damage: 32,
+    attackSpeed: 0.8,
+    rewardGold: 55,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'DARK',
+      secondaryElement: 'GHOST',
+      immunities: ['PHYSICAL', 'DARK'],
+    },
+    tags: ['ELITE', 'SABOTEUR', 'UNBLOCKABLE', 'GHOST'],
+    altitude: 4,
+    size: 24,
+    color: '#6b21a8',
+    abilities: [
+      { type: 'DOWNGRADE_TOWER', interval: 9.0, radius: 155, value: 1, duration: 0, maxTargets: 1 },
+      { type: 'MAGIC_SHIELD_AURA', interval: 7.0, radius: 120, value: 140 }
+    ]
   }
 };
 

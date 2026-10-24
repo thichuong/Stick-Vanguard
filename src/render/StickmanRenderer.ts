@@ -61,6 +61,29 @@ export class StickmanRenderer {
       ctx.restore();
     }
 
+    // Shield Aura (Armor Shield or Magic Shield or Damage Reduction)
+    if ((enemy.armorShield && enemy.armorShield > 0) || (enemy.magicShield && enemy.magicShield > 0)) {
+      ctx.save();
+      const shieldColor = enemy.magicShield && enemy.magicShield > 0 ? '#c084fc' : '#e2e8f0';
+      ctx.strokeStyle = shieldColor;
+      ctx.lineWidth = 2.0;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      ctx.arc(x, drawY - size * 0.2, size * 0.95 + Math.sin(animTime * 5) * 2.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, drawY - size * 0.2, size * 1.1 + Math.sin(animTime * 4) * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // 5. Render Creature Body via Stick Archetype Rigging (Dragon, Serpent, Bat, Spider, etc.)
     EnemyArchetypeRenderer.renderEnemyBody(ctx, enemy, animTime, elemColor, secColor);
 
@@ -74,7 +97,10 @@ export class StickmanRenderer {
       enemy.maxHp,
       elementalProfile.primaryElement,
       enemy.statusEffects,
-      elementalProfile.secondaryElement
+      elementalProfile.secondaryElement,
+      enemy.armorShield,
+      enemy.magicShield,
+      enemy.damageReductionTimer
     );
 
     ctx.restore();
@@ -257,7 +283,10 @@ export class StickmanRenderer {
     maxHp: number,
     element: string,
     statusEffects: any[],
-    secondaryElement?: string
+    secondaryElement?: string,
+    armorShield?: number,
+    magicShield?: number,
+    damageReductionTimer?: number
   ): void {
     const width = 28;
     const height = 4;
@@ -272,6 +301,15 @@ export class StickmanRenderer {
     ctx.fillStyle = healthPercent > 0.5 ? '#22c55e' : healthPercent > 0.25 ? '#eab308' : '#ef4444';
     ctx.fillRect(x - width / 2, y, width * healthPercent, height);
 
+    // Shield overlay bar (Armor Shield or Magic Shield)
+    const totalShield = (armorShield || 0) + (magicShield || 0);
+    if (totalShield > 0) {
+      const shieldRatio = Math.min(1.0, totalShield / Math.max(1, maxHp));
+      const shieldWidth = width * shieldRatio;
+      ctx.fillStyle = (magicShield || 0) > 0 ? '#c084fc' : '#e2e8f0';
+      ctx.fillRect(x - width / 2, y - 2, shieldWidth, 2);
+    }
+
     // Element indicator pip
     const icon1 = ELEMENT_ICONS[element as ElementType] || '⚔️';
     ctx.font = '12px sans-serif';
@@ -285,9 +323,22 @@ export class StickmanRenderer {
       }
     }
 
-    // Status icons
+    // Status icons & Shield badges
+    let iconOffset = 0;
+    if (armorShield && armorShield > 0) {
+      ctx.fillText('🛡️', x + width / 2 + 2 + iconOffset, y + 6);
+      iconOffset += 13;
+    }
+    if (magicShield && magicShield > 0) {
+      ctx.fillText('🔮', x + width / 2 + 2 + iconOffset, y + 6);
+      iconOffset += 13;
+    }
+    if (damageReductionTimer && damageReductionTimer > 0) {
+      ctx.fillText('🔰', x + width / 2 + 2 + iconOffset, y + 6);
+      iconOffset += 13;
+    }
+
     if (statusEffects.length > 0) {
-      let iconOffset = 0;
       for (const eff of statusEffects) {
         let effIcon = '';
         if (eff.type === 'BURN') effIcon = '🔥';

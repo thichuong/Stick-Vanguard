@@ -199,6 +199,11 @@ export class TargetingRuleEngine {
       multiplier *= 1.5;
     }
 
+    // Active Damage Reduction buff on target (DAMAGE_REDUCTION_AURA)
+    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0 && enemy.damageReductionRatio) {
+      multiplier *= Math.max(0.25, 1 - enemy.damageReductionRatio);
+    }
+
     const calculatedDamage = Math.max(1, Math.round(amount * multiplier * this.globalDamageMultiplier));
     const finalDamage = calculatedDamage;
 
@@ -307,6 +312,71 @@ export class TargetingRuleEngine {
       primaryDamage: primary.finalDamage,
       secondaryDamage
     };
+  }
+
+  /**
+   * Applies damage to enemy, absorbing via Armor Shield (PHYSICAL) and Magic Shield (Non-PHYSICAL)
+   * before deducting remaining damage from HP.
+   */
+  public static applyDamageToEnemy(
+    enemy: EnemyEntity,
+    calcOrDamage: DamageCalculationResult | number,
+    element: ElementType = 'PHYSICAL',
+    secondaryDamage?: number,
+    secondaryElement?: ElementType
+  ): { hpLost: number; shieldAbsorbed: number } {
+    const finalDamage = typeof calcOrDamage === 'number' ? calcOrDamage : calcOrDamage.finalDamage;
+    if (typeof calcOrDamage !== 'number' && calcOrDamage.isImmune) {
+      return { hpLost: 0, shieldAbsorbed: 0 };
+    }
+    if (finalDamage <= 0) return { hpLost: 0, shieldAbsorbed: 0 };
+
+    let totalShieldAbsorbed = 0;
+    let totalHpLost = 0;
+
+    const absorbComponent = (dmg: number, elem: ElementType) => {
+      let remainingDmg = dmg;
+      if (elem === 'PHYSICAL') {
+        if (enemy.armorShield && enemy.armorShield > 0) {
+          const absorbed = Math.min(enemy.armorShield, remainingDmg);
+          enemy.armorShield -= absorbed;
+          remainingDmg -= absorbed;
+          totalShieldAbsorbed += absorbed;
+        }
+      } else {
+        if (enemy.magicShield && enemy.magicShield > 0) {
+          const absorbed = Math.min(enemy.magicShield, remainingDmg);
+          enemy.magicShield -= absorbed;
+          remainingDmg -= absorbed;
+          totalShieldAbsorbed += absorbed;
+        }
+      }
+      if (remainingDmg > 0) {
+        enemy.hp = Math.max(0, enemy.hp - remainingDmg);
+        totalHpLost += remainingDmg;
+      }
+    };
+
+    if (
+      typeof calcOrDamage !== 'number' &&
+      calcOrDamage.primaryDamage !== undefined &&
+      calcOrDamage.secondaryDamage !== undefined &&
+      calcOrDamage.secondaryDamage > 0
+    ) {
+      absorbComponent(calcOrDamage.primaryDamage, element);
+      absorbComponent(calcOrDamage.secondaryDamage, secondaryElement || element);
+    } else if (typeof calcOrDamage === 'number' && secondaryDamage && secondaryDamage > 0) {
+      absorbComponent(calcOrDamage, element);
+      absorbComponent(secondaryDamage, secondaryElement || element);
+    } else {
+      absorbComponent(finalDamage, element);
+    }
+
+    if (enemy.hp <= 0) {
+      enemy.state = 'DEAD';
+    }
+
+    return { hpLost: totalHpLost, shieldAbsorbed: totalShieldAbsorbed };
   }
 
   /**
@@ -766,6 +836,14 @@ export class TargetingRuleEngine {
 
       if (eff.duration <= 0) {
         enemy.statusEffects.splice(i, 1);
+      }
+    }
+
+    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
+      enemy.damageReductionTimer -= dt;
+      if (enemy.damageReductionTimer <= 0) {
+        enemy.damageReductionTimer = 0;
+        enemy.damageReductionRatio = 0;
       }
     }
 

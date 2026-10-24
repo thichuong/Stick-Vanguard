@@ -54,6 +54,69 @@ export const BOSS_ENEMIES: Record<string, EnemyBlueprint> = {
       typeId: 'MAGMA_SLIME',
       count: 2
     }
+  },
+
+  // 39. Đại Thiên Sứ Tối Thượng (Hệ Quang + Tiên - FLY, Trùm Thánh Điện)
+  'ARCHANGEL_MONARCH_BOSS': {
+    typeId: 'ARCHANGEL_MONARCH_BOSS',
+    name: 'Đại Thiên Sứ Tối Thượng',
+    description: 'Đại Trùm Không Gian! Hệ Quang Minh + Tiên (LIGHT + FAIRY). Sải cánh 6 cánh rực rỡ, vừa có Giáp Ảo & Khiên Phép khổng lồ, vừa hồi phục và vô hiệu hóa tháp đối phương.',
+    hp: 2200,
+    speed: 28,
+    damage: 50,
+    attackSpeed: 1.1,
+    rewardGold: 200,
+    movementType: 'FLY',
+    navigationMode: 'AIR_WAYPOINTS',
+    elementalProfile: {
+      primaryElement: 'LIGHT',
+      secondaryElement: 'FAIRY',
+      immunities: ['DARK', 'DRAGON', 'EARTH'],
+    },
+    tags: ['BOSS', 'FLYING', 'SUPPORT', 'HEALER'],
+    altitude: 38,
+    size: 34,
+    color: '#fef08a',
+    abilities: [
+      { type: 'MAGIC_SHIELD_AURA', interval: 7.0, radius: 140, value: 300 },
+      { type: 'ARMOR_SHIELD_AURA', interval: 7.0, radius: 140, value: 300 },
+      { type: 'HEAL_AURA', interval: 6.0, radius: 140, value: 180 },
+      { type: 'DAMAGE_REDUCTION_AURA', interval: 7.0, radius: 140, value: 0.35, duration: 4.5 },
+      { type: 'DISABLE_TOWER', interval: 7.0, radius: 180, value: 2, duration: 4.0, maxTargets: 2 }
+    ]
+  },
+
+  // 40. Trùm Hắc Tinh Hủy Diệt (Hệ Bóng Tối + Thép - WALK, Trùm Vực Thẳm)
+  'CHRONO_DESTROYER_BOSS': {
+    typeId: 'CHRONO_DESTROYER_BOSS',
+    name: 'Trùm Hắc Tinh Hủy Diệt',
+    description: 'Đại Trùm Hắc Tinh! Hệ Bóng Tối + Thép (DARK + STEEL). Cỗ máy hủy diệt vũ trụ, liên tục phát sóng hạ cấp tháp, đóng băng tháp và triệu hồi Kẻ Phá Hoại!',
+    hp: 2600,
+    speed: 24,
+    damage: 65,
+    attackSpeed: 0.9,
+    rewardGold: 220,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'DARK',
+      secondaryElement: 'STEEL',
+      immunities: ['POISON', 'LIGHTNING', 'PHYSICAL'],
+    },
+    tags: ['BOSS', 'ARMORED', 'SABOTEUR', 'SUMMONER'],
+    altitude: 0,
+    size: 36,
+    color: '#312e81',
+    summonConfig: {
+      typeId: 'VOID_SABOTEUR',
+      count: 2,
+      interval: 7.5
+    },
+    abilities: [
+      { type: 'DOWNGRADE_TOWER', interval: 10.0, radius: 175, value: 1, duration: 0, maxTargets: 1 },
+      { type: 'DISABLE_TOWER', interval: 7.0, radius: 180, value: 2, duration: 3.5, maxTargets: 2 },
+      { type: 'ARMOR_SHIELD_AURA', interval: 8.0, radius: 140, value: 350 }
+    ]
   }
 };
 

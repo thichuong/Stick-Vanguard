@@ -6,6 +6,7 @@ import { CombatSystem, CombatEvent } from './systems/CombatSystem.js';
 import { TrapSystem } from './systems/TrapSystem.js';
 import { ProjectileSystem } from './systems/ProjectileSystem.js';
 import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
+import { EnemySkillSystem } from './systems/EnemySkillSystem.js';
 import { MapRenderer } from './render/MapRenderer.js';
 import { StickmanRenderer } from './render/StickmanRenderer.js';
 import { TowerRenderer } from './render/TowerRenderer.js';
@@ -307,12 +308,13 @@ class GameApp {
     );
 
     // 2. Update Enemies along Path
+    EnemySkillSystem.update(this.state.enemies, this.state.towers, this.state, dt);
     const basePos = this.state.currentMap.playerBase;
     for (let i = this.state.enemies.length - 1; i >= 0; i--) {
       const enemy = this.state.enemies[i];
 
       TargetingRuleEngine.updateStatusEffects(enemy, dt, (dmg, elem) => {
-        enemy.hp -= dmg;
+        TargetingRuleEngine.applyDamageToEnemy(enemy, dmg, elem);
         this.state.addFloatingText(`-${dmg}`, enemy.x, enemy.y - 12, ELEMENT_COLORS[elem], 13);
         if (enemy.hp <= 0) enemy.state = 'DEAD';
       });

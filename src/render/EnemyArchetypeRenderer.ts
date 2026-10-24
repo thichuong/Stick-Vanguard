@@ -45,11 +45,14 @@ export class EnemyArchetypeRenderer {
       return 'SERPENT';
     }
 
-    // 3. Avians, Bats & Fairies
+    // 3. Avians, Bats & Fairies & Angels
     if (
       id === 'WINGED_GARGOYLE' ||
       id === 'TOXIC_BAT' ||
-      id === 'FAIRY_SPRITE'
+      id === 'FAIRY_SPRITE' ||
+      id === 'SERAPH_VALKYRIE' ||
+      id === 'EMP_DRONE' ||
+      id === 'ARCHANGEL_MONARCH_BOSS'
     ) {
       return 'AVIAN_BAT';
     }
@@ -59,8 +62,8 @@ export class EnemyArchetypeRenderer {
       return 'ARACHNID';
     }
 
-    // 5. Turtles & Water Behemoths
-    if (id === 'MOSS_TURTLE' || id === 'PLAGUE_LEVIATHAN') {
+    // 5. Turtles & Water Behemoths & Crabs
+    if (id === 'MOSS_TURTLE' || id === 'PLAGUE_LEVIATHAN' || id === 'ABYSSAL_CRAB') {
       return 'TURTLE_BEAST';
     }
 
@@ -73,26 +76,28 @@ export class EnemyArchetypeRenderer {
       return 'SLIME_CRYSTAL';
     }
 
-    // 7. Colossus & Golems
+    // 7. Colossus & Golems & Chrono Destroyer
     if (
       id === 'ROCK_GOLEM' ||
       id === 'FROST_CRYSTAL_GOLEM' ||
-      id === 'IRON_COLOSSUS'
+      id === 'IRON_COLOSSUS' ||
+      id === 'CHRONO_DESTROYER_BOSS'
     ) {
       return 'COLOSSUS';
     }
 
-    // 8. Wraiths & Reapers
+    // 8. Wraiths & Reapers & Degrader
     if (
       id === 'SHADOW_WRAITH' ||
       id === 'PHANTOM_REAPER' ||
-      id === 'SPECTRAL_BANSHEE'
+      id === 'SPECTRAL_BANSHEE' ||
+      id === 'HEX_DEGRADER'
     ) {
       return 'WRAITH_REAPER';
     }
 
-    // 9. Siren (Mermaid)
-    if (id === 'STORM_CALLER_SIREN') {
+    // 9. Siren (Mermaid) & Priestess
+    if (id === 'STORM_CALLER_SIREN' || id === 'TIDAL_PRIESTESS') {
       return 'SIREN';
     }
 

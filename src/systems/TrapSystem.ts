@@ -71,7 +71,7 @@ export class TrapSystem {
           );
 
           if (!calc.isImmune) {
-            enemy.hp -= calc.finalDamage;
+            TargetingRuleEngine.applyDamageToEnemy(enemy, calc, trap.element);
             TargetingRuleEngine.applyElementalHitEffects(enemy, trap.element, trap.damage);
             // Special extra effect for TRAP_FROST (Bẫy Băng & Thủy Lôi)
             if (trap.type === 'TRAP_FROST') {

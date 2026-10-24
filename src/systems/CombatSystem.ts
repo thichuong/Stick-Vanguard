@@ -132,7 +132,13 @@ export class CombatSystem {
             const calc = TargetingRuleEngine.calculateDamage(payload, currentEnemy);
 
             if (!calc.isImmune) {
-              currentEnemy.hp -= calc.finalDamage;
+              TargetingRuleEngine.applyDamageToEnemy(
+                currentEnemy,
+                calc,
+                payload.element,
+                payload.secondaryAmount,
+                payload.secondaryElement
+              );
               TargetingRuleEngine.applyAllPayloadEffects(currentEnemy, payload);
 
               // Light holy heal & Grass root drain
@@ -361,7 +367,13 @@ export class CombatSystem {
     const calc = TargetingRuleEngine.calculateDamage(payload, bestTarget);
 
     if (!calc.isImmune) {
-      bestTarget.hp -= calc.finalDamage;
+      TargetingRuleEngine.applyDamageToEnemy(
+        bestTarget,
+        calc,
+        payload.element,
+        payload.secondaryAmount,
+        payload.secondaryElement
+      );
       TargetingRuleEngine.applyAllPayloadEffects(bestTarget, payload);
 
       if (
@@ -447,7 +459,7 @@ export class CombatSystem {
       );
 
       if (!calc.isImmune) {
-        closestCandidate.hp -= calc.finalDamage;
+        TargetingRuleEngine.applyDamageToEnemy(closestCandidate, calc, 'LIGHTNING');
         TargetingRuleEngine.applyElementalHitEffects(closestCandidate, 'LIGHTNING', chainDamage);
       }
 
@@ -521,7 +533,7 @@ export class CombatSystem {
           );
 
           if (!calc.isImmune) {
-            enemy.hp -= calc.finalDamage;
+            TargetingRuleEngine.applyDamageToEnemy(enemy, calc, 'LIGHTNING');
             TargetingRuleEngine.applyElementalHitEffects(enemy, 'LIGHTNING', soldier.damage * 0.9);
           }
 

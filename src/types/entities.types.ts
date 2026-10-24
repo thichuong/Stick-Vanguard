@@ -55,6 +55,23 @@ export interface SummonAbilityConfig {
   interval: number; // in seconds
 }
 
+export type EnemyAbilityType =
+  | 'DISABLE_TOWER'         // Vô hiệu hóa tháp trong tầm
+  | 'DOWNGRADE_TOWER'       // Làm tháp rơi 1 cấp (hoặc phá hủy nếu cấp 1)
+  | 'ARMOR_SHIELD_AURA'     // Tạo Giáp Ảo chặn sát thương vật lý cho bản thân & quái xung quanh
+  | 'MAGIC_SHIELD_AURA'     // Tạo Khiên Phép chặn sát thương phép cho bản thân & quái xung quanh
+  | 'HEAL_AURA'             // Hồi máu cho bản thân & quái xung quanh
+  | 'DAMAGE_REDUCTION_AURA'; // Giảm % sát thương nhận vào cho bản thân & quái xung quanh
+
+export interface EnemyAbilityConfig {
+  type: EnemyAbilityType;
+  interval: number;       // Chu kỳ kích hoạt (giây)
+  radius: number;         // Bán kính tác dụng lên tháp hoặc đồng minh (px)
+  value: number;          // Lượng giáp/khiên, lượng máu hồi, hoặc % giảm sát thương (0 - 0.6)
+  duration?: number;      // Thời gian vô hiệu hóa tháp hoặc thời gian tồn tại buff giảm sát thương
+  maxTargets?: number;    // Số tháp tối đa bị tác động mỗi lần tung chiêu (mặc định 1)
+}
+
 export interface SoldierEntity {
   id: string;
   towerId: string;
@@ -122,6 +139,14 @@ export interface EnemyEntity {
     hardCC?: { effectEfficiency?: number; durationEfficiency?: number };
     softCC?: { effectEfficiency?: number; durationEfficiency?: number };
   };
+  abilities?: EnemyAbilityConfig[];
+  abilityTimers?: number[];
+  armorShield?: number;
+  maxArmorShield?: number;
+  magicShield?: number;
+  maxMagicShield?: number;
+  damageReductionRatio?: number;
+  damageReductionTimer?: number;
 }
 
 export interface TowerEntity {
@@ -156,6 +181,7 @@ export interface TowerEntity {
   buffedElements?: ElementType[];
   buffSourceId?: string | null;
   auraTickTimer?: number;
+  disabledTimer?: number;
 }
 
 export interface ProjectileEntity {

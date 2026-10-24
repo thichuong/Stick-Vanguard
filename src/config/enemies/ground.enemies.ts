@@ -222,6 +222,85 @@ export const GROUND_ENEMIES: Record<string, EnemyBlueprint> = {
     altitude: 0,
     size: 15,
     color: '#84cc16'
+  },
+
+  // 31. Thánh Kỵ Sĩ Quang Minh (Hệ Quang + Thép - WALK, Tộc Thánh Điện)
+  'LIGHT_PALADIN': {
+    typeId: 'LIGHT_PALADIN',
+    name: 'Thánh Kỵ Sĩ Quang Minh',
+    description: 'Hệ Quang Minh + Thép (LIGHT + STEEL). Giáp kiên cố, định kỳ tạo Giáp Ảo cho bản thân và đồng đội xung quanh, kèm hiệu ứng giảm sát thương.',
+    hp: 320,
+    speed: 32,
+    damage: 24,
+    attackSpeed: 0.9,
+    rewardGold: 30,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'LIGHT',
+      secondaryElement: 'STEEL',
+      immunities: ['DARK', 'POISON'],
+    },
+    tags: ['ARMORED', 'SUPPORT'],
+    altitude: 0,
+    size: 23,
+    color: '#fef08a',
+    abilities: [
+      { type: 'ARMOR_SHIELD_AURA', interval: 6.0, radius: 110, value: 90 },
+      { type: 'DAMAGE_REDUCTION_AURA', interval: 6.0, radius: 110, value: 0.25, duration: 4.0 }
+    ]
+  },
+
+  // 32. Kẻ Phá Hoại Hư Không (Hệ Bóng Tối + Sét - WALK, Tộc Hắc Tinh)
+  'VOID_SABOTEUR': {
+    typeId: 'VOID_SABOTEUR',
+    name: 'Kẻ Phá Hoại Hư Không',
+    description: 'Hệ Bóng Tối + Sét (DARK + LIGHTNING). Đi bộ nhanh, phóng xung điện từ vô hiệu hóa tháp phòng thủ của người chơi trong vài giây.',
+    hp: 190,
+    speed: 52,
+    damage: 20,
+    attackSpeed: 1.1,
+    rewardGold: 26,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'DARK',
+      secondaryElement: 'LIGHTNING',
+      immunities: ['LIGHTNING'],
+    },
+    tags: ['FAST', 'SABOTEUR'],
+    altitude: 0,
+    size: 19,
+    color: '#7c3aed',
+    abilities: [
+      { type: 'DISABLE_TOWER', interval: 6.5, radius: 150, value: 1, duration: 3.5, maxTargets: 1 }
+    ]
+  },
+
+  // 33. Tế Tư Rừng Già (Hệ Cỏ + Tiên - WALK, Hồi máu vùng)
+  'DRUID_SHAMAN': {
+    typeId: 'DRUID_SHAMAN',
+    name: 'Tế Tư Rừng Già',
+    description: 'Hệ Cỏ + Tiên (GRASS + FAIRY). Nắm giữ ma pháp thiên nhiên, định kỳ tạo luồng sóng hồi máu diện rộng cho toàn bộ quái xung quanh.',
+    hp: 230,
+    speed: 38,
+    damage: 16,
+    attackSpeed: 0.9,
+    rewardGold: 28,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'GRASS',
+      secondaryElement: 'FAIRY',
+      immunities: ['DRAGON'],
+    },
+    tags: ['HEALER', 'SUPPORT'],
+    altitude: 0,
+    size: 20,
+    color: '#22c55e',
+    abilities: [
+      { type: 'HEAL_AURA', interval: 5.0, radius: 120, value: 85 }
+    ]
   }
 };
 

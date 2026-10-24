@@ -519,6 +519,95 @@ export class GameState {
   }
 
   /**
+   * Downgrade a tower by 1 tier (or destroy if it is tier 1 / trap)
+   */
+  public downgradeOrDestroyTower(towerId: string): 'DOWNGRADED' | 'DESTROYED' | 'NONE' {
+    const tIndex = this.towers.findIndex((t) => t.id === towerId);
+    if (tIndex === -1) return 'NONE';
+    const tower = this.towers[tIndex];
+
+    // If tier > 1, drop to previous tier
+    if (tower.tier > 1) {
+      const prevTier = (tower.tier - 1) as 1 | 2 | 3;
+      tower.tier = prevTier;
+      tower.branch = undefined;
+
+      const prevKey = `${tower.type}_${prevTier}`;
+      const prevBp = TOWER_BLUEPRINTS[prevKey];
+      if (prevBp) {
+        tower.name = prevBp.name;
+        tower.damage = prevBp.damage;
+        tower.range = prevBp.range;
+        tower.fireRate = prevBp.fireRate;
+        tower.aoeRadius = prevBp.aoeRadius;
+
+        if (tower.type !== 'MAGE') {
+          tower.element = 'PHYSICAL';
+        }
+
+        if (tower.type === 'BARRACKS' && tower.soldierMode === 'RANGED') {
+          tower.targetingFilter = { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
+        } else {
+          tower.targetingFilter = { ...prevBp.targetingFilter };
+        }
+
+        if (tower.type === 'BARRACKS') {
+          const targetMax = prevBp.maxSoldiers || 3;
+          tower.maxSoldiers = targetMax;
+          if (tower.soldierIds && tower.soldierIds.length > targetMax) {
+            const removedIds = tower.soldierIds.splice(targetMax);
+            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
+          }
+
+          if (tower.soldierIds) {
+            for (const sid of tower.soldierIds) {
+              const soldier = this.soldiers.find((s) => s.id === sid);
+              if (soldier) {
+                soldier.tier = prevTier;
+                soldier.branch = undefined;
+                soldier.baseMaxHp = prevBp.soldierHp || soldier.baseMaxHp;
+                soldier.baseDamage = prevBp.damage;
+                soldier.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : soldier.baseArmor;
+                soldier.maxHp = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseMaxHp * 0.65)) : soldier.baseMaxHp;
+                soldier.damage = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseDamage * 0.7)) : soldier.baseDamage;
+                soldier.armor = soldier.combatMode === 'RANGED' ? Math.round(soldier.baseArmor * 0.5 * 100) / 100 : soldier.baseArmor;
+                soldier.hp = Math.min(soldier.hp, soldier.maxHp);
+              }
+            }
+          }
+        }
+      }
+
+      this.recalculateTowerBuffs();
+      this.addFloatingText(`⬇️ RƠI CẤP (CẤP ${prevTier})!`, tower.x, tower.y - 20, '#ef4444', 16);
+      this.addExplosionParticles(tower.x, tower.y, '#ef4444', 12);
+      return 'DOWNGRADED';
+    }
+
+    // Tier 1 or Trap: DESTROYED completely!
+    const { x, y } = tower;
+    if (tower.slotId) {
+      const slot = this.towerSlots.find((s) => s.id === tower.slotId);
+      if (slot) slot.currentTowerId = null;
+    }
+
+    if (tower.soldierIds) {
+      this.soldiers = this.soldiers.filter((s) => !tower.soldierIds!.includes(s.id));
+    }
+
+    this.towers.splice(tIndex, 1);
+    if (this.selectedTowerId === towerId) {
+      this.selectedTowerId = null;
+      this.isSettingRallyPoint = false;
+    }
+
+    this.recalculateTowerBuffs();
+    this.addFloatingText('💥 PHÁ HỦY THÁP!', x, y - 20, '#dc2626', 18);
+    this.addExplosionParticles(x, y, '#dc2626', 22);
+    return 'DESTROYED';
+  }
+
+  /**
    * Set or change elemental attribute for a tower
    */
   public setTowerElement(

@@ -1,5 +1,5 @@
 import { MovementType, NavigationMode, ElementalProfile } from '../../types/elements.types.js';
-import { DeathSpawnConfig, SummonAbilityConfig } from '../../types/entities.types.js';
+import { DeathSpawnConfig, SummonAbilityConfig, EnemyAbilityConfig } from '../../types/entities.types.js';
 
 export type EnemyTierCategory = 'NORMAL' | 'ELITE' | 'BOSS';
 
@@ -33,6 +33,7 @@ export interface EnemyBlueprint {
   color: string;
   deathSpawn?: DeathSpawnConfig;
   summonConfig?: SummonAbilityConfig;
+  abilities?: EnemyAbilityConfig[];
   /** Ghi đè tỉ lệ nhận khống chế riêng cho quái (nếu không khai báo sẽ lấy theo bậc BOSS / ELITE / NORMAL trong ENEMY_CC_CONFIG) */
   ccResistance?: {
     hardCC?: Partial<CrowdControlModifiers>;

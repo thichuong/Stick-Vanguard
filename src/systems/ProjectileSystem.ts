@@ -112,7 +112,13 @@ export class ProjectileSystem {
     if (target && target.hp > 0 && target.state !== 'DEAD') {
       const calc = TargetingRuleEngine.calculateDamage(p.damagePayload, target);
       if (!calc.isImmune) {
-        target.hp -= calc.finalDamage;
+        TargetingRuleEngine.applyDamageToEnemy(
+          target,
+          calc,
+          p.damagePayload.element,
+          p.damagePayload.secondaryAmount,
+          p.damagePayload.secondaryElement
+        );
         TargetingRuleEngine.applyAllPayloadEffects(target, p.damagePayload);
       }
 
@@ -162,7 +168,13 @@ export class ProjectileSystem {
 
             const chainCalc = TargetingRuleEngine.calculateDamage(chainPayload, nextEnemy);
             if (!chainCalc.isImmune) {
-              nextEnemy.hp -= chainCalc.finalDamage;
+              TargetingRuleEngine.applyDamageToEnemy(
+                nextEnemy,
+                chainCalc,
+                chainPayload.element,
+                chainPayload.secondaryAmount,
+                chainPayload.secondaryElement
+              );
               TargetingRuleEngine.applyAllPayloadEffects(nextEnemy, chainPayload);
             }
 
@@ -227,7 +239,13 @@ export class ProjectileSystem {
 
         const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
         if (!calc.isImmune) {
-          enemy.hp -= calc.finalDamage;
+          TargetingRuleEngine.applyDamageToEnemy(
+            enemy,
+            calc,
+            payload.element,
+            payload.secondaryAmount,
+            payload.secondaryElement
+          );
           TargetingRuleEngine.applyAllPayloadEffects(enemy, payload);
         }
 

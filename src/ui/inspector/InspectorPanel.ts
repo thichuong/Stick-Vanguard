@@ -70,7 +70,7 @@ export class InspectorPanel {
         .join('');
     }
 
-    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
+    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -275,6 +275,11 @@ export class InspectorPanel {
           <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
             Sát thương: ${damageDisplay}
           </div>
+          ${
+            tower.disabledTimer && tower.disabledTimer > 0
+              ? `<div style="margin-top: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 6px; padding: 6px 10px; color: #f87171; font-size: 11.5px; font-weight: 700; text-align: center;">⚡ THÁP ĐANG BỊ VÔ HIỆU HÓA (${tower.disabledTimer.toFixed(1)}s)</div>`
+              : ''
+          }
         </div>
 
         ${soldierModeHtml}
