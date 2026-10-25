@@ -2970,6 +2970,40 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
 
       StorageService.clear();
     });
+
+    it('should have CELESTIAL_FAIRY configured with Fairy + Light and replace HEX_DEGRADER in Celestial Sanctum', async () => {
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+      const { MAP_CELESTIAL_SANCTUM } = await import('../config/maps/celestial_sanctum.map.js');
+      const { EXTENDED_WAVES_CELESTIAL_SANCTUM } = await import('../config/maps/waves_extended.js');
+
+      // 1. Blueprint checks
+      const fairyBp = ENEMY_BLUEPRINTS['CELESTIAL_FAIRY'];
+      expect(fairyBp).toBeDefined();
+      expect(fairyBp.elementalProfile.primaryElement).toBe('FAIRY');
+      expect(fairyBp.elementalProfile.secondaryElement).toBe('LIGHT');
+      expect(fairyBp.movementType).toBe('WALK');
+      expect(fairyBp.tags).toContain('ELITE');
+      expect(fairyBp.abilities).toBeDefined();
+      const summonAbility = fairyBp.abilities?.find((a) => a.type === 'SUMMON');
+      expect(summonAbility).toBeDefined();
+      expect(summonAbility?.spawnTypeId).toBe('LIGHT_PALADIN');
+
+      // 2. Map waves check: NO HEX_DEGRADER in celestial sanctum
+      for (const wave of MAP_CELESTIAL_SANCTUM.waves) {
+        const hasHex = wave.enemies.some((e) => e.typeId === 'HEX_DEGRADER');
+        expect(hasHex).toBe(false);
+      }
+      for (const wave of EXTENDED_WAVES_CELESTIAL_SANCTUM) {
+        const hasHex = wave.enemies.some((e) => e.typeId === 'HEX_DEGRADER');
+        expect(hasHex).toBe(false);
+      }
+
+      // 3. CELESTIAL_FAIRY present in wave 9 and wave 10
+      const wave9 = MAP_CELESTIAL_SANCTUM.waves.find((w) => w.waveNumber === 9);
+      const wave10 = MAP_CELESTIAL_SANCTUM.waves.find((w) => w.waveNumber === 10);
+      expect(wave9?.enemies.some((e) => e.typeId === 'CELESTIAL_FAIRY')).toBe(true);
+      expect(wave10?.enemies.some((e) => e.typeId === 'CELESTIAL_FAIRY')).toBe(true);
+    });
   });
 });
 

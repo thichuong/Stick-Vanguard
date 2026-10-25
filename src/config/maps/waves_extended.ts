@@ -218,17 +218,17 @@ export const EXTENDED_WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
       { typeId: 'LIGHT_PALADIN', count: 12, interval: 1.4, delay: 0 },
       { typeId: 'SERAPH_VALKYRIE', count: 12, interval: 1.3, delay: 2 },
       { typeId: 'TIDAL_PRIESTESS', count: 10, interval: 1.5, delay: 4 },
-      { typeId: 'HEX_DEGRADER', count: 6, interval: 2.2, delay: 6 }
+      { typeId: 'CELESTIAL_FAIRY', count: 6, interval: 2.2, delay: 6 }
     ]
   },
   {
     waveNumber: 12,
-    name: 'Mở Rộng 2: Thánh Quang Phá Giáp Tối Cao',
+    name: 'Mở Rộng 2: Thánh Quang Tiên Linh Trỗi Dậy',
     rewardGold: 320,
     enemies: [
       { typeId: 'LIGHT_PALADIN', count: 14, interval: 1.2, delay: 0 },
       { typeId: 'SERAPH_VALKYRIE', count: 18, interval: 1.0, delay: 2 },
-      { typeId: 'HEX_DEGRADER', count: 8, interval: 2.0, delay: 4 },
+      { typeId: 'CELESTIAL_FAIRY', count: 8, interval: 2.0, delay: 4 },
       { typeId: 'TIDAL_PRIESTESS', count: 12, interval: 1.3, delay: 6 }
     ]
   }

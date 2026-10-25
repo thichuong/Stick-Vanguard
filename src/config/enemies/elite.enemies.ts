@@ -183,6 +183,33 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
       { type: 'DOWNGRADE_TOWER', interval: 9.0, radius: 155, value: 1, duration: 0, maxTargets: 1 },
       { type: 'MAGIC_SHIELD_AURA', interval: 7.0, radius: 120, value: 140 }
     ]
+  },
+
+  // 39. Thánh Quang Tiên Nữ (Hệ Tiên + Ánh Sáng - WALK/HOVER, Tinh Anh Thánh Điện Thiên Không)
+  'CELESTIAL_FAIRY': {
+    typeId: 'CELESTIAL_FAIRY',
+    name: 'Thánh Quang Tiên Nữ',
+    description: 'Quái Tinh Anh Hệ Tiên + Ánh Sáng (FAIRY + LIGHT). Tinh linh hộ mệnh cổ xưa của Thánh Điện, tỏa Khiên Phép bảo hộ đồng minh và định kỳ hiệu triệu Thánh Kỵ Sĩ Quang Minh xuất trận.',
+    hp: 420,
+    speed: 32,
+    damage: 30,
+    attackSpeed: 0.8,
+    rewardGold: 55,
+    movementType: 'WALK',
+    navigationMode: 'GROUND_PATH',
+    elementalProfile: {
+      primaryElement: 'FAIRY',
+      secondaryElement: 'LIGHT',
+      immunities: ['FAIRY', 'DRAGON'],
+    },
+    tags: ['ELITE', 'SUMMONER', 'AURA', 'MAGE'],
+    altitude: 4,
+    size: 23,
+    color: '#f472b6',
+    abilities: [
+      { type: 'SUMMON', spawnTypeId: 'LIGHT_PALADIN', count: 1, interval: 8.0 },
+      { type: 'MAGIC_SHIELD_AURA', interval: 7.0, radius: 135, value: 160 }
+    ]
   }
 };
 

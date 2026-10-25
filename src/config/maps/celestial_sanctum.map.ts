@@ -87,7 +87,7 @@ export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
     rewardGold: 240,
     enemies: [
       { typeId: 'LIGHT_PALADIN', count: 8, interval: 1.4, delay: 0 },
-      { typeId: 'HEX_DEGRADER', count: 4, interval: 2.5, delay: 2 },
+      { typeId: 'CELESTIAL_FAIRY', count: 4, interval: 2.5, delay: 2 },
       { typeId: 'TIDAL_PRIESTESS', count: 8, interval: 1.4, delay: 3 },
       { typeId: 'SERAPH_VALKYRIE', count: 12, interval: 1.2, delay: 5 },
       { typeId: 'WINGED_GARGOYLE', count: 12, interval: 1.0, delay: 7 }
@@ -100,7 +100,7 @@ export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
     enemies: [
       { typeId: 'LIGHT_PALADIN', count: 8, interval: 1.5, delay: 0 },
       { typeId: 'TIDAL_PRIESTESS', count: 6, interval: 1.6, delay: 3 },
-      { typeId: 'HEX_DEGRADER', count: 4, interval: 2.5, delay: 5 },
+      { typeId: 'CELESTIAL_FAIRY', count: 4, interval: 2.5, delay: 5 },
       { typeId: 'SERAPH_VALKYRIE', count: 6, interval: 1.5, delay: 7 },
       { typeId: 'ARCHANGEL_MONARCH_BOSS', count: 2, interval: 3.0, delay: 10 }
     ]

@@ -52,7 +52,8 @@ export class EnemyArchetypeRenderer {
       id === 'FAIRY_SPRITE' ||
       id === 'SERAPH_VALKYRIE' ||
       id === 'EMP_DRONE' ||
-      id === 'ARCHANGEL_MONARCH_BOSS'
+      id === 'ARCHANGEL_MONARCH_BOSS' ||
+      id === 'CELESTIAL_FAIRY'
     ) {
       return 'AVIAN_BAT';
     }
@@ -541,7 +542,8 @@ export class EnemyArchetypeRenderer {
     isAttacking: boolean
   ): void {
     const s = enemy.size * 0.85;
-    const isFairy = enemy.typeId === 'FAIRY_SPRITE';
+    const isCelestialFairy = enemy.typeId === 'CELESTIAL_FAIRY';
+    const isFairy = enemy.typeId === 'FAIRY_SPRITE' || isCelestialFairy;
 
     const flap = Math.sin(animTime * 16) * 0.6;
     const bodyY = Math.sin(animTime * 8) * 3 + (isAttacking ? 3 : 0);
@@ -556,13 +558,22 @@ export class EnemyArchetypeRenderer {
       // Head
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(0, -s * 0.5, 4, 0, Math.PI * 2);
+      ctx.arc(0, -s * 0.5, isCelestialFairy ? 5 : 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
+      // Halo for Celestial Fairy
+      if (isCelestialFairy) {
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(0, -s * 0.5 - 7, 6, 2.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       // Body & Legs
       ctx.beginPath();
-      ctx.moveTo(0, -s * 0.5 + 4);
+      ctx.moveTo(0, -s * 0.5 + (isCelestialFairy ? 5 : 4));
       ctx.lineTo(0, s * 0.2);
       ctx.lineTo(-faceDir * 4, s * 0.6);
       ctx.stroke();
@@ -586,12 +597,20 @@ export class EnemyArchetypeRenderer {
         ctx.stroke();
       });
 
-      // Fairy wand or sparkle
+      // Fairy wand or holy scepter
       ctx.strokeStyle = '#fef08a';
       ctx.beginPath();
       ctx.moveTo(0, -s * 0.2);
       ctx.lineTo(faceDir * (s * 0.6), -s * 0.2);
       ctx.stroke();
+
+      if (isCelestialFairy) {
+        // Glowing holy star gem on scepter tip
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(faceDir * (s * 0.6), -s * 0.2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
     } else {
       // Bat / Gargoyle: hunched stick torso with clawed wings
       ctx.strokeStyle = color;
