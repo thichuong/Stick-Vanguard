@@ -44,6 +44,30 @@ describe('Modular UI Architecture Tests', () => {
       }
     });
 
+    it('should structure tower codex into 3 clear major sections with 2 columns in sections 2 and 3', () => {
+      const buildings = new CodexBuildings(() => {});
+      const towerTypes = ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'] as const;
+
+      for (const type of towerTypes) {
+        const html = buildings.getTowerCategoryHtml(type);
+        
+        // 3 major sections
+        expect(html).toContain('GIỚI THIỆU & CƠ CHẾ HOẠT ĐỘNG');
+        expect(html).toContain('CÂY NÂNG CẤP & CHI TIẾT CẤP ĐỘ');
+        expect(html).toContain('BẢNG NGUYÊN TỐ & BẢNG SO SÁNH CHI TIẾT');
+
+        // Section numbers
+        expect(html).toContain('<span class="codex-section-num">1</span>');
+        expect(html).toContain('<span class="codex-section-num">2</span>');
+        expect(html).toContain('<span class="codex-section-num">3</span>');
+
+        // Sections 2 and 3 use codex-two-col
+        const twoColMatches = html.match(/class="codex-two-col"/g);
+        expect(twoColMatches).not.toBeNull();
+        expect(twoColMatches!.length).toBeGreaterThanOrEqual(2);
+      }
+    });
+
     it('should include dual-slot simulation for Mage tower', () => {
       const buildings = new CodexBuildings(() => {});
       const html = buildings.getTowerCategoryHtml('MAGE');

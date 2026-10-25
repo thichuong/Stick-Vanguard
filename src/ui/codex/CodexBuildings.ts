@@ -109,223 +109,253 @@ export class CodexBuildings {
     const isSummonTower = type === 'BARRACKS' || type === 'DRAGON_NEST' || type === 'FAIRY_TREE' || type === 'HEROIC_ALTAR';
 
     return `
-      <div class="codex-two-col">
-        <!-- CỘT TRÁI: VAI TRÒ, CÂY NÂNG CẤP & HỒ SƠ ĐƠN VỊ -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <!-- Role and Mechanics Explanation -->
+      <div class="codex-tower-view-container" style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- ==================== MỤC 1: GIỚI THIỆU & CƠ CHẾ HOẠT ĐỘNG ==================== -->
+        <section class="codex-major-section">
+          <div class="codex-section-header">
+            <span class="codex-section-num">1</span>
+            <h3>GIỚI THIỆU & CƠ CHẾ HOẠT ĐỘNG</h3>
+          </div>
+
           <div class="sp-section sp-card">
-            <h4 class="sp-sec-title">📖 VAI TRÒ & CƠ CHẾ HOẠT ĐỘNG</h4>
-            <p class="sp-desc">${meta.role}</p>
-            <div class="sp-mechanic-box">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 28px;">${meta.icon}</span>
+                <h4 class="sp-sec-title" style="margin-bottom: 0; font-size: 19px;">${meta.title}</h4>
+              </div>
+              <span class="cmi-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 12.5px; padding: 4px 12px; border-radius: 6px; font-weight: 700;">${meta.badge}</span>
+            </div>
+
+            <p class="sp-desc" style="font-size: 15px; margin-bottom: 12px; line-height: 1.6;">${meta.role}</p>
+
+            <div class="sp-mechanic-box" style="margin-bottom: 12px;">
               <p><b>⚙️ Cơ chế:</b> ${meta.mechanics}</p>
               <p class="sp-tip-text">${meta.tip}</p>
             </div>
-          </div>
-
-          ${
-            type === 'BARRACKS'
-              ? `
-              <div class="sp-section sp-card" style="border-left: 5px solid #10b981; background: linear-gradient(90deg, #0f241d 0%, #121b2d 100%);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <h4 class="sp-sec-title" style="margin-bottom: 0; color: #34d399;">⚔️ LÍNH CẬN CHIẾN vs 🏹 LÍNH BẮN TÊN</h4>
-                  <button id="btn-goto-soldiers-guide" class="codex-tab" style="padding: 4px 12px; font-size: 13px; border-color: #10b981; color: #34d399;">Xem Bảng Lính ➔</button>
-                </div>
-                <p class="sp-desc" style="margin-bottom: 6px;">
-                  Người chơi có thể chuyển đổi linh hoạt giữa <b>Lính Đánh Gần</b> (Máu dày, giáp cao, chốt chặn quái đi bộ 1v1) và <b>Lính Bắn Tên</b> (Tầm bắn xa 147-183px, bắn được <b>CẢ 3 LOẠI: Đi Bộ, Trên Không & Dưới Nước</b>).
-                </p>
-                <span class="sp-tip-text">💡 Thao tác: Bấm vào Nhà Lính trong trận ➔ Chọn [⚔️ Cận Chiến] hoặc [🏹 Bắn Tên] - Hoàn toàn MIỄN PHÍ!</span>
-              </div>
-            `
-              : ''
-          }
-
-          ${
-            isSummonTower
-              ? `
-              <!-- Hồ sơ đơn vị triệu hồi -->
-              <div class="sp-section sp-card" style="border-left: 4px solid #a855f7;">
-                <h4 class="sp-sec-title" style="color: #c084fc;">🎖️ HỒ SƠ ĐƠN VỊ ĐƯỢC TRIỆU HỒI</h4>
-                <div class="unit-traits-list">
-                  ${this.renderSummonTraitsHtml(type, selectedBp)}
-                </div>
-              </div>
-            `
-              : ''
-          }
-
-          <!-- Interactive Upgrade Tree Diagram -->
-          <div class="sp-section sp-card">
-            <div class="sp-sec-header">
-              <h4 class="sp-sec-title">🌳 CÂY NÂNG CẤP (UPGRADE TREE)</h4>
-              <span class="sp-hint">Bấm vào từng cấp để xem thông số</span>
-            </div>
-
-            <div class="upgrade-tree-container">
-              <!-- Tier 1 -->
-              ${this.renderTreeNode(bp1, 'CẤP 1', `${type}_1`)}
-
-              <div class="tree-arrow">▼</div>
-
-              <!-- Tier 2 -->
-              ${this.renderTreeNode(bp2, 'CẤP 2', `${type}_2`)}
-
-              <div class="tree-arrow">▼</div>
-
-              <!-- Tier 3 -->
-              ${this.renderTreeNode(bp3, 'CẤP 3', `${type}_3`)}
-
-              <div class="tree-split-arrow">
-                <span>┌───────┴───────┐</span>
-                <span>▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼</span>
-              </div>
-
-              <!-- Tier 4 Branch Split -->
-              <div class="tree-branch-split">
-                ${this.renderTreeNode(bp4A, '4-A', `${type}_4_A`, true)}
-                ${this.renderTreeNode(bp4B, '4-B', `${type}_4_B`, true)}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CỘT PHẢI: CHI TIẾT CẤP ĐỘ ĐANG CHỌN, MÔ PHỎNG NGUYÊN TỐ & BẢNG SO SÁNH -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <!-- Selected Tier Detail Card -->
-          <div class="sp-section sp-card highlighted-detail-card">
-            <div class="dt-header">
-              <span class="dt-tier-badge">CHI TIẾT: ${selectedBp.name}</span>
-              <span class="dt-cost">🪙 ${selectedBp.cost} Vàng</span>
-            </div>
-            <p class="dt-desc">${selectedBp.description}</p>
 
             ${
               type === 'BARRACKS'
                 ? `
-              <div class="stance-toggle-box" style="margin-bottom: 10px;">
-                <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">XEM CHỈ SỐ THEO VŨ KHÍ:</span>
-                <div class="stance-btns-group">
-                  <button class="stance-btn ${this.barracksStance === 'MELEE' ? 'active' : ''}" data-stance="MELEE">⚔️ Cận Chiến (100% HP & Giáp)</button>
-                  <button class="stance-btn ${this.barracksStance === 'RANGED' ? 'active' : ''}" data-stance="RANGED">🏹 Bắn Tên (3 Địa Hình)</button>
+                <div style="margin-top: 12px; padding: 12px 16px; border-radius: 8px; border-left: 5px solid #10b981; background: linear-gradient(90deg, #0f241d 0%, #121b2d 100%); display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0; color: #34d399; font-size: 15px; font-weight: 700;">⚔️ LÍNH CẬN CHIẾN vs 🏹 LÍNH BẮN TÊN</h5>
+                    <button id="btn-goto-soldiers-guide" class="codex-tab" style="padding: 4px 12px; font-size: 13px; border-color: #10b981; color: #34d399;">Xem Bảng Lính ➔</button>
+                  </div>
+                  <p class="sp-desc" style="margin: 0; font-size: 13.5px;">
+                    Người chơi có thể chuyển đổi linh hoạt giữa <b>Lính Đánh Gần</b> (Máu dày, giáp cao, chốt chặn quái đi bộ 1v1) và <b>Lính Bắn Tên</b> (Tầm bắn xa 147-183px, bắn được <b>CẢ 3 LOẠI: Đi Bộ, Trên Không & Dưới Nước</b>).
+                  </p>
+                  <span class="sp-tip-text" style="font-size: 12.5px;">💡 Thao tác: Bấm vào Nhà Lính trong trận ➔ Chọn [⚔️ Cận Chiến] hoặc [🏹 Bắn Tên] - Hoàn toàn MIỄN PHÍ!</span>
                 </div>
-              </div>
-            `
+              `
                 : ''
             }
 
-            <div class="dt-stats-grid">
-              <div class="stat-box">
-                <span class="s-label">${isSummonTower ? 'Sát thương đơn vị' : 'Sát thương gốc'}</span>
-                <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage} ${type === 'MAGE' ? '🔮' : '⚔️'}</span>
-              </div>
-              <div class="stat-box">
-                <span class="s-label">${isSummonTower ? 'Tầm điều động (Rally)' : 'Tầm bắn'}</span>
-                <span class="s-val">${selectedBp.range} px</span>
-              </div>
-              <div class="stat-box">
-                <span class="s-label">Tốc độ ra đòn</span>
-                <span class="s-val">${selectedBp.fireRate}/s</span>
-              </div>
-              <div class="stat-box">
-                <span class="s-label">Hệ mặc định</span>
-                <span class="s-val" style="color: ${ELEMENT_COLORS[selectedBp.element]}">
-                  ${ELEMENT_ICONS[selectedBp.element]} ${selectedBp.element}
-                </span>
-              </div>
-              <div class="stat-box">
-                <span class="s-label">Mục tiêu</span>
-                <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'MELEE' ? 'Chỉ Đi Bộ (WALK)' : selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
-              </div>
-              <div class="stat-box">
-                <span class="s-label">${isSummonTower ? 'Tổng DPS Toàn Đội' : 'DPS Cơ Bản'}</span>
-                <span class="s-val highlight-dps">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage) * selectedBp.fireRate * (selectedBp.maxSoldiers || 1))} DPS</span>
-              </div>
-              ${
-                selectedBp.maxSoldiers
-                  ? `
-                  <div class="stat-box">
-                    <span class="s-label">Số lượng đơn vị</span>
-                    <span class="s-val" style="color: #38bdf8;">${selectedBp.maxSoldiers} Đơn vị</span>
+            ${
+              isSummonTower
+                ? `
+                <div style="margin-top: 12px; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #a855f7; background: rgba(168, 85, 247, 0.08);">
+                  <h5 style="margin: 0 0 8px 0; color: #c084fc; font-size: 15px; font-weight: 700;">🎖️ HỒ SƠ ĐƠN VỊ ĐƯỢC TRIỆU HỒI</h5>
+                  <div class="unit-traits-list">
+                    ${this.renderSummonTraitsHtml(type, selectedBp)}
                   </div>
-                  <div class="stat-box">
-                    <span class="s-label">Máu mỗi đơn vị</span>
-                    <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round((selectedBp.soldierHp || 100) * 0.65) : selectedBp.soldierHp} ❤️</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="s-label">Giáp đơn vị</span>
-                    <span class="s-val">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? (selectedBp.soldierArmor || 0) * 0.5 : (selectedBp.soldierArmor || 0)) * 100)}% 🛡️</span>
-                  </div>
-                `
-                  : ''
-              }
-              ${
-                selectedBp.soldierRespawn
-                  ? `
-                  <div class="stat-box">
-                    <span class="s-label">Thời gian hồi sinh</span>
-                    <span class="s-val" style="color: #a855f7;">${selectedBp.soldierRespawn}s ⏳</span>
-                  </div>
-                `
-                  : ''
-              }
-              ${
-                selectedBp.resurrectChance
-                  ? `
-                  <div class="stat-box">
-                    <span class="s-label">Tỉ lệ chiêu hồn</span>
-                    <span class="s-val" style="color: #a855f7;">${Math.round(selectedBp.resurrectChance * 100)}% 👻</span>
-                  </div>
-                `
-                  : ''
-              }
-              ${
-                selectedBp.aoeRadius
-                  ? `
-                  <div class="stat-box">
-                    <span class="s-label">Bán kính nổ AOE</span>
-                    <span class="s-val" style="color: #f97316;">${selectedBp.aoeRadius} px 💥</span>
-                  </div>
-                `
-                  : ''
-              }
-            </div>
+                </div>
+              `
+                : ''
+            }
+          </div>
+        </section>
+
+        <!-- ==================== MỤC 2: CÂY UPGRADE & CHI TIẾT CẤP ĐỘ (2 CỘT) ==================== -->
+        <section class="codex-major-section">
+          <div class="codex-section-header">
+            <span class="codex-section-num">2</span>
+            <h3>CÂY NÂNG CẤP & CHI TIẾT CẤP ĐỘ</h3>
           </div>
 
-          <!-- Interactive Elemental Imbue & Effect Simulator -->
-          ${this.renderTowerElementalSim(type, selectedBp)}
+          <div class="codex-two-col">
+            <!-- Cột Trái: Cây nâng cấp -->
+            <div class="sp-section sp-card">
+              <div class="sp-sec-header">
+                <h4 class="sp-sec-title">🌳 CÂY NÂNG CẤP (UPGRADE TREE)</h4>
+                <span class="sp-hint">Bấm vào từng cấp để xem thông số</span>
+              </div>
 
-          <!-- Full Comparison Table -->
-          <div class="sp-section sp-card">
-            <div class="sp-sec-header">
-              <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (CẢ SÁT THƯƠNG NGUYÊN TỐ)</h4>
-              <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +100% Sát thương Phép (Tỷ lệ 1:1)' : type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 'Gắn Nguyên tố: +60% Sát thương Phép' : type === 'HEROIC_ALTAR' ? '👻 Hệ Ma Cố Định (+50% DMG Ma)' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
+              <div class="upgrade-tree-container">
+                <!-- Tier 1 -->
+                ${this.renderTreeNode(bp1, 'CẤP 1', `${type}_1`)}
+
+                <div class="tree-arrow">▼</div>
+
+                <!-- Tier 2 -->
+                ${this.renderTreeNode(bp2, 'CẤP 2', `${type}_2`)}
+
+                <div class="tree-arrow">▼</div>
+
+                <!-- Tier 3 -->
+                ${this.renderTreeNode(bp3, 'CẤP 3', `${type}_3`)}
+
+                <div class="tree-split-arrow">
+                  <span>┌───────┴───────┐</span>
+                  <span>▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼</span>
+                </div>
+
+                <!-- Tier 4 Branch Split -->
+                <div class="tree-branch-split">
+                  ${this.renderTreeNode(bp4A, '4-A', `${type}_4_A`, true)}
+                  ${this.renderTreeNode(bp4B, '4-B', `${type}_4_B`, true)}
+                </div>
+              </div>
             </div>
-            <div class="table-responsive">
-              <table class="stats-table">
-                <thead>
-                  <tr>
-                    <th>Cấp Độ</th>
-                    <th>Tên Tháp</th>
-                    <th>Giá</th>
-                    ${isSummonTower ? '<th>Số Lượng</th>' : ''}
-                    <th>${isSummonTower ? 'DMG Gốc + Phép' : 'DMG Gốc'}</th>
-                    ${!isSummonTower ? '<th>DMG + Nguyên Tố</th>' : ''}
-                    ${isSummonTower ? '<th>Máu / Lính</th>' : ''}
-                    <th>Tầm</th>
-                    <th>Tốc</th>
-                    <th>DPS Tổng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${this.renderStatsTableRow(bp1, 'Cấp 1', type)}
-                  ${this.renderStatsTableRow(bp2, 'Cấp 2', type)}
-                  ${this.renderStatsTableRow(bp3, 'Cấp 3', type)}
-                  ${this.renderStatsTableRow(bp4A, '4-A 🌟', type, 'branch-row-a')}
-                  ${this.renderStatsTableRow(bp4B, '4-B 🌟', type, 'branch-row-b')}
-                </tbody>
-              </table>
+
+            <!-- Cột Phải: Chi tiết cấp độ đang chọn -->
+            <div class="sp-section sp-card highlighted-detail-card">
+              <div class="dt-header">
+                <span class="dt-tier-badge">CHI TIẾT: ${selectedBp.name}</span>
+                <span class="dt-cost">🪙 ${selectedBp.cost} Vàng</span>
+              </div>
+              <p class="dt-desc">${selectedBp.description}</p>
+
+              ${
+                type === 'BARRACKS'
+                  ? `
+                <div class="stance-toggle-box" style="margin-bottom: 10px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">XEM CHỈ SỐ THEO VŨ KHÍ:</span>
+                  <div class="stance-btns-group">
+                    <button class="stance-btn ${this.barracksStance === 'MELEE' ? 'active' : ''}" data-stance="MELEE">⚔️ Cận Chiến (100% HP & Giáp)</button>
+                    <button class="stance-btn ${this.barracksStance === 'RANGED' ? 'active' : ''}" data-stance="RANGED">🏹 Bắn Tên (3 Địa Hình)</button>
+                  </div>
+                </div>
+              `
+                  : ''
+              }
+
+              <div class="dt-stats-grid">
+                <div class="stat-box">
+                  <span class="s-label">${isSummonTower ? 'Sát thương đơn vị' : 'Sát thương gốc'}</span>
+                  <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage} ${type === 'MAGE' ? '🔮' : '⚔️'}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">${isSummonTower ? 'Tầm điều động (Rally)' : 'Tầm bắn'}</span>
+                  <span class="s-val">${selectedBp.range} px</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Tốc độ ra đòn</span>
+                  <span class="s-val">${selectedBp.fireRate}/s</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Hệ mặc định</span>
+                  <span class="s-val" style="color: ${ELEMENT_COLORS[selectedBp.element]}">
+                    ${ELEMENT_ICONS[selectedBp.element]} ${selectedBp.element}
+                  </span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Mục tiêu</span>
+                  <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'MELEE' ? 'Chỉ Đi Bộ (WALK)' : selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">${isSummonTower ? 'Tổng DPS Toàn Đội' : 'DPS Cơ Bản'}</span>
+                  <span class="s-val highlight-dps">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage) * selectedBp.fireRate * (selectedBp.maxSoldiers || 1))} DPS</span>
+                </div>
+                ${
+                  selectedBp.maxSoldiers
+                    ? `
+                    <div class="stat-box">
+                      <span class="s-label">Số lượng đơn vị</span>
+                      <span class="s-val" style="color: #38bdf8;">${selectedBp.maxSoldiers} Đơn vị</span>
+                    </div>
+                    <div class="stat-box">
+                      <span class="s-label">Máu mỗi đơn vị</span>
+                      <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round((selectedBp.soldierHp || 100) * 0.65) : selectedBp.soldierHp} ❤️</span>
+                    </div>
+                    <div class="stat-box">
+                      <span class="s-label">Giáp đơn vị</span>
+                      <span class="s-val">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? (selectedBp.soldierArmor || 0) * 0.5 : (selectedBp.soldierArmor || 0)) * 100)}% 🛡️</span>
+                    </div>
+                  `
+                    : ''
+                }
+                ${
+                  selectedBp.soldierRespawn
+                    ? `
+                    <div class="stat-box">
+                      <span class="s-label">Thời gian hồi sinh</span>
+                      <span class="s-val" style="color: #a855f7;">${selectedBp.soldierRespawn}s ⏳</span>
+                    </div>
+                  `
+                    : ''
+                }
+                ${
+                  selectedBp.resurrectChance
+                    ? `
+                    <div class="stat-box">
+                      <span class="s-label">Tỉ lệ chiêu hồn</span>
+                      <span class="s-val" style="color: #a855f7;">${Math.round(selectedBp.resurrectChance * 100)}% 👻</span>
+                    </div>
+                  `
+                    : ''
+                }
+                ${
+                  selectedBp.aoeRadius
+                    ? `
+                    <div class="stat-box">
+                      <span class="s-label">Bán kính nổ AOE</span>
+                      <span class="s-val" style="color: #f97316;">${selectedBp.aoeRadius} px 💥</span>
+                    </div>
+                  `
+                    : ''
+                }
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <!-- ==================== MỤC 3: BẢNG NGUYÊN TỐ & BẢNG SO SÁNH CHI TIẾT (2 CỘT) ==================== -->
+        <section class="codex-major-section">
+          <div class="codex-section-header">
+            <span class="codex-section-num">3</span>
+            <h3>BẢNG NGUYÊN TỐ & BẢNG SO SÁNH CHI TIẾT</h3>
+          </div>
+
+          <div class="codex-two-col">
+            <!-- Cột Trái: Bảng mô phỏng nguyên tố -->
+            <div style="display: flex; flex-direction: column;">
+              ${this.renderTowerElementalSim(type, selectedBp)}
+            </div>
+
+            <!-- Cột Phải: Bảng so sánh chi tiết -->
+            <div class="sp-section sp-card" style="display: flex; flex-direction: column;">
+              <div class="sp-sec-header">
+                <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (CẢ SÁT THƯƠNG NGUYÊN TỐ)</h4>
+                <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +100% Sát thương Phép (Tỷ lệ 1:1)' : type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 'Gắn Nguyên tố: +60% Sát thương Phép' : type === 'HEROIC_ALTAR' ? '👻 Hệ Ma Cố Định (+50% DMG Ma)' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
+              </div>
+              <div class="table-responsive">
+                <table class="stats-table">
+                  <thead>
+                    <tr>
+                      <th>Cấp Độ</th>
+                      <th>Tên Tháp</th>
+                      <th>Giá</th>
+                      ${isSummonTower ? '<th>Số Lượng</th>' : ''}
+                      <th>${isSummonTower ? 'DMG Gốc + Phép' : 'DMG Gốc'}</th>
+                      ${!isSummonTower ? '<th>DMG + Nguyên Tố</th>' : ''}
+                      ${isSummonTower ? '<th>Máu / Lính</th>' : ''}
+                      <th>Tầm</th>
+                      <th>Tốc</th>
+                      <th>DPS Tổng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${this.renderStatsTableRow(bp1, 'Cấp 1', type)}
+                    ${this.renderStatsTableRow(bp2, 'Cấp 2', type)}
+                    ${this.renderStatsTableRow(bp3, 'Cấp 3', type)}
+                    ${this.renderStatsTableRow(bp4A, '4-A 🌟', type, 'branch-row-a')}
+                    ${this.renderStatsTableRow(bp4B, '4-B 🌟', type, 'branch-row-b')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     `;
   }
