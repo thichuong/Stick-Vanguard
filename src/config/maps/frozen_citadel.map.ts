@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_FROZEN_CITADEL } from './waves_extended.js';
 
 export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
   {
@@ -93,8 +94,8 @@ export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
 export const MAP_FROZEN_CITADEL: MapConfig = {
   id: 'frozen_citadel',
   name: 'Băng Đảo Cực Bắc',
-  subtitle: 'Song thủy lộ & Đường bộ uốn Z',
-  description: 'Hai dòng sông băng cuồn cuộn ép vào hai sườn đồi, kẹp chặt con đường bộ quanh co ở trung tâm.',
+  subtitle: 'Nhà Chính Đỉnh Cực Bắc & Hướng Nam->Bắc',
+  description: 'Thành lũy băng tọa lạc tại đỉnh Bắc. Quân đoàn băng tuyết đổ bộ từ bờ biển phía Nam tiến ngược lên trên.',
   themeColor: '#0a192f',
   roadColor: '#64748b',
   riverColor: '#38bdf8',
@@ -103,87 +104,95 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
   roadWidth: 40,
   riverWidth: 38,
   groundWaypoints: [
-    { x: 40, y: 325 },
-    { x: 200, y: 325 },
-    { x: 300, y: 220 },
-    { x: 500, y: 220 },
-    { x: 600, y: 430 },
-    { x: 760, y: 430 },
-    { x: 850, y: 325 },
-    { x: 920, y: 325 }
+    { x: 120, y: 610 },
+    { x: 120, y: 420 },
+    { x: 360, y: 360 },
+    { x: 360, y: 180 },
+    { x: 500, y: 75 }
   ],
   waterWaypoints: [
-    { x: 40, y: 90 },
-    { x: 300, y: 90 },
-    { x: 580, y: 110 },
-    { x: 780, y: 170 },
-    { x: 920, y: 325 }
+    { x: 40, y: 520 },
+    { x: 220, y: 480 },
+    { x: 240, y: 240 },
+    { x: 380, y: 110 },
+    { x: 500, y: 75 }
   ],
-  airStart: { x: 40, y: 60 },
+  airStart: { x: 80, y: 590 },
   airWaypoints: [
-    { x: 40, y: 60 },
-    { x: 480, y: 200 },
-    { x: 920, y: 325 }
+    { x: 80, y: 590 },
+    { x: 300, y: 280 },
+    { x: 500, y: 75 }
   ],
-  playerBase: { x: 920, y: 325, radius: 45 },
-  groundSpawn: { x: 40, y: 325 },
-  waterSpawn: { x: 40, y: 90 },
+  playerBase: { x: 500, y: 75, radius: 45 },
+  playerBases: [
+    { x: 500, y: 75, radius: 45 }
+  ],
+  groundSpawn: { x: 120, y: 610 },
+  waterSpawn: { x: 40, y: 520 },
   towerSlots: [],
   waves: WAVES_FROZEN_CITADEL,
+  extendedWaves: EXTENDED_WAVES_FROZEN_CITADEL,
   groundLanes: [
+    // Tuyến Bộ Tây Nam -> Đỉnh Bắc
     [
-      { x: 40, y: 325 },
-      { x: 200, y: 325 },
-      { x: 300, y: 220 },
-      { x: 500, y: 220 },
-      { x: 600, y: 430 },
-      { x: 760, y: 430 },
-      { x: 850, y: 325 },
-      { x: 920, y: 325 }
+      { x: 120, y: 610 },
+      { x: 120, y: 420 },
+      { x: 360, y: 360 },
+      { x: 360, y: 180 },
+      { x: 500, y: 75 }
+    ],
+    // Tuyến Bộ Đông Nam -> Đỉnh Bắc
+    [
+      { x: 880, y: 610 },
+      { x: 880, y: 420 },
+      { x: 640, y: 360 },
+      { x: 640, y: 180 },
+      { x: 500, y: 75 }
     ]
   ],
   waterLanes: [
-    // Sông Băng Bắc
+    // Sông Băng Tây
     [
-      { x: 40, y: 90 },
-      { x: 300, y: 90 },
-      { x: 580, y: 110 },
-      { x: 780, y: 170 },
-      { x: 920, y: 325 }
+      { x: 40, y: 520 },
+      { x: 220, y: 480 },
+      { x: 240, y: 240 },
+      { x: 380, y: 110 },
+      { x: 500, y: 75 }
     ],
-    // Sông Băng Nam
+    // Sông Băng Đông
     [
-      { x: 40, y: 560 },
-      { x: 300, y: 560 },
-      { x: 580, y: 540 },
+      { x: 960, y: 520 },
       { x: 780, y: 480 },
-      { x: 920, y: 325 }
+      { x: 760, y: 240 },
+      { x: 620, y: 110 },
+      { x: 500, y: 75 }
     ]
   ],
   airLanes: [
     [
-      { x: 40, y: 60 },
-      { x: 480, y: 200 },
-      { x: 920, y: 325 }
+      { x: 80, y: 590 },
+      { x: 300, y: 280 },
+      { x: 500, y: 75 }
     ],
     [
-      { x: 40, y: 590 },
-      { x: 480, y: 450 },
-      { x: 920, y: 325 }
+      { x: 920, y: 590 },
+      { x: 700, y: 280 },
+      { x: 500, y: 75 }
     ]
   ],
   groundSpawns: [
-    { x: 40, y: 325 }
+    { x: 120, y: 610 },
+    { x: 880, y: 610 }
   ],
   waterSpawns: [
-    { x: 40, y: 90 },  // Thủy Cổng Bắc
-    { x: 40, y: 560 }  // Thủy Cổng Nam
+    { x: 40, y: 520 },
+    { x: 960, y: 520 }
   ],
   airStarts: [
-    { x: 40, y: 60 },
-    { x: 40, y: 590 }
+    { x: 80, y: 590 },
+    { x: 920, y: 590 }
   ],
-  laneBadges: ['1 Tuyến Bộ Uốn Z', '2 Dòng Sông Băng', 'Song Thủy Đột Kích'],
+  laneBadges: ['1 Nhà Chính Đỉnh Cực Bắc', 'Tiến Quân Nam -> Bắc', '2 Dòng Sông Băng'],
   tribe: {
     name: 'Tộc Hàn Băng Tuyết Linh',
     icon: '❄️🧚',

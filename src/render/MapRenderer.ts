@@ -1,5 +1,5 @@
 import { Vector2D, TowerType } from '../types/entities.types.js';
-import { MapConfig } from '../config/map.config.js';
+import { MapConfig, getMapBases } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { GameState } from '../core/GameState.js';
 
@@ -233,32 +233,35 @@ export class MapRenderer {
       ctx.restore();
     });
 
-    // 3. Player Base (Gate)
-    const base = mapConfig.playerBase;
+    // 3. Player Base(s) (Multi-base aware)
+    const allBases = getMapBases(mapConfig);
     const pulse = Math.sin(animTime * 3) * 3;
 
-    ctx.save();
-    ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(base.x, base.y, base.radius + pulse, 0, Math.PI * 2);
-    ctx.stroke();
+    allBases.forEach((base, idx) => {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(base.x, base.y, base.radius + pulse, 0, Math.PI * 2);
+      ctx.stroke();
 
-    // Bastion core
-    ctx.fillStyle = '#1e3a8a';
-    ctx.beginPath();
-    ctx.arc(base.x, base.y, 28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#60a5fa';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+      // Bastion core
+      ctx.fillStyle = '#1e3a8a';
+      ctx.beginPath();
+      ctx.arc(base.x, base.y, Math.min(28, base.radius - 8), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '22px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🏰', base.x, base.y);
-    ctx.restore();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = allBases.length > 1 ? 'bold 16px sans-serif' : '22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = allBases.length > 1 ? `🏰${idx + 1}` : '🏰';
+      ctx.fillText(label, base.x, base.y);
+      ctx.restore();
+    });
   }
 
   /**

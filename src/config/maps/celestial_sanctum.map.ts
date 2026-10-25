@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_CELESTIAL_SANCTUM } from './waves_extended.js';
 
 export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
   {
@@ -104,8 +105,8 @@ export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
 export const MAP_CELESTIAL_SANCTUM: MapConfig = {
   id: 'celestial_sanctum',
   name: 'Thánh Điện Thiên Không',
-  subtitle: 'Song đạo vân thiên - 2 Tuyến Mây Vàng & Suối Ánh Sáng',
-  description: 'Cung điện lơ lửng giữa tầng mây thánh thần. Quân đoàn thiên sứ với giáp ảo, khiên phép và ánh sáng chói lòa tấn công từ 2 tuyến đường mây.',
+  subtitle: 'Đối Kích Tây Bắc & Đông Bắc - Giao Cắt Chữ X',
+  description: 'Tuyến 1 xuất phát từ Tây Bắc, Tuyến 2 xuất phát từ góc trên bên phải (Đông Bắc), cắt chéo nhau qua giao lộ trung tâm trước khi tiến về Song Điện Thánh.',
   themeColor: '#0a192f',
   roadColor: '#ca8a04',
   riverColor: '#38bdf8',
@@ -114,84 +115,111 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
   roadWidth: 38,
   riverWidth: 34,
   groundWaypoints: [
-    { x: 40, y: 150 },
-    { x: 240, y: 150 },
-    { x: 380, y: 270 },
-    { x: 580, y: 170 },
-    { x: 740, y: 220 },
-    { x: 920, y: 325 }
+    { x: 40, y: 110 },
+    { x: 260, y: 110 },
+    { x: 380, y: 200 },
+    { x: 500, y: 325 },
+    { x: 640, y: 460 },
+    { x: 840, y: 530 },
+    { x: 860, y: 380 },
+    { x: 780, y: 325 },
+    { x: 670, y: 325 }
   ],
   waterWaypoints: [
-    { x: 40, y: 325 },
-    { x: 260, y: 325 },
-    { x: 480, y: 400 },
-    { x: 680, y: 325 },
-    { x: 920, y: 325 }
+    { x: 180, y: 0 },
+    { x: 320, y: 160 },
+    { x: 500, y: 325 },
+    { x: 680, y: 460 },
+    { x: 760, y: 390 },
+    { x: 670, y: 325 }
   ],
-  airStart: { x: 40, y: 80 },
+  airStart: { x: 40, y: 60 },
   airWaypoints: [
-    { x: 40, y: 80 },
-    { x: 480, y: 220 },
-    { x: 920, y: 325 }
+    { x: 40, y: 60 },
+    { x: 500, y: 325 },
+    { x: 670, y: 325 }
   ],
-  playerBase: { x: 920, y: 325, radius: 45 },
-  groundSpawn: { x: 40, y: 150 },
-  waterSpawn: { x: 40, y: 325 },
+  playerBase: { x: 330, y: 325, radius: 42 },
+  playerBases: [
+    { x: 330, y: 325, radius: 42 }, // Thánh Điện Tây
+    { x: 670, y: 325, radius: 42 }  // Thánh Điện Đông
+  ],
+  groundSpawn: { x: 40, y: 110 },
+  waterSpawn: { x: 180, y: 0 },
   towerSlots: [],
   waves: WAVES_CELESTIAL_SANCTUM,
+  extendedWaves: EXTENDED_WAVES_CELESTIAL_SANCTUM,
   groundLanes: [
-    // Tuyến Mây Bắc
+    // Tuyến 1: Tây Bắc (40, 110) -> cắt qua tâm (500, 325) -> vòng qua Đông Nam -> về Điện Đông (670, 325)
     [
-      { x: 40, y: 150 },
-      { x: 240, y: 150 },
-      { x: 380, y: 270 },
-      { x: 580, y: 170 },
-      { x: 740, y: 220 },
-      { x: 920, y: 325 }
+      { x: 40, y: 110 },
+      { x: 260, y: 110 },
+      { x: 380, y: 200 },
+      { x: 500, y: 325 },
+      { x: 640, y: 460 },
+      { x: 840, y: 530 },
+      { x: 860, y: 380 },
+      { x: 780, y: 325 },
+      { x: 670, y: 325 }
     ],
-    // Tuyến Mây Nam
+    // Tuyến 2: Xuất phát góc trên bên phải bản đồ (960, 110) -> cắt qua tâm (500, 325) -> vòng qua Tây Nam -> về Điện Tây (330, 325)
     [
-      { x: 40, y: 500 },
-      { x: 240, y: 500 },
-      { x: 380, y: 380 },
-      { x: 580, y: 480 },
-      { x: 740, y: 430 },
-      { x: 920, y: 325 }
+      { x: 960, y: 110 },
+      { x: 740, y: 110 },
+      { x: 620, y: 200 },
+      { x: 500, y: 325 },
+      { x: 360, y: 460 },
+      { x: 160, y: 530 },
+      { x: 140, y: 380 },
+      { x: 220, y: 325 },
+      { x: 330, y: 325 }
     ]
   ],
   waterLanes: [
+    // Suối Thánh 1: Tây Bắc xuống Đông Nam rồi rẽ vào Điện Đông
     [
-      { x: 40, y: 325 },
-      { x: 260, y: 325 },
-      { x: 480, y: 400 },
-      { x: 680, y: 325 },
-      { x: 920, y: 325 }
+      { x: 180, y: 0 },
+      { x: 320, y: 160 },
+      { x: 500, y: 325 },
+      { x: 680, y: 460 },
+      { x: 760, y: 390 },
+      { x: 670, y: 325 }
+    ],
+    // Suối Thánh 2: Đông Bắc xuống Tây Nam rồi rẽ vào Điện Tây
+    [
+      { x: 820, y: 0 },
+      { x: 680, y: 160 },
+      { x: 500, y: 325 },
+      { x: 320, y: 460 },
+      { x: 240, y: 390 },
+      { x: 330, y: 325 }
     ]
   ],
   airLanes: [
     [
-      { x: 40, y: 80 },
-      { x: 480, y: 220 },
-      { x: 920, y: 325 }
+      { x: 40, y: 60 },
+      { x: 500, y: 325 },
+      { x: 670, y: 325 }
     ],
     [
-      { x: 40, y: 570 },
-      { x: 480, y: 430 },
-      { x: 920, y: 325 }
+      { x: 960, y: 60 },
+      { x: 500, y: 325 },
+      { x: 330, y: 325 }
     ]
   ],
   groundSpawns: [
-    { x: 40, y: 150 },
-    { x: 40, y: 500 }
+    { x: 40, y: 110 },
+    { x: 960, y: 110 }
   ],
   waterSpawns: [
-    { x: 40, y: 325 }
+    { x: 180, y: 0 },
+    { x: 820, y: 0 }
   ],
   airStarts: [
-    { x: 40, y: 80 },
-    { x: 40, y: 570 }
+    { x: 40, y: 60 },
+    { x: 960, y: 60 }
   ],
-  laneBadges: ['2 Tuyến Mây Vàng', 'Suối Thánh Quang', 'Quân Đoàn Thiên Sứ'],
+  laneBadges: ['2 Nhà Chính Song Điện', 'Đối Kích Tây Bắc & Đông Bắc', 'Giao Cắt Chữ X'],
   tribe: {
     name: 'Tộc Thiên Sứ Quang Phong',
     icon: '✨🌪️🧚',

@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_DELTA_FORTRESS } from './waves_extended.js';
 
 export const WAVES_DELTA_FORTRESS: WaveConfig[] = [
   // Wave 1-3: WALK ONLY
@@ -99,8 +100,8 @@ export const WAVES_DELTA_FORTRESS: WaveConfig[] = [
 export const MAP_DELTA_FORTRESS: MapConfig = {
   id: 'delta_fortress',
   name: 'Pháo Đài Đồng Bằng',
-  subtitle: 'Song tuyến hợp lưu về thành',
-  description: 'Đường bộ từ Tây Nam và thủy lộ từ Tây Bắc hợp lưu áp sát thành trì phía Đông.',
+  subtitle: 'Phòng Thủ Trung Tâm & Tứ Phía Hợp Lực',
+  description: 'Thành lũy kiên cố án ngữ ngay chính giữa chiến trường, đón các đợt công kích từ cả hai hướng Đông và Tây.',
   themeColor: '#0f172a',
   roadColor: '#b45309',
   riverColor: '#0284c7',
@@ -111,31 +112,84 @@ export const MAP_DELTA_FORTRESS: MapConfig = {
   groundWaypoints: [
     { x: 40, y: 520 },
     { x: 260, y: 520 },
-    { x: 400, y: 420 },
-    { x: 580, y: 420 },
-    { x: 720, y: 340 },
-    { x: 900, y: 340 }
+    { x: 380, y: 380 },
+    { x: 500, y: 325 }
   ],
   waterWaypoints: [
     { x: 40, y: 120 },
-    { x: 280, y: 120 },
-    { x: 420, y: 240 },
-    { x: 600, y: 240 },
-    { x: 720, y: 340 },
-    { x: 900, y: 340 }
+    { x: 260, y: 180 },
+    { x: 380, y: 260 },
+    { x: 500, y: 325 }
   ],
-  airStart: { x: 40, y: 300 },
+  airStart: { x: 40, y: 325 },
   airWaypoints: [
-    { x: 40, y: 300 },
-    { x: 450, y: 300 },
-    { x: 900, y: 340 }
+    { x: 40, y: 325 },
+    { x: 500, y: 325 }
   ],
-  playerBase: { x: 900, y: 340, radius: 45 },
+  playerBase: { x: 500, y: 325, radius: 46 },
+  playerBases: [
+    { x: 500, y: 325, radius: 46 }
+  ],
   groundSpawn: { x: 40, y: 520 },
   waterSpawn: { x: 40, y: 120 },
   towerSlots: [],
   waves: WAVES_DELTA_FORTRESS,
-  laneBadges: ['1 Tuyến Bộ Tây Nam', '1 Thủy Lộ Tây Bắc', 'Song Tuyến Hợp Lưu'],
+  extendedWaves: EXTENDED_WAVES_DELTA_FORTRESS,
+  groundLanes: [
+    // Cánh Bộ Tây Nam -> Tâm
+    [
+      { x: 40, y: 520 },
+      { x: 260, y: 520 },
+      { x: 380, y: 380 },
+      { x: 500, y: 325 }
+    ],
+    // Cánh Bộ Đông Bắc -> Tâm
+    [
+      { x: 960, y: 130 },
+      { x: 740, y: 130 },
+      { x: 620, y: 270 },
+      { x: 500, y: 325 }
+    ]
+  ],
+  waterLanes: [
+    // Thủy Lộ Tây Bắc -> Tâm
+    [
+      { x: 40, y: 120 },
+      { x: 260, y: 180 },
+      { x: 380, y: 260 },
+      { x: 500, y: 325 }
+    ],
+    // Thủy Lộ Đông Nam -> Tâm
+    [
+      { x: 960, y: 530 },
+      { x: 740, y: 470 },
+      { x: 620, y: 390 },
+      { x: 500, y: 325 }
+    ]
+  ],
+  airLanes: [
+    [
+      { x: 40, y: 325 },
+      { x: 500, y: 325 }
+    ],
+    [
+      { x: 960, y: 325 },
+      { x: 500, y: 325 }
+    ]
+  ],
+  groundSpawns: [
+    { x: 40, y: 520 },
+    { x: 960, y: 130 }
+  ],
+  waterSpawns: [
+    { x: 40, y: 120 },
+    { x: 960, y: 530 }
+  ],
+  airStarts: [
+    { x: 40, y: 325 },
+    { x: 960, y: 325 }
+  ],
+  laneBadges: ['1 Nhà Chính Trung Tâm', 'Tứ Hướng Ép Vào', 'Phòng Thủ Đồng Bằng'],
   tribe: {
     name: 'Tộc Hải Thần Bão Tố',
     icon: '💧⚡',

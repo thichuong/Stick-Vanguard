@@ -362,8 +362,10 @@ class GameApp {
       if (nav.isFinished) {
         const damageToBase = enemy.tags.includes('BOSS') ? 5 : 1;
         this.state.lives -= damageToBase;
-        this.state.addFloatingText(`-${damageToBase} ❤️`, basePos.x, basePos.y - 20, '#ef4444', 16);
-        this.state.addExplosionParticles(basePos.x, basePos.y, '#ef4444', 15);
+        const hitX = enemy.x || basePos.x;
+        const hitY = enemy.y || basePos.y;
+        this.state.addFloatingText(`-${damageToBase} ❤️`, hitX, hitY - 20, '#ef4444', 16);
+        this.state.addExplosionParticles(hitX, hitY, '#ef4444', 15);
         this.state.enemies.splice(i, 1);
 
         if (this.state.lives <= 0) {

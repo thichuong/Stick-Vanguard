@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_VALLEY_ORIGIN } from './waves_extended.js';
 
 export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   // Wave 1-3: Chỉ quái đi bộ
@@ -137,6 +138,7 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
     { x: 920, y: 480 }
   ],
   playerBase: { x: 920, y: 480, radius: 45 },
+  playerBases: [{ x: 920, y: 480, radius: 45 }],
   groundSpawn: { x: 40, y: 160 },
   waterSpawn: { x: 340, y: 0 },
   towerSlots: [
@@ -147,7 +149,8 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
     { id: 'slot-w1', x: 410, y: 210, placement: 'WATER_TRAP', currentTowerId: null }
   ],
   waves: WAVES_VALLEY_ORIGIN,
-  laneBadges: ['1 Tuyến Bộ Uốn S', '1 Dòng Suối', '1 Hành Lang Bay'],
+  extendedWaves: EXTENDED_WAVES_VALLEY_ORIGIN,
+  laneBadges: ['1 Nhà Chính Đông Nam', '1 Tuyến Bộ Uốn S', '1 Dòng Suối'],
   tribe: {
     name: 'Tộc Mộc Tinh & Tiên Linh',
     icon: '🌿🧚',

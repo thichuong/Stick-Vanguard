@@ -1,5 +1,5 @@
 import { GameState } from '../../core/GameState.js';
-import { MAPS_CONFIG, MapConfig } from '../../config/map.config.js';
+import { MAPS_CONFIG, MapConfig, getMapBases } from '../../config/map.config.js';
 import { ELEMENT_ICONS, ELEMENT_NAMES } from '../../config/elements.config.js';
 
 export class MapSelectionModal {
@@ -207,6 +207,15 @@ export class MapSelectionModal {
       )
       .join('');
 
+    const allBases = getMapBases(map);
+    const basesSvg = allBases
+      .map(
+        (b) => `
+        <circle cx="${Math.round(b.x * scale)}" cy="${Math.round(b.y * scale)}" r="6" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5" />
+      `
+      )
+      .join('');
+
     return `
       <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="mini-map-svg">
         <rect width="${w}" height="${h}" fill="${map.themeColor || '#1e293b'}" rx="6" />
@@ -219,7 +228,7 @@ export class MapSelectionModal {
         <!-- Spawners & Base -->
         ${groundSpawnsSvg}
         ${waterSpawnsSvg}
-        <circle cx="${Math.round(map.playerBase.x * scale)}" cy="${Math.round(map.playerBase.y * scale)}" r="6.5" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5" />
+        ${basesSvg}
       </svg>
     `;
   }

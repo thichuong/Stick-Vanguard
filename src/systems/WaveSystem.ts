@@ -1,5 +1,5 @@
 import { EnemyEntity } from '../types/entities.types.js';
-import { WaveConfig, MAP_CONFIG, MapConfig } from '../config/map.config.js';
+import { WaveConfig, MAP_CONFIG, MapConfig, getTraversableLaneCount } from '../config/map.config.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 
 interface ActiveSpawner {
@@ -7,6 +7,7 @@ interface ActiveSpawner {
   remainingCount: number;
   interval: number;
   timer: number;
+  laneCursor: number;
 }
 
 export class WaveSystem {
@@ -57,9 +58,12 @@ export class WaveSystem {
    * Rule:
    * - Waves 1-10: Đúng theo bản đồ đã mô tả (this.currentMap.waves[0..9])
    * - Waves > 10:
+   *   + Phân loại rõ: Waves Lính (không chia hết cho 5) và Waves Boss (chia hết cho 5: 15, 20, 25...)
    *   + n = Math.floor(waveNum / 10)
-   *   + Nếu waveNum chia hết cho 5: Quái = Wave 9 + Wave 10 của bản đồ, số quái gấp n lần.
-   *   + Nếu waveNum không chia hết cho 5: Quái giống Wave 9 của bản đồ, số quái gấp n lần.
+   *   + Waves Lính: Dựa trên extendedWaves của map (luân phiên 2 waves extend riêng của từng map), số lượng quái nhân n lần.
+   *   + Waves Boss:
+   *     * Số lính waves boss ngang số lính waves lính (danh sách lính nhân n lần, không cộng thêm lính wave 10).
+   *     * Boss xuất hiện trên tất cả lane có thể đi được (số lượng Boss = traversableLanes * n).
    */
   public generateWaveConfig(waveIdx: number, _totalWaves?: number): WaveConfig {
     const waveNum = waveIdx + 1;
@@ -76,49 +80,71 @@ export class WaveSystem {
       };
     }
 
-    // --- Waves > 10: Dựa trên Wave 9 và Wave 10 của bản đồ hiện tại ---
+    // --- Waves > 10: Dựa trên extendedWaves riêng của bản đồ (hoặc fallback wave 9) ---
     const n = Math.floor(waveNum / 10);
-    const wave9 = mapWaves[8] || mapWaves[mapWaves.length - 1];
-    const wave10 = mapWaves[9] || wave9;
+    const extendedList = this.currentMap?.extendedWaves && this.currentMap.extendedWaves.length > 0
+      ? this.currentMap.extendedWaves
+      : [mapWaves[8] || mapWaves[mapWaves.length - 1]];
+
+    // Luân phiên 2 waves extend riêng
+    const extWaveTemplate = extendedList[(waveNum - 11) % extendedList.length] || extendedList[0];
+    const wave10 = mapWaves[9] || mapWaves[mapWaves.length - 1];
+
+    // Tìm boss blueprints từ Wave 10 của map (hoặc boss mặc định)
+    const bossEntriesInWave10 = (wave10?.enemies || []).filter((e) => {
+      const bp = ENEMY_BLUEPRINTS[e.typeId];
+      return bp && bp.tags.includes('BOSS');
+    });
 
     if (waveNum % 5 === 0) {
-      // Chia hết cho 5: Quái = Wave 9 + Wave 10 của bản đồ, số quái gấp n lần
-      const mergedMap = new Map<string, { typeId: string; count: number; interval: number; delay: number }>();
-      for (const entry of [...(wave9?.enemies || []), ...(wave10?.enemies || [])]) {
-        const existing = mergedMap.get(entry.typeId);
-        if (existing) {
-          existing.count += entry.count;
-          existing.interval = Math.min(existing.interval, entry.interval);
-          existing.delay = Math.min(existing.delay, entry.delay);
-        } else {
-          mergedMap.set(entry.typeId, { ...entry });
-        }
+      // WAVES BOSS:
+      // 1. Số lính waves boss ngang số lính waves lính (lấy từ template wave lính mở rộng, lọc bỏ boss)
+      const minionEnemies = (extWaveTemplate?.enemies || [])
+        .filter((e) => {
+          const bp = ENEMY_BLUEPRINTS[e.typeId];
+          return !bp || !bp.tags.includes('BOSS');
+        })
+        .map((entry) => ({
+          ...entry,
+          count: entry.count * n
+        }));
+
+      // 2. Boss xuất hiện trên tất cả lane có thể đi được
+      const bossEnemies: { typeId: string; count: number; interval: number; delay: number }[] = [];
+      const bossesToSpawn = bossEntriesInWave10.length > 0 ? bossEntriesInWave10 : [{ typeId: 'ANCIENT_TREANT_BOSS', count: 1, interval: 1.0, delay: 0 }];
+
+      for (const bEntry of bossesToSpawn) {
+        const bp = ENEMY_BLUEPRINTS[bEntry.typeId];
+        const navMode = bp ? bp.navigationMode : 'GROUND_PATH';
+        const traversableLanes = getTraversableLaneCount(this.currentMap, navMode);
+        // Boss xuất hiện trên tất cả lane: mỗi lane 1 boss x n bậc
+        bossEnemies.push({
+          typeId: bEntry.typeId,
+          count: Math.max(1, traversableLanes * n),
+          interval: bEntry.interval || 1.0,
+          delay: Math.max(0, (bEntry.delay ?? 6))
+        });
       }
 
-      const enemies = Array.from(mergedMap.values()).map((entry) => ({
-        ...entry,
-        count: entry.count * n
-      }));
-
-      const baseReward = (wave9?.rewardGold || 175) + (wave10?.rewardGold || 300);
+      const baseReward = (extWaveTemplate?.rewardGold || 220) + (wave10?.rewardGold || 300);
       return {
         waveNumber: waveNum,
-        name: `Đợt ${waveNum}: Tổng Lực Tinh Nhuệ & Trùm (x${n})`,
+        name: `Đợt ${waveNum}: Đại Trận Chiến Trùm Toàn Tuyến (x${n})`,
         rewardGold: baseReward * n,
-        enemies
+        enemies: [...minionEnemies, ...bossEnemies]
       };
     }
 
-    // Waves > 10 không chia hết cho 5: Quái giống Wave 9 của bản đồ, số quái gấp n lần
-    const enemies = (wave9?.enemies || []).map((entry) => ({
+    // WAVES LÍNH: Số quái lấy từ extendedWave riêng của map, nhân n lần
+    const enemies = (extWaveTemplate?.enemies || []).map((entry) => ({
       ...entry,
       count: entry.count * n
     }));
 
     return {
       waveNumber: waveNum,
-      name: `${wave9?.name || `Đợt ${waveNum}`} (x${n})`,
-      rewardGold: (wave9?.rewardGold || 175) * n,
+      name: `${extWaveTemplate?.name || `Đợt ${waveNum}`} (x${n})`,
+      rewardGold: (extWaveTemplate?.rewardGold || 200) * n,
       enemies
     };
   }
@@ -141,7 +167,8 @@ export class WaveSystem {
       typeId: entry.typeId,
       remainingCount: entry.count,
       interval: entry.interval,
-      timer: entry.delay
+      timer: entry.delay,
+      laneCursor: 0
     }));
 
     return true;
@@ -166,7 +193,8 @@ export class WaveSystem {
           spawner.timer = spawner.interval;
           spawner.remainingCount--;
 
-          const enemy = this.createEnemy(spawner.typeId);
+          const forcedLane = spawner.laneCursor++;
+          const enemy = this.createEnemy(spawner.typeId, forcedLane);
           if (enemy) {
             onSpawnEnemy(enemy);
           }

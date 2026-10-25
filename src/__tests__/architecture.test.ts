@@ -1362,34 +1362,36 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       }
     });
 
-    it('should scale procedural waves beyond wave 10 based on map Wave 9 and Wave 10 with n-multiplier', async () => {
+    it('should scale procedural waves beyond wave 10 based on map extendedWaves and Boss on traversable lanes', async () => {
       const { WaveSystem } = await import('../systems/WaveSystem.js');
       const { MAP_VALLEY_ORIGIN } = await import('../config/map.config.js');
       const waveSys = new WaveSystem(MAP_VALLEY_ORIGIN, 30);
 
-      // Waves 11 to 14: n = 1, same as Wave 9 of map
-      const wave9Enemies = MAP_VALLEY_ORIGIN.waves[8].enemies;
+      // Waves 11 to 14: n = 1, based on extendedWaves of map
+      const ext1Enemies = MAP_VALLEY_ORIGIN.extendedWaves![0].enemies;
       const wave11 = waveSys.generateWaveConfig(10, 30);
-      expect(wave11.enemies.length).toBe(wave9Enemies.length);
+      expect(wave11.enemies.length).toBe(ext1Enemies.length);
       for (const entry of wave11.enemies) {
-        const orig = wave9Enemies.find((e) => e.typeId === entry.typeId)!;
+        const orig = ext1Enemies.find((e) => e.typeId === entry.typeId)!;
         expect(orig).toBeDefined();
         expect(entry.count).toBe(orig.count * 1);
       }
 
-      // Wave 15: n = 1, Wave 9 + Wave 10
+      // Wave 15: n = 1, Boss wave: minion count equals wave lính (ext1Enemies) and Boss on traversable lanes
       const wave15 = waveSys.generateWaveConfig(14, 30);
       expect(wave15.enemies.some((e) => e.typeId === 'ANCIENT_TREANT_BOSS')).toBe(true);
+      const wave15Minions = wave15.enemies.filter((e) => e.typeId !== 'ANCIENT_TREANT_BOSS');
+      expect(wave15Minions.length).toBe(ext1Enemies.length);
 
-      // Waves 21 to 24: n = 2, Wave 9 * 2
+      // Waves 21 (wave 21 -> (21-11)%2 = 0 -> ext1Enemies * 2)
       const wave21 = waveSys.generateWaveConfig(20, 30);
       for (const entry of wave21.enemies) {
-        const orig = wave9Enemies.find((e) => e.typeId === entry.typeId)!;
+        const orig = ext1Enemies.find((e) => e.typeId === entry.typeId)!;
         expect(orig).toBeDefined();
         expect(entry.count).toBe(orig.count * 2);
       }
 
-      // Wave 25: n = 2, (Wave 9 + Wave 10) * 2
+      // Wave 25: n = 2, Boss count = 1 lane * 2 = 2
       const wave25 = waveSys.generateWaveConfig(24, 30);
       const boss = wave25.enemies.find((e) => e.typeId === 'ANCIENT_TREANT_BOSS')!;
       expect(boss.count).toBe(2);
@@ -2635,6 +2637,90 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       EnemySkillSystem.handleDeath(summonerEnemy, state, navSys, waveSys, 0);
       const deathSpawnMinions = state.enemies.filter((e) => e.typeId === 'SKELETON_MINION');
       expect(deathSpawnMinions.length).toBe(4); // 2 from summon + 2 from death spawn
+    });
+
+    it('should verify diverse base positions, base counts, and 2 unique extended waves on all 10 maps', async () => {
+      const { MAPS_CONFIG, getMapBases } = await import('../config/map.config.js');
+      expect(MAPS_CONFIG).toHaveLength(10);
+
+      const baseCounts: Record<string, number> = {};
+      for (const map of MAPS_CONFIG) {
+        const bases = getMapBases(map);
+        expect(bases.length).toBeGreaterThanOrEqual(1);
+        expect(bases.length).toBeLessThanOrEqual(3);
+        baseCounts[map.id] = bases.length;
+
+        // Every map has exactly 2 unique extended waves configured
+        expect(map.extendedWaves).toBeDefined();
+        expect(map.extendedWaves).toHaveLength(2);
+
+        // Extended waves have enemies configured
+        for (const extWave of map.extendedWaves!) {
+          expect(extWave.enemies.length).toBeGreaterThan(0);
+          expect(extWave.rewardGold).toBeGreaterThan(150);
+        }
+      }
+
+      // Check maps with 1 base: valley_origin, serpent_canyon, delta_fortress, frozen_citadel
+      expect(baseCounts['valley_origin']).toBe(1);
+      expect(baseCounts['serpent_canyon']).toBe(1);
+      expect(baseCounts['delta_fortress']).toBe(1);
+      expect(baseCounts['frozen_citadel']).toBe(1);
+
+      // Check maps with 2 bases: twin_crossroads, infernal_caldera, plague_morass, celestial_sanctum
+      expect(baseCounts['twin_crossroads']).toBe(2);
+      expect(baseCounts['infernal_caldera']).toBe(2);
+      expect(baseCounts['plague_morass']).toBe(2);
+      expect(baseCounts['celestial_sanctum']).toBe(2);
+
+      // Check maps with 3 bases: ancient_necropolis, void_singularity
+      expect(baseCounts['ancient_necropolis']).toBe(3);
+      expect(baseCounts['void_singularity']).toBe(3);
+    });
+
+    it('should verify Boss waves spawn Boss on all traversable lanes and equal minion count', async () => {
+      const { MAPS_CONFIG } = await import('../config/map.config.js');
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const { ENEMY_BLUEPRINTS } = await import('../config/enemies.config.js');
+
+      // Test map with 2 ground lanes: infernal_caldera (Boss is INFERNO_MONARCH_BOSS - GROUND_PATH)
+      const caldera = MAPS_CONFIG.find((m) => m.id === 'infernal_caldera')!;
+      expect(caldera).toBeDefined();
+      const waveSysCaldera = new WaveSystem(caldera, 20);
+
+      // Wave 11: Wave lính
+      const wave11 = waveSysCaldera.generateWaveConfig(10, 20);
+      const wave11Minions = wave11.enemies.filter((e) => !ENEMY_BLUEPRINTS[e.typeId]?.tags.includes('BOSS'));
+
+      // Wave 15: Wave boss
+      const wave15 = waveSysCaldera.generateWaveConfig(14, 20);
+      const wave15Minions = wave15.enemies.filter((e) => !ENEMY_BLUEPRINTS[e.typeId]?.tags.includes('BOSS'));
+      const wave15Bosses = wave15.enemies.filter((e) => ENEMY_BLUEPRINTS[e.typeId]?.tags.includes('BOSS'));
+
+      // 1. Minion count of boss wave is equal to minion wave
+      expect(wave15Minions.length).toBe(wave11Minions.length);
+      for (let i = 0; i < wave15Minions.length; i++) {
+        expect(wave15Minions[i].count).toBe(wave11Minions[i].count);
+      }
+
+      // 2. Boss appears on all traversable lanes (2 ground lanes -> 2 bosses for n = 1)
+      expect(wave15Bosses.length).toBeGreaterThan(0);
+      const totalBossCount = wave15Bosses.reduce((acc, b) => acc + b.count, 0);
+      expect(totalBossCount).toBe(2); // 2 ground lanes * n(1)
+
+      // 3. Test spawning verification: bosses spawn on different lanes (0 and 1)
+      waveSysCaldera.startWave(15);
+      const spawnedEnemies: any[] = [];
+      for (let i = 0; i < 20; i++) {
+        waveSysCaldera.update(1.0, (enemy) => spawnedEnemies.push(enemy), () => {}, 0);
+      }
+
+      const spawnedBosses = spawnedEnemies.filter((e) => ENEMY_BLUEPRINTS[e.typeId]?.tags.includes('BOSS'));
+      if (spawnedBosses.length >= 2) {
+        const bossLanes = new Set(spawnedBosses.map((b) => b.laneIndex));
+        expect(bossLanes.has(0)).toBe(true);
+        expect(bossLanes.has(1)).toBe(true);
+      }
     });
   });
 });

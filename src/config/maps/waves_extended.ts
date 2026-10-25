@@ -1,177 +1,277 @@
 import { WaveConfig } from '../map.config.js';
 
-/**
- * Chuỗi Waves mở rộng sau Wave 10 (Wave 11 - Wave 20):
- * - Độ khó tăng vọt: Spawn dồn dập, kết hợp đa tuyến đồng thời (Bộ, Bay, Nước).
- * - Xuất quái đầy đủ 100% chủng loại:
- *   + Quái đi bộ: Swarm (Runner), Melee (Warrior), Kháng Vật lý & Sét (Rock Golem),
- *     Kháng Lửa (Fire Imp), Phân tách Dung Nham (Magma Slime), Kháng Băng & Phân tách (Frost Crystal Golem),
- *     Xuyên lính chặn (Shadow Wraith), Triệu hồi quái (Necro Warlock).
- *   + Quái bay: Không kích bầy đàn (Winged Gargoyle), Rồng Hắc Ám (Dark Dragon Boss).
- *   + Quái dưới nước: Lướt sóng (Aqua Serpent), Triệu hồi lôi điện (Storm Caller Siren), Kháng Lôi (Spark Eel).
- *   + Trùm tối thượng: Dark Dragon Boss, Void Hydra Boss.
- * - Số lượng quái tăng liên tục theo mỗi wave, áp lực tăng dần.
- */
-export const WAVES_EXTENDED_POST_10: WaveConfig[] = [
-  // Wave 11: Tổng ~50 quái (Tam Tuyến Tràn Lập)
+// Map 1: Thung Lũng Khởi Nguyên (Mộc Tinh & Tiên Linh)
+export const EXTENDED_WAVES_VALLEY_ORIGIN: WaveConfig[] = [
   {
     waveNumber: 11,
-    name: 'Đợt 11: Bão Tố Đa Chiều (Bộ, Bay & Nước Tăng Cường)',
-    rewardGold: 210,
+    name: 'Mở Rộng 1: Đại Quân Mộc Tinh Cuồng Nộ',
+    rewardGold: 220,
     enemies: [
-      { typeId: 'STICK_WARRIOR', count: 12, interval: 1.0, delay: 0 },
-      { typeId: 'AQUA_SERPENT', count: 10, interval: 1.4, delay: 2 },
-      { typeId: 'WINGED_GARGOYLE', count: 10, interval: 1.2, delay: 4 },
-      { typeId: 'MAGMA_SLIME', count: 6, interval: 1.8, delay: 6 },
-      { typeId: 'FIRE_IMP', count: 12, interval: 0.8, delay: 8 }
+      { typeId: 'TREANT_GUARD', count: 12, interval: 1.4, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 14, interval: 1.2, delay: 2 },
+      { typeId: 'MOSS_TURTLE', count: 10, interval: 1.6, delay: 4 },
+      { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 6 }
     ]
   },
-
-  // Wave 12: Tổng ~58 quái (Triệu Hồi & Thiết Giáp)
   {
     waveNumber: 12,
-    name: 'Đợt 12: Triệu Hồi Hắc Ám (Vong Linh & Lôi Điện)',
-    rewardGold: 235,
+    name: 'Mở Rộng 2: Bão Tố Hoa Gió & Thần Mộc',
+    rewardGold: 250,
     enemies: [
-      { typeId: 'ROCK_GOLEM', count: 6, interval: 2.0, delay: 0 },
-      { typeId: 'NECRO_WARLOCK', count: 4, interval: 2.2, delay: 2 },
-      { typeId: 'STORM_CALLER_SIREN', count: 6, interval: 1.8, delay: 4 },
-      { typeId: 'WINGED_GARGOYLE', count: 14, interval: 1.0, delay: 6 },
-      { typeId: 'STICK_RUNNER', count: 22, interval: 0.5, delay: 8 },
-      { typeId: 'SPARK_EEL', count: 6, interval: 1.4, delay: 10 }
-    ]
-  },
-
-  // Wave 13: Tổng ~76 quái (Băng Hỏa & Phân Tách)
-  {
-    waveNumber: 13,
-    name: 'Đợt 13: Băng Hỏa Song Hành (Đại Quân Phân Tách)',
-    rewardGold: 265,
-    enemies: [
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 6, interval: 2.0, delay: 0 },
-      { typeId: 'MAGMA_SLIME', count: 10, interval: 1.5, delay: 2 },
-      { typeId: 'AQUA_SERPENT', count: 12, interval: 1.2, delay: 4 },
-      { typeId: 'SPARK_EEL', count: 8, interval: 1.2, delay: 6 },
-      { typeId: 'SHADOW_WRAITH', count: 10, interval: 1.1, delay: 8 },
-      { typeId: 'WINGED_GARGOYLE', count: 16, interval: 0.9, delay: 10 },
-      { typeId: 'FIRE_IMP', count: 14, interval: 0.7, delay: 12 }
-    ]
-  },
-
-  // Wave 14: Tổng ~84 quái (Không Kích & Vong Hồn)
-  {
-    waveNumber: 14,
-    name: 'Đợt 14: Cuồng Nộ Không Gian (Không Kích & Vong Hồn)',
-    rewardGold: 295,
-    enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 12, interval: 1.0, delay: 0 },
-      { typeId: 'NECRO_WARLOCK', count: 6, interval: 1.8, delay: 2 },
-      { typeId: 'STORM_CALLER_SIREN', count: 8, interval: 1.5, delay: 4 },
-      { typeId: 'ROCK_GOLEM', count: 8, interval: 1.8, delay: 6 },
-      { typeId: 'WINGED_GARGOYLE', count: 20, interval: 0.8, delay: 8 },
-      { typeId: 'STICK_WARRIOR', count: 16, interval: 0.8, delay: 10 },
-      { typeId: 'AQUA_SERPENT', count: 14, interval: 1.0, delay: 12 }
-    ]
-  },
-
-  // Wave 15: Boss + ~68 quái tinh nhuệ (Đại Trận Chiến Giữa Kỳ)
-  {
-    waveNumber: 15,
-    name: 'Đợt 15: Đại Trận Chiến Giữa Kỳ - Hắc Long Cuồng Nộ',
-    rewardGold: 450,
-    enemies: [
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 0 },
-      { typeId: 'ROCK_GOLEM', count: 8, interval: 1.6, delay: 2 },
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 7, interval: 1.8, delay: 4 },
-      { typeId: 'STORM_CALLER_SIREN', count: 8, interval: 1.4, delay: 6 },
-      { typeId: 'WINGED_GARGOYLE', count: 18, interval: 0.8, delay: 8 },
-      { typeId: 'MAGMA_SLIME', count: 10, interval: 1.4, delay: 10 },
-      { typeId: 'STICK_WARRIOR', count: 16, interval: 0.7, delay: 12 }
-    ]
-  },
-
-  // Wave 16: Tổng ~98 quái (Quân Đoàn Thạch Băng)
-  {
-    waveNumber: 16,
-    name: 'Đợt 16: Thủy Lục Giao Tranh (Quân Đoàn Thạch Băng)',
-    rewardGold: 340,
-    enemies: [
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 9, interval: 1.6, delay: 0 },
-      { typeId: 'MAGMA_SLIME', count: 13, interval: 1.2, delay: 2 },
-      { typeId: 'SPARK_EEL', count: 14, interval: 1.0, delay: 4 },
-      { typeId: 'AQUA_SERPENT', count: 16, interval: 0.9, delay: 6 },
-      { typeId: 'WINGED_GARGOYLE', count: 22, interval: 0.7, delay: 8 },
-      { typeId: 'NECRO_WARLOCK', count: 7, interval: 1.8, delay: 10 },
-      { typeId: 'FIRE_IMP', count: 18, interval: 0.6, delay: 12 }
-    ]
-  },
-
-  // Wave 17: Tổng ~110 quái (Bóng Ma Đột Phá)
-  {
-    waveNumber: 17,
-    name: 'Đợt 17: Cuồng Triều Vong Mệnh (Bóng Ma Đột Phá)',
-    rewardGold: 380,
-    enemies: [
-      { typeId: 'SHADOW_WRAITH', count: 16, interval: 0.8, delay: 0 },
-      { typeId: 'NECRO_WARLOCK', count: 8, interval: 1.6, delay: 2 },
-      { typeId: 'ROCK_GOLEM', count: 10, interval: 1.5, delay: 4 },
-      { typeId: 'STORM_CALLER_SIREN', count: 10, interval: 1.3, delay: 6 },
-      { typeId: 'WINGED_GARGOYLE', count: 24, interval: 0.6, delay: 8 },
-      { typeId: 'SPARK_EEL', count: 14, interval: 1.0, delay: 10 },
-      { typeId: 'STICK_RUNNER', count: 28, interval: 0.4, delay: 12 }
-    ]
-  },
-
-  // Wave 18: Tổng ~134 quái (Biển Quái Hỗn Hợp Tối Thượng)
-  {
-    waveNumber: 18,
-    name: 'Đợt 18: Thần Khúc Hư Vô (Biển Quái Hỗn Hợp Tối Thượng)',
-    rewardGold: 430,
-    enemies: [
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 11, interval: 1.5, delay: 0 },
-      { typeId: 'MAGMA_SLIME', count: 15, interval: 1.0, delay: 2 },
-      { typeId: 'AQUA_SERPENT', count: 18, interval: 0.8, delay: 4 },
-      { typeId: 'SPARK_EEL', count: 16, interval: 0.9, delay: 6 },
-      { typeId: 'SHADOW_WRAITH', count: 18, interval: 0.8, delay: 8 },
-      { typeId: 'WINGED_GARGOYLE', count: 26, interval: 0.5, delay: 10 },
-      { typeId: 'ROCK_GOLEM', count: 10, interval: 1.4, delay: 12 },
-      { typeId: 'FIRE_IMP', count: 20, interval: 0.5, delay: 14 }
-    ]
-  },
-
-  // Wave 19: Tổng ~144 quái (Quân Đoàn Diệt Tuyệt Tối Cao)
-  {
-    waveNumber: 19,
-    name: 'Đợt 19: Tiền Đại Họa - Quân Đoàn Diệt Tuyệt Tối Cao',
-    rewardGold: 490,
-    enemies: [
-      { typeId: 'ROCK_GOLEM', count: 12, interval: 1.4, delay: 0 },
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 12, interval: 1.4, delay: 2 },
-      { typeId: 'NECRO_WARLOCK', count: 10, interval: 1.5, delay: 4 },
-      { typeId: 'STORM_CALLER_SIREN', count: 12, interval: 1.1, delay: 6 },
-      { typeId: 'WINGED_GARGOYLE', count: 28, interval: 0.5, delay: 8 },
-      { typeId: 'STICK_RUNNER', count: 32, interval: 0.35, delay: 10 },
-      { typeId: 'SHADOW_WRAITH', count: 18, interval: 0.7, delay: 12 },
-      { typeId: 'MAGMA_SLIME', count: 16, interval: 0.9, delay: 14 }
-    ]
-  },
-
-  // Wave 20: 2 Bosses + ~114 quái tinh nhuệ tối cao (Chung Cuộc Tận Diệt)
-  {
-    waveNumber: 20,
-    name: 'Đợt 20: Chung Cuộc Tận Diệt - Song Trùm Ma Vương Tối Thượng',
-    rewardGold: 850,
-    enemies: [
-      { typeId: 'VOID_HYDRA_BOSS', count: 1, interval: 1.0, delay: 0 },
-      { typeId: 'DARK_DRAGON_BOSS', count: 1, interval: 1.0, delay: 6 },
-      { typeId: 'FROST_CRYSTAL_GOLEM', count: 12, interval: 1.3, delay: 2 },
-      { typeId: 'ROCK_GOLEM', count: 12, interval: 1.3, delay: 4 },
-      { typeId: 'NECRO_WARLOCK', count: 9, interval: 1.6, delay: 6 },
-      { typeId: 'STORM_CALLER_SIREN', count: 11, interval: 1.1, delay: 7 },
-      { typeId: 'WINGED_GARGOYLE', count: 28, interval: 0.5, delay: 9 },
-      { typeId: 'AQUA_SERPENT', count: 18, interval: 0.7, delay: 11 },
-      { typeId: 'SHADOW_WRAITH', count: 18, interval: 0.7, delay: 13 }
+      { typeId: 'TREANT_GUARD', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'FAIRY_SPRITE', count: 18, interval: 1.0, delay: 2 },
+      { typeId: 'MOSS_TURTLE', count: 12, interval: 1.4, delay: 4 },
+      { typeId: 'SHADOW_WRAITH', count: 8, interval: 1.5, delay: 6 }
     ]
   }
 ];
 
+// Map 2: Giao Lộ Sinh Tử (Thiết Giáp Cơ Giới)
+export const EXTENDED_WAVES_TWIN_CROSSROADS: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Quân Đoàn Thép Đột Kích Cầu',
+    rewardGold: 230,
+    enemies: [
+      { typeId: 'STEEL_VANGUARD', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'IRON_COLOSSUS', count: 4, interval: 2.5, delay: 2 },
+      { typeId: 'SPARK_EEL', count: 12, interval: 1.4, delay: 4 },
+      { typeId: 'WINGED_GARGOYLE', count: 12, interval: 1.3, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Khổng Lồ Sấm Sét Song Hành',
+    rewardGold: 260,
+    enemies: [
+      { typeId: 'IRON_COLOSSUS', count: 6, interval: 2.2, delay: 0 },
+      { typeId: 'STEEL_VANGUARD', count: 16, interval: 1.0, delay: 2 },
+      { typeId: 'SPARK_EEL', count: 14, interval: 1.2, delay: 4 },
+      { typeId: 'WINGED_GARGOYLE', count: 16, interval: 1.0, delay: 6 }
+    ]
+  }
+];
+
+// Map 3: Hẻm Núi Mãng Xà (Long Huyết Thạch Nham)
+export const EXTENDED_WAVES_SERPENT_CANYON: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Long Huyết Vách Đá Cuộn Trào',
+    rewardGold: 235,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'ROCK_GOLEM', count: 8, interval: 1.8, delay: 2 },
+      { typeId: 'WYVERN_RAIDER', count: 12, interval: 1.3, delay: 4 },
+      { typeId: 'RIVER_DRAKE', count: 10, interval: 1.5, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Cuồng Long Đáy Vực Hỗn Chiến',
+    rewardGold: 270,
+    enemies: [
+      { typeId: 'DRAKE_WARRIOR', count: 16, interval: 1.0, delay: 0 },
+      { typeId: 'WYVERN_RAIDER', count: 16, interval: 1.1, delay: 2 },
+      { typeId: 'ROCK_GOLEM', count: 10, interval: 1.6, delay: 5 },
+      { typeId: 'RIVER_DRAKE', count: 12, interval: 1.3, delay: 7 }
+    ]
+  }
+];
+
+// Map 4: Pháo Đài Đồng Bằng (Hải Thần Bão Tố)
+export const EXTENDED_WAVES_DELTA_FORTRESS: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Bão Biển Tràn Cửa Thành',
+    rewardGold: 240,
+    enemies: [
+      { typeId: 'STORM_CALLER_SIREN', count: 8, interval: 1.6, delay: 0 },
+      { typeId: 'STEEL_VANGUARD', count: 14, interval: 1.2, delay: 2 },
+      { typeId: 'AQUA_SERPENT', count: 14, interval: 1.2, delay: 4 },
+      { typeId: 'WINGED_GARGOYLE', count: 12, interval: 1.3, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Đại Triều Hải Thần Hợp Lực',
+    rewardGold: 280,
+    enemies: [
+      { typeId: 'STORM_CALLER_SIREN', count: 10, interval: 1.4, delay: 0 },
+      { typeId: 'AQUA_SERPENT', count: 16, interval: 1.0, delay: 2 },
+      { typeId: 'STEEL_VANGUARD', count: 16, interval: 1.1, delay: 4 },
+      { typeId: 'WINGED_GARGOYLE', count: 16, interval: 1.1, delay: 6 }
+    ]
+  }
+];
+
+// Map 5: Hỏa Ngục Núi Lửa (Hỏa Ngục Viêm Long)
+export const EXTENDED_WAVES_INFERNAL_CALDERA: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Dung Nham Băng Trụ Song Cánh',
+    rewardGold: 245,
+    enemies: [
+      { typeId: 'MAGMA_SLIME', count: 12, interval: 1.4, delay: 0 },
+      { typeId: 'FIRE_IMP', count: 18, interval: 0.8, delay: 2 },
+      { typeId: 'AQUA_SERPENT', count: 12, interval: 1.3, delay: 4 },
+      { typeId: 'ROCK_GOLEM', count: 8, interval: 1.8, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Biển Lửa Viêm Long Giáng Lâm',
+    rewardGold: 290,
+    enemies: [
+      { typeId: 'MAGMA_SLIME', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'FIRE_IMP', count: 22, interval: 0.7, delay: 2 },
+      { typeId: 'WINGED_GARGOYLE', count: 16, interval: 1.0, delay: 5 },
+      { typeId: 'AQUA_SERPENT', count: 14, interval: 1.2, delay: 7 }
+    ]
+  }
+];
+
+// Map 6: Băng Đảo Cực Bắc (Hàn Băng Tuyết Linh)
+export const EXTENDED_WAVES_FROZEN_CITADEL: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Khổng Lồ Băng Tinh Đột Kích',
+    rewardGold: 250,
+    enemies: [
+      { typeId: 'FROST_CRYSTAL_GOLEM', count: 10, interval: 1.6, delay: 0 },
+      { typeId: 'STORM_CALLER_SIREN', count: 8, interval: 1.6, delay: 2 },
+      { typeId: 'AQUA_SERPENT', count: 14, interval: 1.2, delay: 4 },
+      { typeId: 'FAIRY_SPRITE', count: 14, interval: 1.1, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Bão Tuyết Cực Bắc Tận Diệt',
+    rewardGold: 295,
+    enemies: [
+      { typeId: 'FROST_CRYSTAL_GOLEM', count: 12, interval: 1.4, delay: 0 },
+      { typeId: 'STORM_CALLER_SIREN', count: 10, interval: 1.4, delay: 2 },
+      { typeId: 'WINGED_GARGOYLE', count: 16, interval: 1.0, delay: 4 },
+      { typeId: 'AQUA_SERPENT', count: 16, interval: 1.0, delay: 6 }
+    ]
+  }
+];
+
+// Map 7: Cổ Thành Hư Vô (Vong Linh U Hồn)
+export const EXTENDED_WAVES_ANCIENT_NECROPOLIS: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Triệu Hồi Vong Linh Tam Lộ',
+    rewardGold: 255,
+    enemies: [
+      { typeId: 'SHADOW_WRAITH', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'NECRO_WARLOCK', count: 8, interval: 1.8, delay: 2 },
+      { typeId: 'AQUA_SERPENT', count: 12, interval: 1.3, delay: 4 },
+      { typeId: 'SPECTRAL_BANSHEE', count: 12, interval: 1.2, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Dạ Quỷ Hư Vô Xuyên Giáp',
+    rewardGold: 300,
+    enemies: [
+      { typeId: 'SHADOW_WRAITH', count: 18, interval: 1.0, delay: 0 },
+      { typeId: 'NECRO_WARLOCK', count: 10, interval: 1.6, delay: 2 },
+      { typeId: 'PHANTOM_REAPER', count: 8, interval: 1.8, delay: 4 },
+      { typeId: 'SPECTRAL_BANSHEE', count: 14, interval: 1.1, delay: 6 }
+    ]
+  }
+];
+
+// Map 8: Đầm Lầy Tử Khí (Độc Trùng Biến Dị)
+export const EXTENDED_WAVES_PLAGUE_MORASS: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Độc Trùng Kênh Bùn Trỗi Dậy',
+    rewardGold: 260,
+    enemies: [
+      { typeId: 'VENOM_ARACHNID', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'PLAGUE_LEVIATHAN', count: 6, interval: 2.0, delay: 2 },
+      { typeId: 'TOXIC_BAT', count: 14, interval: 1.2, delay: 4 },
+      { typeId: 'SPARK_EEL', count: 12, interval: 1.3, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Bão Tử Khí Đầm Lầy Tận Diệt',
+    rewardGold: 310,
+    enemies: [
+      { typeId: 'VENOM_ARACHNID', count: 16, interval: 1.0, delay: 0 },
+      { typeId: 'PLAGUE_LEVIATHAN', count: 8, interval: 1.8, delay: 2 },
+      { typeId: 'TOXIC_BAT', count: 16, interval: 1.0, delay: 4 },
+      { typeId: 'SHADOW_WRAITH', count: 12, interval: 1.2, delay: 6 }
+    ]
+  }
+];
+
+// Map 9: Thánh Điện Thiên Không (Thiên Sứ Quang Phong)
+export const EXTENDED_WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Kỵ Binh Ánh Sáng & Thiên Sứ',
+    rewardGold: 270,
+    enemies: [
+      { typeId: 'LIGHT_PALADIN', count: 12, interval: 1.4, delay: 0 },
+      { typeId: 'SERAPH_VALKYRIE', count: 12, interval: 1.3, delay: 2 },
+      { typeId: 'TIDAL_PRIESTESS', count: 10, interval: 1.5, delay: 4 },
+      { typeId: 'HEX_DEGRADER', count: 6, interval: 2.2, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Thánh Quang Phá Giáp Tối Cao',
+    rewardGold: 320,
+    enemies: [
+      { typeId: 'LIGHT_PALADIN', count: 14, interval: 1.2, delay: 0 },
+      { typeId: 'SERAPH_VALKYRIE', count: 16, interval: 1.0, delay: 2 },
+      { typeId: 'HEX_DEGRADER', count: 8, interval: 2.0, delay: 4 },
+      { typeId: 'TIDAL_PRIESTESS', count: 12, interval: 1.3, delay: 6 }
+    ]
+  }
+];
+
+// Map 10: Vực Thẳm Hắc Tinh (Hắc Tinh Phá Tháp)
+export const EXTENDED_WAVES_VOID_SINGULARITY: WaveConfig[] = [
+  {
+    waveNumber: 11,
+    name: 'Mở Rộng 1: Phá Hoại Cơ Giới Hư Không',
+    rewardGold: 280,
+    enemies: [
+      { typeId: 'VOID_SABOTEUR', count: 12, interval: 1.4, delay: 0 },
+      { typeId: 'HEX_DEGRADER', count: 8, interval: 2.0, delay: 2 },
+      { typeId: 'EMP_DRONE', count: 14, interval: 1.2, delay: 4 },
+      { typeId: 'ABYSSAL_CRAB', count: 10, interval: 1.6, delay: 6 }
+    ]
+  },
+  {
+    waveNumber: 12,
+    name: 'Mở Rộng 2: Hố Đen Diệt Tuyệt Tối Thượng',
+    rewardGold: 340,
+    enemies: [
+      { typeId: 'HEX_DEGRADER', count: 10, interval: 1.8, delay: 0 },
+      { typeId: 'VOID_SABOTEUR', count: 14, interval: 1.2, delay: 2 },
+      { typeId: 'EMP_DRONE', count: 18, interval: 1.0, delay: 4 },
+      { typeId: 'ABYSSAL_CRAB', count: 12, interval: 1.4, delay: 6 }
+    ]
+  }
+];
+
+export const MAP_EXTENDED_WAVES: Record<string, WaveConfig[]> = {
+  valley_origin: EXTENDED_WAVES_VALLEY_ORIGIN,
+  twin_crossroads: EXTENDED_WAVES_TWIN_CROSSROADS,
+  serpent_canyon: EXTENDED_WAVES_SERPENT_CANYON,
+  delta_fortress: EXTENDED_WAVES_DELTA_FORTRESS,
+  infernal_caldera: EXTENDED_WAVES_INFERNAL_CALDERA,
+  frozen_citadel: EXTENDED_WAVES_FROZEN_CITADEL,
+  ancient_necropolis: EXTENDED_WAVES_ANCIENT_NECROPOLIS,
+  plague_morass: EXTENDED_WAVES_PLAGUE_MORASS,
+  celestial_sanctum: EXTENDED_WAVES_CELESTIAL_SANCTUM,
+  void_singularity: EXTENDED_WAVES_VOID_SINGULARITY
+};
+
+// Giữ lại WAVES_EXTENDED_POST_10 để tương thích ngược nếu có import
+export const WAVES_EXTENDED_POST_10: WaveConfig[] = EXTENDED_WAVES_VALLEY_ORIGIN;

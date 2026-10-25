@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_SERPENT_CANYON } from './waves_extended.js';
 
 export const WAVES_SERPENT_CANYON: WaveConfig[] = [
   // Wave 1-3: WALK
@@ -99,8 +100,8 @@ export const WAVES_SERPENT_CANYON: WaveConfig[] = [
 export const MAP_SERPENT_CANYON: MapConfig = {
   id: 'serpent_canyon',
   name: 'Hẻm Núi Mãng Xà',
-  subtitle: 'Địa hình zíc-zắc 3 tầng',
-  description: 'Đường bộ khúc khuỷu kéo dài cho phép đặt tháp tập trung hỏa lực tối đa.',
+  subtitle: 'Đảo Hướng Đông-Tây & Nhà Chính Tây Nam',
+  description: 'Quân đoàn rồng tràn xuống từ vách núi phía Đông Bắc, uốn lượn zíc-zắc 3 tầng xuyên qua đáy hẻm núi để đột kích Nhà Chính ở góc Tây Nam.',
   themeColor: '#1c1917',
   roadColor: '#a16207',
   riverColor: '#0ea5e9',
@@ -109,36 +110,36 @@ export const MAP_SERPENT_CANYON: MapConfig = {
   roadWidth: 40,
   riverWidth: 36,
   groundWaypoints: [
-    { x: 40, y: 120 },
-    { x: 860, y: 120 },
-    { x: 860, y: 300 },
-    { x: 160, y: 300 },
-    { x: 160, y: 500 },
-    { x: 860, y: 500 },
-    { x: 920, y: 500 }
+    { x: 950, y: 110 },
+    { x: 140, y: 110 },
+    { x: 140, y: 310 },
+    { x: 860, y: 310 },
+    { x: 860, y: 520 },
+    { x: 80, y: 520 }
   ],
   waterWaypoints: [
-    { x: 0, y: 300 },
-    { x: 120, y: 400 },
-    { x: 340, y: 400 },
-    { x: 560, y: 400 },
-    { x: 740, y: 400 },
-    { x: 880, y: 420 },
-    { x: 920, y: 500 }
+    { x: 980, y: 210 },
+    { x: 520, y: 210 },
+    { x: 520, y: 420 },
+    { x: 220, y: 420 },
+    { x: 80, y: 520 }
   ],
-  airStart: { x: 40, y: 50 },
+  airStart: { x: 950, y: 60 },
   airWaypoints: [
-    { x: 40, y: 50 },
-    { x: 450, y: 240 },
-    { x: 750, y: 380 },
-    { x: 920, y: 500 }
+    { x: 950, y: 60 },
+    { x: 500, y: 280 },
+    { x: 80, y: 520 }
   ],
-  playerBase: { x: 920, y: 500, radius: 45 },
-  groundSpawn: { x: 40, y: 120 },
-  waterSpawn: { x: 0, y: 300 },
+  playerBase: { x: 80, y: 520, radius: 45 },
+  playerBases: [
+    { x: 80, y: 520, radius: 45 }
+  ],
+  groundSpawn: { x: 950, y: 110 },
+  waterSpawn: { x: 980, y: 210 },
   towerSlots: [],
   waves: WAVES_SERPENT_CANYON,
-  laneBadges: ['1 Tuyến Bộ 3 Tầng', '1 Thủy Lộ Đáy Vực', 'Đường Dài Tập Kích'],
+  extendedWaves: EXTENDED_WAVES_SERPENT_CANYON,
+  laneBadges: ['1 Nhà Chính Tây Nam', 'Đảo Hướng Đông -> Tây', '1 Tuyến Bộ 3 Tầng'],
   tribe: {
     name: 'Tộc Long Huyết Thạch Nham',
     icon: '🐉🪨',

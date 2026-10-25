@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_INFERNAL_CALDERA } from './waves_extended.js';
 
 export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
   {
@@ -95,8 +96,8 @@ export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
 export const MAP_INFERNAL_CALDERA: MapConfig = {
   id: 'infernal_caldera',
   name: 'Hỏa Ngục Núi Lửa',
-  subtitle: 'Song cánh gọng kìm & Sông nham thạch',
-  description: 'Hai đạo quân bộ tràn xuống từ vách núi Bắc - Nam kẹp lấy dòng dung nham rực lửa ở trung tâm.',
+  subtitle: 'Song Thành Đông Bắc & Đông Nam',
+  description: 'Hai đạo quân bộ tràn xuống từ vách núi Bắc - Nam kẹp lấy dòng dung nham rực lửa, đánh thẳng vào 2 pháo đài Song Thành riêng biệt.',
   themeColor: '#1a0500',
   roadColor: '#9a3412',
   riverColor: '#ea580c',
@@ -125,51 +126,62 @@ export const MAP_INFERNAL_CALDERA: MapConfig = {
     { x: 450, y: 180 },
     { x: 920, y: 325 }
   ],
-  playerBase: { x: 920, y: 325, radius: 45 },
+  playerBase: { x: 920, y: 180, radius: 42 },
+  playerBases: [
+    { x: 920, y: 180, radius: 42 }, // Thành Bắc
+    { x: 920, y: 470, radius: 42 }  // Thành Nam
+  ],
   groundSpawn: { x: 40, y: 120 },
   waterSpawn: { x: 40, y: 325 },
   towerSlots: [],
   waves: WAVES_INFERNAL_CALDERA,
+  extendedWaves: EXTENDED_WAVES_INFERNAL_CALDERA,
   groundLanes: [
-    // Lane 0: Cánh Bắc
+    // Lane 0: Cánh Bắc -> Thành Bắc
     [
       { x: 40, y: 120 },
       { x: 260, y: 120 },
       { x: 440, y: 160 },
       { x: 640, y: 160 },
-      { x: 820, y: 240 },
-      { x: 920, y: 325 }
+      { x: 820, y: 180 },
+      { x: 920, y: 180 }
     ],
-    // Lane 1: Cánh Nam
+    // Lane 1: Cánh Nam -> Thành Nam
     [
       { x: 40, y: 530 },
       { x: 260, y: 530 },
       { x: 440, y: 490 },
       { x: 640, y: 490 },
-      { x: 820, y: 410 },
-      { x: 920, y: 325 }
+      { x: 820, y: 470 },
+      { x: 920, y: 470 }
     ]
   ],
   waterLanes: [
-    // Sông Nham Thạch Xuyên Tâm
+    // Sông Nham Thạch 1 -> Thành Bắc
     [
       { x: 40, y: 325 },
-      { x: 280, y: 325 },
-      { x: 520, y: 325 },
-      { x: 740, y: 325 },
-      { x: 920, y: 325 }
+      { x: 380, y: 325 },
+      { x: 640, y: 240 },
+      { x: 920, y: 180 }
+    ],
+    // Sông Nham Thạch 2 -> Thành Nam
+    [
+      { x: 40, y: 325 },
+      { x: 380, y: 325 },
+      { x: 640, y: 410 },
+      { x: 920, y: 470 }
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 80 },
-      { x: 450, y: 180 },
-      { x: 920, y: 325 }
+      { x: 450, y: 150 },
+      { x: 920, y: 180 }
     ],
     [
       { x: 40, y: 570 },
-      { x: 450, y: 470 },
-      { x: 920, y: 325 }
+      { x: 450, y: 500 },
+      { x: 920, y: 470 }
     ]
   ],
   groundSpawns: [
@@ -177,13 +189,14 @@ export const MAP_INFERNAL_CALDERA: MapConfig = {
     { x: 40, y: 530 }
   ],
   waterSpawns: [
+    { x: 40, y: 325 },
     { x: 40, y: 325 }
   ],
   airStarts: [
     { x: 40, y: 80 },
     { x: 40, y: 570 }
   ],
-  laneBadges: ['2 Tuyến Bộ Song Cánh', '1 Sông Nham Thạch', '2 Hành Lang Bay'],
+  laneBadges: ['2 Nhà Chính Đông Bắc & Đông Nam', '2 Tuyến Bộ Song Cánh', 'Song Nhánh Nham Thạch'],
   tribe: {
     name: 'Tộc Hỏa Ngục Viêm Long',
     icon: '🔥🐉',

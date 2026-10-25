@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_PLAGUE_MORASS } from './waves_extended.js';
 
 export const WAVES_PLAGUE_MORASS: WaveConfig[] = [
   {
@@ -94,8 +95,8 @@ export const WAVES_PLAGUE_MORASS: WaveConfig[] = [
 export const MAP_PLAGUE_MORASS: MapConfig = {
   id: 'plague_morass',
   name: 'Đầm Lầy Tử Khí',
-  subtitle: 'Tứ trận hợp điểm - 2 Tuyến bộ & 2 Kênh độc',
-  description: 'Địa hình sình lầy đan xen mạng lưới kênh bùn độc, quái vật xuất hiện từ cả 4 hướng tiếp cận.',
+  subtitle: 'Đối Cực Chéo - Tây Bắc & Đông Nam',
+  description: 'Quân đoàn độc trùng đan chéo qua mạng lưới bùn lầy, tấn công 2 Căn Cứ độc lập ở hai góc đối cực Tây Bắc và Đông Nam.',
   themeColor: '#051f15',
   roadColor: '#166534',
   riverColor: '#84cc16',
@@ -125,76 +126,77 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
     { x: 460, y: 220 },
     { x: 920, y: 325 }
   ],
-  playerBase: { x: 920, y: 325, radius: 45 },
-  groundSpawn: { x: 40, y: 140 },
-  waterSpawn: { x: 300, y: 0 },
+  playerBase: { x: 120, y: 120, radius: 42 },
+  playerBases: [
+    { x: 120, y: 120, radius: 42 }, // Căn Cứ Tây Bắc
+    { x: 880, y: 530, radius: 42 }  // Căn Cứ Đông Nam
+  ],
+  groundSpawn: { x: 40, y: 510 },
+  waterSpawn: { x: 300, y: 650 },
   towerSlots: [],
   waves: WAVES_PLAGUE_MORASS,
+  extendedWaves: EXTENDED_WAVES_PLAGUE_MORASS,
   groundLanes: [
-    // Tuyến Lầy Bắc
-    [
-      { x: 40, y: 140 },
-      { x: 220, y: 140 },
-      { x: 360, y: 280 },
-      { x: 560, y: 160 },
-      { x: 740, y: 200 },
-      { x: 920, y: 325 }
-    ],
-    // Tuyến Lầy Nam
+    // Tuyến 1: Từ Tây Nam -> Trung Tâm -> Căn Cứ Đông Nam
     [
       { x: 40, y: 510 },
-      { x: 220, y: 510 },
-      { x: 360, y: 370 },
-      { x: 560, y: 490 },
-      { x: 740, y: 450 },
-      { x: 920, y: 325 }
+      { x: 260, y: 510 },
+      { x: 500, y: 325 },
+      { x: 740, y: 530 },
+      { x: 880, y: 530 }
+    ],
+    // Tuyến 2: Từ Đông Bắc -> Trung Tâm -> Căn Cứ Tây Bắc
+    [
+      { x: 960, y: 140 },
+      { x: 740, y: 140 },
+      { x: 500, y: 325 },
+      { x: 260, y: 120 },
+      { x: 120, y: 120 }
     ]
   ],
   waterLanes: [
-    // Kênh Bùn Độc Phương Bắc
-    [
-      { x: 300, y: 0 },
-      { x: 340, y: 180 },
-      { x: 460, y: 325 },
-      { x: 640, y: 280 },
-      { x: 820, y: 310 },
-      { x: 920, y: 325 }
-    ],
-    // Kênh Bùn Độc Phương Nam
+    // Kênh Bùn 1: Nam -> Tâm -> Đông Nam
     [
       { x: 300, y: 650 },
-      { x: 340, y: 470 },
-      { x: 460, y: 325 },
-      { x: 640, y: 370 },
-      { x: 820, y: 340 },
-      { x: 920, y: 325 }
+      { x: 360, y: 460 },
+      { x: 500, y: 325 },
+      { x: 680, y: 420 },
+      { x: 880, y: 530 }
+    ],
+    // Kênh Bùn 2: Bắc -> Tâm -> Tây Bắc
+    [
+      { x: 700, y: 0 },
+      { x: 640, y: 190 },
+      { x: 500, y: 325 },
+      { x: 320, y: 230 },
+      { x: 120, y: 120 }
     ]
   ],
   airLanes: [
     [
-      { x: 40, y: 80 },
-      { x: 460, y: 220 },
-      { x: 920, y: 325 }
-    ],
-    [
       { x: 40, y: 570 },
       { x: 460, y: 430 },
-      { x: 920, y: 325 }
+      { x: 880, y: 530 }
+    ],
+    [
+      { x: 960, y: 80 },
+      { x: 540, y: 220 },
+      { x: 120, y: 120 }
     ]
   ],
   groundSpawns: [
-    { x: 40, y: 140 }, // Cổng Lầy 1
-    { x: 40, y: 510 }  // Cổng Lầy 2
+    { x: 40, y: 510 },
+    { x: 960, y: 140 }
   ],
   waterSpawns: [
-    { x: 300, y: 0 },   // Kênh Độc Bắc
-    { x: 300, y: 650 }  // Kênh Độc Nam
+    { x: 300, y: 650 },
+    { x: 700, y: 0 }
   ],
   airStarts: [
-    { x: 40, y: 80 },
-    { x: 40, y: 570 }
+    { x: 40, y: 570 },
+    { x: 960, y: 80 }
   ],
-  laneBadges: ['2 Tuyến Bộ Đan Chéo', '2 Kênh Bùn Độc', 'Tứ Tuyến Tử Địa'],
+  laneBadges: ['2 Nhà Chính Đối Cực Chéo', '2 Tuyến Đan Chéo Tâm', '2 Kênh Bùn Độc'],
   tribe: {
     name: 'Tộc Độc Trùng Biến Dị',
     icon: '☠️🌿',

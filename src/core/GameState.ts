@@ -17,7 +17,8 @@ import { MagicalElementType } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
   MapConfig,
-  getDistanceToPolylines
+  getDistanceToPolylines,
+  getMapBases
 } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
 import {
@@ -126,7 +127,7 @@ export class GameState {
     type: TowerType | 'TOWER_GENERIC' | 'TRAP_GENERIC'
   ): { valid: boolean; placement: PlacementType; reason?: string } {
     const isTrap = type === 'TRAP_GENERIC' || type.startsWith('TRAP_');
-    const { width, height, groundWaypoints, waterWaypoints, playerBase, groundSpawn, waterSpawn } = this.currentMap;
+    const { width, height, groundWaypoints, waterWaypoints, groundSpawn, waterSpawn } = this.currentMap;
 
     // 1. Boundary check
     const margin = 26;
@@ -135,9 +136,12 @@ export class GameState {
     }
 
     // 2. Base & Spawn zone clearance
-    const distToBase = Math.hypot(x - playerBase.x, y - playerBase.y);
-    if (distToBase < playerBase.radius + 14) {
-      return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần căn cứ trung tâm!' };
+    const allBases = getMapBases(this.currentMap);
+    for (const base of allBases) {
+      const distToBase = Math.hypot(x - base.x, y - base.y);
+      if (distToBase < (base.radius || 42) + 14) {
+        return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần căn cứ trung tâm!' };
+      }
     }
 
     const allGroundSpawns =

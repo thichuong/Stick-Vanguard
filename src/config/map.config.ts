@@ -1,5 +1,5 @@
 import { Vector2D, TowerSlot } from '../types/entities.types.js';
-import { ElementType } from '../types/elements.types.js';
+import { ElementType, NavigationMode } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
   MAP_VALLEY_ORIGIN,
@@ -61,12 +61,14 @@ export interface MapConfig {
   airStart: Vector2D;
   airWaypoints: Vector2D[];
   playerBase: { x: number; y: number; radius: number };
+  playerBases?: { x: number; y: number; radius: number }[];
   groundSpawn: Vector2D;
   waterSpawn: Vector2D;
   roadWidth: number;
   riverWidth: number;
   towerSlots: TowerSlot[];
   waves: WaveConfig[];
+  extendedWaves?: WaveConfig[];
   // Multi-Lane Architecture
   groundLanes?: Vector2D[][];
   waterLanes?: Vector2D[][];
@@ -76,6 +78,38 @@ export interface MapConfig {
   airStarts?: Vector2D[];
   laneBadges?: string[];
   tribe?: MapTribeConfig;
+}
+
+export function getMapBases(mapConfig: MapConfig): { x: number; y: number; radius: number }[] {
+  if (mapConfig.playerBases && mapConfig.playerBases.length > 0) {
+    return mapConfig.playerBases;
+  }
+  return [mapConfig.playerBase];
+}
+
+export function getTraversableLaneCount(mapConfig: MapConfig, navMode: NavigationMode): number {
+  switch (navMode) {
+    case 'WATER_PATH': {
+      if (mapConfig.waterLanes && mapConfig.waterLanes.length > 0) {
+        return mapConfig.waterLanes.length;
+      }
+      return mapConfig.waterWaypoints && mapConfig.waterWaypoints.length > 0 ? 1 : 1;
+    }
+    case 'AIR_DIRECT':
+    case 'AIR_WAYPOINTS': {
+      if (mapConfig.airLanes && mapConfig.airLanes.length > 0) {
+        return mapConfig.airLanes.length;
+      }
+      return mapConfig.airWaypoints && mapConfig.airWaypoints.length > 0 ? 1 : 1;
+    }
+    case 'GROUND_PATH':
+    default: {
+      if (mapConfig.groundLanes && mapConfig.groundLanes.length > 0) {
+        return mapConfig.groundLanes.length;
+      }
+      return 1;
+    }
+  }
 }
 
 // Distance helper from point (px, py) to segment (x1, y1)-(x2, y2)

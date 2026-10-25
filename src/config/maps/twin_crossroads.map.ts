@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_TWIN_CROSSROADS } from './waves_extended.js';
 
 export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
   // Wave 1-3: WALK
@@ -99,8 +100,8 @@ export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
 export const MAP_TWIN_CROSSROADS: MapConfig = {
   id: 'twin_crossroads',
   name: 'Giao Lộ Sinh Tử',
-  subtitle: 'Đường bộ & Thủy lộ giao cắt',
-  description: 'Dòng sông chảy dọc từ Bắc xuống Nam cắt ngang đường tiến quân tại cầu trung tâm.',
+  subtitle: 'Song Thành Bắc - Nam & Giao Lộ Giữa',
+  description: 'Quân đoàn tiến vào từ hai phía Đông và Tây gặp nhau tại giao lộ trung tâm, rồi chia mũi nhọn tấn công 2 Nhà Chính ở phương Bắc và Nam.',
   themeColor: '#172554',
   roadColor: '#b45309',
   riverColor: '#0369a1',
@@ -109,38 +110,89 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
   roadWidth: 42,
   riverWidth: 40,
   groundWaypoints: [
-    { x: 40, y: 320 },
-    { x: 180, y: 320 },
-    { x: 260, y: 160 },
-    { x: 440, y: 160 },
+    { x: 40, y: 325 },
+    { x: 260, y: 325 },
     { x: 500, y: 325 },
-    { x: 560, y: 480 },
-    { x: 740, y: 480 },
-    { x: 820, y: 320 },
-    { x: 920, y: 320 }
+    { x: 500, y: 70 }
   ],
   waterWaypoints: [
-    { x: 500, y: 0 },
-    { x: 500, y: 200 },
-    { x: 500, y: 325 },
-    { x: 520, y: 460 },
-    { x: 680, y: 560 },
-    { x: 850, y: 450 },
-    { x: 920, y: 320 }
+    { x: 40, y: 120 },
+    { x: 280, y: 160 },
+    { x: 500, y: 70 }
   ],
-  airStart: { x: 40, y: 100 },
+  airStart: { x: 40, y: 220 },
   airWaypoints: [
-    { x: 40, y: 100 },
-    { x: 350, y: 220 },
-    { x: 650, y: 220 },
-    { x: 920, y: 320 }
+    { x: 40, y: 220 },
+    { x: 280, y: 160 },
+    { x: 500, y: 70 }
   ],
-  playerBase: { x: 920, y: 320, radius: 45 },
-  groundSpawn: { x: 40, y: 320 },
-  waterSpawn: { x: 500, y: 0 },
+  playerBase: { x: 500, y: 70, radius: 42 },
+  playerBases: [
+    { x: 500, y: 70, radius: 42 },  // Nhà Chính Bắc
+    { x: 500, y: 580, radius: 42 } // Nhà Chính Nam
+  ],
+  groundSpawn: { x: 40, y: 325 },
+  waterSpawn: { x: 40, y: 120 },
   towerSlots: [],
   waves: WAVES_TWIN_CROSSROADS,
-  laneBadges: ['1 Tuyến Bộ Cắt Sông', '1 Thủy Lộ Xuyên Tâm', 'Giao Điểm Cầu'],
+  extendedWaves: EXTENDED_WAVES_TWIN_CROSSROADS,
+  groundLanes: [
+    // Tuyến Bộ Tây -> Giao lộ -> Nhà Chính Bắc
+    [
+      { x: 40, y: 325 },
+      { x: 260, y: 325 },
+      { x: 500, y: 325 },
+      { x: 500, y: 70 }
+    ],
+    // Tuyến Bộ Đông -> Giao lộ -> Nhà Chính Nam
+    [
+      { x: 960, y: 325 },
+      { x: 740, y: 325 },
+      { x: 500, y: 325 },
+      { x: 500, y: 580 }
+    ]
+  ],
+  waterLanes: [
+    // Thủy Lộ Tây Bắc -> Nhà Chính Bắc
+    [
+      { x: 40, y: 120 },
+      { x: 260, y: 160 },
+      { x: 500, y: 70 }
+    ],
+    // Thủy Lộ Đông Nam -> Nhà Chính Nam
+    [
+      { x: 960, y: 530 },
+      { x: 740, y: 490 },
+      { x: 500, y: 580 }
+    ]
+  ],
+  airLanes: [
+    // Hành Lang Bay Tây -> Nhà Chính Bắc
+    [
+      { x: 40, y: 220 },
+      { x: 280, y: 160 },
+      { x: 500, y: 70 }
+    ],
+    // Hành Lang Bay Đông -> Nhà Chính Nam
+    [
+      { x: 960, y: 430 },
+      { x: 720, y: 490 },
+      { x: 500, y: 580 }
+    ]
+  ],
+  groundSpawns: [
+    { x: 40, y: 325 },
+    { x: 960, y: 325 }
+  ],
+  waterSpawns: [
+    { x: 40, y: 120 },
+    { x: 960, y: 530 }
+  ],
+  airStarts: [
+    { x: 40, y: 220 },
+    { x: 960, y: 430 }
+  ],
+  laneBadges: ['2 Nhà Chính Bắc-Nam', 'Giao Lộ Chữ Thập', 'Song Tuyến Đông-Tây'],
   tribe: {
     name: 'Tộc Thiết Giáp Cơ Giới',
     icon: '⚙️⚡',

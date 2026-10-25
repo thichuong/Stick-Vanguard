@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { EXTENDED_WAVES_VOID_SINGULARITY } from './waves_extended.js';
 
 export const WAVES_VOID_SINGULARITY: WaveConfig[] = [
   {
@@ -104,8 +105,8 @@ export const WAVES_VOID_SINGULARITY: WaveConfig[] = [
 export const MAP_VOID_SINGULARITY: MapConfig = {
   id: 'void_singularity',
   name: 'Vực Thẳm Hắc Tinh',
-  subtitle: 'Tam lộ hư không - 3 Tuyến Hội Tụ & 2 Kênh Hắc Ám',
-  description: 'Tâm điểm hố đen vũ trụ nuốt chửng năng lượng. Binh đoàn Hắc Tinh Cơ Giới liên tục phóng xung điện vô hiệu hóa và tia hạ cấp tháp phòng thủ.',
+  subtitle: 'Tam Tuyến Vòng Xoáy Hư Không & 3 Lõi Năng Lượng',
+  description: 'Ba tuyến đường kéo dài uốn quanh co từ các góc bản đồ, cắt nhau tại các ngã tư chiến lược trước khi hội tụ về 3 Lõi Năng Lượng.',
   themeColor: '#09081a',
   roadColor: '#4338ca',
   riverColor: '#6d28d9',
@@ -114,100 +115,114 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
   roadWidth: 38,
   riverWidth: 34,
   groundWaypoints: [
-    { x: 40, y: 140 },
-    { x: 260, y: 140 },
-    { x: 440, y: 260 },
-    { x: 680, y: 200 },
-    { x: 920, y: 325 }
+    { x: 40, y: 120 },
+    { x: 320, y: 120 },
+    { x: 500, y: 260 },
+    { x: 500, y: 140 }
   ],
   waterWaypoints: [
     { x: 40, y: 240 },
-    { x: 300, y: 240 },
-    { x: 500, y: 325 },
-    { x: 740, y: 300 },
-    { x: 920, y: 325 }
+    { x: 340, y: 240 },
+    { x: 500, y: 360 },
+    { x: 300, y: 490 }
   ],
   airStart: { x: 40, y: 60 },
   airWaypoints: [
     { x: 40, y: 60 },
-    { x: 460, y: 200 },
-    { x: 920, y: 325 }
+    { x: 500, y: 140 }
   ],
-  playerBase: { x: 920, y: 325, radius: 45 },
-  groundSpawn: { x: 40, y: 140 },
+  playerBase: { x: 500, y: 140, radius: 42 },
+  playerBases: [
+    { x: 500, y: 140, radius: 42 }, // Lõi Bắc
+    { x: 300, y: 490, radius: 42 }, // Lõi Tây Nam
+    { x: 700, y: 490, radius: 42 }  // Lõi Đông Nam
+  ],
+  groundSpawn: { x: 40, y: 120 },
   waterSpawn: { x: 40, y: 240 },
   towerSlots: [],
   waves: WAVES_VOID_SINGULARITY,
+  extendedWaves: EXTENDED_WAVES_VOID_SINGULARITY,
   groundLanes: [
-    // Tuyến Bắc
+    // Tuyến 1 (Dài): Xuất phát Tây Bắc (40, 120) -> chạy sang Đông (480, 120) -> cắt xuống Nam qua giao điểm (500, 325) -> rẽ vòng quanh Lõi Tây Nam rồi vào Lõi Đông Nam (700, 490)
     [
-      { x: 40, y: 140 },
-      { x: 260, y: 140 },
-      { x: 440, y: 260 },
-      { x: 680, y: 200 },
-      { x: 920, y: 325 }
+      { x: 40, y: 120 },
+      { x: 320, y: 120 },
+      { x: 480, y: 200 },
+      { x: 500, y: 325 },
+      { x: 420, y: 450 },
+      { x: 420, y: 550 },
+      { x: 600, y: 550 },
+      { x: 700, y: 490 }
     ],
-    // Tuyến Giữa
+    // Tuyến 2 (Dài): Xuất phát Đông Bắc (960, 120) -> chạy sang Tây (680, 120) -> cắt qua (500, 325) -> rẽ vòng quanh Lõi Đông Nam rồi vào Lõi Tây Nam (300, 490)
     [
-      { x: 40, y: 325 },
-      { x: 220, y: 325 },
-      { x: 380, y: 325 },
-      { x: 600, y: 325 },
-      { x: 920, y: 325 }
+      { x: 960, y: 120 },
+      { x: 680, y: 120 },
+      { x: 520, y: 200 },
+      { x: 500, y: 325 },
+      { x: 580, y: 450 },
+      { x: 580, y: 550 },
+      { x: 400, y: 550 },
+      { x: 300, y: 490 }
     ],
-    // Tuyến Nam
+    // Tuyến 3 (Dài): Xuất phát Nam (500, 630) -> rẽ sang Tây (200, 520) -> đi dọc lên Bắc (200, 240) -> cắt qua trên đỉnh (360, 180) -> cắm vào Lõi Bắc (500, 140)
     [
-      { x: 40, y: 510 },
-      { x: 260, y: 510 },
-      { x: 440, y: 390 },
-      { x: 680, y: 450 },
-      { x: 920, y: 325 }
+      { x: 500, y: 630 },
+      { x: 200, y: 580 },
+      { x: 140, y: 380 },
+      { x: 220, y: 240 },
+      { x: 380, y: 200 },
+      { x: 500, y: 140 }
     ]
   ],
   waterLanes: [
-    // Kênh Năng Lượng Bắc
+    // Kênh Năng Lượng 1: Bắt đầu từ Tây cắt qua tâm (500, 325) rồi rẽ xuống Lõi Đông Nam
     [
-      { x: 40, y: 230 },
-      { x: 300, y: 230 },
-      { x: 500, y: 310 },
-      { x: 740, y: 290 },
-      { x: 920, y: 325 }
+      { x: 40, y: 325 },
+      { x: 280, y: 325 },
+      { x: 500, y: 325 },
+      { x: 640, y: 380 },
+      { x: 700, y: 490 }
     ],
-    // Kênh Năng Lượng Nam
+    // Kênh Năng Lượng 2: Bắt đầu từ Đông cắt qua tâm (500, 325) rồi rẽ xuống Lõi Tây Nam
     [
-      { x: 40, y: 420 },
-      { x: 300, y: 420 },
-      { x: 500, y: 340 },
-      { x: 740, y: 360 },
-      { x: 920, y: 325 }
+      { x: 960, y: 325 },
+      { x: 720, y: 325 },
+      { x: 500, y: 325 },
+      { x: 360, y: 380 },
+      { x: 300, y: 490 }
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 60 },
-      { x: 460, y: 200 },
-      { x: 920, y: 325 }
+      { x: 300, y: 100 },
+      { x: 500, y: 140 }
     ],
     [
       { x: 40, y: 590 },
-      { x: 460, y: 450 },
-      { x: 920, y: 325 }
+      { x: 300, y: 490 }
+    ],
+    [
+      { x: 960, y: 590 },
+      { x: 700, y: 490 }
     ]
   ],
   groundSpawns: [
-    { x: 40, y: 140 },
-    { x: 40, y: 325 },
-    { x: 40, y: 510 }
+    { x: 40, y: 120 },
+    { x: 960, y: 120 },
+    { x: 500, y: 630 }
   ],
   waterSpawns: [
-    { x: 40, y: 230 },
-    { x: 40, y: 420 }
+    { x: 40, y: 325 },
+    { x: 960, y: 325 }
   ],
   airStarts: [
     { x: 40, y: 60 },
-    { x: 40, y: 590 }
+    { x: 40, y: 590 },
+    { x: 960, y: 590 }
   ],
-  laneBadges: ['3 Tuyến Hội Tụ', '2 Kênh Hắc Ám', 'Cỗ Máy Hủy Diệt'],
+  laneBadges: ['3 Lõi Năng Lượng', 'Tam Tuyến Vòng Cắt Nhau', 'Giao Điểm Tâm Hố Đen'],
   tribe: {
     name: 'Tộc Hắc Tinh Phá Tháp',
     icon: '🔮⚙️⚡',
