@@ -2384,6 +2384,11 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(celestial).toBeDefined();
       expect(celestial?.name).toBe('Thánh Điện Thiên Không');
       expect(celestial?.waves.length).toBe(10);
+      expect(celestial?.airLanes?.length).toBe(6);
+      expect(celestial?.airStarts?.length).toBe(6);
+      expect(celestial?.waterLanes?.length).toBe(2);
+      expect(celestial?.groundLanes?.length).toBe(2);
+      expect(celestial?.playerBases?.length).toBe(2);
 
       expect(voidMap).toBeDefined();
       expect(voidMap?.name).toBe('Vực Thẳm Hắc Tinh');
