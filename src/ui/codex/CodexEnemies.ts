@@ -535,7 +535,7 @@ export class CodexEnemies {
               }
               ${
                 sElem
-                  ? `<div>✨ <b>Song Thuộc Tính:</b> Mang kết hợp 2 hệ <b>${ELEMENT_NAMES[pElem]}</b> và <b>${ELEMENT_NAMES[sElem]}</b>, ma trận sát thương nhận vào sẽ tính trung bình cộng giữa 2 hệ!</div>`
+                  ? `<div>✨ <b>Song Thuộc Tính:</b> Mang kết hợp 2 hệ <b>${ELEMENT_NAMES[pElem]}</b> và <b>${ELEMENT_NAMES[sElem]}</b>, ma trận sát thương nhận vào sẽ tính theo phép nhân giữa 2 hệ!</div>`
                   : ''
               }
             </div>
