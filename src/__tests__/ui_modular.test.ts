@@ -10,6 +10,7 @@ import { ALL_15_ELEMENTS, STATUS_TO_ELEMENT } from '../ui/codex/CodexTypes.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { MAPS_CONFIG } from '../config/map.config.js';
 import { MapSelectionModal } from '../ui/modals/MapSelectionModal.js';
+import { SideDetailPanel } from '../ui/SideDetailPanel.js';
 
 describe('Modular UI Architecture Tests', () => {
   describe('CodexTypes', () => {
@@ -162,6 +163,20 @@ describe('Modular UI Architecture Tests', () => {
       expect(html).toContain('codex-enemy-canvas');
       expect(html).toContain('BẢNG TỈ LỆ SÁT THƯƠNG NHẬN VÀO TỪ MỖI HỆ NGUYÊN TỐ');
     });
+
+    it('should reset search query and filters via resetFilters', () => {
+      enemies.enemySearchQuery = 'dragon';
+      enemies.enemyElementFilter = 'FIRE';
+      enemies.enemyMovementFilter = 'FLY';
+      enemies.enemyTagFilter = 'BOSS';
+
+      enemies.resetFilters();
+
+      expect(enemies.enemySearchQuery).toBe('');
+      expect(enemies.enemyElementFilter).toBe('ALL');
+      expect(enemies.enemyMovementFilter).toBe('ALL');
+      expect(enemies.enemyTagFilter).toBe('ALL');
+    });
   });
 
   describe('CodexNavigation', () => {
@@ -187,6 +202,81 @@ describe('Modular UI Architecture Tests', () => {
         expect(svg).toContain('<svg');
         expect(svg).toContain('class="mini-map-svg"');
         expect(svg).toContain('</svg>');
+      }
+    });
+  });
+
+  describe('SideDetailPanel Enemy Reset and External Target Tests', () => {
+    it('should reset filters on close and when opening enemy from outside target', () => {
+      const createMockEl = (classes: string[] = []) => {
+        const classSet = new Set(classes);
+        return {
+          classList: {
+            add: (c: string) => classSet.add(c),
+            remove: (c: string) => classSet.delete(c),
+            contains: (c: string) => classSet.has(c),
+          },
+          addEventListener: () => {},
+          querySelectorAll: () => [],
+          querySelector: () => null,
+          getContext: () => null,
+          textContent: '',
+          innerHTML: '',
+        };
+      };
+
+      const mockElements: Record<string, any> = {
+        'codex-modal-backdrop': createMockEl(['hidden']),
+        'codex-modal-body': createMockEl(),
+        'codex-modal-title': createMockEl(),
+        'codex-modal-badge': createMockEl(),
+        'codex-modal-icon': createMockEl(),
+        'btn-close-codex-modal': createMockEl(),
+      };
+
+      const originalDocument = (globalThis as any).document;
+      const originalWindow = (globalThis as any).window;
+
+      (globalThis as any).document = {
+        getElementById: (id: string) => mockElements[id] || createMockEl(),
+        addEventListener: () => {},
+      };
+      (globalThis as any).window = globalThis;
+
+      try {
+        const panel = new SideDetailPanel();
+        const codexEnemies = (panel as any).enemiesCodex as CodexEnemies;
+
+        // Simulate user searching / filtering
+        codexEnemies.enemySearchQuery = 'dragon';
+        codexEnemies.enemyElementFilter = 'FIRE';
+        codexEnemies.enemyMovementFilter = 'FLY';
+        codexEnemies.enemyTagFilter = 'BOSS';
+
+        // 1. When opening an enemy target from outside (e.g. clicking enemy in stage wave view)
+        panel.open('ENEMIES', 'STICK_RUNNER');
+
+        // Filters must be cleared so STICK_RUNNER (non-fire, walk) is successfully found and selected
+        expect(codexEnemies.enemySearchQuery).toBe('');
+        expect(codexEnemies.enemyElementFilter).toBe('ALL');
+        expect(codexEnemies.enemyMovementFilter).toBe('ALL');
+        expect(codexEnemies.enemyTagFilter).toBe('ALL');
+        expect(codexEnemies.selectedEnemyTypeId).toBe('STICK_RUNNER');
+
+        // Simulate applying filters again
+        codexEnemies.enemySearchQuery = 'demon';
+        codexEnemies.enemyElementFilter = 'DARK';
+
+        // 2. When closing the modal ("khi tắt cẩm nang")
+        panel.close();
+
+        // Filters must be reset upon closing
+        expect(codexEnemies.enemySearchQuery).toBe('');
+        expect(codexEnemies.enemyElementFilter).toBe('ALL');
+        expect(panel.isOpen()).toBe(false);
+      } finally {
+        (globalThis as any).document = originalDocument;
+        (globalThis as any).window = originalWindow;
       }
     });
   });

@@ -207,7 +207,7 @@ export const ELITE_ENEMIES: Record<string, EnemyBlueprint> = {
     size: 23,
     color: '#f472b6',
     abilities: [
-      { type: 'SUMMON', spawnTypeId: 'LIGHT_PALADIN', count: 1, interval: 8.0 },
+      { type: 'SUMMON', spawnTypeId: 'LIGHT_PALADIN', count: 2, interval: 4.0 },
       { type: 'MAGIC_SHIELD_AURA', interval: 7.0, radius: 135, value: 160 }
     ]
   }

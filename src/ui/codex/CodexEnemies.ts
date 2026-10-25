@@ -23,6 +23,16 @@ export class CodexEnemies {
 
   constructor(private isPanelOpen: () => boolean, private getCurrentCategory: () => string) {}
 
+  public resetFilters(resetSelectedEnemy: boolean = false): void {
+    this.enemySearchQuery = '';
+    this.enemyElementFilter = 'ALL';
+    this.enemyMovementFilter = 'ALL';
+    this.enemyTagFilter = 'ALL';
+    if (resetSelectedEnemy) {
+      this.selectedEnemyTypeId = 'STICK_RUNNER';
+    }
+  }
+
   public renderEnemiesCategory(
     contentEl: HTMLElement,
     titleEl: HTMLElement,
@@ -145,12 +155,19 @@ export class CodexEnemies {
       .join('');
 
     const rightContentHtml = this.getEnemyDetailHtml(selectedBp);
+    const hasActiveFilters = Boolean(
+      this.enemySearchQuery.trim() !== '' ||
+      this.enemyElementFilter !== 'ALL' ||
+      this.enemyMovementFilter !== 'ALL' ||
+      this.enemyTagFilter !== 'ALL'
+    );
 
     contentEl.innerHTML = `
       <div class="codex-master-layout">
         <aside class="codex-sidebar-nav">
           <div class="codex-sidebar-title">
             <span>TÌM KIẾM & BỘ LỌC</span>
+            <button id="btn-codex-reset-filters" class="codex-reset-btn" title="Xóa toàn bộ tìm kiếm & bộ lọc" style="${hasActiveFilters ? '' : 'display: none;'}">↺ Đặt lại</button>
           </div>
 
           <div class="codex-search-box">
@@ -190,7 +207,12 @@ export class CodexEnemies {
           </div>
 
           <div class="codex-monster-list" id="codex-monster-list">
-            ${listHtml || '<div style="color: #64748b; padding: 20px 8px; text-align: center;">Không tìm thấy quái vật nào phù hợp.</div>'}
+            ${listHtml || `
+              <div style="color: #64748b; padding: 20px 8px; text-align: center;">
+                <div>Không tìm thấy quái vật nào phù hợp.</div>
+                <button id="btn-codex-empty-reset" class="codex-reset-btn" style="margin-top: 10px; display: inline-block;">↺ Đặt lại bộ lọc</button>
+              </div>
+            `}
           </div>
         </aside>
 
@@ -203,11 +225,45 @@ export class CodexEnemies {
     // Start stickman animation loop
     this.startEnemyAnimation(selectedBp);
 
+    // Scroll active item into view
+    const activeItem = contentEl.querySelector('.codex-monster-item.active') as HTMLElement;
+    if (activeItem && typeof activeItem.scrollIntoView === 'function') {
+      activeItem.scrollIntoView({ block: 'nearest' });
+    }
+
     // Bind Search Input
     const searchInput = document.getElementById('codex-enemy-search') as HTMLInputElement;
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.enemySearchQuery = (e.target as HTMLInputElement).value;
+        this.renderEnemiesCategory(contentEl, titleEl, iconEl, badgeEl);
+        const nextInput = document.getElementById('codex-enemy-search') as HTMLInputElement;
+        if (nextInput) {
+          nextInput.focus();
+          const len = nextInput.value.length;
+          nextInput.setSelectionRange(len, len);
+        }
+      });
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          searchInput.blur();
+        }
+      });
+    }
+
+    // Bind Reset Buttons
+    const resetBtn = document.getElementById('btn-codex-reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        this.resetFilters();
+        this.renderEnemiesCategory(contentEl, titleEl, iconEl, badgeEl);
+      });
+    }
+
+    const emptyResetBtn = document.getElementById('btn-codex-empty-reset');
+    if (emptyResetBtn) {
+      emptyResetBtn.addEventListener('click', () => {
+        this.resetFilters();
         this.renderEnemiesCategory(contentEl, titleEl, iconEl, badgeEl);
       });
     }

@@ -1,4 +1,5 @@
 import { TowerType } from '../types/entities.types.js';
+import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { CodexBuildings } from './codex/CodexBuildings.js';
 import { CodexSoldiers } from './codex/CodexSoldiers.js';
 import { CodexTraps } from './codex/CodexTraps.js';
@@ -103,7 +104,17 @@ export class SideDetailPanel {
     } else if (category === 'ENEMIES') {
       this.currentCategory = 'ENEMIES';
       if (targetSubId) {
-        this.enemiesCodex.selectedEnemyTypeId = targetSubId;
+        this.enemiesCodex.resetFilters();
+        if (ENEMY_BLUEPRINTS[targetSubId]) {
+          this.enemiesCodex.selectedEnemyTypeId = targetSubId;
+        } else {
+          const matched = Object.keys(ENEMY_BLUEPRINTS).find(
+            (k) => k.toLowerCase() === targetSubId.toLowerCase()
+          );
+          if (matched) {
+            this.enemiesCodex.selectedEnemyTypeId = matched;
+          }
+        }
       }
     } else if (category === 'NAVIGATION') {
       this.currentCategory = 'NAVIGATION';
@@ -132,6 +143,7 @@ export class SideDetailPanel {
 
   public close(): void {
     this.enemiesCodex.stopEnemyAnimation();
+    this.enemiesCodex.resetFilters();
     this.backdropEl.classList.add('hidden');
   }
 
