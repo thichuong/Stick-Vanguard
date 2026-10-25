@@ -23,6 +23,7 @@ export class InspectorPanel {
   private currentWave: number = 1;
   private totalWaves: number = 15;
   private isWaveRunning: boolean = false;
+  private currentTab: 'CHOOSE_TOWER' | 'STAGE_INFO' = 'CHOOSE_TOWER';
   private onOpenMapModal?: () => void;
 
   constructor(
@@ -35,6 +36,20 @@ export class InspectorPanel {
     this.inspectorTitleEl = document.getElementById('inspector-main-title');
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
     this.onOpenMapModal = onOpenMapModal;
+
+    const btnChooseTower = document.getElementById('btn-choose-tower');
+    if (btnChooseTower) {
+      btnChooseTower.addEventListener('click', () => {
+        this.openChooseTower();
+      });
+    }
+
+    const btnStageInfo = document.getElementById('btn-stage-info');
+    if (btnStageInfo) {
+      btnStageInfo.addEventListener('click', () => {
+        this.openStageInfo();
+      });
+    }
   }
 
   public handleResize(): void {
@@ -42,10 +57,22 @@ export class InspectorPanel {
     this.render();
   }
 
+  public openChooseTower(): void {
+    this.currentTab = 'CHOOSE_TOWER';
+    this.state.selectedTowerId = null;
+    this.state.selectedBuildPoint = null;
+    this.state.hoveredBuildTowerType = null;
+    this.confirmingSellTowerId = null;
+    this.lastRenderKey = '';
+    this.render();
+  }
+
   public openStageInfo(): void {
+    this.currentTab = 'STAGE_INFO';
     this.state.selectedTowerId = null;
     this.state.selectedBuildPoint = null;
     this.state.activePlacementType = null;
+    this.state.hoveredBuildTowerType = null;
     this.confirmingSellTowerId = null;
     this.lastRenderKey = '';
     this.render();
@@ -62,14 +89,20 @@ export class InspectorPanel {
     const tower = this.state.getSelectedTower();
     const buildPt = this.state.selectedBuildPoint;
 
-    const stageInfoBtn = document.getElementById('btn-stage-info');
-    const isItemSelected = !!(tower || buildPt || this.state.activePlacementType);
-    if (stageInfoBtn) {
-      if (isItemSelected) {
-        stageInfoBtn.classList.remove('active');
-      } else {
-        stageInfoBtn.classList.add('active');
-      }
+    const btnChooseTower = document.getElementById('btn-choose-tower');
+    const btnStageInfo = document.getElementById('btn-stage-info');
+    if (tower) {
+      btnChooseTower?.classList.remove('active');
+      btnStageInfo?.classList.remove('active');
+    } else if (buildPt) {
+      btnChooseTower?.classList.add('active');
+      btnStageInfo?.classList.remove('active');
+    } else if (this.state.activePlacementType) {
+      btnChooseTower?.classList.add('active');
+      btnStageInfo?.classList.remove('active');
+    } else {
+      btnChooseTower?.classList.toggle('active', this.currentTab === 'CHOOSE_TOWER');
+      btnStageInfo?.classList.toggle('active', this.currentTab === 'STAGE_INFO');
     }
 
     if (this.confirmingSellTowerId && (!tower || tower.id !== this.confirmingSellTowerId)) {
@@ -93,8 +126,20 @@ export class InspectorPanel {
       const isTrapArea = buildPt.validFor === 'TRAP';
       const availableTypes: TowerType[] = isTrapArea
         ? ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET']
-        : ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
+        : ['ARCHER', 'MAGE', 'ARTILLERY', 'BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
       goldAffordKey = availableTypes
+        .map((t) => {
+          const bpKey = t.startsWith('TRAP_') ? t : `${t}_1`;
+          return (TOWER_BLUEPRINTS[bpKey]?.cost ?? 0) <= this.state.gold ? '1' : '0';
+        })
+        .join('');
+    } else {
+      const allTypes: TowerType[] = [
+        'ARCHER', 'MAGE', 'ARTILLERY',
+        'BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR',
+        'TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'
+      ];
+      goldAffordKey = allTypes
         .map((t) => {
           const bpKey = t.startsWith('TRAP_') ? t : `${t}_1`;
           return (TOWER_BLUEPRINTS[bpKey]?.cost ?? 0) <= this.state.gold ? '1' : '0';
@@ -102,7 +147,7 @@ export class InspectorPanel {
         .join('');
     }
 
-    const currentKey = `${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
+    const currentKey = `${this.currentTab}_${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -132,6 +177,11 @@ export class InspectorPanel {
       }
 
       const isBarracks = tower.type === 'BARRACKS';
+      const isSummon =
+        tower.type === 'BARRACKS' ||
+        tower.type === 'DRAGON_NEST' ||
+        tower.type === 'FAIRY_TREE' ||
+        tower.type === 'HEROIC_ALTAR';
       const isTrap = tower.placement !== 'ROADSIDE';
       const refund = Math.round(tower.totalInvested * 0.7);
 
@@ -182,6 +232,20 @@ export class InspectorPanel {
           const secDmg = tower.damage; // 100%
           damageDisplay += ` + <b>${secDmg}</b>${isAura ? '/s' : ''} (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
+      } else if (tower.type === 'DRAGON_NEST') {
+        damageDisplay = `<b>${tower.damage}</b> (🐉 Hệ Rồng - 💥 Nổ Lan ${tower.aoeRadius || 55}px - 🦅 Chặn Quái Bay)`;
+        if (tower.secondaryElement) {
+          const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
+          damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+        }
+      } else if (tower.type === 'FAIRY_TREE') {
+        damageDisplay = `<b>${tower.damage}</b> (🧚 Hệ Tiên - 🦅 Chặn Quái Bay)`;
+        if (tower.secondaryElement) {
+          const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
+          damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
+        }
+      } else if (tower.type === 'HEROIC_ALTAR') {
+        damageDisplay = `<b>${tower.damage}</b> (👻 Hệ Ma)<br><span style="color: #818cf8;">Tỉ lệ chiêu hồn: <b>${Math.round((tower.resurrectChance || 0.3) * 100)}%</b> • Anh Linh: <b>${tower.soldierIds?.length || 0}/${tower.maxSoldiers || 2}</b></span>`;
       } else {
         damageDisplay = `<b>${tower.damage}</b> (⚔️ Vật lý)`;
         if (tower.secondaryElement) {
@@ -256,6 +320,46 @@ export class InspectorPanel {
               </div>
             </div>
           `;
+        } else if (tower.type === 'DRAGON_NEST') {
+          elementPickerHtml = `
+            <div class="elem-picker-section">
+              <div class="picker-header">
+                <span>🔥 NGUYÊN TỐ THỨ 2 CỦA RỒNG (GỐC: 🐉 HỆ RỒNG):</span>
+                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+              </div>
+              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : '🔥 Hỏa (Mặc định)'}</b></div>
+              <div class="elem-buttons-grid">
+                ${SELECTABLE_ELEMENTS.map(
+                  (elem) => `
+                  <button class="elem-btn ${tower.secondaryElement === elem ? 'selected' : ''}" data-slot="1" data-elem="${elem}" title="${ELEMENT_NAMES[elem]}">
+                    <span>${ELEMENT_ICONS[elem]}</span>
+                    <span class="eb-lbl">${ELEMENT_NAMES[elem].split(' ')[0]}</span>
+                  </button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `;
+        } else if (tower.type === 'FAIRY_TREE') {
+          elementPickerHtml = `
+            <div class="elem-picker-section">
+              <div class="picker-header">
+                <span>✨ NGUYÊN TỐ THỨ 2 CỦA TIÊN (GỐC: 🧚 HỆ TIÊN):</span>
+                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+              </div>
+              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : '✨ Quang (Mặc định)'}</b></div>
+              <div class="elem-buttons-grid">
+                ${SELECTABLE_ELEMENTS.map(
+                  (elem) => `
+                  <button class="elem-btn ${tower.secondaryElement === elem ? 'selected' : ''}" data-slot="1" data-elem="${elem}" title="${ELEMENT_NAMES[elem]}">
+                    <span>${ELEMENT_ICONS[elem]}</span>
+                    <span class="eb-lbl">${ELEMENT_NAMES[elem].split(' ')[0]}</span>
+                  </button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `;
         } else {
           elementPickerHtml = `
             <div class="elem-picker-section">
@@ -292,7 +396,7 @@ export class InspectorPanel {
           </div>
           <div class="insp-stats-grid">
             <div class="insp-stat-item">
-              <span class="isi-lbl">Tầm bắn</span>
+              <span class="isi-lbl">${isSummon ? 'Tầm điều động' : 'Tầm bắn'}</span>
               <span class="isi-val">${tower.range} px</span>
             </div>
             <div class="insp-stat-item">
@@ -305,8 +409,13 @@ export class InspectorPanel {
             </div>
           </div>
           <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
-            Sát thương: ${damageDisplay}
+            ${isSummon ? 'Sát thương đơn vị triệu hồi:' : 'Sát thương:'} ${damageDisplay}
           </div>
+          ${
+            isSummon
+              ? `<div style="margin-top: 4px; font-size: 10.5px; color: #38bdf8;">🚩 Tháp triệu hồi không trực tiếp tấn công; đơn vị triệu hồi sẽ ra chốt chặn và chiến đấu.</div>`
+              : ''
+          }
           ${
             tower.disabledTimer && tower.disabledTimer > 0
               ? `<div style="margin-top: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 6px; padding: 6px 10px; color: #f87171; font-size: 11.5px; font-weight: 700; text-align: center;">⚡ THÁP ĐANG BỊ VÔ HIỆU HÓA (${tower.disabledTimer.toFixed(1)}s)</div>`
@@ -322,7 +431,7 @@ export class InspectorPanel {
           this.confirmingSellTowerId === tower.id
             ? `
               ${
-                isBarracks
+                isSummon
                   ? `<div class="button-row"><button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button></div>`
                   : ''
               }
@@ -338,7 +447,7 @@ export class InspectorPanel {
             : `
               <div class="button-row">
                 ${
-                  isBarracks
+                  isSummon
                     ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
                     : ''
                 }
@@ -449,27 +558,41 @@ export class InspectorPanel {
           : `🏰 XÂY THÁP TẠI (${buildPt.x}, ${buildPt.y})`;
       }
 
-      const availableTypes: TowerType[] = isTrapArea
-        ? ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET']
-        : ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'];
+      const renderOption = (type: TowerType) => {
+        const bpKey = type.startsWith('TRAP_') ? type : `${type}_1`;
+        const bp = TOWER_BLUEPRINTS[bpKey];
+        if (!bp) return '';
+        const canAfford = this.state.gold >= bp.cost;
+        const icon = ELEMENT_ICONS[bp.element] || (isTrapArea ? '⚙️' : '⚔️');
+        return `
+          <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
+            <div class="opt-top">
+              <span class="opt-name">${bp.name}</span>
+              <span class="opt-cost">🪙 ${bp.cost}</span>
+            </div>
+            <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
+          </button>
+        `;
+      };
 
-      const optionsHtml = availableTypes
-        .map((type) => {
-          const bpKey = type.startsWith('TRAP_') ? type : `${type}_1`;
-          const bp = TOWER_BLUEPRINTS[bpKey];
-          const canAfford = this.state.gold >= bp.cost;
-          const icon = ELEMENT_ICONS[bp.element] || (isTrapArea ? '⚙️' : '⚔️');
-          return `
-            <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
-              <div class="opt-top">
-                <span class="opt-name">${bp.name}</span>
-                <span class="opt-cost">🪙 ${bp.cost}</span>
-              </div>
-              <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
-            </button>
-          `;
-        })
-        .join('');
+      let optionsSectionHtml = '';
+      if (isTrapArea) {
+        const trapTypes: TowerType[] = ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
+        optionsSectionHtml = `
+          <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">⚙️ 3. BẪY CHIẾN THUẬT</div>
+          <div class="build-options-list">${trapTypes.map(renderOption).join('')}</div>
+        `;
+      } else {
+        const defenseTypes: TowerType[] = ['ARCHER', 'MAGE', 'ARTILLERY'];
+        const summonTypes: TowerType[] = ['BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
+        optionsSectionHtml = `
+          <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">🏰 1. THÁP PHÒNG NGỰ</div>
+          <div class="build-options-list" style="margin-bottom: 10px;">${defenseTypes.map(renderOption).join('')}</div>
+
+          <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">🐉 2. THÁP TRIỆU HỒI</div>
+          <div class="build-options-list">${summonTypes.map(renderOption).join('')}</div>
+        `;
+      }
 
       this.inspectorContentEl.innerHTML = `
         <div class="insp-card">
@@ -483,7 +606,7 @@ export class InspectorPanel {
             Nhấp chuột vào một công trình bên dưới để xây dựng trực tiếp tại tọa độ đã đánh dấu.
           </p>
         </div>
-        <div class="build-options-list">${optionsHtml}</div>
+        ${optionsSectionHtml}
         <button id="btn-cancel-point" class="action-btn" style="background: #334155; margin-top: 10px;">
           Hủy chọn điểm này (ESC)
         </button>
@@ -495,15 +618,26 @@ export class InspectorPanel {
 
       document.getElementById('btn-cancel-point')?.addEventListener('click', () => {
         this.state.selectedBuildPoint = null;
+        this.state.hoveredBuildTowerType = null;
         this.lastRenderKey = '';
         this.render();
       });
 
       this.inspectorContentEl.querySelectorAll('.build-option').forEach((btn) => {
+        const type = btn.getAttribute('data-type') as TowerType;
+        btn.addEventListener('mouseenter', () => {
+          this.state.hoveredBuildTowerType = type;
+        });
+        btn.addEventListener('mouseleave', () => {
+          if (this.state.hoveredBuildTowerType === type) {
+            this.state.hoveredBuildTowerType = null;
+          }
+        });
         btn.addEventListener('click', (e) => {
-          const type = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
-          if (type && this.state.selectedBuildPoint) {
-            this.state.buildTowerAt(this.state.selectedBuildPoint.x, this.state.selectedBuildPoint.y, type);
+          this.state.hoveredBuildTowerType = null;
+          const clickedType = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
+          if (clickedType && this.state.selectedBuildPoint) {
+            this.state.buildTowerAt(this.state.selectedBuildPoint.x, this.state.selectedBuildPoint.y, clickedType);
             this.lastRenderKey = '';
             this.render();
           }
@@ -513,68 +647,151 @@ export class InspectorPanel {
       return;
     }
 
-    // CASE 3: Active placement type chosen from hotbar or keys
-    if (this.state.activePlacementType) {
+    // CASE 3: Tower Catalog Mode (or active placement type selected)
+    if (this.currentTab === 'CHOOSE_TOWER' || this.state.activePlacementType !== null) {
       if (this.inspectorTitleEl) {
-        this.inspectorTitleEl.textContent = '📍 ĐANG CHỌN ĐẶT THÁP / BẪY';
+        this.inspectorTitleEl.textContent = '🏗️ DANH SÁCH THÁP & BẪY';
       }
 
-      const type = this.state.activePlacementType;
-      const bp = TOWER_BLUEPRINTS[type.startsWith('TRAP_') ? type : `${type}_1`];
-      const isTrap = type.startsWith('TRAP_');
+      const activeType = this.state.activePlacementType;
+      const activeBp = activeType
+        ? TOWER_BLUEPRINTS[activeType.startsWith('TRAP_') ? activeType : `${activeType}_1`]
+        : null;
+      const isTrap = activeType?.startsWith('TRAP_');
 
-      if (bp) {
-        this.inspectorContentEl.innerHTML = `
-          <div class="insp-card">
-            <div class="insp-header">
-              <span class="insp-title">${bp.name}</span>
-              <button id="btn-placement-tree" class="btn-detail-link" title="Xem giải thích cẩm nang">
-                📖 Xem chi tiết
-              </button>
+      let bannerHtml = '';
+      if (activeBp) {
+        bannerHtml = `
+          <div class="insp-card" style="border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.12); margin-bottom: 8px;">
+            <div style="font-weight: 700; color: #60a5fa; font-size: 12.5px; margin-bottom: 4px;">
+              📍 ĐANG CHỌN: ${activeBp.name.toUpperCase()} (🪙 ${activeBp.cost})
             </div>
-            <p style="font-size: 12px; color: #cbd5e1; margin: 4px 0 8px 0;">${bp.description}</p>
-            <div class="insp-stats-grid">
-              <div class="insp-stat-item">
-                <span class="isi-lbl">Chi phí</span>
-                <span class="isi-val" style="color: #facc15;">🪙 ${bp.cost}</span>
-              </div>
-              <div class="insp-stat-item">
-                <span class="isi-lbl">Sát thương</span>
-                <span class="isi-val">${bp.damage}</span>
-              </div>
-              <div class="insp-stat-item">
-                <span class="isi-lbl">Tầm bắn</span>
-                <span class="isi-val">${bp.range} px</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="background: rgba(59, 130, 246, 0.1); border: 1px dashed #3b82f6; border-radius: 6px; padding: 10px; text-align: center;">
-            <p style="font-size: 11px; color: #93c5fd; line-height: 1.5;">
+            <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.4;">
               ${
                 isTrap
-                  ? '👉 <b>BẪY:</b> Rà chuột và nhấp vào <b>TRÊN ĐƯỜNG BỘ</b> hoặc <b>DÒNG SÔNG</b> màu xanh lá để đặt!'
-                  : '👉 <b>THÁP:</b> Rà chuột và nhấp vào <b>VÙNG ĐẤT TRỐNG NGOÀI ĐƯỜNG/SÔNG</b> màu xanh lá để xây dựng!'
+                  ? '👉 Nhấp chuột vào <b>ĐƯỜNG BỘ</b> hoặc <b>DÒNG SÔNG</b> màu xanh để đặt bẫy!'
+                  : '👉 Nhấp chuột vào <b>ĐẤT TRỐNG</b> (ngoài đường & sông) màu xanh để xây tháp!'
               }
             </p>
-            <button id="btn-cancel-placement" class="action-btn" style="margin-top: 8px; background: #334155; color: #fff;">
-              Hủy chọn (ESC)
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-cancel-placement-cat" class="action-btn" style="background: #334155; padding: 4px 10px; font-size: 11px; width: auto;">
+                ✖ Hủy chọn (ESC)
+              </button>
+              <button id="btn-view-codex-cat" class="action-btn" style="background: #1e3a8a; padding: 4px 10px; font-size: 11px; width: auto;">
+                📖 Cẩm nang
+              </button>
+            </div>
           </div>
         `;
+      } else {
+        bannerHtml = `
+          <div class="insp-card" style="margin-bottom: 8px;">
+            <div style="font-weight: 700; color: #facc15; font-size: 12px; margin-bottom: 2px;">
+              💡 CHỌN THÁP ĐỂ XÂY DỰNG
+            </div>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.4;">
+              Bấm chọn một tháp bên dưới (hoặc phím [1]-[0]), sau đó nhấp vào bản đồ để đặt. Bạn cũng có thể nhấp vào ô đất trống trên bản đồ trước!
+            </p>
+          </div>
+        `;
+      }
 
-        document.getElementById('btn-placement-tree')?.addEventListener('click', () => {
-          this.sidePanel.open(isTrap ? 'TRAPS' : type);
+      const keyNumberMap: Record<TowerType, string> = {
+        ARCHER: '1',
+        MAGE: '2',
+        ARTILLERY: '3',
+        BARRACKS: '4',
+        DRAGON_NEST: '5',
+        FAIRY_TREE: '6',
+        HEROIC_ALTAR: '7',
+        TRAP_SPIKE: '8',
+        TRAP_FIRE: '9',
+        TRAP_FROST: '0',
+        TRAP_NET: '-'
+      };
+
+      const renderCatalogOption = (type: TowerType) => {
+        const bpKey = type.startsWith('TRAP_') ? type : `${type}_1`;
+        const bp = TOWER_BLUEPRINTS[bpKey];
+        if (!bp) return '';
+        const canAfford = this.state.gold >= bp.cost;
+        const isSelected = this.state.activePlacementType === type;
+        const icon = ELEMENT_ICONS[bp.element] || (type.startsWith('TRAP_') ? '⚙️' : '⚔️');
+        const hotkey = keyNumberMap[type] || '';
+        const rangeText = type.startsWith('TRAP_')
+          ? `${bp.triggerRadius || bp.range || 40}px`
+          : `${bp.range}px`;
+        return `
+          <button class="build-option ${isSelected ? 'active' : ''} ${canAfford ? '' : 'disabled'}" data-type="${type}">
+            <div class="opt-top">
+              <span>
+                <span class="opt-key">[${hotkey}]</span>
+                <span class="opt-name">${bp.name}</span>
+              </span>
+              <span class="opt-cost">🪙 ${bp.cost}</span>
+            </div>
+            <div class="opt-desc">${icon} [${bp.element}] • ⚔️ ${bp.damage} • 🎯 ${rangeText} • ${bp.description}</div>
+          </button>
+        `;
+      };
+
+      const defenseTypes: TowerType[] = ['ARCHER', 'MAGE', 'ARTILLERY'];
+      const summonTypes: TowerType[] = ['BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
+      const trapTypes: TowerType[] = ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
+
+      this.inspectorContentEl.innerHTML = `
+        ${bannerHtml}
+        <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">🏰 1. THÁP PHÒNG NGỰ</div>
+        <div class="build-options-list" style="margin-bottom: 10px;">${defenseTypes.map(renderCatalogOption).join('')}</div>
+
+        <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">🐉 2. THÁP TRIỆU HỒI</div>
+        <div class="build-options-list" style="margin-bottom: 10px;">${summonTypes.map(renderCatalogOption).join('')}</div>
+
+        <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">⚙️ 3. BẪY CHIẾN THUẬT (ĐƯỜNG & SÔNG)</div>
+        <div class="build-options-list">${trapTypes.map(renderCatalogOption).join('')}</div>
+      `;
+
+      document.getElementById('btn-cancel-placement-cat')?.addEventListener('click', () => {
+        this.state.activePlacementType = null;
+        this.state.hoveredBuildTowerType = null;
+        this.onArsenalVisualsUpdate();
+        this.lastRenderKey = '';
+        this.render();
+      });
+
+      document.getElementById('btn-view-codex-cat')?.addEventListener('click', () => {
+        if (activeType) {
+          this.sidePanel.open(isTrap ? 'TRAPS' : activeType);
+        }
+      });
+
+      this.inspectorContentEl.querySelectorAll('.build-option').forEach((btn) => {
+        const type = btn.getAttribute('data-type') as TowerType;
+        btn.addEventListener('mouseenter', () => {
+          this.state.hoveredBuildTowerType = type;
         });
-
-        document.getElementById('btn-cancel-placement')?.addEventListener('click', () => {
-          this.state.activePlacementType = null;
+        btn.addEventListener('mouseleave', () => {
+          if (this.state.hoveredBuildTowerType === type) {
+            this.state.hoveredBuildTowerType = null;
+          }
+        });
+        btn.addEventListener('click', (e) => {
+          const clickedType = (e.currentTarget as HTMLElement).getAttribute('data-type') as TowerType;
+          if (!clickedType) return;
+          if (this.state.activePlacementType === clickedType) {
+            this.state.activePlacementType = null;
+          } else {
+            this.state.activePlacementType = clickedType;
+            this.state.selectedTowerId = null;
+            this.state.selectedBuildPoint = null;
+          }
           this.onArsenalVisualsUpdate();
           this.lastRenderKey = '';
           this.render();
         });
-        return;
-      }
+      });
+
+      return;
     }
 
     // CASE 4: Stage Info & Waves breakdown

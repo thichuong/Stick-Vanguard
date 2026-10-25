@@ -142,6 +142,7 @@ export class UIManager {
           this.closeSettingsModal();
           return;
         }
+        this.state.hoveredBuildTowerType = null;
         if (this.state.isSettingRallyPoint) {
           this.state.isSettingRallyPoint = false;
         }
@@ -178,16 +179,19 @@ export class UIManager {
         return;
       }
 
-      // Hotkeys [1] to [8] for building selection
+      // Hotkeys [1] to [7] and [8]-[0],[-] for building selection
       const keyMap: Record<string, TowerType> = {
-        '1': 'BARRACKS',
-        '2': 'ARCHER',
-        '3': 'MAGE',
-        '4': 'ARTILLERY',
-        '5': 'TRAP_SPIKE',
-        '6': 'TRAP_FIRE',
-        '7': 'TRAP_FROST',
-        '8': 'TRAP_NET'
+        '1': 'ARCHER',
+        '2': 'MAGE',
+        '3': 'ARTILLERY',
+        '4': 'BARRACKS',
+        '5': 'DRAGON_NEST',
+        '6': 'FAIRY_TREE',
+        '7': 'HEROIC_ALTAR',
+        '8': 'TRAP_SPIKE',
+        '9': 'TRAP_FIRE',
+        '0': 'TRAP_FROST',
+        '-': 'TRAP_NET'
       };
 
       if (keyMap[key]) {

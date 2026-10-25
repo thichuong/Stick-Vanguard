@@ -67,11 +67,11 @@ export class ArsenalBar {
         this.placementHintEl.classList.add('highlight');
       } else if (this.state.selectedBuildPoint) {
         this.placementHintEl.textContent = this.state.selectedBuildPoint.validFor === 'TRAP'
-          ? '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐƯỜNG/SÔNG. Bấm chọn Bẫy [5]-[8] bên dưới để đặt!'
-          : '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐẤT. Bấm chọn Tháp [1]-[4] bên dưới để xây!';
+          ? '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐƯỜNG/SÔNG. Bấm chọn Bẫy [8]-[0],[-] ở bảng bên phải để đặt!'
+          : '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐẤT. Chọn Tháp Phòng Ngự [1]-[3] hoặc Tháp Triệu Hồi [4]-[7] ở bảng bên phải!';
         this.placementHintEl.classList.add('highlight');
       } else {
-        this.placementHintEl.textContent = 'Đặt tự do: Tháp đặt ngoài đường/sông | Bẫy đặt trên đường hoặc dưới sông [1]-[8]';
+        this.placementHintEl.textContent = 'Chọn tháp từ bảng bên phải [1]-[7] hoặc bẫy [8]-[0],[-] rồi nhấp vào bản đồ để xây';
         this.placementHintEl.classList.remove('highlight');
       }
     }

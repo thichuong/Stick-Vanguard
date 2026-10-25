@@ -66,7 +66,7 @@
         </div>
 
         <div class="left-panel-footer">
-          <span>Phím tắt: [1]-[8] Chọn tháp | [M] Âm thanh | [B] Cẩm nang | [ESC] Hủy chọn | [Space] Gọi đợt</span>
+          <span>Phím tắt: [1]-[7] Tháp | [8]-[0],[-] Bẫy | [M] Âm thanh | [B] Cẩm nang | [ESC] Hủy | [Space] Gọi đợt</span>
         </div>
       </aside>
 
@@ -77,7 +77,7 @@
           <!-- Floating Hint Bar -->
           <div id="placement-hint-bar" class="placement-hint-bar">
             <span id="placement-hint" class="placement-hint">
-              Bấm chọn tháp bên dưới hoặc phím [1]-[8] rồi nhấp vào ô đất để xây
+              Chọn tháp từ bảng bên phải [1]-[7] hoặc bẫy [8]-[0],[-] rồi nhấp vào bản đồ để xây
             </span>
           </div>
 
@@ -97,95 +97,18 @@
             <div id="message-banner" class="hidden"></div>
           </div>
         </div>
-
-        <!-- Panel danh sách công trình nằm bên dưới canvas -->
-        <div id="bottom-arsenal-panel" class="bottom-arsenal-panel">
-          <div class="arsenal-subcluster towers-cluster">
-            <div class="arsenal-cluster-title">🏰 THÁP PHÒNG NGỰ (VEN ĐƯỜNG)</div>
-            <div class="arsenal-row">
-              <button class="hotbar-btn" data-type="BARRACKS" data-key="1" title="Trại Dân Quân (Phím 1)">
-                <span class="hotbar-key">[1]</span>
-                <span class="hotbar-icon">🛡️</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Trại Lính</span>
-                  <span class="hotbar-cost">🪙 70</span>
-                </div>
-              </button>
-              <button class="hotbar-btn" data-type="ARCHER" data-key="2" title="Tháp Cung Thủ (Phím 2)">
-                <span class="hotbar-key">[2]</span>
-                <span class="hotbar-icon">🏹</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Tháp Cung</span>
-                  <span class="hotbar-cost">🪙 60</span>
-                </div>
-              </button>
-              <button class="hotbar-btn" data-type="MAGE" data-key="3" title="Tháp Phép Thuật (Phím 3)">
-                <span class="hotbar-key">[3]</span>
-                <span class="hotbar-icon">🔮</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Tháp Phép</span>
-                  <span class="hotbar-cost">🪙 75</span>
-                </div>
-              </button>
-              <button class="hotbar-btn" data-type="ARTILLERY" data-key="4" title="Pháo Cối AoE (Phím 4)">
-                <span class="hotbar-key">[4]</span>
-                <span class="hotbar-icon">💣</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Pháo Cối</span>
-                  <span class="hotbar-cost">🪙 80</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div class="arsenal-divider"></div>
-
-          <div class="arsenal-subcluster traps-cluster">
-            <div class="arsenal-cluster-title">⚙️ BẪY CHIẾN THUẬT (ĐƯỜNG & NƯỚC)</div>
-            <div class="arsenal-row">
-              <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5" title="Bẫy Chông Gai (Phím 5)">
-                <span class="hotbar-key">[5]</span>
-                <span class="hotbar-icon">🪨</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Bẫy Chông</span>
-                  <span class="hotbar-cost">🪙 45</span>
-                </div>
-              </button>
-              <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6" title="Mìn Lửa (Phím 6)">
-                <span class="hotbar-key">[6]</span>
-                <span class="hotbar-icon">🔥</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Mìn Lửa</span>
-                  <span class="hotbar-cost">🪙 55</span>
-                </div>
-              </button>
-              <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7" title="Thủy Lôi/Băng (Phím 7)">
-                <span class="hotbar-key">[7]</span>
-                <span class="hotbar-icon">❄️</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Thủy Lôi/Băng</span>
-                  <span class="hotbar-cost">🪙 50</span>
-                </div>
-              </button>
-              <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8" title="Cọc Sét/Lưới Điện (Phím 8)">
-                <span class="hotbar-key">[8]</span>
-                <span class="hotbar-icon">⚡</span>
-                <div class="hotbar-info">
-                  <span class="hotbar-name">Cọc Sét</span>
-                  <span class="hotbar-cost">🪙 65</span>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
       </main>
 
       <!-- 3. RIGHT PANEL: Trang Thông Tin & Thông Tin Màn Chơi -->
       <aside id="right-panel">
-        <div class="panel-section stage-info-header-section">
-          <button id="btn-stage-info" class="stage-info-toggle-btn active" title="Xem thông tin bản đồ và các đợt quái (waves)">
+        <div class="panel-section stage-info-header-section right-panel-tab-bar">
+          <button id="btn-choose-tower" class="right-tab-btn active" title="Xem danh sách tháp phòng ngự, tháp triệu hồi và bẫy (Phím 1-7, 8-0)">
+            <span class="btn-icon">🏗️</span>
+            <span class="btn-text">Chọn Tháp</span>
+          </button>
+          <button id="btn-stage-info" class="right-tab-btn" title="Xem thông tin bản đồ và các đợt quái (waves)">
             <span class="btn-icon">🗺️</span>
-            <span class="btn-text">Thông Tin Màn Chơi</span>
+            <span class="btn-text">Màn Chơi</span>
           </button>
         </div>
 

@@ -179,6 +179,7 @@ class GameApp {
       this.state.selectedSlotId = null;
       this.state.selectedTowerId = null;
       this.state.selectedBuildPoint = null;
+      this.state.hoveredBuildTowerType = null;
       this.state.isSettingRallyPoint = false;
       this.uiManager.updateHotbarVisuals();
     });
@@ -258,6 +259,7 @@ class GameApp {
       this.state.selectedSlotId = null;
       this.state.selectedTowerId = null;
       this.state.selectedBuildPoint = null;
+      this.state.hoveredBuildTowerType = null;
       this.state.activePlacementType = null;
       this.uiManager.updateHotbarVisuals();
     });
@@ -431,6 +433,25 @@ class GameApp {
         this.state.addExplosionParticles(evt.x, evt.y, color, 4);
       } else if (evt.type === 'SOLDIER_DEATH') {
         SoundSystem.playSoldierDeath();
+        const deadSoldier = this.state.soldiers.find((s) => s.id === evt.targetId);
+        if (deadSoldier) {
+          if (!deadSoldier.isSpirit) {
+            this.state.trySpawnHeroicSpirit(deadSoldier);
+          } else {
+            // Remove spirit from soldiers list and from altar's active spirits
+            const sIdx = this.state.soldiers.findIndex((s) => s.id === deadSoldier.id);
+            if (sIdx !== -1) {
+              this.state.soldiers.splice(sIdx, 1);
+            }
+            const altar = this.state.towers.find((t) => t.id === deadSoldier.towerId);
+            if (altar && altar.soldierIds) {
+              const idIdx = altar.soldierIds.indexOf(deadSoldier.id);
+              if (idIdx !== -1) {
+                altar.soldierIds.splice(idIdx, 1);
+              }
+            }
+          }
+        }
       }
     });
 

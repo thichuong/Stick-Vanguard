@@ -128,6 +128,37 @@ export class StickmanRenderer {
     ctx.ellipse(x, y + 6, 9, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Spectral aura if unit is a Heroic Spirit
+    if (soldier.isSpirit) {
+      ctx.globalAlpha = 0.78 + Math.sin(animTime * 6) * 0.15;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(129, 140, 248, 0.75)';
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y - 8, 16 + Math.sin(animTime * 5) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Specialized archetype rendering: Dragon
+    if (soldier.archetype === 'DRAGON') {
+      this.renderDragonSoldier(ctx, soldier, animTime);
+      const displayElement = soldier.isSpirit ? 'GHOST' : soldier.secondaryElement || soldier.element;
+      this.renderHealthBar(ctx, x, y - 26, soldier.hp, soldier.maxHp, displayElement, [], soldier.isSpirit ? 'DRAGON' : undefined);
+      ctx.restore();
+      return;
+    }
+
+    // Specialized archetype rendering: Fairy
+    if (soldier.archetype === 'FAIRY') {
+      this.renderFairySoldier(ctx, soldier, animTime);
+      const displayElement = soldier.isSpirit ? 'GHOST' : soldier.secondaryElement || soldier.element;
+      this.renderHealthBar(ctx, x, y - 22, soldier.hp, soldier.maxHp, displayElement, [], soldier.isSpirit ? 'FAIRY' : undefined);
+      ctx.restore();
+      return;
+    }
+
     // 2. Aura for Paladin (Tier 4 Branch A)
     if (tier === 4 && branch === 'A') {
       ctx.save();
@@ -269,8 +300,221 @@ export class StickmanRenderer {
     ctx.stroke();
 
     // Soldier Health bar
-    const displayElement = soldier.secondaryElement || soldier.element;
-    this.renderHealthBar(ctx, x, headY - 8, soldier.hp, soldier.maxHp, displayElement, []);
+    const displayElement = soldier.isSpirit ? 'GHOST' : soldier.secondaryElement || soldier.element;
+    this.renderHealthBar(ctx, x, headY - 8, soldier.hp, soldier.maxHp, displayElement, [], soldier.isSpirit ? 'PHYSICAL' : undefined);
+
+    ctx.restore();
+  }
+
+  private static renderDragonSoldier(
+    ctx: CanvasRenderingContext2D,
+    soldier: SoldierEntity,
+    animTime: number
+  ): void {
+    const { x, y, tier, branch, state } = soldier;
+    const isAttacking = state === 'ATTACKING';
+    const isMoving = state === 'MOVING_TO_ENGAGE' || state === 'MOVING_TO_RALLY';
+    const hover = Math.sin(animTime * 5) * 4;
+    const flap = Math.sin(animTime * (isMoving ? 14 : 7)) * 7;
+    const bodyY = y - 12 + hover;
+
+    const mainColor = soldier.isSpirit
+      ? '#818cf8'
+      : tier === 4 && branch === 'A'
+      ? '#f59e0b'
+      : tier === 4 && branch === 'B'
+      ? '#dc2626'
+      : '#ea580c';
+    const wingColor = soldier.isSpirit ? '#a5b4fc' : tier === 4 && branch === 'A' ? '#fcd34d' : '#fb923c';
+    const hornColor = soldier.isSpirit ? '#c7d2fe' : '#fef08a';
+
+    // Direction facing: defaults to 0 (right)
+    const facing = soldier.facing ?? 0;
+
+    ctx.save();
+    ctx.translate(x, bodyY);
+    ctx.rotate(facing);
+
+    // --- 1. Tail (Behind in -X) ---
+    const tailWiggle = Math.sin(animTime * (isMoving ? 10 : 6)) * 4;
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 2.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-6, 0);
+    ctx.quadraticCurveTo(-14, tailWiggle * 0.8, -22, tailWiggle * 1.4);
+    ctx.stroke();
+
+    // Tail Spade (fin/blade)
+    ctx.fillStyle = wingColor;
+    ctx.beginPath();
+    ctx.moveTo(-22, tailWiggle * 1.4);
+    ctx.lineTo(-26, tailWiggle * 1.4 - 4);
+    ctx.lineTo(-30, tailWiggle * 1.4);
+    ctx.lineTo(-26, tailWiggle * 1.4 + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // --- 2. Wings (Left on -Y, Right on +Y) ---
+    ctx.fillStyle = wingColor;
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 1.8;
+
+    // Left Wing (-Y)
+    ctx.beginPath();
+    ctx.moveTo(-2, -4);
+    ctx.lineTo(2, -18 - flap);
+    ctx.lineTo(-10, -12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Right Wing (+Y)
+    ctx.beginPath();
+    ctx.moveTo(-2, 4);
+    ctx.lineTo(2, 18 + flap);
+    ctx.lineTo(-10, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // --- 3. Dragon Torso (Aerodynamic Oval) ---
+    ctx.fillStyle = mainColor;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- 4. Neck & Head (Facing forward in +X) ---
+    // Neck
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(4, 0);
+    ctx.lineTo(11, 0);
+    ctx.stroke();
+
+    // Head base (skull)
+    ctx.fillStyle = mainColor;
+    ctx.beginPath();
+    ctx.arc(12, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snout pointing forward (+X)
+    ctx.beginPath();
+    ctx.moveTo(11, -3.5);
+    ctx.lineTo(19, 0);
+    ctx.lineTo(11, 3.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Majestic Horns curving backwards (-X)
+    ctx.strokeStyle = hornColor;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    // Top Horn (-Y)
+    ctx.moveTo(10, -2.5);
+    ctx.quadraticCurveTo(6, -6, 4, -9);
+    // Bottom Horn (+Y)
+    ctx.moveTo(10, 2.5);
+    ctx.quadraticCurveTo(6, 6, 4, 9);
+    ctx.stroke();
+
+    // Glowing Eyes
+    ctx.fillStyle = hornColor;
+    ctx.beginPath();
+    ctx.arc(13, -2, 1.3, 0, Math.PI * 2);
+    ctx.arc(13, 2, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- 5. Fire Breath / Elemental Attack when Attacking ---
+    if (isAttacking) {
+      const flamePulse = Math.sin(animTime * 16) * 3;
+      const flameDist = 24 + flamePulse;
+
+      // Outer fiery blast
+      ctx.fillStyle = soldier.isSpirit ? 'rgba(168, 85, 247, 0.75)' : 'rgba(249, 115, 22, 0.8)';
+      ctx.beginPath();
+      ctx.moveTo(18, -2);
+      ctx.lineTo(flameDist + 4, -7 - flamePulse * 0.5);
+      ctx.lineTo(flameDist + 10, 0);
+      ctx.lineTo(flameDist + 4, 7 + flamePulse * 0.5);
+      ctx.lineTo(18, 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner flame core (bright white/yellow)
+      ctx.fillStyle = soldier.isSpirit ? '#e0e7ff' : '#fef08a';
+      ctx.beginPath();
+      ctx.moveTo(19, -1);
+      ctx.lineTo(flameDist, -3);
+      ctx.lineTo(flameDist + 4, 0);
+      ctx.lineTo(flameDist, 3);
+      ctx.lineTo(19, 1);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  private static renderFairySoldier(
+    ctx: CanvasRenderingContext2D,
+    soldier: SoldierEntity,
+    animTime: number
+  ): void {
+    const { x, y, tier, branch, state } = soldier;
+    const isAttacking = state === 'ATTACKING';
+    const hover = Math.sin(animTime * 6) * 3;
+    const flap = Math.sin(animTime * 14) * 5;
+    const bodyY = y - 10 + hover;
+    const fColor = soldier.isSpirit
+      ? '#a5b4fc'
+      : tier === 4 && branch === 'A'
+      ? '#f472b6'
+      : tier === 4 && branch === 'B'
+      ? '#c084fc'
+      : '#ec4899';
+
+    ctx.save();
+
+    // Translucent Fairy Butterfly Wings
+    ctx.fillStyle = soldier.isSpirit ? 'rgba(199, 210, 254, 0.6)' : 'rgba(251, 207, 232, 0.65)';
+    ctx.strokeStyle = fColor;
+    ctx.lineWidth = 1.2;
+
+    // Left Wing
+    ctx.beginPath();
+    ctx.ellipse(x - 6, bodyY - 3, 5, 8 + flap * 0.4, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Right Wing
+    ctx.beginPath();
+    ctx.ellipse(x + 6, bodyY - 3, 5, 8 + flap * 0.4, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Petite Fairy Body
+    ctx.fillStyle = fColor;
+    ctx.beginPath();
+    ctx.arc(x, bodyY - 6, 3.5, 0, Math.PI * 2); // Head
+    ctx.fill();
+
+    ctx.strokeStyle = fColor;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(x, bodyY - 2.5);
+    ctx.lineTo(x, bodyY + 5); // Torso
+    ctx.stroke();
+
+    // Wand or starlight sparkle
+    const sparkleAngle = animTime * 8;
+    const wandX = x + (isAttacking ? 8 : 5);
+    const wandY = bodyY - (isAttacking ? 6 : 2);
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(wandX + Math.cos(sparkleAngle) * 2, wandY + Math.sin(sparkleAngle) * 2, 2.5, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }

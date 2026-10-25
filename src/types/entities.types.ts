@@ -15,11 +15,18 @@ export interface Vector2D {
 
 export type PlacementType = 'ROADSIDE' | 'PATH_TRAP' | 'WATER_TRAP';
 
+export type TowerCategory = 'DEFENSE' | 'SUMMON' | 'TRAP';
+
+export type SummonUnitArchetype = 'SOLDIER' | 'DRAGON' | 'FAIRY';
+
 export type TowerType =
   | 'BARRACKS'
   | 'ARCHER'
   | 'MAGE'
   | 'ARTILLERY'
+  | 'DRAGON_NEST'
+  | 'FAIRY_TREE'
+  | 'HEROIC_ALTAR'
   | 'TRAP_SPIKE'
   | 'TRAP_FIRE'
   | 'TRAP_FROST'
@@ -101,12 +108,19 @@ export interface SoldierEntity {
   tier: TowerTier;
   branch?: TowerBranch;
   canTargetAir?: boolean;
+  canBlockAir?: boolean;
+  canTargetSwim?: boolean;
+  archetype?: SummonUnitArchetype;
+  isSpirit?: boolean;
+  spiritSourceArchetype?: SummonUnitArchetype;
+  aoeRadius?: number;
   buffedElements?: ElementType[];
   rangedDamage?: number;
   rangedRange?: number;
   baseMaxHp: number;
   baseDamage: number;
   baseArmor: number;
+  facing?: number; // radians angle facing
 }
 
 export interface EnemyEntity {
@@ -158,6 +172,7 @@ export interface TowerEntity {
   slotId?: string;
   name: string;
   type: TowerType;
+  category?: TowerCategory;
   tier: TowerTier;
   branch?: TowerBranch;
   x: number;
@@ -176,6 +191,8 @@ export interface TowerEntity {
   rallyPoint?: Vector2D;
   soldierIds?: string[];
   maxSoldiers?: number;
+  resurrectChance?: number;
+  spiritStatMultiplier?: number;
   trapCharges?: number;
   maxTrapCharges?: number;
   triggerRadius?: number;

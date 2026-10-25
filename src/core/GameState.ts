@@ -13,7 +13,7 @@ import {
   PlacementType,
   BuildCursorTarget
 } from '../types/entities.types.js';
-import { MagicalElementType } from '../types/elements.types.js';
+import { ElementType, MagicalElementType } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
   MapConfig,
@@ -69,6 +69,7 @@ export class GameState {
   public activePlacementType: TowerType | null = null;
   public hoveredSlotId: string | null = null;
   public hoveredTowerId: string | null = null;
+  public hoveredBuildTowerType: TowerType | null = null;
   public mousePos: Vector2D = { x: 0, y: 0 };
 
   private towerIdCounter = 0;
@@ -104,6 +105,7 @@ export class GameState {
     this.activePlacementType = null;
     this.hoveredSlotId = null;
     this.hoveredTowerId = null;
+    this.hoveredBuildTowerType = null;
 
     // Default fallback roadside slots for backward compatibility in tests
     this.towerSlots = [
@@ -251,8 +253,14 @@ export class GameState {
     let rallyPoint: Vector2D | undefined;
     let soldierIds: string[] | undefined;
 
-    // For Barracks, find closest point on nearest road lane
-    if (bp.type === 'BARRACKS') {
+    // For Summon towers (Barracks, Dragon Nest, Fairy Tree, Heroic Altar), find closest point on nearest road lane
+    const isSummonTower =
+      bp.type === 'BARRACKS' ||
+      bp.type === 'DRAGON_NEST' ||
+      bp.type === 'FAIRY_TREE' ||
+      bp.type === 'HEROIC_ALTAR';
+
+    if (isSummonTower) {
       const allGroundLanes = getResolvedGroundLanes(this.currentMap);
       const roadRes = getDistanceToPolylines(x, y, allGroundLanes);
       const distToClosest = Math.hypot(roadRes.closestPoint.x - x, roadRes.closestPoint.y - y);
@@ -268,46 +276,152 @@ export class GameState {
         };
       }
 
-      soldierIds = [];
-      for (let i = 0; i < (bp.maxSoldiers || 3); i++) {
-        this.soldierIdCounter++;
-        const soldierId = `soldier-${this.soldierIdCounter}`;
-        soldierIds.push(soldierId);
+      if (bp.type === 'BARRACKS') {
+        soldierIds = [];
+        for (let i = 0; i < (bp.maxSoldiers || 3); i++) {
+          this.soldierIdCounter++;
+          const soldierId = `soldier-${this.soldierIdCounter}`;
+          soldierIds.push(soldierId);
 
-        const offsetAngle = (i / 3) * Math.PI * 2;
-        const initialX = rallyPoint.x + Math.cos(offsetAngle) * 12;
-        const initialY = rallyPoint.y + Math.sin(offsetAngle) * 12;
+          const offsetAngle = (i / 3) * Math.PI * 2;
+          const initialX = rallyPoint.x + Math.cos(offsetAngle) * 12;
+          const initialY = rallyPoint.y + Math.sin(offsetAngle) * 12;
+
+          this.soldiers.push({
+            id: soldierId,
+            towerId,
+            name: `Lính ${i + 1}`,
+            archetype: 'SOLDIER',
+            x: initialX,
+            y: initialY,
+            hp: bp.soldierHp || 100,
+            maxHp: bp.soldierHp || 100,
+            baseMaxHp: bp.soldierHp || 100,
+            damage: bp.damage,
+            baseDamage: bp.damage,
+            attackSpeed: bp.fireRate,
+            attackCooldown: 0.5,
+            element: 'PHYSICAL',
+            secondaryElement: null,
+            combatMode: 'MELEE',
+            state: 'IDLE',
+            engagedEnemyId: null,
+            rallyPoint: { x: initialX, y: initialY },
+            targetPos: { x: initialX, y: initialY },
+            armor: bp.soldierArmor || 0.1,
+            baseArmor: bp.soldierArmor || 0.1,
+            magicResist: 0.1,
+            respawnTimer: 0,
+            respawnDelay: bp.soldierRespawn || 8,
+            tier: 1,
+            rangedRange: 145
+          });
+        }
+      } else if (bp.type === 'DRAGON_NEST') {
+        soldierIds = [];
+        this.soldierIdCounter++;
+        const soldierId = `dragon-${this.soldierIdCounter}`;
+        soldierIds.push(soldierId);
 
         this.soldiers.push({
           id: soldierId,
           towerId,
-          name: `Lính ${i + 1}`,
-          x: initialX,
-          y: initialY,
-          hp: bp.soldierHp || 100,
-          maxHp: bp.soldierHp || 100,
-          baseMaxHp: bp.soldierHp || 100,
+          name: 'Hỏa Long',
+          archetype: 'DRAGON',
+          canBlockAir: true,
+          canTargetAir: true,
+          canTargetSwim: true,
+          aoeRadius: bp.aoeRadius || 55,
+          x: rallyPoint.x,
+          y: rallyPoint.y,
+          hp: bp.soldierHp || 220,
+          maxHp: bp.soldierHp || 220,
+          baseMaxHp: bp.soldierHp || 220,
           damage: bp.damage,
           baseDamage: bp.damage,
           attackSpeed: bp.fireRate,
           attackCooldown: 0.5,
-          element: 'PHYSICAL',
-          secondaryElement: null,
+          element: 'DRAGON',
+          secondaryElement: 'FIRE',
           combatMode: 'MELEE',
           state: 'IDLE',
+          facing: 0,
           engagedEnemyId: null,
-          rallyPoint: { x: initialX, y: initialY },
-          targetPos: { x: initialX, y: initialY },
-          armor: bp.soldierArmor || 0.1,
-          baseArmor: bp.soldierArmor || 0.1,
-          magicResist: 0.1,
+          rallyPoint: { x: rallyPoint.x, y: rallyPoint.y },
+          targetPos: { x: rallyPoint.x, y: rallyPoint.y },
+          armor: bp.soldierArmor || 0.2,
+          baseArmor: bp.soldierArmor || 0.2,
+          magicResist: 0.2,
           respawnTimer: 0,
-          respawnDelay: bp.soldierRespawn || 8,
-          tier: 1,
-          rangedRange: 145
+          respawnDelay: bp.soldierRespawn || 9,
+          tier: 1
         });
+      } else if (bp.type === 'FAIRY_TREE') {
+        soldierIds = [];
+        const count = bp.maxSoldiers || 2;
+        for (let i = 0; i < count; i++) {
+          this.soldierIdCounter++;
+          const soldierId = `fairy-${this.soldierIdCounter}`;
+          soldierIds.push(soldierId);
+
+          const offsetAngle = (i / count) * Math.PI * 2;
+          const initialX = rallyPoint.x + Math.cos(offsetAngle) * 14;
+          const initialY = rallyPoint.y + Math.sin(offsetAngle) * 14;
+
+          this.soldiers.push({
+            id: soldierId,
+            towerId,
+            name: `Tiên ${i + 1}`,
+            archetype: 'FAIRY',
+            canBlockAir: true,
+            canTargetAir: true,
+            canTargetSwim: true,
+            x: initialX,
+            y: initialY,
+            hp: bp.soldierHp || 80,
+            maxHp: bp.soldierHp || 80,
+            baseMaxHp: bp.soldierHp || 80,
+            damage: bp.damage,
+            baseDamage: bp.damage,
+            attackSpeed: bp.fireRate,
+            attackCooldown: 0.5,
+            element: 'FAIRY',
+            secondaryElement: 'LIGHT',
+            combatMode: 'MELEE',
+            state: 'IDLE',
+            engagedEnemyId: null,
+            rallyPoint: { x: initialX, y: initialY },
+            targetPos: { x: initialX, y: initialY },
+            armor: bp.soldierArmor || 0.1,
+            baseArmor: bp.soldierArmor || 0.1,
+            magicResist: 0.15,
+            respawnTimer: 0,
+            respawnDelay: bp.soldierRespawn || 7,
+            tier: 1
+          });
+        }
+      } else if (bp.type === 'HEROIC_ALTAR') {
+        soldierIds = [];
       }
     }
+
+    const defaultElement: ElementType =
+      bp.type === 'DRAGON_NEST'
+        ? 'DRAGON'
+        : bp.type === 'FAIRY_TREE'
+        ? 'FAIRY'
+        : bp.type === 'HEROIC_ALTAR'
+        ? 'GHOST'
+        : bp.type === 'MAGE'
+        ? 'DARK'
+        : 'PHYSICAL';
+
+    const defaultSecondary: ElementType | null =
+      bp.type === 'DRAGON_NEST'
+        ? 'FIRE'
+        : bp.type === 'FAIRY_TREE'
+        ? 'LIGHT'
+        : null;
 
     const tower: TowerEntity = {
       id: towerId,
@@ -321,8 +435,8 @@ export class GameState {
       damage: bp.damage,
       fireRate: bp.fireRate,
       attackCooldown: 0.5,
-      element: bp.type === 'MAGE' ? 'DARK' : 'PHYSICAL',
-      secondaryElement: null,
+      element: defaultElement,
+      secondaryElement: defaultSecondary,
       soldierMode: bp.type === 'BARRACKS' ? 'MELEE' : undefined,
       targetingFilter: { ...bp.targetingFilter },
       placement: validation.placement,
@@ -331,6 +445,8 @@ export class GameState {
       rallyPoint,
       soldierIds,
       maxSoldiers: bp.maxSoldiers,
+      resurrectChance: bp.resurrectChance,
+      spiritStatMultiplier: bp.spiritStatMultiplier,
       trapCharges: bp.maxTrapCharges,
       maxTrapCharges: bp.maxTrapCharges,
       triggerRadius: bp.triggerRadius,
@@ -403,7 +519,13 @@ export class GameState {
     tower.damage = nextBp.damage;
     tower.range = nextBp.range;
     tower.fireRate = nextBp.fireRate;
-    if (tower.type !== 'MAGE') {
+    if (tower.type === 'DRAGON_NEST') {
+      tower.element = 'DRAGON';
+    } else if (tower.type === 'FAIRY_TREE') {
+      tower.element = 'FAIRY';
+    } else if (tower.type === 'HEROIC_ALTAR') {
+      tower.element = 'GHOST';
+    } else if (tower.type !== 'MAGE') {
       tower.element = 'PHYSICAL';
     }
     if (tower.type === 'BARRACKS' && tower.soldierMode === 'RANGED') {
@@ -415,8 +537,111 @@ export class GameState {
     tower.totalInvested += nextBp.cost;
     if (nextBp.aoeRadius) tower.aoeRadius = nextBp.aoeRadius;
 
-    // Upgrade soldiers stats & count
-    if (tower.type === 'BARRACKS') {
+    if (tower.type === 'DRAGON_NEST') {
+      tower.element = 'DRAGON';
+      tower.maxSoldiers = 1;
+      const rPoint = tower.rallyPoint || { x: tower.x, y: tower.y };
+      if (tower.soldierIds) {
+        for (const sid of tower.soldierIds) {
+          const dragon = this.soldiers.find((s) => s.id === sid);
+          if (dragon) {
+            dragon.tier = nextTier;
+            dragon.branch = branch;
+            dragon.baseMaxHp = nextBp.soldierHp || dragon.baseMaxHp;
+            dragon.baseDamage = nextBp.damage;
+            dragon.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : dragon.baseArmor;
+            dragon.maxHp = dragon.baseMaxHp;
+            dragon.hp = dragon.maxHp;
+            dragon.damage = dragon.baseDamage;
+            dragon.armor = dragon.baseArmor;
+            dragon.aoeRadius = nextBp.aoeRadius || dragon.aoeRadius;
+            dragon.attackSpeed = nextBp.fireRate;
+            dragon.rallyPoint = { ...rPoint };
+          }
+        }
+      }
+    } else if (tower.type === 'FAIRY_TREE') {
+      tower.element = 'FAIRY';
+      const targetMaxSoldiers = nextBp.maxSoldiers || 2;
+      tower.maxSoldiers = targetMaxSoldiers;
+      if (!tower.soldierIds) tower.soldierIds = [];
+
+      const rPoint = tower.rallyPoint || { x: tower.x, y: tower.y };
+      while (tower.soldierIds.length < targetMaxSoldiers) {
+        this.soldierIdCounter++;
+        const newFairyId = `fairy-${this.soldierIdCounter}`;
+        tower.soldierIds.push(newFairyId);
+
+        const fairyIndex = tower.soldierIds.length - 1;
+        const offsetAngle = (fairyIndex / targetMaxSoldiers) * Math.PI * 2;
+        const initialX = rPoint.x + Math.cos(offsetAngle) * 14;
+        const initialY = rPoint.y + Math.sin(offsetAngle) * 14;
+
+        this.soldiers.push({
+          id: newFairyId,
+          towerId,
+          name: `Tiên ${fairyIndex + 1}`,
+          archetype: 'FAIRY',
+          canBlockAir: true,
+          canTargetAir: true,
+          canTargetSwim: true,
+          x: initialX,
+          y: initialY,
+          hp: nextBp.soldierHp || 80,
+          maxHp: nextBp.soldierHp || 80,
+          baseMaxHp: nextBp.soldierHp || 80,
+          damage: nextBp.damage,
+          baseDamage: nextBp.damage,
+          attackSpeed: nextBp.fireRate,
+          attackCooldown: 0.5,
+          element: 'FAIRY',
+          secondaryElement: tower.secondaryElement || 'LIGHT',
+          buffedElements: tower.buffedElements ? [...tower.buffedElements] : undefined,
+          combatMode: 'MELEE',
+          state: 'IDLE',
+          facing: 0,
+          engagedEnemyId: null,
+          rallyPoint: { x: initialX, y: initialY },
+          targetPos: { x: initialX, y: initialY },
+          armor: nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : 0.1,
+          baseArmor: nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : 0.1,
+          magicResist: 0.15,
+          respawnTimer: 0,
+          respawnDelay: nextBp.soldierRespawn || 7,
+          tier: nextTier,
+          branch: branch
+        });
+      }
+
+      const totalCount = tower.soldierIds.length;
+      for (let i = 0; i < totalCount; i++) {
+        const sid = tower.soldierIds[i];
+        const fairy = this.soldiers.find((s) => s.id === sid);
+        if (fairy) {
+          fairy.tier = nextTier;
+          fairy.branch = branch;
+          fairy.baseMaxHp = nextBp.soldierHp || fairy.baseMaxHp;
+          fairy.baseDamage = nextBp.damage;
+          fairy.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : fairy.baseArmor;
+          fairy.maxHp = fairy.baseMaxHp;
+          fairy.hp = fairy.maxHp;
+          fairy.damage = fairy.baseDamage;
+          fairy.armor = fairy.baseArmor;
+          fairy.attackSpeed = nextBp.fireRate;
+          const offsetAngle = (i / totalCount) * Math.PI * 2;
+          fairy.rallyPoint = {
+            x: rPoint.x + Math.cos(offsetAngle) * 14,
+            y: rPoint.y + Math.sin(offsetAngle) * 14
+          };
+        }
+      }
+    } else if (tower.type === 'HEROIC_ALTAR') {
+      tower.element = 'GHOST';
+      tower.maxSoldiers = nextBp.maxSoldiers || 2;
+      tower.resurrectChance = nextBp.resurrectChance || 0.3;
+      tower.spiritStatMultiplier = nextBp.spiritStatMultiplier;
+      tower.aoeRadius = nextBp.aoeRadius;
+    } else if (tower.type === 'BARRACKS') {
       const targetMaxSoldiers = nextBp.maxSoldiers || 3;
       tower.maxSoldiers = targetMaxSoldiers;
       if (!tower.soldierIds) tower.soldierIds = [];
@@ -540,7 +765,61 @@ export class GameState {
         tower.fireRate = prevBp.fireRate;
         tower.aoeRadius = prevBp.aoeRadius;
 
-        if (tower.type !== 'MAGE') {
+        if (tower.type === 'DRAGON_NEST') {
+          tower.element = 'DRAGON';
+          tower.maxSoldiers = 1;
+          if (tower.soldierIds) {
+            for (const sid of tower.soldierIds) {
+              const dragon = this.soldiers.find((s) => s.id === sid);
+              if (dragon) {
+                dragon.tier = prevTier;
+                dragon.branch = undefined;
+                dragon.baseMaxHp = prevBp.soldierHp || dragon.baseMaxHp;
+                dragon.baseDamage = prevBp.damage;
+                dragon.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : dragon.baseArmor;
+                dragon.aoeRadius = prevBp.aoeRadius || dragon.aoeRadius;
+                dragon.maxHp = dragon.baseMaxHp;
+                dragon.damage = dragon.baseDamage;
+                dragon.armor = dragon.baseArmor;
+                dragon.hp = Math.min(dragon.hp, dragon.maxHp);
+              }
+            }
+          }
+        } else if (tower.type === 'FAIRY_TREE') {
+          tower.element = 'FAIRY';
+          const targetMax = prevBp.maxSoldiers || 2;
+          tower.maxSoldiers = targetMax;
+          if (tower.soldierIds && tower.soldierIds.length > targetMax) {
+            const removedIds = tower.soldierIds.splice(targetMax);
+            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
+          }
+          if (tower.soldierIds) {
+            for (const sid of tower.soldierIds) {
+              const fairy = this.soldiers.find((s) => s.id === sid);
+              if (fairy) {
+                fairy.tier = prevTier;
+                fairy.branch = undefined;
+                fairy.baseMaxHp = prevBp.soldierHp || fairy.baseMaxHp;
+                fairy.baseDamage = prevBp.damage;
+                fairy.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : fairy.baseArmor;
+                fairy.maxHp = fairy.baseMaxHp;
+                fairy.damage = fairy.baseDamage;
+                fairy.armor = fairy.baseArmor;
+                fairy.hp = Math.min(fairy.hp, fairy.maxHp);
+              }
+            }
+          }
+        } else if (tower.type === 'HEROIC_ALTAR') {
+          tower.element = 'GHOST';
+          tower.maxSoldiers = prevBp.maxSoldiers || 2;
+          tower.resurrectChance = prevBp.resurrectChance || 0.3;
+          tower.spiritStatMultiplier = prevBp.spiritStatMultiplier;
+          tower.aoeRadius = prevBp.aoeRadius;
+          if (tower.soldierIds && tower.soldierIds.length > tower.maxSoldiers) {
+            const removedIds = tower.soldierIds.splice(tower.maxSoldiers);
+            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
+          }
+        } else if (tower.type !== 'MAGE') {
           tower.element = 'PHYSICAL';
         }
 
@@ -638,7 +917,7 @@ export class GameState {
       }
     } else {
       tower.secondaryElement = element;
-      if (tower.type === 'BARRACKS' && tower.soldierIds) {
+      if (tower.soldierIds) {
         for (const sid of tower.soldierIds) {
           const soldier = this.soldiers.find((s) => s.id === sid);
           if (soldier) {
@@ -691,6 +970,7 @@ export class GameState {
 
           soldier.hp = Math.max(1, Math.round(soldier.maxHp * hpRatio));
           soldier.engagedEnemyId = null;
+          soldier.facing = Math.atan2(soldier.rallyPoint.y - soldier.y, soldier.rallyPoint.x - soldier.x);
           soldier.state = 'MOVING_TO_RALLY';
         }
       }
@@ -740,11 +1020,17 @@ export class GameState {
   }
 
   /**
-   * Change Rally Point for Barracks
+   * Change Rally Point for Summon towers (Barracks, Dragon Nest, Fairy Tree, Heroic Altar)
    */
   public setRallyPoint(towerId: string, targetX: number, targetY: number): boolean {
     const tower = this.towers.find((t) => t.id === towerId);
-    if (!tower || tower.type !== 'BARRACKS') return false;
+    const validSummon =
+      tower &&
+      (tower.type === 'BARRACKS' ||
+        tower.type === 'DRAGON_NEST' ||
+        tower.type === 'FAIRY_TREE' ||
+        tower.type === 'HEROIC_ALTAR');
+    if (!validSummon) return false;
 
     const dist = Math.hypot(targetX - tower.x, targetY - tower.y);
     if (dist > tower.range) {
@@ -766,6 +1052,7 @@ export class GameState {
             y: targetY + Math.sin(offsetAngle) * 12
           };
           soldier.engagedEnemyId = null;
+          soldier.facing = Math.atan2(soldier.rallyPoint.y - soldier.y, soldier.rallyPoint.x - soldier.x);
           soldier.state = 'MOVING_TO_RALLY';
         }
       }
@@ -774,6 +1061,104 @@ export class GameState {
     this.isSettingRallyPoint = false;
     SoundSystem.playRally();
     this.addFloatingText('🚩 Đã đổi điểm tập kết!', targetX, targetY - 10, '#eab308');
+    return true;
+  }
+
+  /**
+   * Called when an allied summoned unit dies (Soldier, Dragon, Fairy).
+   * Heroic Altars have a chance to resurrect the fallen warrior as a Heroic Spirit (+Ghost element).
+   */
+  public trySpawnHeroicSpirit(deadSoldier: SoldierEntity): boolean {
+    if (deadSoldier.isSpirit) return false;
+
+    // Find active Heroic Altars with available capacity
+    const altars = this.towers.filter(
+      (t) =>
+        t.type === 'HEROIC_ALTAR' &&
+        (!t.disabledTimer || t.disabledTimer <= 0) &&
+        (t.soldierIds?.length || 0) < (t.maxSoldiers || 2)
+    );
+
+    if (altars.length === 0) return false;
+
+    // Prioritize altars closest to death point
+    altars.sort((a, b) => {
+      const distA = Math.hypot(deadSoldier.x - a.x, deadSoldier.y - a.y);
+      const distB = Math.hypot(deadSoldier.x - b.x, deadSoldier.y - b.y);
+      return distA - distB;
+    });
+
+    const chosenAltar = altars[0];
+    const chance = chosenAltar.resurrectChance ?? 0.3;
+    if (Math.random() >= chance) return false;
+
+    this.soldierIdCounter++;
+    const spiritId = `spirit-${this.soldierIdCounter}`;
+    chosenAltar.soldierIds = chosenAltar.soldierIds || [];
+    chosenAltar.soldierIds.push(spiritId);
+
+    const mult = chosenAltar.spiritStatMultiplier || 1.0;
+    const spiritHp = Math.round(deadSoldier.baseMaxHp * mult);
+    const spiritDmg = Math.round(deadSoldier.baseDamage * mult);
+    const arch = deadSoldier.archetype || 'SOLDIER';
+
+    const spiritUnit: SoldierEntity = {
+      id: spiritId,
+      towerId: chosenAltar.id,
+      name: `Anh Linh ${deadSoldier.name}`,
+      archetype: arch,
+      isSpirit: true,
+      spiritSourceArchetype: arch,
+      x: deadSoldier.x,
+      y: deadSoldier.y,
+      hp: spiritHp,
+      maxHp: spiritHp,
+      baseMaxHp: spiritHp,
+      damage: spiritDmg,
+      baseDamage: spiritDmg,
+      attackSpeed: deadSoldier.attackSpeed,
+      attackCooldown: 0.5,
+      element: deadSoldier.element === 'PHYSICAL' ? 'GHOST' : deadSoldier.element,
+      secondaryElement: deadSoldier.element === 'PHYSICAL' ? deadSoldier.secondaryElement : 'GHOST',
+      combatMode: deadSoldier.combatMode,
+      state: 'IDLE',
+      engagedEnemyId: null,
+      rallyPoint: { ...deadSoldier.rallyPoint },
+      targetPos: { ...deadSoldier.rallyPoint },
+      armor: deadSoldier.baseArmor,
+      baseArmor: deadSoldier.baseArmor,
+      magicResist: 0.25,
+      respawnTimer: 0,
+      respawnDelay: 999999, // Spirits do not respawn on timer
+      tier: chosenAltar.tier,
+      canBlockAir: deadSoldier.canBlockAir,
+      canTargetAir: deadSoldier.canTargetAir,
+      canTargetSwim: deadSoldier.canTargetSwim,
+      aoeRadius: deadSoldier.aoeRadius,
+      rangedDamage: deadSoldier.rangedDamage,
+      rangedRange: deadSoldier.rangedRange
+    };
+
+    this.soldiers.push(spiritUnit);
+
+    // If Altar is 4_B (Soulbind Necropolis), trigger Ghost burst on spawn!
+    if (chosenAltar.tier === 4 && chosenAltar.branch === 'B') {
+      const aoe = chosenAltar.aoeRadius || 65;
+      const burstDmg = Math.round(chosenAltar.damage * 1.5);
+      for (const enemy of this.enemies) {
+        if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
+        if (Math.hypot(enemy.x - deadSoldier.x, enemy.y - deadSoldier.y) <= aoe) {
+          enemy.hp -= burstDmg;
+          this.addFloatingText(`-${burstDmg}`, enemy.x, enemy.y - 12, '#a855f7', 14);
+          if (enemy.hp <= 0) enemy.state = 'DEAD';
+        }
+      }
+      this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#a855f7', 16);
+    }
+
+    this.addFloatingText('👻 ANH LINH HỒI SINH!', deadSoldier.x, deadSoldier.y - 20, '#818cf8', 16);
+    this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#818cf8', 15);
+    SoundSystem.playEnemySkill('SUMMON');
     return true;
   }
 
@@ -820,8 +1205,8 @@ export class GameState {
         tower.buffSourceId = nearestMage.id;
         tower.buffedElements = [elem1, elem2];
 
-        // Propagate to soldiers if barracks
-        if (tower.type === 'BARRACKS' && tower.soldierIds) {
+        // Propagate to soldiers/summoned units if any
+        if (tower.soldierIds) {
           for (const sid of tower.soldierIds) {
             const soldier = this.soldiers.find((s) => s.id === sid);
             if (soldier) {

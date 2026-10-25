@@ -24,9 +24,9 @@ export class CodexBuildings {
         title: 'Trại Dân Quân (Barracks)',
         icon: '🛡️',
         badge: 'Cận Chiến & Bắn Cung Linh Hoạt',
-        role: 'Triệu hồi 3 chiến binh người que tinh nhuệ. Người chơi có thể tự do chọn Lính Đánh Gần hoặc Lính Bắn Tên.',
+        role: 'Triệu hồi 3 chiến binh người que tinh nhuệ. Trại lính không trực tiếp tấn công, chỉ có binh lính được điều động ra chặn đường hoặc bắn cung.',
         mechanics:
-          'Lính Đánh Gần có máu và DPS cao, chốt chặn quái đi bộ 1v1. Lính Bắn Tên đứng tại điểm tập kết bắn cung tầm xa tấn công được cả Đi bộ, Dưới nước và Trên không. Cả 2 đều dùng sát thương hỗn hợp Vật lý + Nguyên tố tự chọn!',
+          'Trại lính không trực tiếp tấn công. Lính Đánh Gần có máu và DPS cao, chốt chặn quái đi bộ 1v1. Lính Bắn Tên đứng tại điểm tập kết bắn cung tầm xa tấn công được cả Đi bộ, Dưới nước và Trên không. Cả 2 đều dùng sát thương hỗn hợp Vật lý + Nguyên tố tự chọn!',
         tip: '💡 Bấm vào tháp để đổi qua lại giữa Lính Đánh Gần và Lính Bắn Tên bất kỳ lúc nào; gắn nguyên tố để đòn đánh có thêm sát thương phép và hiệu ứng riêng.'
       },
       ARCHER: {
@@ -55,6 +55,33 @@ export class CodexBuildings {
         mechanics:
           'Đạn pháo phát nổ khi chạm đất gây sát thương nổ lan Vật lý + Nguyên tố phép cộng thêm trên toàn bộ bán kính nổ. Nhánh 4A siêu nổ đại địa chấn; Nhánh 4B pháo liên thanh nạp cực nhanh.',
         tip: '⚠️ Pháo cối không bắn được quái Bay (FLY). Gắn thêm nguyên tố để tạo vùng nổ thiêu đốt (Lửa), bão từ (Sét) hoặc chấn động làm chậm (Đất)!'
+      },
+      DRAGON_NEST: {
+        title: 'Tổ Rồng (Dragon Nest)',
+        icon: '🐉',
+        badge: 'Rồng Hỏa Long • Sát Thương AoE • Chặn Quái Bay',
+        role: 'Triệu hồi 1 con rồng uy mãnh chốt chặn chiến trường. Tổ rồng không trực tiếp tấn công, chỉ có Rồng xuất trận chiến đấu. Nâng cấp tăng mạnh sát thương, máu và tầm nổ lan mà không tăng số lượng rồng.',
+        mechanics:
+          'Tổ rồng không trực tiếp tấn công. Rồng sở hữu sẵn nguyên tố RỒNG (DRAGON) và được chọn thêm 1 nguyên tố thứ 2 (mặc định LỬA). Rồng bay lượn trên không nên có thể chặn đứng và không chiến với cả quái Bay (FLY) lẫn quái Đi bộ.',
+        tip: '💡 Rồng gây sát thương nổ lan AoE lên mọi quái vật xung quanh mục tiêu bị cắn/khè lửa!'
+      },
+      FAIRY_TREE: {
+        title: 'Cây Tiên (Fairy Tree)',
+        icon: '🧚',
+        badge: 'Bầy Tiên Tinh Linh • Chặn Quái Bay • Số Lượng Tăng Theo Cấp',
+        role: 'Cổ thụ thần thoại triệu hồi các tiên nhỏ bay lượn bảo vệ lãnh địa. Cây tiên không trực tiếp tấn công, chỉ bầy tiên tham chiến. Càng nâng cấp tháp thì số lượng tiên xuất trận càng đông (2 ➔ 3 ➔ 4 ➔ 5 tiên).',
+        mechanics:
+          'Cây tiên không trực tiếp tấn công. Bầy tiên sở hữu sẵn nguyên tố TIÊN (FAIRY) và được chọn thêm 1 nguyên tố thứ 2 (mặc định ÁNH SÁNG). Có khả năng bay trên không để chốt chặn và tấn công quái Bay (FLY) cũng như quái mặt đất.',
+        tip: '💡 Tiên tấn công phép thuật tầm xa và phân tán chặn đánh nhiều kẻ địch cùng lúc trên không và mặt đất.'
+      },
+      HEROIC_ALTAR: {
+        title: 'Tế Đàn Anh Linh (Heroic Altar)',
+        icon: '🏛️',
+        badge: 'Hồi Sinh Linh Hồn • Hệ Ma • Quần Thể Bất Tử',
+        role: 'Tế đàn cổ đại thu thập linh hồn các đơn vị đồng minh ngã xuống trong phạm vi (Binh lính, Rồng, Tiên) và tái sinh họ dưới dạng Anh Linh bóng ma. Tế đàn không trực tiếp tấn công, các Anh Linh hồi sinh sẽ tham chiến.',
+        mechanics:
+          'Tế đàn không trực tiếp tấn công. Khi một đơn vị tử trận trong phạm vi tế đàn, có tỉ lệ được hồi sinh thành Anh Linh nhận thêm hệ MA (GHOST) và tăng mạnh sát thương. Cấp tháp càng cao tỉ lệ hồi sinh càng lớn và giới hạn Anh Linh tối đa càng nhiều.',
+        tip: '💡 Đặt Tế Đàn gần điểm tập kết của Trại Lính, Cây Tiên hoặc Tổ Rồng để tối ưu hóa khả năng hồi sinh liên tục!'
       },
       TRAP_SPIKE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },
       TRAP_FIRE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },
@@ -467,6 +494,24 @@ export class CodexBuildings {
           name: `Đạn Đại Bác Bọc ${ELEMENT_NAMES[elem]}`,
           desc: `Đạn pháo phát nổ trên diện rộng gây sát thương Vật lý khủng kèm +45% sát thương ${ELEMENT_NAMES[elem]} lên quái Đi bộ và Bơi lội.`,
           synergy: `💣 Tạo ra vùng nổ chấn động hủy diệt đàn quái đông đảo.`
+        };
+      case 'DRAGON_NEST':
+        return {
+          name: `Hơi Thở Rồng Hòa Quyện Hệ ${ELEMENT_NAMES[elem]}`,
+          desc: `Rồng gây sát thương AoE nổ lan mang song hệ [RỒNG + ${ELEMENT_NAMES[elem]}]. Tấn công mục tiêu ở cả 3 loại đường (Đi Bộ, Bay, Bơi), nhưng chỉ chặn quái Đi Bộ và Bay.`,
+          synergy: `🐉 Bay lượn tấn công cả 3 đường (Bộ, Bay, Bơi) và chặn quái Bay/Đi Bộ!`
+        };
+      case 'FAIRY_TREE':
+        return {
+          name: `Phép Thuật Tinh Linh Hệ ${ELEMENT_NAMES[elem]}`,
+          desc: `Mỗi tinh linh tiên bắn đạn phép tầm xa mang song hệ [TIÊN + ${ELEMENT_NAMES[elem]}]. Tấn công mục tiêu ở cả 3 loại đường (Đi Bộ, Bay, Bơi), nhưng chỉ chặn quái Đi Bộ và Bay.`,
+          synergy: `🧚 Tấn công linh hoạt cả 3 đường (Bộ, Bay, Bơi) và chặn quái Bay/Đi Bộ!`
+        };
+      case 'HEROIC_ALTAR':
+        return {
+          name: `Uy Lực Anh Linh Hệ ${ELEMENT_NAMES[elem]}`,
+          desc: `Tế đàn hồi sinh các chiến binh đã hy sinh thành Anh Linh nhận thêm hệ MA và khuếch đại sát thương.`,
+          synergy: `🏛️ Tái sinh liên tục binh lính, rồng và tiên để tạo bức tường phòng thủ bất tử!`
         };
       default:
         return {

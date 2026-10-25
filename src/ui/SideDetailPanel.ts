@@ -86,7 +86,18 @@ export class SideDetailPanel {
   }
 
   public open(category: string = 'BUILDINGS', targetSubId?: string): void {
-    const buildingSubKeys = ['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY', 'SOLDIERS', 'TRAPS', 'IMBUE'];
+    const buildingSubKeys = [
+      'ARCHER',
+      'MAGE',
+      'ARTILLERY',
+      'BARRACKS',
+      'DRAGON_NEST',
+      'FAIRY_TREE',
+      'HEROIC_ALTAR',
+      'SOLDIERS',
+      'TRAPS',
+      'IMBUE'
+    ];
 
     if (buildingSubKeys.includes(category)) {
       this.currentCategory = 'BUILDINGS';
@@ -199,14 +210,17 @@ export class SideDetailPanel {
 
     this.titleEl.textContent = 'Bách Khoa Công Trình & Bẫy Phòng Thủ';
     this.iconEl.textContent = '🏰';
-    this.badgeEl.textContent = '4 Nhánh Tháp • Binh Lính • Bẫy Chiến Thuật • Khảm Ngọc';
+    this.badgeEl.textContent = '3 Nhánh Tháp • 4 Tháp Triệu Hồi • Bẫy • Khảm Ngọc';
 
     let rightContentHtml = '';
     switch (this.currentBuildingSubTab) {
-      case 'BARRACKS':
       case 'ARCHER':
       case 'MAGE':
       case 'ARTILLERY':
+      case 'BARRACKS':
+      case 'DRAGON_NEST':
+      case 'FAIRY_TREE':
+      case 'HEROIC_ALTAR':
         rightContentHtml = this.buildingsCodex.getTowerCategoryHtml(
           this.currentBuildingSubTab as TowerType,
           this.buildingsCodex.selectedTierKey
@@ -222,27 +236,20 @@ export class SideDetailPanel {
         rightContentHtml = this.imbueCodex.getBuildingImbueCategoryHtml();
         break;
       default:
-        rightContentHtml = this.buildingsCodex.getTowerCategoryHtml('BARRACKS', 'BARRACKS_1');
+        rightContentHtml = this.buildingsCodex.getTowerCategoryHtml('ARCHER', 'ARCHER_1');
     }
 
     this.contentEl.innerHTML = `
       <div class="codex-master-layout">
         <aside class="codex-sidebar-nav">
           <div class="codex-sidebar-title">
-            <span>CÔNG TRÌNH PHÒNG THỦ</span>
-            <span style="color: #38bdf8;">4 Tháp</span>
+            <span>THÁP PHÒNG NGỰ</span>
+            <span style="color: #38bdf8;">3 Tháp</span>
           </div>
-          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'BARRACKS' ? 'active' : ''}" data-building-sub="BARRACKS">
-            <span style="font-size: 18px;">🛡️</span>
-            <div>
-              <div style="font-weight: 700;">Trại Dân Quân (Barracks)</div>
-              <div style="font-size: 11px; color: #64748b;">Lính kiếm chặn đường & Lính cung</div>
-            </div>
-          </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'ARCHER' ? 'active' : ''}" data-building-sub="ARCHER">
             <span style="font-size: 18px;">🏹</span>
             <div>
-              <div style="font-weight: 700;">Tháp Cung Thủ</div>
+              <div style="font-weight: 700;">Tháp Cung Thủ (Archer)</div>
               <div style="font-size: 11px; color: #64748b;">Bắn nhanh, linh hoạt 3 địa hình</div>
             </div>
           </button>
@@ -262,14 +269,47 @@ export class SideDetailPanel {
           </button>
 
           <div class="codex-sidebar-title" style="margin-top: 10px;">
-            <span>LÍNH & HỖ TRỢ</span>
+            <span>THÁP TRIỆU HỒI</span>
+            <span style="color: #a78bfa;">4 Tháp</span>
+          </div>
+          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'BARRACKS' ? 'active' : ''}" data-building-sub="BARRACKS">
+            <span style="font-size: 18px;">🛡️</span>
+            <div>
+              <div style="font-weight: 700;">Trại Dân Quân (Barracks)</div>
+              <div style="font-size: 11px; color: #64748b;">Lính kiếm chặn đường & Lính cung</div>
+            </div>
+          </button>
+          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'DRAGON_NEST' ? 'active' : ''}" data-building-sub="DRAGON_NEST">
+            <span style="font-size: 18px;">🐉</span>
+            <div>
+              <div style="font-weight: 700;">Tổ Rồng (Dragon Nest)</div>
+              <div style="font-size: 11px; color: #64748b;">Rồng sát thương AoE, chặn quái bay</div>
+            </div>
+          </button>
+          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'FAIRY_TREE' ? 'active' : ''}" data-building-sub="FAIRY_TREE">
+            <span style="font-size: 18px;">🧚</span>
+            <div>
+              <div style="font-weight: 700;">Cây Tiên (Fairy Tree)</div>
+              <div style="font-size: 11px; color: #64748b;">Bầy tiên tăng theo cấp, chặn quái bay</div>
+            </div>
+          </button>
+          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'HEROIC_ALTAR' ? 'active' : ''}" data-building-sub="HEROIC_ALTAR">
+            <span style="font-size: 18px;">🏛️</span>
+            <div>
+              <div style="font-weight: 700;">Tế Đàn Anh Linh (Heroic Altar)</div>
+              <div style="font-size: 11px; color: #64748b;">Hồi sinh Anh Linh, nhận thêm hệ ma</div>
+            </div>
+          </button>
+
+          <div class="codex-sidebar-title" style="margin-top: 10px;">
+            <span>BẪY & HỖ TRỢ</span>
             <span style="color: #10b981;">3 Mục</span>
           </div>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'SOLDIERS' ? 'active' : ''}" data-building-sub="SOLDIERS">
             <span style="font-size: 18px;">⚔️</span>
             <div>
-              <div style="font-weight: 700;">Binh Lính & Cung Thủ</div>
-              <div style="font-size: 11px; color: #64748b;">So sánh chi tiết & cơ chế đổi vũ khí</div>
+              <div style="font-weight: 700;">Binh Lính & Đơn Vị Triệu Hồi</div>
+              <div style="font-size: 11px; color: #64748b;">So sánh chi tiết lính, rồng & tiên</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'TRAPS' ? 'active' : ''}" data-building-sub="TRAPS">

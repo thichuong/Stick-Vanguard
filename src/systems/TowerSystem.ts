@@ -5,6 +5,7 @@ import {
 } from '../types/entities.types.js';
 import { ElementType, DamagePayload } from '../types/elements.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
+import { DEFENSE_TOWER_TYPES } from '../config/towers.config.js';
 import {
   HYBRID_ELEMENT_DMG_RATIO,
   MAGE_SECONDARY_DMG_RATIO,
@@ -32,8 +33,9 @@ export class TowerSystem {
         tower.attackCooldown -= dt;
       }
 
-      // Barracks and traps do not shoot normal projectiles from this loop
-      if (tower.type === 'BARRACKS' || tower.placement !== 'ROADSIDE') {
+      // Only Defense Towers (Archer, Mage, Artillery) attack directly from the tower.
+      // Summon Towers (Barracks, Dragon Nest, Fairy Tree, Heroic Altar) and Traps NEVER attack directly!
+      if (!DEFENSE_TOWER_TYPES.includes(tower.type) || tower.placement !== 'ROADSIDE') {
         continue;
       }
 

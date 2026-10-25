@@ -2,12 +2,25 @@ import {
   PlacementType,
   TowerTier,
   TowerType,
-  TowerBranch
+  TowerBranch,
+  TowerCategory,
+  SummonUnitArchetype
 } from '../types/entities.types.js';
 import { ElementType, TargetingFilter } from '../types/elements.types.js';
 
+export const DEFENSE_TOWER_TYPES: TowerType[] = ['ARCHER', 'ARTILLERY', 'MAGE'];
+export const SUMMON_TOWER_TYPES: TowerType[] = ['BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
+export const TRAP_TOWER_TYPES: TowerType[] = ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
+
+export function getTowerCategory(type: TowerType): TowerCategory {
+  if (type.startsWith('TRAP_')) return 'TRAP';
+  if (SUMMON_TOWER_TYPES.includes(type)) return 'SUMMON';
+  return 'DEFENSE';
+}
+
 export interface TowerBlueprint {
   type: TowerType;
+  category?: TowerCategory;
   tier: TowerTier;
   branch?: TowerBranch;
   name: string;
@@ -18,6 +31,7 @@ export interface TowerBlueprint {
   damage: number;
   fireRate: number; // shots per sec
   element: ElementType;
+  defaultSecondaryElement?: ElementType;
   targetingFilter: TargetingFilter;
   aoeRadius?: number;
   isParabolic?: boolean;
@@ -26,6 +40,11 @@ export interface TowerBlueprint {
   soldierArmor?: number;
   soldierRespawn?: number;
   canTargetAir?: boolean;
+  canBlockAir?: boolean;
+  canTargetSwim?: boolean;
+  archetype?: SummonUnitArchetype;
+  resurrectChance?: number;
+  spiritStatMultiplier?: number;
   maxTrapCharges?: number;
   triggerRadius?: number;
   rearmTime?: number;
@@ -362,6 +381,325 @@ export const TOWER_BLUEPRINTS: Record<string, TowerBlueprint> = {
     aoeRadius: 90,
     isParabolic: true,
     color: '#57534e'
+  },
+
+  // === DRAGON NEST (SUMMON - ROAD-SIDE) ===
+  'DRAGON_NEST_1': {
+    type: 'DRAGON_NEST',
+    tier: 1,
+    name: 'Tổ Rồng Lửa',
+    description: 'Triệu hồi 1 con rồng lửa dũng mãnh. Tấn công mục tiêu ở cả 3 loại đường (Đi Bộ, Bay, Bơi) với sát thương nổ lan (AOE), nhưng chỉ chặn đường quái Đi Bộ và Bay.',
+    cost: 110,
+    placement: 'ROADSIDE',
+    range: 130,
+    damage: 30,
+    fireRate: 0.9,
+    element: 'DRAGON',
+    defaultSecondaryElement: 'FIRE',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 1,
+    soldierHp: 220,
+    soldierArmor: 0.2,
+    soldierRespawn: 9,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    aoeRadius: 55,
+    color: '#f97316'
+  },
+  'DRAGON_NEST_2': {
+    type: 'DRAGON_NEST',
+    tier: 2,
+    name: 'Long Huyệt Thiết Giáp',
+    description: 'Nâng cấp rồng chiến trưởng thành với giáp vảy dày hơn, sát thương thở lửa AOE mạnh mẽ hơn.',
+    cost: 150,
+    placement: 'ROADSIDE',
+    range: 145,
+    damage: 52,
+    fireRate: 1.0,
+    element: 'DRAGON',
+    defaultSecondaryElement: 'FIRE',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 1,
+    soldierHp: 360,
+    soldierArmor: 0.3,
+    soldierRespawn: 9,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    aoeRadius: 65,
+    color: '#ea580c'
+  },
+  'DRAGON_NEST_3': {
+    type: 'DRAGON_NEST',
+    tier: 3,
+    name: 'Thần Long Cổ Tháp',
+    description: 'Rồng trưởng thành uy dũng, hơi thở rồng hủy diệt càn quét cả không kích và mặt đất.',
+    cost: 210,
+    placement: 'ROADSIDE',
+    range: 160,
+    damage: 80,
+    fireRate: 1.1,
+    element: 'DRAGON',
+    defaultSecondaryElement: 'FIRE',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 1,
+    soldierHp: 550,
+    soldierArmor: 0.45,
+    soldierRespawn: 8,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    aoeRadius: 75,
+    color: '#c2410c'
+  },
+  'DRAGON_NEST_4_A': {
+    type: 'DRAGON_NEST',
+    tier: 4,
+    branch: 'A',
+    name: 'Long Tổ Cổ Đại (Ancient Dragon Lair)',
+    description: 'Rồng Cổ Đại hộ vệ kiên cố. Máu và giáp cực dày, tự động hồi phục máu mỗi giây và bán kính thở lửa AOE khổng lồ.',
+    cost: 280,
+    placement: 'ROADSIDE',
+    range: 175,
+    damage: 115,
+    fireRate: 1.1,
+    element: 'DRAGON',
+    defaultSecondaryElement: 'FIRE',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 1,
+    soldierHp: 850,
+    soldierArmor: 0.65,
+    soldierRespawn: 7,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    aoeRadius: 85,
+    color: '#ea580c'
+  },
+  'DRAGON_NEST_4_B': {
+    type: 'DRAGON_NEST',
+    tier: 4,
+    branch: 'B',
+    name: 'Long Huyệt Hủy Diệt (Cataclysmic Wyrm)',
+    description: 'Rồng Cuồng Nộ tấn công cuồng bạo. Tốc độ phun hơi thở nhanh, sát thương nổ lan cực đại thiêu rụi đội hình địch.',
+    cost: 280,
+    placement: 'ROADSIDE',
+    range: 175,
+    damage: 150,
+    fireRate: 1.4,
+    element: 'DRAGON',
+    defaultSecondaryElement: 'FIRE',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 1,
+    soldierHp: 680,
+    soldierArmor: 0.45,
+    soldierRespawn: 7,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    aoeRadius: 75,
+    color: '#dc2626'
+  },
+
+  // === FAIRY TREE (SUMMON - ROAD-SIDE) ===
+  'FAIRY_TREE_1': {
+    type: 'FAIRY_TREE',
+    tier: 1,
+    name: 'Cây Tiên Rừng Xanh',
+    description: 'Triệu hồi 2 nàng tiên ánh sáng bay lượn. Tấn công linh hoạt ở cả 3 loại đường (Đi Bộ, Bay, Bơi), nhưng chỉ chặn đường quái Đi Bộ và Bay.',
+    cost: 85,
+    placement: 'ROADSIDE',
+    range: 135,
+    damage: 10,
+    fireRate: 1.3,
+    element: 'FAIRY',
+    defaultSecondaryElement: 'LIGHT',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 2,
+    soldierHp: 80,
+    soldierArmor: 0.1,
+    soldierRespawn: 7,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    color: '#f472b6'
+  },
+  'FAIRY_TREE_2': {
+    type: 'FAIRY_TREE',
+    tier: 2,
+    name: 'Cổ Thụ Tinh Linh',
+    description: 'Tăng số lượng lên 3 nàng tiên, cường hóa tốc độ xuất chiêu và phép thuật ánh sáng.',
+    cost: 130,
+    placement: 'ROADSIDE',
+    range: 150,
+    damage: 18,
+    fireRate: 1.4,
+    element: 'FAIRY',
+    defaultSecondaryElement: 'LIGHT',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 3,
+    soldierHp: 130,
+    soldierArmor: 0.15,
+    soldierRespawn: 7,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    color: '#ec4899'
+  },
+  'FAIRY_TREE_3': {
+    type: 'FAIRY_TREE',
+    tier: 3,
+    name: 'Ngân Hạnh Thần Mộc',
+    description: 'Tăng số lượng lên 4 nàng tiên tinh anh, sát thương phép Tiên và Ánh Sáng áp chế kẻ thù diện rộng.',
+    cost: 180,
+    placement: 'ROADSIDE',
+    range: 165,
+    damage: 28,
+    fireRate: 1.5,
+    element: 'FAIRY',
+    defaultSecondaryElement: 'LIGHT',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 4,
+    soldierHp: 190,
+    soldierArmor: 0.25,
+    soldierRespawn: 6,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    color: '#db2777'
+  },
+  'FAIRY_TREE_4_A': {
+    type: 'FAIRY_TREE',
+    tier: 4,
+    branch: 'A',
+    name: 'Đại Thụ Tinh Linh (Elder Sylvan Tree)',
+    description: 'Triệu hồi 5 Tiên Hộ Mệnh. Máu dày, tự hồi phục nhanh và ban phước lành hồi máu cho bản thân cùng lính đồng minh khi tấn công.',
+    cost: 250,
+    placement: 'ROADSIDE',
+    range: 180,
+    damage: 42,
+    fireRate: 1.6,
+    element: 'FAIRY',
+    defaultSecondaryElement: 'LIGHT',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 5,
+    soldierHp: 320,
+    soldierArmor: 0.35,
+    soldierRespawn: 5,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    color: '#ec4899'
+  },
+  'FAIRY_TREE_4_B': {
+    type: 'FAIRY_TREE',
+    tier: 4,
+    branch: 'B',
+    name: 'Thần Mộc Huyền Quang (Starlight Feywild)',
+    description: 'Triệu hồi 5 Tiên Tinh Tú giáng đòn chớp nhoáng. Tốc độ ra đòn thần tốc, mê hoặc và làm suy yếu quái vật diện rộng.',
+    cost: 250,
+    placement: 'ROADSIDE',
+    range: 180,
+    damage: 52,
+    fireRate: 1.8,
+    element: 'FAIRY',
+    defaultSecondaryElement: 'LIGHT',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 5,
+    soldierHp: 240,
+    soldierArmor: 0.2,
+    soldierRespawn: 5,
+    canTargetAir: true,
+    canBlockAir: true,
+    canTargetSwim: true,
+    color: '#a855f7'
+  },
+
+  // === HEROIC ALTAR (SUMMON - ROAD-SIDE) ===
+  'HEROIC_ALTAR_1': {
+    type: 'HEROIC_ALTAR',
+    tier: 1,
+    name: 'Tế Đàn Anh Linh',
+    description: 'Khi Lính, Rồng hoặc Tiên tử trận trong tầm, 30% tỉ lệ được triệu hồi lại thành Anh Linh mang hệ Ma (tối đa 2 Anh Linh cùng lúc).',
+    cost: 90,
+    placement: 'ROADSIDE',
+    range: 220,
+    damage: 16,
+    fireRate: 1.0,
+    element: 'GHOST',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 2,
+    resurrectChance: 0.30,
+    color: '#818cf8'
+  },
+  'HEROIC_ALTAR_2': {
+    type: 'HEROIC_ALTAR',
+    tier: 2,
+    name: 'U Hồn Linh Đàn',
+    description: 'Mở rộng phạm vi chiêu hồn. 45% tỉ lệ triệu hồi lại thành Anh Linh hệ Ma (tối đa 3 Anh Linh cùng lúc).',
+    cost: 135,
+    placement: 'ROADSIDE',
+    range: 245,
+    damage: 28,
+    fireRate: 1.0,
+    element: 'GHOST',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 3,
+    resurrectChance: 0.45,
+    color: '#6366f1'
+  },
+  'HEROIC_ALTAR_3': {
+    type: 'HEROIC_ALTAR',
+    tier: 3,
+    name: 'Vạn Hồn Tế Điện',
+    description: 'Chiêu hồn linh lực mạnh mẽ. 60% tỉ lệ triệu hồi lại thành Anh Linh hệ Ma (tối đa 4 Anh Linh cùng lúc).',
+    cost: 190,
+    placement: 'ROADSIDE',
+    range: 270,
+    damage: 45,
+    fireRate: 1.1,
+    element: 'GHOST',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 4,
+    resurrectChance: 0.60,
+    color: '#4f46e5'
+  },
+  'HEROIC_ALTAR_4_A': {
+    type: 'HEROIC_ALTAR',
+    tier: 4,
+    branch: 'A',
+    name: 'Đền Anh Linh Bất Diệt (Immortal Pantheon)',
+    description: '80% tỉ lệ chiêu hồn thành Anh Linh (tối đa 6 Anh Linh). Toàn bộ Anh Linh được ban phước nhận thêm +30% Máu và Sát thương.',
+    cost: 260,
+    placement: 'ROADSIDE',
+    range: 300,
+    damage: 65,
+    fireRate: 1.2,
+    element: 'GHOST',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 6,
+    resurrectChance: 0.80,
+    spiritStatMultiplier: 1.3,
+    color: '#6366f1'
+  },
+  'HEROIC_ALTAR_4_B': {
+    type: 'HEROIC_ALTAR',
+    tier: 4,
+    branch: 'B',
+    name: 'Minh Giới Chiêu Hồn Đàn (Soulbind Necropolis)',
+    description: '75% tỉ lệ chiêu hồn thành Anh Linh (tối đa 5 Anh Linh). Khi Anh Linh xuất hiện hoặc tiêu diệt kẻ thù sẽ phát nổ Hồn Ma AOE gây sát thương hệ Ma.',
+    cost: 260,
+    placement: 'ROADSIDE',
+    range: 300,
+    damage: 75,
+    fireRate: 1.2,
+    element: 'GHOST',
+    targetingFilter: { allowedMovement: ['WALK', 'FLY', 'SWIM'] },
+    maxSoldiers: 5,
+    resurrectChance: 0.75,
+    aoeRadius: 65,
+    color: '#7c3aed'
   },
 
   // === ON-PATH TRAPS (ĐẶT TRỰC TIẾP TRÊN ĐƯỜNG & NƯỚC) ===

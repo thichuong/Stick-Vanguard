@@ -99,6 +99,51 @@ export class CodexSoldiers {
         </div>
       </div>
 
+      <!-- ĐƠN VỊ TRIỆU HỒI HUYỀN BÍ (RỒNG, TIÊN, ANH LINH) -->
+      <div class="sp-section sp-card" style="border-left: 5px solid #a855f7;">
+        <h4 class="sp-sec-title" style="color: #c084fc;">🐉🧚👻 CÁC THỰC THỂ TRIỆU HỒI HUYỀN BÍ</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 10px;">
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 24px;">🐉</span>
+              <div>
+                <b style="color: #f87171;">Hỏa Long (Tổ Rồng)</b>
+                <div style="font-size: 10.5px; color: #94a3b8;">1 Cá Thể Duy Nhất • AoE Splash</div>
+              </div>
+            </div>
+            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
+              Chốt chặn không phận, bay lượn trên trời và <b>chặn đứng quái Bay (FLY) & Đi Bộ</b>. Khè lửa/cắn nổ lan AoE toàn vùng. Sở hữu sẵn hệ <b>RỒNG</b> và 1 hệ tự chọn.
+            </p>
+          </div>
+
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 24px;">🧚</span>
+              <div>
+                <b style="color: #f472b6;">Bầy Tiên (Cây Tiên)</b>
+                <div style="font-size: 10.5px; color: #94a3b8;">Số Lượng Tăng Dần (2 ➔ 5)</div>
+              </div>
+            </div>
+            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
+              Các tinh linh ánh sáng bay lượn, có khả năng <b>chặn quái Bay (FLY) & Đi Bộ</b>. Bắn đạn phép tầm xa liên thanh. Sở hữu sẵn hệ <b>TIÊN</b> và 1 hệ tự chọn.
+            </p>
+          </div>
+
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 24px;">👻</span>
+              <div>
+                <b style="color: #a78bfa;">Anh Linh (Tế Đàn)</b>
+                <div style="font-size: 10.5px; color: #94a3b8;">Tái Sinh Từ Đơn Vị Tử Trận</div>
+              </div>
+            </div>
+            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
+              Khi lính, rồng, tiên tử trận gần Tế Đàn, có tỉ lệ hồi sinh thành thực thể bóng ma. Giữ nguyên hình thái nhưng được <b>thêm hệ MA (GHOST)</b> và sát thương cường hóa!
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Bảng So Sánh Chỉ Số Cụ Thể Theo Từng Cấp -->
       <div class="sp-section sp-card">
         <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CỦA 3 CHIẾN BINH THEO CẤP NHÀ LÍNH</h4>

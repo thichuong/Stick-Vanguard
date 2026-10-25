@@ -870,49 +870,7 @@ html, body {
   box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
 
-/* Bottom Arsenal Panel (Below Canvas) */
-.bottom-arsenal-panel {
-  width: 100%;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, #090e1a 100%);
-  border-top: 1px solid #1e293b;
-  padding: 6px 14px 8px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  z-index: 20;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-  flex-shrink: 0;
-  overflow-x: auto;
-}
 
-.arsenal-subcluster {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.arsenal-cluster-title {
-  font-size: 9.5px;
-  font-weight: 800;
-  color: #64748b;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-
-.arsenal-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.arsenal-divider {
-  width: 1px;
-  height: 38px;
-  background: #334155;
-  margin: 12px 2px 0 2px;
-  align-self: center;
-}
 
 /* Action Menu Overlay (Used only for floating notices like Rally Point) */
 #menu-overlay {
@@ -998,6 +956,49 @@ html, body {
   padding: 10px 14px;
   border-bottom: 1px solid #1e293b;
   background: rgba(15, 23, 42, 0.6);
+}
+
+/* Right Panel Tab Bar */
+.right-panel-tab-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+}
+
+.right-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #141e33;
+  border: 1px solid #2d3b55;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.right-tab-btn:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  color: #fff;
+}
+
+.right-tab-btn.active {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border-color: #60a5fa;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.45);
+}
+
+.right-tab-btn .btn-icon {
+  font-size: 16px;
 }
 
 .stage-info-toggle-btn {
@@ -1862,9 +1863,26 @@ html, body {
   transform: translateY(-1px);
 }
 
+.build-option.active {
+  background-color: #1e3a8a;
+  border-color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
 .build-option.disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.opt-key {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  background-color: #0b1120;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 5px;
+  display: inline-block;
 }
 
 .opt-top {

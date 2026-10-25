@@ -73,7 +73,8 @@ export class CombatSystem {
         const interceptCandidate = this.findUnengagedEnemyNear(
           soldier.rallyPoint,
           95, // aggro radius around rally point
-          enemies
+          enemies,
+          soldier.canBlockAir
         );
 
         if (interceptCandidate) {
@@ -82,19 +83,25 @@ export class CombatSystem {
           interceptCandidate.state = 'ENGAGED';
           soldier.state = 'MOVING_TO_ENGAGE';
           currentEnemy = interceptCandidate;
-        } else if (soldier.canTargetAir) {
-          this.checkSoldierAirAttack(soldier, enemies, dt, onCombatEvent);
+        } else if (
+          soldier.canTargetAir ||
+          soldier.canTargetSwim ||
+          soldier.archetype === 'DRAGON' ||
+          soldier.archetype === 'FAIRY'
+        ) {
+          this.checkAerialSoldierAttack(soldier, enemies, dt, onCombatEvent);
         }
       }
 
       // 5. State Machine execution for Melee
       if (soldier.engagedEnemyId && currentEnemy) {
         const dist = Math.hypot(soldier.x - currentEnemy.x, soldier.y - currentEnemy.y);
+        const angle = Math.atan2(currentEnemy.y - soldier.y, currentEnemy.x - soldier.x);
+        soldier.facing = angle;
 
         if (dist > 24) {
           // Move towards enemy
           soldier.state = 'MOVING_TO_ENGAGE';
-          const angle = Math.atan2(currentEnemy.y - soldier.y, currentEnemy.x - soldier.x);
           const moveSpeed = 80;
           soldier.x += Math.cos(angle) * moveSpeed * dt;
           soldier.y += Math.sin(angle) * moveSpeed * dt;
@@ -108,9 +115,10 @@ export class CombatSystem {
           if (soldier.attackCooldown <= 0) {
             soldier.attackCooldown = 1 / soldier.attackSpeed;
 
+            const primaryElement = soldier.element || 'PHYSICAL';
             const secondaryElement = soldier.secondaryElement || undefined;
             const secondaryAmount = secondaryElement
-              ? Math.max(1, Math.round(soldier.damage * 0.45))
+              ? Math.max(1, Math.round(soldier.damage * (soldier.archetype === 'DRAGON' || soldier.archetype === 'FAIRY' ? 0.6 : 0.45)))
               : undefined;
 
             const bonusElements = soldier.buffedElements
@@ -118,14 +126,21 @@ export class CombatSystem {
                   element: elem,
                   amount: Math.max(1, Math.round(soldier.damage * 0.45))
                 }))
-              : undefined;
+              : [];
+
+            if (soldier.isSpirit) {
+              bonusElements.push({
+                element: 'GHOST' as const,
+                amount: Math.max(1, Math.round(soldier.damage * 0.5))
+              });
+            }
 
             const payload = {
               amount: soldier.damage,
-              element: 'PHYSICAL' as const,
+              element: primaryElement,
               secondaryAmount,
               secondaryElement,
-              bonusElements,
+              bonusElements: bonusElements.length > 0 ? bonusElements : undefined,
               sourceId: soldier.id
             };
 
@@ -144,12 +159,14 @@ export class CombatSystem {
               // Light holy heal & Grass root drain
               if (
                 secondaryElement === 'LIGHT' ||
+                primaryElement === 'LIGHT' ||
                 soldier.buffedElements?.includes('LIGHT')
               ) {
                 const healAmt = ALL_ELEMENT_DEFINITIONS.LIGHT?.combatStats?.soldierHealOnHit ?? 5;
                 soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
               } else if (
                 secondaryElement === 'GRASS' ||
+                primaryElement === 'GRASS' ||
                 soldier.buffedElements?.includes('GRASS')
               ) {
                 const healAmt = ALL_ELEMENT_DEFINITIONS.GRASS?.combatStats?.soldierHealOnHit ?? 3;
@@ -160,7 +177,7 @@ export class CombatSystem {
             const displayElement =
               bonusElements && bonusElements.length > 0
                 ? bonusElements[0].element
-                : secondaryElement || 'PHYSICAL';
+                : secondaryElement || primaryElement;
 
             onCombatEvent({
               type: 'MELEE_HIT',
@@ -173,6 +190,52 @@ export class CombatSystem {
               label: calc.label,
               element: displayElement
             });
+
+            // AOE splash attack for Dragon
+            if (soldier.aoeRadius && soldier.aoeRadius > 0) {
+              const splashRadius = soldier.aoeRadius;
+              const splashAmount = Math.max(1, Math.round(soldier.damage * 0.7));
+              const splashPayload = {
+                amount: splashAmount,
+                element: primaryElement,
+                secondaryAmount: secondaryElement ? Math.max(1, Math.round(splashAmount * 0.45)) : undefined,
+                secondaryElement,
+                bonusElements: bonusElements.length > 0 ? bonusElements : undefined,
+                sourceId: soldier.id
+              };
+
+              for (const otherEnemy of enemies) {
+                if (otherEnemy.id === currentEnemy.id || otherEnemy.hp <= 0 || otherEnemy.state === 'DEAD') continue;
+                const d = Math.hypot(otherEnemy.x - currentEnemy.x, otherEnemy.y - currentEnemy.y);
+                if (d <= splashRadius) {
+                  const sCalc = TargetingRuleEngine.calculateDamage(splashPayload, otherEnemy);
+                  if (!sCalc.isImmune) {
+                    TargetingRuleEngine.applyDamageToEnemy(
+                      otherEnemy,
+                      sCalc,
+                      splashPayload.element,
+                      splashPayload.secondaryAmount,
+                      splashPayload.secondaryElement
+                    );
+                    TargetingRuleEngine.applyAllPayloadEffects(otherEnemy, splashPayload);
+                  }
+                  onCombatEvent({
+                    type: 'MELEE_HIT',
+                    sourceId: soldier.id,
+                    targetId: otherEnemy.id,
+                    x: otherEnemy.x,
+                    y: otherEnemy.y - (otherEnemy.altitude || 0),
+                    damage: sCalc.finalDamage,
+                    isImmune: sCalc.isImmune,
+                    label: sCalc.label,
+                    element: displayElement
+                  });
+                  if (otherEnemy.hp <= 0) {
+                    otherEnemy.state = 'DEAD';
+                  }
+                }
+              }
+            }
 
             if (currentEnemy.hp <= 0) {
               currentEnemy.state = 'DEAD';
@@ -246,11 +309,14 @@ export class CombatSystem {
         if (distToRally > 6) {
           soldier.state = 'MOVING_TO_RALLY';
           const angle = Math.atan2(soldier.rallyPoint.y - soldier.y, soldier.rallyPoint.x - soldier.x);
+          soldier.facing = angle;
           const moveSpeed = 65;
           soldier.x += Math.cos(angle) * moveSpeed * dt;
           soldier.y += Math.sin(angle) * moveSpeed * dt;
         } else {
-          soldier.state = 'IDLE';
+          if (soldier.state !== 'ATTACKING') {
+            soldier.state = 'IDLE';
+          }
         }
       }
     }
@@ -343,9 +409,10 @@ export class CombatSystem {
     soldier.attackCooldown = 1 / soldier.attackSpeed;
     soldier.state = 'ATTACKING';
 
+    const primaryElement = soldier.element || 'PHYSICAL';
     const secondaryElement = soldier.secondaryElement || undefined;
     const secondaryAmount = secondaryElement
-      ? Math.max(1, Math.round(soldier.damage * 0.45))
+      ? Math.max(1, Math.round(soldier.damage * (soldier.archetype === 'DRAGON' || soldier.archetype === 'FAIRY' ? 0.6 : 0.45)))
       : undefined;
 
     const bonusElements = soldier.buffedElements
@@ -353,14 +420,21 @@ export class CombatSystem {
           element: elem,
           amount: Math.max(1, Math.round(soldier.damage * 0.45))
         }))
-      : undefined;
+      : [];
+
+    if (soldier.isSpirit) {
+      bonusElements.push({
+        element: 'GHOST' as const,
+        amount: Math.max(1, Math.round(soldier.damage * 0.5))
+      });
+    }
 
     const payload = {
       amount: soldier.damage,
-      element: 'PHYSICAL' as const,
+      element: primaryElement,
       secondaryAmount,
       secondaryElement,
-      bonusElements,
+      bonusElements: bonusElements.length > 0 ? bonusElements : undefined,
       sourceId: soldier.id
     };
 
@@ -378,12 +452,14 @@ export class CombatSystem {
 
       if (
         secondaryElement === 'LIGHT' ||
+        primaryElement === 'LIGHT' ||
         soldier.buffedElements?.includes('LIGHT')
       ) {
         const healAmt = ALL_ELEMENT_DEFINITIONS.LIGHT?.combatStats?.soldierHealOnHit ?? 5;
         soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
       } else if (
         secondaryElement === 'GRASS' ||
+        primaryElement === 'GRASS' ||
         soldier.buffedElements?.includes('GRASS')
       ) {
         const healAmt = ALL_ELEMENT_DEFINITIONS.GRASS?.combatStats?.soldierHealOnHit ?? 3;
@@ -394,7 +470,7 @@ export class CombatSystem {
     const displayElement =
       bonusElements && bonusElements.length > 0
         ? bonusElements[0].element
-        : secondaryElement || 'PHYSICAL';
+        : secondaryElement || primaryElement;
 
     onCombatEvent({
       type: 'RANGED_JAVELIN',
@@ -484,17 +560,21 @@ export class CombatSystem {
   private static findUnengagedEnemyNear(
     rallyPoint: Vector2D,
     radius: number,
-    enemies: EnemyEntity[]
+    enemies: EnemyEntity[],
+    canBlockAir?: boolean
   ): EnemyEntity | null {
     let closest: EnemyEntity | null = null;
     let maxDist = radius;
 
     for (const enemy of enemies) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-      // Melee soldiers can ONLY engage WALK units that are NOT UNBLOCKABLE
-      if (enemy.movementType !== 'WALK') continue;
-      if (enemy.tags.includes('UNBLOCKABLE')) continue;
-      if (enemy.engagedBySoldierId !== null) continue; // already blocked
+      // Melee soldiers without canBlockAir can ONLY engage WALK units
+      // Units with canBlockAir can engage both WALK and FLY units!
+      if (enemy.movementType !== 'WALK') {
+        if (!canBlockAir || enemy.movementType !== 'FLY') continue;
+      }
+      if (enemy.tags && enemy.tags.includes('UNBLOCKABLE')) continue;
+      if (enemy.engagedBySoldierId) continue; // already blocked
 
       const dist = Math.hypot(enemy.x - rallyPoint.x, enemy.y - rallyPoint.y);
       if (dist < maxDist) {
@@ -506,55 +586,233 @@ export class CombatSystem {
     return closest;
   }
 
-  private static checkSoldierAirAttack(
+  private static checkAerialSoldierAttack(
     soldier: SoldierEntity,
     enemies: EnemyEntity[],
     dt: number,
     onCombatEvent: (evt: CombatEvent) => void
   ): void {
-    soldier.attackCooldown -= dt;
-    if (soldier.attackCooldown > 0) return;
+    if (soldier.attackCooldown > 0) {
+      soldier.attackCooldown -= dt;
+    }
 
-    // Look for flying enemy within range
-    const range = 130;
+    const isDragon = soldier.archetype === 'DRAGON' || (soldier.isSpirit && soldier.spiritSourceArchetype === 'DRAGON');
+    const isFairy = soldier.archetype === 'FAIRY' || (soldier.isSpirit && soldier.spiritSourceArchetype === 'FAIRY');
+    const canHitAll = isDragon || isFairy || soldier.canTargetSwim;
+
+    // Movement types allowed:
+    // Dragon and Fairy can attack targets across all 3 paths: WALK, FLY, and SWIM!
+    // Regular melee soldiers with canTargetAir can only attack FLY.
+    const allowedMovement: string[] = canHitAll ? ['WALK', 'FLY', 'SWIM'] : ['FLY'];
+
+    const range = soldier.rangedRange || 130;
+    let bestTarget: EnemyEntity | null = null;
+    let maxProgress = -1;
+
     for (const enemy of enemies) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-      if (enemy.movementType === 'FLY') {
-        const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
-        if (dist <= range) {
-          soldier.attackCooldown = 1.2;
-          const calc = TargetingRuleEngine.calculateDamage(
-            {
-              amount: soldier.damage * 0.9,
-              element: 'LIGHTNING',
-              sourceId: soldier.id
-            },
-            enemy
-          );
+      if (!allowedMovement.includes(enemy.movementType)) continue;
 
-          if (!calc.isImmune) {
-            TargetingRuleEngine.applyDamageToEnemy(enemy, calc, 'LIGHTNING');
-            TargetingRuleEngine.applyElementalHitEffects(enemy, 'LIGHTNING', soldier.damage * 0.9);
-          }
-
-          onCombatEvent({
-            type: 'RANGED_JAVELIN',
-            sourceId: soldier.id,
-            targetId: enemy.id,
-            x: enemy.x,
-            y: enemy.y,
-            damage: calc.finalDamage,
-            isImmune: calc.isImmune,
-            label: calc.label,
-            element: 'LIGHTNING'
-          });
-
-          if (enemy.hp <= 0) {
-            enemy.state = 'DEAD';
-          }
-          break;
+      const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
+      if (dist <= range) {
+        if (enemy.pathDistance > maxProgress) {
+          maxProgress = enemy.pathDistance;
+          bestTarget = enemy;
         }
       }
+    }
+
+    if (!bestTarget) {
+      if (soldier.state === 'ATTACKING') {
+        soldier.state = 'IDLE';
+      }
+      return;
+    }
+
+    // Turn soldier to face the target enemy (360-degree orientation)
+    soldier.facing = Math.atan2(bestTarget.y - soldier.y, bestTarget.x - soldier.x);
+    soldier.state = 'ATTACKING';
+
+    if (soldier.attackCooldown > 0) return;
+
+    soldier.attackCooldown = 1 / Math.max(0.2, soldier.attackSpeed);
+
+    if (!canHitAll) {
+      // Legacy Spartan air javelin
+      const calc = TargetingRuleEngine.calculateDamage(
+        {
+          amount: soldier.damage * 0.9,
+          element: 'LIGHTNING',
+          sourceId: soldier.id
+        },
+        bestTarget
+      );
+
+      if (!calc.isImmune) {
+        TargetingRuleEngine.applyDamageToEnemy(bestTarget, calc, 'LIGHTNING');
+        TargetingRuleEngine.applyElementalHitEffects(bestTarget, 'LIGHTNING', soldier.damage * 0.9);
+      }
+
+      onCombatEvent({
+        type: 'RANGED_JAVELIN',
+        sourceId: soldier.id,
+        targetId: bestTarget.id,
+        x: bestTarget.x,
+        y: bestTarget.y - (bestTarget.altitude || 0),
+        damage: calc.finalDamage,
+        isImmune: calc.isImmune,
+        label: calc.label,
+        element: 'LIGHTNING'
+      });
+
+      if (bestTarget.hp <= 0) {
+        bestTarget.state = 'DEAD';
+      }
+      return;
+    }
+
+    // Dragon and Fairy full hybrid elemental attack:
+    const primaryElement = soldier.element || 'PHYSICAL';
+    const secondaryElement = soldier.secondaryElement || undefined;
+    const secondaryAmount = secondaryElement
+      ? Math.max(1, Math.round(soldier.damage * (isDragon || isFairy ? 0.6 : 0.45)))
+      : undefined;
+
+    const bonusElements = soldier.buffedElements
+      ? soldier.buffedElements.map((elem) => ({
+          element: elem,
+          amount: Math.max(1, Math.round(soldier.damage * 0.45))
+        }))
+      : [];
+
+    if (soldier.isSpirit) {
+      bonusElements.push({
+        element: 'GHOST' as const,
+        amount: Math.max(1, Math.round(soldier.damage * 0.5))
+      });
+    }
+
+    const payload = {
+      amount: soldier.damage,
+      element: primaryElement,
+      secondaryAmount,
+      secondaryElement,
+      bonusElements: bonusElements.length > 0 ? bonusElements : undefined,
+      sourceId: soldier.id
+    };
+
+    const calc = TargetingRuleEngine.calculateDamage(payload, bestTarget);
+
+    if (!calc.isImmune) {
+      TargetingRuleEngine.applyDamageToEnemy(
+        bestTarget,
+        calc,
+        payload.element,
+        payload.secondaryAmount,
+        payload.secondaryElement
+      );
+      TargetingRuleEngine.applyAllPayloadEffects(bestTarget, payload);
+
+      // Light holy heal & Grass root drain
+      if (
+        secondaryElement === 'LIGHT' ||
+        primaryElement === 'LIGHT' ||
+        soldier.buffedElements?.includes('LIGHT')
+      ) {
+        const healAmt = ALL_ELEMENT_DEFINITIONS.LIGHT?.combatStats?.soldierHealOnHit ?? 5;
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
+      } else if (
+        secondaryElement === 'GRASS' ||
+        primaryElement === 'GRASS' ||
+        soldier.buffedElements?.includes('GRASS')
+      ) {
+        const healAmt = ALL_ELEMENT_DEFINITIONS.GRASS?.combatStats?.soldierHealOnHit ?? 3;
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + healAmt);
+      }
+    }
+
+    const displayElement =
+      bonusElements && bonusElements.length > 0
+        ? bonusElements[0].element
+        : secondaryElement || primaryElement;
+
+    onCombatEvent({
+      type: 'MELEE_HIT',
+      sourceId: soldier.id,
+      targetId: bestTarget.id,
+      x: bestTarget.x,
+      y: bestTarget.y - (bestTarget.altitude || 0),
+      damage: calc.finalDamage,
+      isImmune: calc.isImmune,
+      label: calc.label,
+      element: displayElement
+    });
+
+    // AOE splash attack for Dragon
+    if (soldier.aoeRadius && soldier.aoeRadius > 0) {
+      const splashRadius = soldier.aoeRadius;
+      const splashAmount = Math.max(1, Math.round(soldier.damage * 0.7));
+      const splashPayload = {
+        amount: splashAmount,
+        element: primaryElement,
+        secondaryAmount: secondaryElement ? Math.max(1, Math.round(splashAmount * 0.45)) : undefined,
+        secondaryElement,
+        bonusElements: bonusElements.length > 0 ? bonusElements : undefined,
+        sourceId: soldier.id
+      };
+
+      for (const otherEnemy of enemies) {
+        if (otherEnemy.id === bestTarget.id || otherEnemy.hp <= 0 || otherEnemy.state === 'DEAD') continue;
+        const d = Math.hypot(otherEnemy.x - bestTarget.x, otherEnemy.y - bestTarget.y);
+        if (d <= splashRadius) {
+          const sCalc = TargetingRuleEngine.calculateDamage(splashPayload, otherEnemy);
+          if (!sCalc.isImmune) {
+            TargetingRuleEngine.applyDamageToEnemy(
+              otherEnemy,
+              sCalc,
+              splashPayload.element,
+              splashPayload.secondaryAmount,
+              splashPayload.secondaryElement
+            );
+            TargetingRuleEngine.applyAllPayloadEffects(otherEnemy, splashPayload);
+          }
+          onCombatEvent({
+            type: 'MELEE_HIT',
+            sourceId: soldier.id,
+            targetId: otherEnemy.id,
+            x: otherEnemy.x,
+            y: otherEnemy.y - (otherEnemy.altitude || 0),
+            damage: sCalc.finalDamage,
+            isImmune: sCalc.isImmune,
+            label: sCalc.label,
+            element: displayElement
+          });
+          if (otherEnemy.hp <= 0) {
+            otherEnemy.state = 'DEAD';
+          }
+        }
+      }
+    }
+
+    if (bestTarget.hp <= 0) {
+      bestTarget.state = 'DEAD';
+      bestTarget.engagedBySoldierId = null;
+      onCombatEvent({
+        type: 'ENEMY_DEATH',
+        sourceId: soldier.id,
+        targetId: bestTarget.id,
+        x: bestTarget.x,
+        y: bestTarget.y,
+        damage: 0,
+        isImmune: false,
+        element: secondaryElement || 'PHYSICAL'
+      });
+    }
+
+    // Lightning chain bounce
+    if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
+      const chainRatio = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainDamageRatio ?? 0.35;
+      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent);
     }
   }
 }

@@ -337,6 +337,68 @@ export class MapRenderer {
       const label = selectedBuildPoint.validFor === 'TRAP' ? '📍 ĐIỂM ĐẶT BẪY' : '📍 ĐIỂM ĐẶT THÁP';
       ctx.fillText(label, selectedBuildPoint.x, selectedBuildPoint.y - 24);
       ctx.restore();
+
+      // If hovering over a tower option in the right panel list, preview its range!
+      if (state.hoveredBuildTowerType) {
+        const bpKey = state.hoveredBuildTowerType.startsWith('TRAP_')
+          ? state.hoveredBuildTowerType
+          : `${state.hoveredBuildTowerType}_1`;
+        const bp = TOWER_BLUEPRINTS[bpKey];
+        if (bp) {
+          const isTrap = state.hoveredBuildTowerType.startsWith('TRAP_');
+          const range = isTrap ? (bp.triggerRadius || bp.range || 40) : bp.range;
+
+          ctx.save();
+          // Animated rotating dashed range circle
+          ctx.beginPath();
+          ctx.arc(selectedBuildPoint.x, selectedBuildPoint.y, range, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+          ctx.fill();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([8, 6]);
+          ctx.lineDashOffset = -animTime * 20;
+          ctx.stroke();
+
+          // Range badge with icon and name
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(
+            `🎯 Tầm bắn: ${range}px • ${bp.name}`,
+            selectedBuildPoint.x,
+            selectedBuildPoint.y - range - 8
+          );
+          ctx.restore();
+        }
+      }
+    }
+
+    // 3. Hovering tower in list without pre-selected point: preview range at mouse cursor
+    if (!selectedBuildPoint && !activePlacementType && state.hoveredBuildTowerType && mousePos.x > 0 && mousePos.y > 0) {
+      const bpKey = state.hoveredBuildTowerType.startsWith('TRAP_')
+        ? state.hoveredBuildTowerType
+        : `${state.hoveredBuildTowerType}_1`;
+      const bp = TOWER_BLUEPRINTS[bpKey];
+      if (bp) {
+        const isTrap = state.hoveredBuildTowerType.startsWith('TRAP_');
+        const range = isTrap ? (bp.triggerRadius || bp.range || 40) : bp.range;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(mousePos.x, mousePos.y, range, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`🎯 Tầm: ${range}px • ${bp.name}`, mousePos.x, mousePos.y - range - 6);
+        ctx.restore();
+      }
     }
   }
 

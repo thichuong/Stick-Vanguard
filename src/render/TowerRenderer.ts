@@ -37,8 +37,13 @@ export class TowerRenderer {
         ctx.stroke();
         ctx.restore();
 
-        // If Barracks, draw line to Rally Point
-        if (tower.type === 'BARRACKS' && tower.rallyPoint) {
+        // If Summon tower (Barracks, Dragon Nest, Fairy Tree, Heroic Altar), draw line to Rally Point
+        const isSummon =
+          tower.type === 'BARRACKS' ||
+          tower.type === 'DRAGON_NEST' ||
+          tower.type === 'FAIRY_TREE' ||
+          tower.type === 'HEROIC_ALTAR';
+        if (isSummon && tower.rallyPoint) {
           ctx.save();
           ctx.strokeStyle = 'rgba(234, 179, 8, 0.7)';
           ctx.lineWidth = 2;
@@ -268,6 +273,83 @@ export class TowerRenderer {
         ctx.strokeStyle = '#94a3b8';
         ctx.strokeRect(-4, -14, 8, 16);
         ctx.restore();
+        break;
+      }
+      case 'DRAGON_NEST': {
+        // Volcanic dragon crag lair
+        ctx.fillStyle = '#451a03';
+        ctx.beginPath();
+        ctx.moveTo(x - 13, y + 8);
+        ctx.lineTo(x - 9, y - 8);
+        ctx.lineTo(x, y - 16);
+        ctx.lineTo(x + 9, y - 8);
+        ctx.lineTo(x + 13, y + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Glowing draconic egg / crest in the nest
+        const pulse = Math.sin(animTime * 4) * 1.5;
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.ellipse(x, y - 4, 5 + pulse * 0.5, 7 + pulse * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        break;
+      }
+      case 'FAIRY_TREE': {
+        // Mystical enchanted tree
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(x - 3, y - 2, 6, 12);
+
+        // Radiant foliage
+        const fPulse = Math.sin(animTime * 3) * 1.5;
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(x, y - 10, 11 + fPulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fbcfe8';
+        ctx.beginPath();
+        ctx.arc(x - 2, y - 12, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating fairy starlight
+        const sAngle = animTime * 4;
+        const sx = x + Math.cos(sAngle) * 12;
+        const sy = y - 10 + Math.sin(sAngle) * 6;
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'HEROIC_ALTAR': {
+        // Spectral soul altar with rune plinth
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fillRect(x - 12, y - 4, 24, 14);
+        ctx.strokeStyle = '#4338ca';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x - 12, y - 4, 24, 14);
+
+        // Floating soul flame
+        const flameY = y - 14 + Math.sin(animTime * 3) * 2;
+        ctx.fillStyle = '#818cf8';
+        ctx.beginPath();
+        ctx.arc(x, flameY, 5 + Math.sin(animTime * 6) * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Active spirits count badge
+        const activeCount = tower.soldierIds ? tower.soldierIds.length : 0;
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = 'bold 8.5px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`👻 ${activeCount}/${tower.maxSoldiers || 2}`, x, y + 6);
         break;
       }
     }
