@@ -87,11 +87,27 @@ describe('Defense System Restructure & New Summon Towers', () => {
 
     expect(t1).toBeDefined();
     expect(t1.element).toBe('GHOST');
-    expect(t1.resurrectChance).toBeDefined();
-    expect(t2.resurrectChance!).toBeGreaterThan(t1.resurrectChance!);
-    expect(t3.resurrectChance!).toBeGreaterThan(t2.resurrectChance!);
-    expect(t4A.maxSoldiers!).toBeGreaterThan(t3.maxSoldiers!);
-    expect(t4B.maxSoldiers!).toBeGreaterThan(t3.maxSoldiers!);
+    expect(t1.resurrectChance).toBe(0.30);
+    expect(t1.maxSoldiers).toBe(2);
+    expect(t1.spiritGhostRatio).toBe(0.50);
+
+    expect(t2.resurrectChance).toBe(0.45);
+    expect(t2.maxSoldiers).toBe(3);
+    expect(t2.spiritGhostRatio).toBe(0.50);
+
+    expect(t3.resurrectChance).toBe(0.60);
+    expect(t3.maxSoldiers).toBe(4);
+    expect(t3.spiritGhostRatio).toBe(0.50);
+
+    // Tier 4-A: Max 6 spirits, 80% chance, 50% ghost ratio
+    expect(t4A.maxSoldiers).toBe(6);
+    expect(t4A.resurrectChance).toBe(0.80);
+    expect(t4A.spiritGhostRatio).toBe(0.50);
+
+    // Tier 4-B: Max 5 spirits, 70% chance, 100% ghost ratio
+    expect(t4B.maxSoldiers).toBe(5);
+    expect(t4B.resurrectChance).toBe(0.70);
+    expect(t4B.spiritGhostRatio).toBe(1.00);
   });
 
   it('verifies GameState building and unit initialization for Dragon Nest, Fairy Tree, Heroic Altar', () => {
@@ -196,8 +212,131 @@ describe('Defense System Restructure & New Summon Towers', () => {
     const spirit = state.soldiers.find((s) => s.id === altar.soldierIds![0]);
     expect(spirit).toBeDefined();
     expect(spirit!.isSpirit).toBe(true);
-    expect(spirit!.element).toBe('GHOST');
+    expect(spirit!.spiritGhostRatio).toBe(0.5);
+    expect(spirit!.hp).toBe(deadSoldier.baseMaxHp);
+    expect(spirit!.damage).toBe(deadSoldier.baseDamage);
+    expect(spirit!.armor).toBe(deadSoldier.baseArmor);
+    expect(spirit!.element).toBe(deadSoldier.element);
     expect(spirit!.towerId).toBe(altar.id);
+  });
+
+  it('verifies Heroic Altar Tier 4 Branch A (max 6, 80%, +50% ghost dmg) and Branch B (max 5, 70%, +100% ghost dmg)', () => {
+    const stateA = new GameState();
+    stateA.gold = 5000;
+    stateA.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+    stateA.buildTowerAt(300, 300, 'HEROIC_ALTAR');
+    const altarA = stateA.towers.find((t) => t.type === 'HEROIC_ALTAR')!;
+    
+    // Upgrade altar to Tier 4 Branch A
+    stateA.upgradeTower(altarA.id); // Tier 2
+    stateA.upgradeTower(altarA.id); // Tier 3
+    stateA.upgradeTower(altarA.id, 'A'); // Tier 4 Branch A
+    expect(altarA.tier).toBe(4);
+    expect(altarA.branch).toBe('A');
+    expect(altarA.maxSoldiers).toBe(6);
+    expect(altarA.resurrectChance).toBe(0.80);
+    expect(altarA.spiritGhostRatio).toBe(0.50);
+
+    // Mock a dead soldier for Altar 4-A
+    const deadSoldierA: SoldierEntity = {
+      id: 'soldier_a',
+      towerId: 'barracks_a',
+      name: 'Chiến Binh',
+      x: 310,
+      y: 310,
+      hp: 0,
+      maxHp: 200,
+      baseMaxHp: 200,
+      damage: 40,
+      baseDamage: 40,
+      attackSpeed: 1.2,
+      attackCooldown: 0.5,
+      armor: 0.3,
+      baseArmor: 0.3,
+      magicResist: 0.2,
+      rallyPoint: { x: 310, y: 310 },
+      targetPos: { x: 310, y: 310 },
+      tier: 3,
+      state: 'DEAD',
+      engagedEnemyId: null,
+      respawnTimer: 10,
+      respawnDelay: 8,
+      combatMode: 'MELEE',
+      archetype: 'SOLDIER',
+      element: 'PHYSICAL',
+      isSpirit: false
+    };
+
+    altarA.resurrectChance = 1.0; // Override chance for unit test deterministic check
+    const resA = stateA.trySpawnHeroicSpirit(deadSoldierA);
+    expect(resA).toBe(true);
+    const spiritA = stateA.soldiers.find((s) => s.id === altarA.soldierIds![0])!;
+    expect(spiritA.hp).toBe(200); // Exact base HP without extra multiplier
+    expect(spiritA.damage).toBe(40); // Exact base DMG
+    expect(spiritA.armor).toBe(0.3); // Exact base Armor
+    expect(spiritA.spiritGhostRatio).toBe(0.50); // 50% Ghost damage
+
+    // Now test Tier 4 Branch B
+    const stateB = new GameState();
+    stateB.gold = 5000;
+    stateB.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+    stateB.buildTowerAt(300, 300, 'HEROIC_ALTAR');
+    const altarB = stateB.towers.find((t) => t.type === 'HEROIC_ALTAR')!;
+
+    stateB.upgradeTower(altarB.id); // Tier 2
+    stateB.upgradeTower(altarB.id); // Tier 3
+    stateB.upgradeTower(altarB.id, 'B'); // Tier 4 Branch B
+    expect(altarB.tier).toBe(4);
+    expect(altarB.branch).toBe('B');
+    expect(altarB.maxSoldiers).toBe(5);
+    expect(altarB.resurrectChance).toBe(0.70);
+    expect(altarB.spiritGhostRatio).toBe(1.00);
+
+    const deadDragon: SoldierEntity = {
+      id: 'dragon_dead',
+      towerId: 'dragon_nest_1',
+      name: 'Hỏa Long',
+      x: 320,
+      y: 320,
+      hp: 0,
+      maxHp: 850,
+      baseMaxHp: 850,
+      damage: 150,
+      baseDamage: 150,
+      attackSpeed: 0.9,
+      attackCooldown: 0.5,
+      armor: 0.65,
+      baseArmor: 0.65,
+      magicResist: 0.35,
+      rallyPoint: { x: 320, y: 320 },
+      targetPos: { x: 320, y: 320 },
+      tier: 4,
+      state: 'DEAD',
+      engagedEnemyId: null,
+      respawnTimer: 12,
+      respawnDelay: 12,
+      combatMode: 'MELEE',
+      archetype: 'DRAGON',
+      element: 'DRAGON',
+      secondaryElement: 'FIRE',
+      canBlockAir: true,
+      canTargetAir: true,
+      canTargetSwim: true,
+      aoeRadius: 85,
+      isSpirit: false
+    };
+
+    altarB.resurrectChance = 1.0;
+    const resB = stateB.trySpawnHeroicSpirit(deadDragon);
+    expect(resB).toBe(true);
+    const spiritB = stateB.soldiers.find((s) => s.id === altarB.soldierIds![0])!;
+    expect(spiritB.hp).toBe(850);
+    expect(spiritB.damage).toBe(150);
+    expect(spiritB.armor).toBe(0.65);
+    expect(spiritB.element).toBe('DRAGON');
+    expect(spiritB.secondaryElement).toBe('FIRE');
+    expect(spiritB.canBlockAir).toBe(true);
+    expect(spiritB.spiritGhostRatio).toBe(1.00); // 100% Ghost damage!
   });
 
   it('verifies dragon and fairy can attack all 3 path types (WALK, FLY, SWIM) but can only block WALK and FLY', () => {

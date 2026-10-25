@@ -129,9 +129,10 @@ export class CombatSystem {
               : [];
 
             if (soldier.isSpirit) {
+              const ghostRatio = soldier.spiritGhostRatio ?? 0.5;
               bonusElements.push({
                 element: 'GHOST' as const,
-                amount: Math.max(1, Math.round(soldier.damage * 0.5))
+                amount: Math.max(1, Math.round(soldier.damage * ghostRatio))
               });
             }
 
@@ -423,9 +424,10 @@ export class CombatSystem {
       : [];
 
     if (soldier.isSpirit) {
+      const ghostRatio = soldier.spiritGhostRatio ?? 0.5;
       bonusElements.push({
         element: 'GHOST' as const,
-        amount: Math.max(1, Math.round(soldier.damage * 0.5))
+        amount: Math.max(1, Math.round(soldier.damage * ghostRatio))
       });
     }
 
@@ -686,9 +688,10 @@ export class CombatSystem {
       : [];
 
     if (soldier.isSpirit) {
+      const ghostRatio = soldier.spiritGhostRatio ?? 0.5;
       bonusElements.push({
         element: 'GHOST' as const,
-        amount: Math.max(1, Math.round(soldier.damage * 0.5))
+        amount: Math.max(1, Math.round(soldier.damage * ghostRatio))
       });
     }
 

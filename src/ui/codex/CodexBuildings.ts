@@ -79,9 +79,9 @@ export class CodexBuildings {
         title: 'Tế Đàn Anh Linh (Heroic Altar)',
         icon: '🏛️',
         badge: 'Hồi Sinh Linh Hồn • Hệ Ma Cố Định • Quần Thể Bất Tử',
-        role: 'Tế đàn cổ đại thu thập linh hồn các đơn vị đồng minh ngã xuống trong phạm vi (Binh lính, Rồng, Tiên) và tái sinh họ dưới dạng Anh Linh bóng ma. Tế đàn không trực tiếp tấn công, các Anh Linh hồi sinh sẽ tham chiến.',
+        role: 'Tế đàn cổ đại không trực tiếp tấn công, chỉ có 1 năng lực duy nhất là thu thập linh hồn các đơn vị đồng minh ngã xuống trong phạm vi (Binh lính, Rồng, Tiên) và tái sinh họ dưới dạng Anh Linh bóng ma.',
         mechanics:
-          'Tế đàn mang hệ MA (GHOST) cố định, không chọn thêm nguyên tố. Khi một đơn vị tử trận trong phạm vi tế đàn, có tỉ lệ được hồi sinh thành Anh Linh nhận thêm hệ MA (GHOST +50% DMG) và tăng mạnh sát thương. Cấp tháp càng cao tỉ lệ hồi sinh càng lớn và giới hạn Anh Linh tối đa càng nhiều.',
+          'Anh Linh hồi sinh giữ nguyên 100% chỉ số gốc của lính (HP, Giáp, Tốc đánh, Tầm đánh/bắn, Chặn đường & Tấn công) và nhận thêm Hệ Ma với 50% công kích cơ bản (riêng Nhánh 4-B nhận thêm 100% công kích cơ bản). Nâng cấp tháp giúp tăng phạm vi chiêu hồn, tỉ lệ hồi sinh và số lượng Anh Linh tối đa.',
         tip: '💡 Đặt Tế Đàn gần điểm tập kết của Trại Lính, Cây Tiên hoặc Tổ Rồng để tối ưu hóa khả năng hồi sinh liên tục!'
       },
       TRAP_SPIKE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },
@@ -229,6 +229,55 @@ export class CodexBuildings {
                   : ''
               }
 
+              ${
+                type === 'HEROIC_ALTAR'
+                  ? `
+                <div class="dt-stats-grid">
+                  <div class="stat-box">
+                    <span class="s-label">Năng lực cốt lõi</span>
+                    <span class="s-val" style="color: #a5b4fc;">Chiêu Hồn Đồng Minh 👻</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tầm chiêu hồn</span>
+                    <span class="s-val">${selectedBp.range} px 🌐</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tối đa Anh Linh</span>
+                    <span class="s-val" style="color: #38bdf8; font-weight: 700;">${selectedBp.maxSoldiers || 2} Đơn vị 👥</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tỉ lệ hồi sinh</span>
+                    <span class="s-val" style="color: #a855f7; font-weight: 700;">${Math.round((selectedBp.resurrectChance || 0.3) * 100)}% 🔮</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Hệ Ma nhận thêm</span>
+                    <span class="s-val" style="color: #c084fc; font-weight: 700;">+${Math.round((selectedBp.spiritGhostRatio ?? (selectedBp.branch === 'B' ? 1.0 : 0.5)) * 100)}% Base DMG ⚡</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Hệ mặc định tháp</span>
+                    <span class="s-val" style="color: ${ELEMENT_COLORS[selectedBp.element]}">
+                      ${ELEMENT_ICONS[selectedBp.element]} ${selectedBp.element}
+                    </span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Máu & Giáp Anh Linh</span>
+                    <span class="s-val" style="color: #34d399;">100% Chỉ số lính gốc ❤️</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tốc đánh & Tầm đánh</span>
+                    <span class="s-val" style="color: #34d399;">100% Chỉ số lính gốc ⚔️</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Địa hình chiến đấu</span>
+                    <span class="s-val" style="color: #fbbf24;">Kế thừa đơn vị gốc (Bộ, Bay, Bơi)</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tấn công tháp</span>
+                    <span class="s-val" style="color: #94a3b8;">Không tấn công trực tiếp</span>
+                  </div>
+                </div>
+              `
+                  : `
               <div class="dt-stats-grid">
                 <div class="stat-box">
                   <span class="s-label">${isSummonTower ? 'Sát thương đơn vị' : 'Sát thương gốc'}</span>
@@ -305,6 +354,7 @@ export class CodexBuildings {
                     : ''
                 }
               </div>
+              `}
             </div>
           </div>
         </section>
@@ -332,6 +382,19 @@ export class CodexBuildings {
                 <table class="stats-table">
                   <thead>
                     <tr>
+                    ${
+                      type === 'HEROIC_ALTAR'
+                        ? `
+                      <th>Cấp Độ</th>
+                      <th>Tên Tháp</th>
+                      <th>Giá</th>
+                      <th>Tối Đa Anh Linh</th>
+                      <th>Tỉ Lệ Hồi Sinh</th>
+                      <th>Hệ Ma Nhận Thêm</th>
+                      <th>Tầm Chiêu Hồn</th>
+                      <th>Chỉ Số Lính</th>
+                    `
+                        : `
                       <th>Cấp Độ</th>
                       <th>Tên Tháp</th>
                       <th>Giá</th>
@@ -342,6 +405,8 @@ export class CodexBuildings {
                       <th>Tầm</th>
                       <th>Tốc</th>
                       <th>DPS Tổng</th>
+                    `
+                    }
                     </tr>
                   </thead>
                   <tbody>
@@ -395,12 +460,13 @@ export class CodexBuildings {
       `;
     }
     if (type === 'HEROIC_ALTAR') {
+      const ghostPct = Math.round((bp.spiritGhostRatio ?? (bp.branch === 'B' ? 1.0 : 0.5)) * 100);
       return `
         <div class="trait-item">
-          <b>👻 Hồi Sinh Bất Tử:</b> Khi Lính/Rồng/Tiên tử trận trong tầm ${bp.range}px, có ${Math.round((bp.resurrectChance || 0.3) * 100)}% tỉ lệ hồi sinh thành Anh Linh (tối đa ${bp.maxSoldiers || 2}).
+          <b>👻 Hồi Sinh Bất Tử:</b> Khi Lính, Rồng hoặc Tiên tử trận trong tầm ${bp.range}px, có ${Math.round((bp.resurrectChance || 0.3) * 100)}% tỉ lệ hồi sinh thành Anh Linh (tối đa ${bp.maxSoldiers || 2} Anh Linh cùng lúc).
         </div>
         <div class="trait-item">
-          <b>🔮 Ban Thêm Hệ Ma:</b> Kế thừa nguyên tố gốc và nhận thêm <b>Hệ Ma (+50% DMG Ma)</b>! Nhánh 4-B nổ Hồn Ma AoE 65px khi xuất hiện.
+          <b>🔮 Nhận Thêm Hệ Ma:</b> Kế thừa nguyên tố gốc và nhận thêm <b>Hệ Ma (+${ghostPct}% công kích cơ bản)</b>! Toàn bộ chỉ số còn lại của lính không đổi (HP, Giáp, Tốc đánh, Tầm đánh/bắn).
         </div>
       `;
     }
@@ -488,6 +554,24 @@ export class CodexBuildings {
     const maxSoldiers = bp.maxSoldiers || (type === 'HEROIC_ALTAR' ? 2 : 1);
     const totalDps = Math.round(totalDmg * bp.fireRate * (isSummon ? maxSoldiers : 1));
 
+    if (type === 'HEROIC_ALTAR') {
+      const maxSpirits = bp.maxSoldiers || 2;
+      const chance = Math.round((bp.resurrectChance || 0.3) * 100);
+      const ghostPct = Math.round((bp.spiritGhostRatio ?? (bp.branch === 'B' ? 1.0 : 0.5)) * 100);
+      return `
+        <tr class="${customClass} ${isCurrent ? 'selected-row' : ''}">
+          <td><b>${tierLabel}</b></td>
+          <td>${bp.name}</td>
+          <td style="color: #facc15">🪙 ${bp.cost}</td>
+          <td style="color: #38bdf8; font-weight: 700;">${maxSpirits} Anh Linh</td>
+          <td style="color: #a855f7; font-weight: 700;">${chance}%</td>
+          <td style="color: #c084fc; font-weight: 700;">+${ghostPct}% Base DMG</td>
+          <td>${bp.range} px</td>
+          <td style="color: #34d399; font-size: 11px;">100% Chỉ số lính gốc</td>
+        </tr>
+      `;
+    }
+
     if (isSummon) {
       const hp = bp.soldierHp || 100;
       return `
@@ -525,6 +609,7 @@ export class CodexBuildings {
 
   private renderTowerElementalSim(type: TowerType, bp: TowerBlueprint): string {
     if (type === 'HEROIC_ALTAR') {
+      const ghostPct = Math.round((bp.spiritGhostRatio ?? (bp.branch === 'B' ? 1.0 : 0.5)) * 100);
       return `
         <div class="sp-section sp-card" style="border-left: 4px solid #818cf8; background: linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%);">
           <h4 class="sp-sec-title" style="color: #a5b4fc;">👻 THUỘC TÍNH NGUYÊN TỐ CỦA TẾ ĐÀN ANH LINH</h4>
@@ -532,7 +617,7 @@ export class CodexBuildings {
             Tế Đàn Anh Linh sở hữu thuộc tính <b>👻 Hệ Ma (GHOST) cố định</b> và <b>không chọn thêm nguyên tố</b>.
           </p>
           <span class="sp-tip-text">
-            💡 Khi chiến binh ngã xuống, Anh Linh hồi sinh sẽ giữ nguyên các nguyên tố gốc của đơn vị đó và được ban thêm <b>Hệ Ma (+50% sát thương Ma)</b>!
+            💡 Khi chiến binh ngã xuống, Anh Linh hồi sinh sẽ giữ nguyên các nguyên tố gốc của đơn vị đó và được nhận thêm <b>Hệ Ma (+${ghostPct}% công kích cơ bản)</b>!
           </span>
         </div>
       `;
@@ -700,8 +785,8 @@ export class CodexBuildings {
         };
       case 'HEROIC_ALTAR':
         return {
-          name: `Uy Lực Anh Linh Hệ ${ELEMENT_NAMES[elem]}`,
-          desc: `Tế đàn hồi sinh các chiến binh đã hy sinh thành Anh Linh nhận thêm hệ MA và khuếch đại sát thương.`,
+          name: `Uy Lực Anh Linh Hệ Ma`,
+          desc: `Tế đàn hồi sinh các chiến binh đã hy sinh thành Anh Linh nhận thêm hệ MA và giữ nguyên toàn bộ chỉ số gốc.`,
           synergy: `🏛️ Tái sinh liên tục binh lính, rồng và tiên để tạo bức tường phòng thủ bất tử!`
         };
       default:

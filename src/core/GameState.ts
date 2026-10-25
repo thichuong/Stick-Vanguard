@@ -447,6 +447,7 @@ export class GameState {
       maxSoldiers: bp.maxSoldiers,
       resurrectChance: bp.resurrectChance,
       spiritStatMultiplier: bp.spiritStatMultiplier,
+      spiritGhostRatio: bp.spiritGhostRatio ?? 0.5,
       trapCharges: bp.maxTrapCharges,
       maxTrapCharges: bp.maxTrapCharges,
       triggerRadius: bp.triggerRadius,
@@ -640,6 +641,7 @@ export class GameState {
       tower.maxSoldiers = nextBp.maxSoldiers || 2;
       tower.resurrectChance = nextBp.resurrectChance || 0.3;
       tower.spiritStatMultiplier = nextBp.spiritStatMultiplier;
+      tower.spiritGhostRatio = nextBp.spiritGhostRatio ?? (nextBp.tier === 4 && nextBp.branch === 'B' ? 1.0 : 0.5);
       tower.aoeRadius = nextBp.aoeRadius;
     } else if (tower.type === 'BARRACKS') {
       const targetMaxSoldiers = nextBp.maxSoldiers || 3;
@@ -814,6 +816,7 @@ export class GameState {
           tower.maxSoldiers = prevBp.maxSoldiers || 2;
           tower.resurrectChance = prevBp.resurrectChance || 0.3;
           tower.spiritStatMultiplier = prevBp.spiritStatMultiplier;
+          tower.spiritGhostRatio = prevBp.spiritGhostRatio ?? (prevBp.tier === 4 && prevBp.branch === 'B' ? 1.0 : 0.5);
           tower.aoeRadius = prevBp.aoeRadius;
           if (tower.soldierIds && tower.soldierIds.length > tower.maxSoldiers) {
             const removedIds = tower.soldierIds.splice(tower.maxSoldiers);
@@ -1097,6 +1100,7 @@ export class GameState {
     chosenAltar.soldierIds = chosenAltar.soldierIds || [];
     chosenAltar.soldierIds.push(spiritId);
 
+    const spiritGhostRatio = chosenAltar.spiritGhostRatio ?? (chosenAltar.tier === 4 && chosenAltar.branch === 'B' ? 1.0 : 0.5);
     const mult = chosenAltar.spiritStatMultiplier || 1.0;
     const spiritHp = Math.round(deadSoldier.baseMaxHp * mult);
     const spiritDmg = Math.round(deadSoldier.baseDamage * mult);
@@ -1109,6 +1113,7 @@ export class GameState {
       archetype: arch,
       isSpirit: true,
       spiritSourceArchetype: arch,
+      spiritGhostRatio,
       x: deadSoldier.x,
       y: deadSoldier.y,
       hp: spiritHp,
@@ -1118,8 +1123,8 @@ export class GameState {
       baseDamage: spiritDmg,
       attackSpeed: deadSoldier.attackSpeed,
       attackCooldown: 0.5,
-      element: deadSoldier.element === 'PHYSICAL' ? 'GHOST' : deadSoldier.element,
-      secondaryElement: deadSoldier.element === 'PHYSICAL' ? deadSoldier.secondaryElement : 'GHOST',
+      element: deadSoldier.element || 'PHYSICAL',
+      secondaryElement: deadSoldier.secondaryElement,
       combatMode: deadSoldier.combatMode,
       state: 'IDLE',
       engagedEnemyId: null,
@@ -1127,7 +1132,7 @@ export class GameState {
       targetPos: { ...deadSoldier.rallyPoint },
       armor: deadSoldier.baseArmor,
       baseArmor: deadSoldier.baseArmor,
-      magicResist: 0.25,
+      magicResist: deadSoldier.magicResist ?? 0.25,
       respawnTimer: 0,
       respawnDelay: 999999, // Spirits do not respawn on timer
       tier: chosenAltar.tier,
@@ -1140,21 +1145,6 @@ export class GameState {
     };
 
     this.soldiers.push(spiritUnit);
-
-    // If Altar is 4_B (Soulbind Necropolis), trigger Ghost burst on spawn!
-    if (chosenAltar.tier === 4 && chosenAltar.branch === 'B') {
-      const aoe = chosenAltar.aoeRadius || 65;
-      const burstDmg = Math.round(chosenAltar.damage * 1.5);
-      for (const enemy of this.enemies) {
-        if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-        if (Math.hypot(enemy.x - deadSoldier.x, enemy.y - deadSoldier.y) <= aoe) {
-          enemy.hp -= burstDmg;
-          this.addFloatingText(`-${burstDmg}`, enemy.x, enemy.y - 12, '#a855f7', 14);
-          if (enemy.hp <= 0) enemy.state = 'DEAD';
-        }
-      }
-      this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#a855f7', 16);
-    }
 
     this.addFloatingText('👻 ANH LINH HỒI SINH!', deadSoldier.x, deadSoldier.y - 20, '#818cf8', 16);
     this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#818cf8', 15);

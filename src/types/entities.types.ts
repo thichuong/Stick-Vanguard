@@ -113,6 +113,7 @@ export interface SoldierEntity {
   archetype?: SummonUnitArchetype;
   isSpirit?: boolean;
   spiritSourceArchetype?: SummonUnitArchetype;
+  spiritGhostRatio?: number;
   aoeRadius?: number;
   buffedElements?: ElementType[];
   rangedDamage?: number;
@@ -193,6 +194,7 @@ export interface TowerEntity {
   maxSoldiers?: number;
   resurrectChance?: number;
   spiritStatMultiplier?: number;
+  spiritGhostRatio?: number;
   trapCharges?: number;
   maxTrapCharges?: number;
   triggerRadius?: number;

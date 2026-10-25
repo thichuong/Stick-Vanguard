@@ -248,7 +248,8 @@ export class InspectorPanel {
           damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
       } else if (tower.type === 'HEROIC_ALTAR') {
-        damageDisplay = `<b>${tower.damage}</b> (👻 Hệ Ma)<br><span style="color: #818cf8;">Tỉ lệ chiêu hồn: <b>${Math.round((tower.resurrectChance || 0.3) * 100)}%</b> • Anh Linh: <b>${tower.soldierIds?.length || 0}/${tower.maxSoldiers || 2}</b></span>`;
+        const ghostPct = Math.round((tower.spiritGhostRatio ?? (tower.branch === 'B' ? 1.0 : 0.5)) * 100);
+        damageDisplay = `<span style="color: #a5b4fc;">👻 Hồi sinh đồng minh tử trận (+${ghostPct}% DMG Ma)</span><br><span style="color: #818cf8;">Tỉ lệ chiêu hồn: <b>${Math.round((tower.resurrectChance || 0.3) * 100)}%</b> • Anh Linh: <b>${tower.soldierIds?.length || 0}/${tower.maxSoldiers || 2}</b></span>`;
       } else {
         damageDisplay = `<b>${tower.damage}</b> (⚔️ Vật lý)`;
         if (tower.secondaryElement) {
