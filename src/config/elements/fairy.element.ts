@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { FAIRY_SVG } from './icons/index.js';
 
 export const FAIRY_ELEMENT: ElementDefinition = {
   element: 'FAIRY',
   name: 'Fairy',
   nameVi: 'Tiên (Tiên Linh)',
   color: '#f472b6',
-  icon: '🧚',
+  icon: FAIRY_SVG,
+  iconSvg: FAIRY_SVG,
+  iconPath: 'src/config/elements/icons/fairy.svg',
   badge: 'Bụi Tiên Mê Hoặc • Khắc Tinh Loài Rồng',
   nature: 'Phép thuật cổ tích huyền ảo của các tinh linh, làm mê hoặc kẻ địch, tăng phúc mọi chiêu thức nguyên tố (trừ Hắc, Ma, Độc, Vật Lý) và khắc chế tuyệt đối loài Rồng.',
   statusEffectType: 'CHARM',

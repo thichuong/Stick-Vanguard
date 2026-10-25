@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { PHYSICAL_SVG } from './icons/index.js';
 
 export const PHYSICAL_ELEMENT: ElementDefinition = {
   element: 'PHYSICAL',
   name: 'Physical',
   nameVi: 'Vật Lý',
   color: '#e2e8f0',
-  icon: '⚔️',
+  icon: PHYSICAL_SVG,
+  iconSvg: PHYSICAL_SVG,
+  iconPath: 'src/config/elements/icons/physical.svg',
   badge: 'Cơ Bản • Vũ Khí Thép & Đá',
   nature: 'Sát thương cơ bản từ kiếm khiên, cung tên và đạn pháo cối thô sơ. Vững chắc, ổn định, không tốn mana nhưng chịu giảm trừ trước giáp dày hoặc thể vô hình.',
   effectName: 'Không (Sát thương Thuần Túy)',

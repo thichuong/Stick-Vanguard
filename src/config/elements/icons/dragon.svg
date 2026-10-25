@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="dragonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa" />
+      <stop offset="30%" stop-color="#fb923c" />
+      <stop offset="70%" stop-color="#ea580c" />
+      <stop offset="100%" stop-color="#9a3412" />
+    </linearGradient>
+    <linearGradient id="dragonEye" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#facc15" />
+    </linearGradient>
+  </defs>
+  <!-- Dragon Horns (Majestic Sweep) -->
+  <path d="M7 6C5 3 2.5 2 1.5 2c0 2 1 5 3.5 7.5" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" />
+  <path d="M17 6c2-3 4.5-4 5.5-4 0 2-1 5-3.5 7.5" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" />
+  <!-- Dragon Head Crest & Armored Snout -->
+  <polygon points="12,3 17,9 18,14 15,19 12,22 9,19 6,14 7,9" fill="url(#dragonGrad)" stroke="#7c2d12" stroke-width="0.8" />
+  <!-- Dragon Brow Plate -->
+  <polygon points="12,6 15,10 12,12 9,10" fill="#f97316" />
+  <!-- Fierce Slanted Dragon Eyes -->
+  <polygon points="8.5,10.5 10.5,11.5 9,12.5" fill="url(#dragonEye)" stroke="#7c2d12" stroke-width="0.5" />
+  <polygon points="15.5,10.5 13.5,11.5 15,12.5" fill="url(#dragonEye)" stroke="#7c2d12" stroke-width="0.5" />
+  <!-- Dragon Fang & Snout Ridge -->
+  <path d="M10 17l2 2 2-2" fill="none" stroke="#fef08a" stroke-width="1.2" stroke-linecap="round" />
+  <polygon points="12,16 11,18.5 13,18.5" fill="#ffffff" />
+</svg>
+

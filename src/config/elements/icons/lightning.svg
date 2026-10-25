@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="25%" stop-color="#fef08a" />
+      <stop offset="70%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <filter id="boltGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#f59e0b" flood-opacity="0.8" />
+    </filter>
+  </defs>
+  <!-- Outer Glow Arc Bolt -->
+  <polygon points="13.5,1.5 4,13 11,13 8.5,22.5 20,10 13,10" fill="url(#boltGrad)" filter="url(#boltGlow)" />
+  <!-- Inner White-hot Core Bolt -->
+  <polygon points="13,3 5.5,12 11,12 9,19.5 17.5,10.5 12.5,10.5" fill="#ffffff" opacity="0.85" />
+  <!-- Sparking Electric Arcs -->
+  <path d="M18.5 4.5l2 2-1.5 1.5" fill="none" stroke="#fef08a" stroke-width="1.2" stroke-linecap="round" />
+  <path d="M3.5 8l2 1.5-1.5 2" fill="none" stroke="#fef08a" stroke-width="1.2" stroke-linecap="round" />
+</svg>
+

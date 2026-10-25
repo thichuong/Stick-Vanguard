@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { WATER_SVG } from './icons/index.js';
 
 export const WATER_ELEMENT: ElementDefinition = {
   element: 'WATER',
   name: 'Water',
   nameVi: 'Nước (Thủy)',
   color: '#3b82f6',
-  icon: '💧',
+  icon: WATER_SVG,
+  iconSvg: WATER_SVG,
+  iconPath: 'src/config/elements/icons/water.svg',
   badge: 'Ẩm Ướt Trì Hoãn • Dẫn Truyền Ma Pháp',
   nature: 'Áp lực nước dập tắt ngọn lửa, làm ẩm ướt mục tiêu để làm bệ phóng kích hoạt các phản ứng Sét, Băng và Mộc.',
   statusEffectType: 'WET',

@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { LIGHTNING_SVG } from './icons/index.js';
 
 export const LIGHTNING_ELEMENT: ElementDefinition = {
   element: 'LIGHTNING',
   name: 'Lightning',
   nameVi: 'Sét (Lôi)',
   color: '#f59e0b',
-  icon: '⚡',
+  icon: LIGHTNING_SVG,
+  iconSvg: LIGHTNING_SVG,
+  iconPath: 'src/config/elements/icons/lightning.svg',
   badge: 'Tốc Độ Ánh Sáng • Sốc Điện & Giật Lan',
   nature: 'Nguồn năng lượng chớp giật tốc độ cao, ngắt nhịp tung đòn của quái bằng choáng và nảy tia điện diệt bầy đàn.',
   statusEffectType: 'SHOCK',

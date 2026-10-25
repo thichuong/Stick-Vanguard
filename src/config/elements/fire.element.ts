@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { FIRE_SVG } from './icons/index.js';
 
 export const FIRE_ELEMENT: ElementDefinition = {
   element: 'FIRE',
   name: 'Fire',
   nameVi: 'Lửa (Hỏa)',
   color: '#ef4444',
-  icon: '🔥',
+  icon: FIRE_SVG,
+  iconSvg: FIRE_SVG,
+  iconPath: 'src/config/elements/icons/fire.svg',
   badge: 'Thiêu Đốt DoT • Bùng Nổ Nham Thạch',
   nature: 'Nhiệt năng cuồng nộ thiêu rụi mục tiêu theo thời gian, có thể kích nổ cực mạnh khi gặp Độc tố và Cỏ cây.',
   statusEffectType: 'BURN',

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="earthTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="earthBottom" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309" />
+      <stop offset="100%" stop-color="#78350f" />
+    </linearGradient>
+  </defs>
+  <!-- Main Rocky Mountain / Monolith -->
+  <polygon points="12,2 20.5,9 18,20 6,20 3.5,9" fill="url(#earthBottom)" stroke="#f59e0b" stroke-width="0.8" />
+  <!-- Upper Facets -->
+  <polygon points="12,2 20.5,9 12,12 3.5,9" fill="url(#earthTop)" />
+  <!-- Center Front Facet -->
+  <polygon points="12,12 18,20 6,20" fill="#92400e" opacity="0.9" />
+  <!-- Fracture Lines & Crystal Cuts -->
+  <polyline points="12,2 12,12 14,20" fill="none" stroke="#fef3c7" stroke-width="1.2" stroke-linejoin="round" />
+  <polyline points="3.5,9 12,12 20.5,9" fill="none" stroke="#fef3c7" stroke-width="1.2" stroke-linejoin="round" />
+  <polyline points="6,20 12,12" fill="none" stroke="#d97706" stroke-width="1" />
+  <!-- Crumbled Earth Shards -->
+  <polygon points="2,17 4,15 3.5,19" fill="#d97706" />
+  <polygon points="22,16 20,14.5 21,18.5" fill="#f59e0b" />
+</svg>
+

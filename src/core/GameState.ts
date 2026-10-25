@@ -27,7 +27,6 @@ import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
 import {
   ELEMENT_IMBUE_COST,
   MAGE_SECOND_ELEMENT_COST,
-  ELEMENT_ICONS,
   ELEMENT_NAMES
 } from '../config/elements.config.js';
 import { StorageService } from './StorageService.js';
@@ -930,11 +929,10 @@ export class GameState {
       }
     }
 
-    const icon = ELEMENT_ICONS[element];
     const name = ELEMENT_NAMES[element];
     this.recalculateTowerBuffs();
     SoundSystem.playImbue();
-    this.addFloatingText(`${icon} Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
+    this.addFloatingText(`✨ Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
     return true;
   }
 

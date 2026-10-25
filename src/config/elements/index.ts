@@ -25,6 +25,7 @@ import { FAIRY_ELEMENT } from './fairy.element.js';
 import { ELEMENTAL_REACTIONS } from './reactions.config.js';
 
 export * from './types.js';
+export * from './icons/index.js';
 export { ELEMENTAL_REACTIONS };
 
 export const ALL_15_ELEMENTS: ElementType[] = [

@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { ICE_SVG } from './icons/index.js';
 
 export const ICE_ELEMENT: ElementDefinition = {
   element: 'ICE',
   name: 'Ice',
   nameVi: 'Băng (Hàn)',
   color: '#06b6d4',
-  icon: '❄️',
+  icon: ICE_SVG,
+  iconSvg: ICE_SVG,
+  iconPath: 'src/config/elements/icons/ice.svg',
   badge: 'Khống Chế Tuyệt Đối • Đóng Băng Vĩnh Cửu',
   nature: 'Độ không tuyệt đối làm chậm sâu bước tiến quân địch và phong ấn quái vật đứng bất động trong băng giá.',
   statusEffectType: 'FREEZE',

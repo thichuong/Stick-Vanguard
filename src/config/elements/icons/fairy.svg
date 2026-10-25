@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="fairyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2f8" />
+      <stop offset="40%" stop-color="#f472b6" />
+      <stop offset="100%" stop-color="#db2777" />
+    </linearGradient>
+  </defs>
+  <!-- Upper Left Fairy Wing -->
+  <path d="M11 11C8.5 4 4 3 3 5c-1.5 3 2 8 8 6z" fill="url(#fairyGrad)" opacity="0.9" stroke="#fbcfe8" stroke-width="0.6" />
+  <!-- Upper Right Fairy Wing -->
+  <path d="M13 11c2.5-7 7-8 8-6 1.5 3-2 8-8 6z" fill="url(#fairyGrad)" opacity="0.9" stroke="#fbcfe8" stroke-width="0.6" />
+  <!-- Lower Left Fairy Wing -->
+  <path d="M11 13C8 17 5 19 4 17.5c-1.2-1.8 1.5-4.5 7-4.5z" fill="url(#fairyGrad)" opacity="0.75" />
+  <!-- Lower Right Fairy Wing -->
+  <path d="M13 13c3 4 6 6 7 4.5 1.2-1.8-1.5-4.5-7-4.5z" fill="url(#fairyGrad)" opacity="0.75" />
+  <!-- Fairy Body / Starlight Wand Spine -->
+  <line x1="12" y1="4" x2="12" y2="20" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Starlight Dust Sparkles -->
+  <circle cx="12" cy="7" r="2.2" fill="#ffffff" />
+  <polygon points="12,1.5 13,3.5 15,4.5 13,5.5 12,7.5 11,5.5 9,4.5 11,3.5" fill="#fef08a" />
+  <circle cx="6" cy="8" r="0.8" fill="#fdf2f8" />
+  <circle cx="18" cy="8" r="0.8" fill="#fdf2f8" />
+  <circle cx="12" cy="21.5" r="0.7" fill="#f472b6" />
+</svg>
+

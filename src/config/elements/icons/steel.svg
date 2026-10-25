@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="steelMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f1f5f9" />
+      <stop offset="50%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    <linearGradient id="cogCenter" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+  </defs>
+  <!-- Armored Cogwheel -->
+  <path d="M12 4.2l1.2-2.2h1.6l.8 2.4 2.2.8 2.2-1.2 1.2 1.2-1.2 2.2.8 2.2 2.4.8v1.6l-2.4.8-.8 2.2 1.2 2.2-1.2 1.2-2.2-1.2-2.2.8-.8 2.4h-1.6l-.8-2.4-2.2-.8-2.2 1.2-1.2-1.2 1.2-2.2-.8-2.2-2.4-.8v-1.6l2.4-.8.8-2.2-1.2-2.2 1.2-1.2 2.2 1.2 2.2-.8L10.8 2h1.6z" fill="url(#steelMetallic)" stroke="#1e293b" stroke-width="0.8" />
+  <!-- Center Core Ring -->
+  <circle cx="12" cy="12" r="5" fill="url(#cogCenter)" stroke="#cbd5e1" stroke-width="1.2" />
+  <!-- Piercing Steel Cross Cut -->
+  <polygon points="12,8.5 13.2,10.8 15.5,12 13.2,13.2 12,15.5 10.8,13.2 8.5,12 10.8,10.8" fill="#f8fafc" />
+</svg>
+

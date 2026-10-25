@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { POISON_SVG } from './icons/index.js';
 
 export const POISON_ELEMENT: ElementDefinition = {
   element: 'POISON',
   name: 'Poison',
   nameVi: 'Độc (Độc Tố)',
   color: '#a3e635',
-  icon: '☠️',
+  icon: POISON_SVG,
+  iconSvg: POISON_SVG,
+  iconPath: 'src/config/elements/icons/poison.svg',
   badge: 'Kịch Độc Cộng Dồn • Suy Yếu Đòn Đánh',
   nature: 'Nọc độc ăn mòn thể xác và tinh thần, gây sát thương DoT cộng dồn liên tục và làm chậm nhịp tung đòn của kẻ địch.',
   statusEffectType: 'POISON',

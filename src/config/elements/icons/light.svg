@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="holyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#fef08a" />
+      <stop offset="80%" stop-color="#facc15" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+  </defs>
+  <!-- 8-Pointed Holy Celestial Starburst -->
+  <!-- Primary Cardinal Rays (Long) -->
+  <polygon points="12,1 14,8.5 21.5,12 14,15.5 12,23 10,15.5 2.5,12 10,8.5" fill="url(#holyGrad)" stroke="#fef08a" stroke-width="0.8" />
+  <!-- Diagonal Sub-Rays (Medium) -->
+  <polygon points="12,5.5 14.5,9.5 18.5,12 14.5,14.5 12,18.5 9.5,14.5 5.5,12 9.5,9.5" fill="#fef9c3" opacity="0.9" />
+  <!-- Pure Diamond Core -->
+  <circle cx="12" cy="12" r="3" fill="#ffffff" />
+  <circle cx="12" cy="12" r="1.5" fill="#facc15" />
+  <!-- Glimmering Starlight Specks -->
+  <circle cx="5" cy="5" r="0.9" fill="#ffffff" />
+  <circle cx="19" cy="5" r="0.9" fill="#ffffff" />
+  <circle cx="5" cy="19" r="0.9" fill="#ffffff" />
+  <circle cx="19" cy="19" r="0.9" fill="#ffffff" />
+</svg>
+

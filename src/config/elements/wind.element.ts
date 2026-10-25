@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { WIND_SVG } from './icons/index.js';
 
 export const WIND_ELEMENT: ElementDefinition = {
   element: 'WIND',
   name: 'Wind',
   nameVi: 'Gió (Phong)',
   color: '#10b981',
-  icon: '🌪️',
+  icon: WIND_SVG,
+  iconSvg: WIND_SVG,
+  iconPath: 'src/config/elements/icons/wind.svg',
   badge: 'Xuyên Không Gian • Cuồng Phong Đẩy Lùi',
   nature: 'Lưỡi dao gió xé toạc không gian, có tỉ lệ đẩy lùi mục tiêu về sau trên lộ trình, đặc biệt khắc chế quái bay với tỉ lệ đẩy lùi vượt trội.',
   statusEffectType: 'KNOCKBACK',

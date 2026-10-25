@@ -299,7 +299,7 @@ export class CodexElements {
             <option value="ALL" ${this.reactionElementFilter === 'ALL' ? 'selected' : ''}>✨ Mọi Hệ Nguyên Tố</option>
             ${ALL_15_ELEMENTS.map((el) => `
               <option value="${el}" ${this.reactionElementFilter === el ? 'selected' : ''}>
-                ${ELEMENT_ICONS[el]} ${ELEMENT_NAMES[el]}
+                ${ELEMENT_NAMES[el]} (${el})
               </option>
             `).join('')}
           </select>

@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { DARK_SVG } from './icons/index.js';
 
 export const DARK_ELEMENT: ElementDefinition = {
   element: 'DARK',
   name: 'Dark',
   nameVi: 'Hắc Ám (Ám)',
   color: '#8b5cf6',
-  icon: '🔮',
+  icon: DARK_SVG,
+  iconSvg: DARK_SVG,
+  iconPath: 'src/config/elements/icons/dark.svg',
   badge: 'Ăn Mòn Tâm Linh • Khuếch Đại Toàn Diện',
   nature: 'Năng lượng hư vô bóng tối gặm nhấm phòng ngự, khắc dấu ấn nguyền rủa khiến kẻ địch chịu thêm sát thương từ mọi nguồn.',
   statusEffectType: 'CURSE',

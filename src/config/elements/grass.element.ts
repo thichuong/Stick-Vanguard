@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { GRASS_SVG } from './icons/index.js';
 
 export const GRASS_ELEMENT: ElementDefinition = {
   element: 'GRASS',
   name: 'Grass',
   nameVi: 'Cỏ (Mộc)',
   color: '#22c55e',
-  icon: '🌿',
+  icon: GRASS_SVG,
+  iconSvg: GRASS_SVG,
+  iconPath: 'src/config/elements/icons/grass.svg',
   badge: 'Dây Leo Trói Chân • Hút Nhựa Sống',
   nature: 'Sức sống mãnh liệt của thiên nhiên cây cỏ, triệu hồi rễ cây trói chặt bước chân kẻ địch và hút sinh lực tiếp tế đồng minh.',
   statusEffectType: 'ROOT',

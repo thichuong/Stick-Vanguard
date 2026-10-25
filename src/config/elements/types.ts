@@ -64,6 +64,8 @@ export interface ElementDefinition {
   nameVi: string;
   color: string;
   icon: string;
+  iconSvg?: string;
+  iconPath?: string;
   badge: string;
   nature: string;
   statusEffectType?: StatusEffectType;

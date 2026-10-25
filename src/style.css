@@ -18,6 +18,36 @@ html, body {
 }
 
 /* ==========================================================================
+   ELEMENT SVG ICONS GLOBAL STYLING
+   ========================================================================== */
+.elem-svg-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.18em;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  transition: transform 0.15s ease-in-out;
+}
+
+.elem-btn .elem-svg-icon,
+.sim-elem-btn .elem-svg-icon {
+  width: 1.35em;
+  height: 1.35em;
+}
+
+.elem-icon-huge .elem-svg-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.le-icon .elem-svg-icon {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.2em;
+}
+
+/* ==========================================================================
    MAIN 3-COLUMN DESKTOP CONTAINER
    ========================================================================== */
 #game-container {

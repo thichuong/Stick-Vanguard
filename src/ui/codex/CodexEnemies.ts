@@ -175,7 +175,7 @@ export class CodexEnemies {
             <div class="codex-filter-grid">
               <select id="codex-filter-element" class="codex-filter-select">
                 <option value="ALL" ${this.enemyElementFilter === 'ALL' ? 'selected' : ''}>✨ Mọi Hệ</option>
-                ${ALL_15_ELEMENTS.map((el) => `<option value="${el}" ${this.enemyElementFilter === el ? 'selected' : ''}>${ELEMENT_ICONS[el]} ${ELEMENT_NAMES[el]}</option>`).join('')}
+                ${ALL_15_ELEMENTS.map((el) => `<option value="${el}" ${this.enemyElementFilter === el ? 'selected' : ''}>${ELEMENT_NAMES[el]} (${el})</option>`).join('')}
               </select>
               <select id="codex-filter-movement" class="codex-filter-select">
                 <option value="ALL" ${this.enemyMovementFilter === 'ALL' ? 'selected' : ''}>🚶 Mọi Di Chuyển</option>

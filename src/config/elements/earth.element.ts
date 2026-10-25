@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { EARTH_SVG } from './icons/index.js';
 
 export const EARTH_ELEMENT: ElementDefinition = {
   element: 'EARTH',
   name: 'Earth',
   nameVi: 'Đất (Thổ)',
   color: '#d97706',
-  icon: '🪨',
+  icon: EARTH_SVG,
+  iconSvg: EARTH_SVG,
+  iconPath: 'src/config/elements/icons/earth.svg',
   badge: 'Địa Chấn Nặng Nề • Khắc Tinh Quái Bộ',
   nature: 'Trọng lượng ngàn cân làm nứt nẻ địa tầng, chuyên trị quái đi bộ và nghiền nát kim loại, sét điện.',
   statusEffectType: 'SLOW',

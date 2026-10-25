@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { DRAGON_SVG } from './icons/index.js';
 
 export const DRAGON_ELEMENT: ElementDefinition = {
   element: 'DRAGON',
   name: 'Dragon',
   nameVi: 'Rồng (Long)',
   color: '#f97316',
-  icon: '🐉',
+  icon: DRAGON_SVG,
+  iconSvg: DRAGON_SVG,
+  iconPath: 'src/config/elements/icons/dragon.svg',
   badge: 'Long Uy Bá Đạo • Diệt Trùm & Tinh Anh',
   nature: 'Uy lực của loài sinh vật đứng đầu chuỗi thức ăn, áp chế toàn bộ kẻ địch, giảm sát thương của quái, bạo kích lên Boss và tăng uy lực cho các nguyên tố khác.',
   statusEffectType: 'DRAGON_AWE',

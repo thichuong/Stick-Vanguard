@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { GHOST_SVG } from './icons/index.js';
 
 export const GHOST_ELEMENT: ElementDefinition = {
   element: 'GHOST',
   name: 'Ghost',
   nameVi: 'Ma (U Hồn)',
   color: '#c084fc',
-  icon: '👻',
+  icon: GHOST_SVG,
+  iconSvg: GHOST_SVG,
+  iconPath: 'src/config/elements/icons/ghost.svg',
   badge: 'Xuyên Thấu Vật Lý • Trảm Sát Theo % Máu',
   nature: 'Linh hồn hư ảo phiêu bạt xuyên qua chướng ngại vật lý, tấn công trực diện vào linh hồn và kết liễu kẻ địch suy yếu.',
   statusEffectType: 'SOUL_DRAIN',

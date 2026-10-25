@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#67e8f9" />
+      <stop offset="100%" stop-color="#0891b2" />
+    </linearGradient>
+  </defs>
+  <!-- Six-pointed Snowflake Core Spine -->
+  <g stroke="url(#iceGrad)" stroke-width="1.8" stroke-linecap="round">
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="3.3" y1="7" x2="20.7" y2="17" />
+    <line x1="3.3" y1="17" x2="20.7" y2="7" />
+  </g>
+  <!-- Crystal Branches -->
+  <g stroke="#ffffff" stroke-width="1.3" stroke-linecap="round">
+    <!-- Vertical Spikes -->
+    <path d="M9.5 4.5l2.5 2 2.5-2" fill="none" />
+    <path d="M9.5 19.5l2.5-2 2.5 2" fill="none" />
+    <!-- Diagonal Spikes 1 -->
+    <path d="M4.5 10l3 0 1.5-2.5" fill="none" />
+    <path d="M19.5 14l-3 0-1.5 2.5" fill="none" />
+    <!-- Diagonal Spikes 2 -->
+    <path d="M4.5 14l3 0 1.5 2.5" fill="none" />
+    <path d="M19.5 10l-3 0-1.5-2.5" fill="none" />
+  </g>
+  <!-- Center Diamond Crystal -->
+  <polygon points="12,8.5 15,12 12,15.5 9,12" fill="#e0f2fe" stroke="#0284c7" stroke-width="0.8" />
+  <circle cx="12" cy="12" r="1.2" fill="#ffffff" />
+</svg>
+

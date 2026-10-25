@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { STEEL_SVG } from './icons/index.js';
 
 export const STEEL_ELEMENT: ElementDefinition = {
   element: 'STEEL',
   name: 'Steel',
   nameVi: 'Thép (Kim)',
   color: '#94a3b8',
-  icon: '⚙️',
+  icon: STEEL_SVG,
+  iconSvg: STEEL_SVG,
+  iconPath: 'src/config/elements/icons/steel.svg',
   badge: 'Trọng Thiết Phá Giáp • Nghiền Nát Phòng Thủ',
   nature: 'Kim loại tôi luyện cứng cáp và nặng nề, nghiền nát lớp phòng ngự hộ thân và bẻ gãy băng tuyết, tiên tộc.',
   statusEffectType: 'SUNDER',

@@ -2,8 +2,9 @@ import {
   EnemyEntity,
   SoldierEntity
 } from '../types/entities.types.js';
-import { ELEMENT_COLORS, ELEMENT_ICONS } from '../config/elements.config.js';
-import { ElementType } from '../types/elements.types.js';
+import { ELEMENT_COLORS } from '../config/elements.config.js';
+import { ElementType, StatusEffectType } from '../types/elements.types.js';
+import { drawElementSvgOnCanvas, STATUS_EFFECT_TO_ELEMENT } from '../config/elements/icons/index.js';
 import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
 
 export class StickmanRenderer {
@@ -554,17 +555,14 @@ export class StickmanRenderer {
       ctx.fillRect(x - width / 2, y - 2, shieldWidth, 2);
     }
 
-    // Element indicator pip
-    const icon1 = ELEMENT_ICONS[element as ElementType] || '⚔️';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(icon1, x - width / 2 - 14, y + 6);
+    // Element indicator pip (Crisp SVG icon)
+    if (element) {
+      drawElementSvgOnCanvas(ctx, element as ElementType, x - width / 2 - 16, y - 5, 13);
+    }
 
-    // Secondary Element indicator pip for dual-element enemies
+    // Secondary Element indicator pip for dual-element enemies (Crisp SVG icon)
     if (secondaryElement) {
-      const icon2 = ELEMENT_ICONS[secondaryElement as ElementType] || '';
-      if (icon2) {
-        ctx.fillText(icon2, x - width / 2 - 26, y + 6);
-      }
+      drawElementSvgOnCanvas(ctx, secondaryElement as ElementType, x - width / 2 - 31, y - 5, 13);
     }
 
     // Status icons & Shield badges
@@ -584,21 +582,9 @@ export class StickmanRenderer {
 
     if (statusEffects.length > 0) {
       for (const eff of statusEffects) {
-        let effIcon = '';
-        if (eff.type === 'BURN') effIcon = '🔥';
-        else if (eff.type === 'FREEZE') effIcon = '❄️';
-        else if (eff.type === 'SHOCK') effIcon = '⚡';
-        else if (eff.type === 'SLOW') effIcon = '🪨';
-        else if (eff.type === 'WET') effIcon = '💧';
-        else if (eff.type === 'POISON') effIcon = '☠️';
-        else if (eff.type === 'ROOT') effIcon = '🌿';
-        else if (eff.type === 'SUNDER') effIcon = '⚙️';
-        else if (eff.type === 'SOUL_DRAIN') effIcon = '👻';
-        else if (eff.type === 'DRAGON_AWE') effIcon = '🐉';
-        else if (eff.type === 'CHARM') effIcon = '🧚';
-        else if (eff.type === 'CURSE') effIcon = '🔮';
-        if (effIcon) {
-          ctx.fillText(effIcon, x + width / 2 + 2 + iconOffset, y + 6);
+        const effElem = STATUS_EFFECT_TO_ELEMENT[eff.type as StatusEffectType];
+        if (effElem) {
+          drawElementSvgOnCanvas(ctx, effElem, x + width / 2 + 2 + iconOffset, y - 5, 12);
           iconOffset += 13;
         }
       }

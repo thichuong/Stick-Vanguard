@@ -1,11 +1,14 @@
 import { ElementDefinition } from './types.js';
+import { LIGHT_SVG } from './icons/index.js';
 
 export const LIGHT_ELEMENT: ElementDefinition = {
   element: 'LIGHT',
   name: 'Light',
   nameVi: 'Ánh Sáng (Quang)',
   color: '#fef08a',
-  icon: '✨',
+  icon: LIGHT_SVG,
+  iconSvg: LIGHT_SVG,
+  iconPath: 'src/config/elements/icons/light.svg',
   badge: 'Thần Thánh • Hồi Máu & Thanh Tẩy',
   nature: 'Hào quang rực rỡ bảo hộ sinh mạng đồng minh, hồi phục vết thương và thanh tẩy bóng tối ma quỷ.',
   effectName: 'Thánh Quang & Hồi Phục (Holy)',
