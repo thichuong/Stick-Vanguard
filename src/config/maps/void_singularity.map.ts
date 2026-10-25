@@ -171,16 +171,15 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
   airLanes: [
     [
       { x: 40, y: 60 },
-      { x: 300, y: 100 },
-      1
+      3
     ],
     [
       { x: 40, y: 590 },
-      2
+      1
     ],
     [
       { x: 960, y: 590 },
-      3
+      1
     ]
   ],
   waves: WAVES_VOID_SINGULARITY,
