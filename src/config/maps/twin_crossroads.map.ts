@@ -105,51 +105,26 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
   themeColor: '#172554',
   roadColor: '#b45309',
   riverColor: '#0369a1',
-  width: 1000,
-  height: 650,
   roadWidth: 42,
   riverWidth: 40,
-  groundWaypoints: [
-    { x: 40, y: 325 },
-    { x: 260, y: 325 },
-    { x: 500, y: 325 },
-    { x: 500, y: 70 }
-  ],
-  waterWaypoints: [
-    { x: 40, y: 120 },
-    { x: 280, y: 160 },
-    { x: 500, y: 70 }
-  ],
-  airStart: { x: 40, y: 220 },
-  airWaypoints: [
-    { x: 40, y: 220 },
-    { x: 280, y: 160 },
-    { x: 500, y: 70 }
-  ],
-  playerBase: { x: 500, y: 70, radius: 42 },
   playerBases: [
-    { x: 500, y: 70, radius: 42 },  // Nhà Chính Bắc
-    { x: 500, y: 580, radius: 42 } // Nhà Chính Nam
+    { x: 500, y: 70, radius: 42 },  // 1: Nhà Chính Bắc
+    { x: 500, y: 580, radius: 42 } // 2: Nhà Chính Nam
   ],
-  groundSpawn: { x: 40, y: 325 },
-  waterSpawn: { x: 40, y: 120 },
-  towerSlots: [],
-  waves: WAVES_TWIN_CROSSROADS,
-  extendedWaves: EXTENDED_WAVES_TWIN_CROSSROADS,
   groundLanes: [
     // Tuyến Bộ Tây -> Giao lộ -> Nhà Chính Bắc
     [
       { x: 40, y: 325 },
       { x: 260, y: 325 },
       { x: 500, y: 325 },
-      { x: 500, y: 70 }
+      1
     ],
     // Tuyến Bộ Đông -> Giao lộ -> Nhà Chính Nam
     [
       { x: 960, y: 325 },
       { x: 740, y: 325 },
       { x: 500, y: 325 },
-      { x: 500, y: 580 }
+      2
     ]
   ],
   waterLanes: [
@@ -157,13 +132,13 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
     [
       { x: 40, y: 120 },
       { x: 260, y: 160 },
-      { x: 500, y: 70 }
+      1
     ],
     // Thủy Lộ Đông Nam -> Nhà Chính Nam
     [
       { x: 960, y: 530 },
       { x: 740, y: 490 },
-      { x: 500, y: 580 }
+      2
     ]
   ],
   airLanes: [
@@ -171,27 +146,17 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
     [
       { x: 40, y: 220 },
       { x: 280, y: 160 },
-      { x: 500, y: 70 }
+      1
     ],
     // Hành Lang Bay Đông -> Nhà Chính Nam
     [
       { x: 960, y: 430 },
       { x: 720, y: 490 },
-      { x: 500, y: 580 }
+      2
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 325 },
-    { x: 960, y: 325 }
-  ],
-  waterSpawns: [
-    { x: 40, y: 120 },
-    { x: 960, y: 530 }
-  ],
-  airStarts: [
-    { x: 40, y: 220 },
-    { x: 960, y: 430 }
-  ],
+  waves: WAVES_TWIN_CROSSROADS,
+  extendedWaves: EXTENDED_WAVES_TWIN_CROSSROADS,
   laneBadges: ['2 Nhà Chính Bắc-Nam', 'Giao Lộ Chữ Thập', 'Song Tuyến Đông-Tây'],
   tribe: {
     name: 'Tộc Thiết Giáp Cơ Giới',
@@ -200,4 +165,3 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
     description: 'Binh đoàn cơ giới giáp sắt dày cộm, chỉ huy bởi Khổng Lồ Thép Sét kết hợp cùng Lươn Điện dưới sông.'
   }
 };
-

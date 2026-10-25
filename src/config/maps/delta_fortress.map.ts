@@ -105,50 +105,25 @@ export const MAP_DELTA_FORTRESS: MapConfig = {
   themeColor: '#0f172a',
   roadColor: '#b45309',
   riverColor: '#0284c7',
-  width: 1000,
-  height: 650,
   roadWidth: 42,
   riverWidth: 40,
-  groundWaypoints: [
-    { x: 40, y: 520 },
-    { x: 260, y: 520 },
-    { x: 380, y: 380 },
-    { x: 500, y: 325 }
-  ],
-  waterWaypoints: [
-    { x: 40, y: 120 },
-    { x: 260, y: 180 },
-    { x: 380, y: 260 },
-    { x: 500, y: 325 }
-  ],
-  airStart: { x: 40, y: 325 },
-  airWaypoints: [
-    { x: 40, y: 325 },
-    { x: 500, y: 325 }
-  ],
-  playerBase: { x: 500, y: 325, radius: 46 },
   playerBases: [
     { x: 500, y: 325, radius: 46 }
   ],
-  groundSpawn: { x: 40, y: 520 },
-  waterSpawn: { x: 40, y: 120 },
-  towerSlots: [],
-  waves: WAVES_DELTA_FORTRESS,
-  extendedWaves: EXTENDED_WAVES_DELTA_FORTRESS,
   groundLanes: [
-    // Cánh Bộ Tây Nam -> Tâm
+    // Cánh Bộ Tây Nam -> Tâm (Nhà chính 1)
     [
       { x: 40, y: 520 },
       { x: 260, y: 520 },
       { x: 380, y: 380 },
-      { x: 500, y: 325 }
+      1
     ],
-    // Cánh Bộ Đông Bắc -> Tâm
+    // Cánh Bộ Đông Bắc -> Tâm (Nhà chính 1)
     [
       { x: 960, y: 130 },
       { x: 740, y: 130 },
       { x: 620, y: 270 },
-      { x: 500, y: 325 }
+      1
     ]
   ],
   waterLanes: [
@@ -157,38 +132,28 @@ export const MAP_DELTA_FORTRESS: MapConfig = {
       { x: 40, y: 120 },
       { x: 260, y: 180 },
       { x: 380, y: 260 },
-      { x: 500, y: 325 }
+      1
     ],
     // Thủy Lộ Đông Nam -> Tâm
     [
       { x: 960, y: 530 },
       { x: 740, y: 470 },
       { x: 620, y: 390 },
-      { x: 500, y: 325 }
+      1
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 325 },
-      { x: 500, y: 325 }
+      1
     ],
     [
       { x: 960, y: 325 },
-      { x: 500, y: 325 }
+      1
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 520 },
-    { x: 960, y: 130 }
-  ],
-  waterSpawns: [
-    { x: 40, y: 120 },
-    { x: 960, y: 530 }
-  ],
-  airStarts: [
-    { x: 40, y: 325 },
-    { x: 960, y: 325 }
-  ],
+  waves: WAVES_DELTA_FORTRESS,
+  extendedWaves: EXTENDED_WAVES_DELTA_FORTRESS,
   laneBadges: ['1 Nhà Chính Trung Tâm', 'Tứ Hướng Ép Vào', 'Phòng Thủ Đồng Bằng'],
   tribe: {
     name: 'Tộc Hải Thần Bão Tố',
@@ -197,4 +162,3 @@ export const MAP_DELTA_FORTRESS: MapConfig = {
     description: 'Thủy quái Tiên Cá Gọi Bão, Lôi Điện Thủy Xà cùng đạo quân Chiến Binh Thiết Giáp tràn vào cửa biển.'
   }
 };
-

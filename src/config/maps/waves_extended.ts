@@ -259,19 +259,3 @@ export const EXTENDED_WAVES_VOID_SINGULARITY: WaveConfig[] = [
     ]
   }
 ];
-
-export const MAP_EXTENDED_WAVES: Record<string, WaveConfig[]> = {
-  valley_origin: EXTENDED_WAVES_VALLEY_ORIGIN,
-  twin_crossroads: EXTENDED_WAVES_TWIN_CROSSROADS,
-  serpent_canyon: EXTENDED_WAVES_SERPENT_CANYON,
-  delta_fortress: EXTENDED_WAVES_DELTA_FORTRESS,
-  infernal_caldera: EXTENDED_WAVES_INFERNAL_CALDERA,
-  frozen_citadel: EXTENDED_WAVES_FROZEN_CITADEL,
-  ancient_necropolis: EXTENDED_WAVES_ANCIENT_NECROPOLIS,
-  plague_morass: EXTENDED_WAVES_PLAGUE_MORASS,
-  celestial_sanctum: EXTENDED_WAVES_CELESTIAL_SANCTUM,
-  void_singularity: EXTENDED_WAVES_VOID_SINGULARITY
-};
-
-// Giữ lại WAVES_EXTENDED_POST_10 để tương thích ngược nếu có import
-export const WAVES_EXTENDED_POST_10: WaveConfig[] = EXTENDED_WAVES_VALLEY_ORIGIN;

@@ -240,8 +240,8 @@ export class WaveSystem {
     const finalHp = Math.max(1, Math.round(bp.hp * hpMultiplier));
 
     let laneIndex = 0;
-    let startX = this.currentMap.groundSpawn.x;
-    let startY = this.currentMap.groundSpawn.y;
+    let startX = 40;
+    let startY = 160;
 
     if (bp.navigationMode === 'WATER_PATH') {
       const waterLanesCount =
@@ -249,36 +249,36 @@ export class WaveSystem {
           ? this.currentMap.waterLanes.length
           : 1;
       laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.waterLaneIndex++ % waterLanesCount;
-      const spawnPt =
-        (this.currentMap.waterSpawns && this.currentMap.waterSpawns[laneIndex]) ||
-        (this.currentMap.waterLanes && this.currentMap.waterLanes[laneIndex]?.[0]) ||
-        this.currentMap.waterSpawn;
-      startX = spawnPt.x;
-      startY = spawnPt.y;
+      const targetLane = this.currentMap.waterLanes?.[laneIndex];
+      const spawnPt = targetLane?.[0];
+      if (spawnPt && typeof spawnPt === 'object') {
+        startX = spawnPt.x;
+        startY = spawnPt.y;
+      }
     } else if (bp.navigationMode === 'AIR_DIRECT' || bp.navigationMode === 'AIR_WAYPOINTS') {
       const airLanesCount =
         this.currentMap.airLanes && this.currentMap.airLanes.length > 0
           ? this.currentMap.airLanes.length
           : 1;
       laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.airLaneIndex++ % airLanesCount;
-      const spawnPt =
-        (this.currentMap.airStarts && this.currentMap.airStarts[laneIndex]) ||
-        (this.currentMap.airLanes && this.currentMap.airLanes[laneIndex]?.[0]) ||
-        this.currentMap.airStart;
-      startX = spawnPt.x;
-      startY = spawnPt.y;
+      const targetLane = this.currentMap.airLanes?.[laneIndex];
+      const spawnPt = targetLane?.[0];
+      if (spawnPt && typeof spawnPt === 'object') {
+        startX = spawnPt.x;
+        startY = spawnPt.y;
+      }
     } else {
       const groundLanesCount =
         this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
           ? this.currentMap.groundLanes.length
           : 1;
       laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.groundLaneIndex++ % groundLanesCount;
-      const spawnPt =
-        (this.currentMap.groundSpawns && this.currentMap.groundSpawns[laneIndex]) ||
-        (this.currentMap.groundLanes && this.currentMap.groundLanes[laneIndex]?.[0]) ||
-        this.currentMap.groundSpawn;
-      startX = spawnPt.x;
-      startY = spawnPt.y;
+      const targetLane = this.currentMap.groundLanes?.[laneIndex];
+      const spawnPt = targetLane?.[0];
+      if (spawnPt && typeof spawnPt === 'object') {
+        startX = spawnPt.x;
+        startY = spawnPt.y;
+      }
     }
 
     return {

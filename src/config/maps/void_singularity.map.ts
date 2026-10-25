@@ -110,40 +110,15 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
   themeColor: '#09081a',
   roadColor: '#4338ca',
   riverColor: '#6d28d9',
-  width: 1000,
-  height: 650,
   roadWidth: 38,
   riverWidth: 34,
-  groundWaypoints: [
-    { x: 40, y: 120 },
-    { x: 320, y: 120 },
-    { x: 500, y: 260 },
-    { x: 500, y: 140 }
-  ],
-  waterWaypoints: [
-    { x: 40, y: 240 },
-    { x: 340, y: 240 },
-    { x: 500, y: 360 },
-    { x: 300, y: 490 }
-  ],
-  airStart: { x: 40, y: 60 },
-  airWaypoints: [
-    { x: 40, y: 60 },
-    { x: 500, y: 140 }
-  ],
-  playerBase: { x: 500, y: 140, radius: 42 },
   playerBases: [
-    { x: 500, y: 140, radius: 42 }, // Lõi Bắc
-    { x: 300, y: 490, radius: 42 }, // Lõi Tây Nam
-    { x: 700, y: 490, radius: 42 }  // Lõi Đông Nam
+    { x: 500, y: 140, radius: 42 }, // 1: Lõi Bắc
+    { x: 300, y: 490, radius: 42 }, // 2: Lõi Tây Nam
+    { x: 700, y: 490, radius: 42 }  // 3: Lõi Đông Nam
   ],
-  groundSpawn: { x: 40, y: 120 },
-  waterSpawn: { x: 40, y: 240 },
-  towerSlots: [],
-  waves: WAVES_VOID_SINGULARITY,
-  extendedWaves: EXTENDED_WAVES_VOID_SINGULARITY,
   groundLanes: [
-    // Tuyến 1 (Dài): Xuất phát Tây Bắc (40, 120) -> chạy sang Đông (480, 120) -> cắt xuống Nam qua giao điểm (500, 325) -> rẽ vòng quanh Lõi Tây Nam rồi vào Lõi Đông Nam (700, 490)
+    // Tuyến 1: Xuất phát Tây Bắc (40, 120) -> cắt qua tâm -> Lõi Đông Nam (3)
     [
       { x: 40, y: 120 },
       { x: 320, y: 120 },
@@ -152,9 +127,9 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
       { x: 420, y: 450 },
       { x: 420, y: 550 },
       { x: 600, y: 550 },
-      { x: 700, y: 490 }
+      3
     ],
-    // Tuyến 2 (Dài): Xuất phát Đông Bắc (960, 120) -> chạy sang Tây (680, 120) -> cắt qua (500, 325) -> rẽ vòng quanh Lõi Đông Nam rồi vào Lõi Tây Nam (300, 490)
+    // Tuyến 2: Xuất phát Đông Bắc (960, 120) -> cắt qua tâm -> Lõi Tây Nam (2)
     [
       { x: 960, y: 120 },
       { x: 680, y: 120 },
@@ -163,65 +138,53 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
       { x: 580, y: 450 },
       { x: 580, y: 550 },
       { x: 400, y: 550 },
-      { x: 300, y: 490 }
+      2
     ],
-    // Tuyến 3 (Dài): Xuất phát Nam (500, 630) -> rẽ sang Tây (200, 520) -> đi dọc lên Bắc (200, 240) -> cắt qua trên đỉnh (360, 180) -> cắm vào Lõi Bắc (500, 140)
+    // Tuyến 3: Xuất phát Nam (500, 630) -> vòng lên đỉnh -> Lõi Bắc (1)
     [
       { x: 500, y: 630 },
       { x: 200, y: 580 },
       { x: 140, y: 380 },
       { x: 220, y: 240 },
       { x: 380, y: 200 },
-      { x: 500, y: 140 }
+      1
     ]
   ],
   waterLanes: [
-    // Kênh Năng Lượng 1: Bắt đầu từ Tây cắt qua tâm (500, 325) rồi rẽ xuống Lõi Đông Nam
+    // Kênh Năng Lượng 1: Tây -> cắt qua tâm -> Lõi Đông Nam (3)
     [
       { x: 40, y: 325 },
       { x: 280, y: 325 },
       { x: 500, y: 325 },
       { x: 640, y: 380 },
-      { x: 700, y: 490 }
+      3
     ],
-    // Kênh Năng Lượng 2: Bắt đầu từ Đông cắt qua tâm (500, 325) rồi rẽ xuống Lõi Tây Nam
+    // Kênh Năng Lượng 2: Đông -> cắt qua tâm -> Lõi Tây Nam (2)
     [
       { x: 960, y: 325 },
       { x: 720, y: 325 },
       { x: 500, y: 325 },
       { x: 360, y: 380 },
-      { x: 300, y: 490 }
+      2
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 60 },
       { x: 300, y: 100 },
-      { x: 500, y: 140 }
+      1
     ],
     [
       { x: 40, y: 590 },
-      { x: 300, y: 490 }
+      2
     ],
     [
       { x: 960, y: 590 },
-      { x: 700, y: 490 }
+      3
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 120 },
-    { x: 960, y: 120 },
-    { x: 500, y: 630 }
-  ],
-  waterSpawns: [
-    { x: 40, y: 325 },
-    { x: 960, y: 325 }
-  ],
-  airStarts: [
-    { x: 40, y: 60 },
-    { x: 40, y: 590 },
-    { x: 960, y: 590 }
-  ],
+  waves: WAVES_VOID_SINGULARITY,
+  extendedWaves: EXTENDED_WAVES_VOID_SINGULARITY,
   laneBadges: ['3 Lõi Năng Lượng', 'Tam Tuyến Vòng Cắt Nhau', 'Giao Điểm Tâm Hố Đen'],
   tribe: {
     name: 'Tộc Hắc Tinh Phá Tháp',
@@ -230,4 +193,3 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
     description: 'Binh đoàn tà thuật cơ giới tối thượng do Trùm Hắc Tinh Hủy Diệt dẫn đầu, đe dọa hạ cấp và vô hiệu hóa toàn bộ tháp phòng thủ.'
   }
 };
-

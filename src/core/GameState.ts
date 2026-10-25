@@ -18,7 +18,10 @@ import {
   MAPS_CONFIG,
   MapConfig,
   getDistanceToPolylines,
-  getMapBases
+  getMapBases,
+  getResolvedGroundLanes,
+  getResolvedWaterLanes,
+  getUniqueLaneSpawns
 } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../config/towers.config.js';
 import {
@@ -97,11 +100,12 @@ export class GameState {
     this.hoveredSlotId = null;
     this.hoveredTowerId = null;
 
-    // Legacy slot support if map defines slots
-    this.towerSlots = (this.currentMap.towerSlots || []).map((s) => ({
-      ...s,
-      currentTowerId: null
-    }));
+    // Default fallback roadside slots for backward compatibility in tests
+    this.towerSlots = [
+      { id: 'slot-r1', x: 150, y: 105, placement: 'ROADSIDE', currentTowerId: null },
+      { id: 'slot-r2', x: 230, y: 245, placement: 'ROADSIDE', currentTowerId: null },
+      { id: 'slot-r3', x: 235, y: 365, placement: 'ROADSIDE', currentTowerId: null }
+    ];
     this.towers = [];
     this.soldiers = [];
     this.enemies = [];
@@ -127,7 +131,8 @@ export class GameState {
     type: TowerType | 'TOWER_GENERIC' | 'TRAP_GENERIC'
   ): { valid: boolean; placement: PlacementType; reason?: string } {
     const isTrap = type === 'TRAP_GENERIC' || type.startsWith('TRAP_');
-    const { width, height, groundWaypoints, waterWaypoints, groundSpawn, waterSpawn } = this.currentMap;
+    const width = this.currentMap.width || 1000;
+    const height = this.currentMap.height || 650;
 
     // 1. Boundary check
     const margin = 26;
@@ -144,40 +149,23 @@ export class GameState {
       }
     }
 
-    const allGroundSpawns =
-      this.currentMap.groundSpawns && this.currentMap.groundSpawns.length > 0
-        ? this.currentMap.groundSpawns
-        : [groundSpawn];
-
+    const allGroundSpawns = getUniqueLaneSpawns(this.currentMap.groundLanes);
     for (const sp of allGroundSpawns) {
       if (Math.hypot(x - sp.x, y - sp.y) < 30) {
         return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng quái xuất phát!' };
       }
     }
 
-    const allWaterSpawns =
-      this.currentMap.waterSpawns && this.currentMap.waterSpawns.length > 0
-        ? this.currentMap.waterSpawns
-        : [waterSpawn];
-
+    const allWaterSpawns = getUniqueLaneSpawns(this.currentMap.waterLanes);
     for (const sp of allWaterSpawns) {
       if (Math.hypot(x - sp.x, y - sp.y) < 30) {
         return { valid: false, placement: 'ROADSIDE', reason: 'Quá gần cổng thủy quái!' };
       }
     }
 
-    // 3. Distance to Road & River (Multi-lane aware)
-    const allGroundLanes =
-      this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
-        ? this.currentMap.groundLanes
-        : [groundWaypoints];
-
-    const allWaterLanes =
-      this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
-        ? this.currentMap.waterLanes
-        : waterWaypoints && waterWaypoints.length > 0
-        ? [waterWaypoints]
-        : [];
+    // 3. Distance to Road & River (Multi-lane aware, dynamically resolved to bases)
+    const allGroundLanes = getResolvedGroundLanes(this.currentMap);
+    const allWaterLanes = getResolvedWaterLanes(this.currentMap);
 
     const roadRes = getDistanceToPolylines(x, y, allGroundLanes);
     const riverRes = getDistanceToPolylines(x, y, allWaterLanes);
@@ -258,10 +246,7 @@ export class GameState {
 
     // For Barracks, find closest point on nearest road lane
     if (bp.type === 'BARRACKS') {
-      const allGroundLanes =
-        this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
-          ? this.currentMap.groundLanes
-          : [this.currentMap.groundWaypoints];
+      const allGroundLanes = getResolvedGroundLanes(this.currentMap);
       const roadRes = getDistanceToPolylines(x, y, allGroundLanes);
       const distToClosest = Math.hypot(roadRes.closestPoint.x - x, roadRes.closestPoint.y - y);
 

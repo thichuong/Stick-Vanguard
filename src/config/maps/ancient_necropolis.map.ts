@@ -101,115 +101,74 @@ export const MAP_ANCIENT_NECROPOLIS: MapConfig = {
   themeColor: '#0a0914',
   roadColor: '#a16207',
   riverColor: '#9333ea',
-  width: 1000,
-  height: 650,
   roadWidth: 38,
   riverWidth: 36,
-  groundWaypoints: [
-    { x: 40, y: 110 },
-    { x: 280, y: 110 },
-    { x: 480, y: 220 },
-    { x: 720, y: 220 },
-    { x: 920, y: 325 }
-  ],
-  waterWaypoints: [
-    { x: 200, y: 0 },
-    { x: 280, y: 220 },
-    { x: 450, y: 330 },
-    { x: 580, y: 200 },
-    { x: 820, y: 280 },
-    { x: 920, y: 325 }
-  ],
-  airStart: { x: 40, y: 60 },
-  airWaypoints: [
-    { x: 40, y: 60 },
-    { x: 460, y: 160 },
-    { x: 920, y: 325 }
-  ],
-  playerBase: { x: 900, y: 325, radius: 40 },
   playerBases: [
-    { x: 900, y: 130, radius: 40 }, // Cổng Thành Bắc
-    { x: 900, y: 325, radius: 40 }, // Cổng Thành Trung
-    { x: 900, y: 520, radius: 40 }  // Cổng Thành Nam
+    { x: 900, y: 130, radius: 40 }, // 1: Cổng Thành Bắc
+    { x: 900, y: 325, radius: 40 }, // 2: Cổng Thành Trung
+    { x: 900, y: 520, radius: 40 }  // 3: Cổng Thành Nam
   ],
-  groundSpawn: { x: 40, y: 110 },
-  waterSpawn: { x: 200, y: 0 },
-  towerSlots: [],
-  waves: WAVES_ANCIENT_NECROPOLIS,
-  extendedWaves: EXTENDED_WAVES_ANCIENT_NECROPOLIS,
   groundLanes: [
-    // Cánh Tây Bắc -> Cổng Thành Bắc
+    // Cánh Tây Bắc -> Cổng Thành Bắc (1)
     [
       { x: 40, y: 110 },
       { x: 280, y: 110 },
       { x: 540, y: 180 },
       { x: 740, y: 130 },
-      { x: 900, y: 130 }
+      1
     ],
-    // Cánh Chính Tây -> Cổng Thành Trung
+    // Cánh Chính Tây -> Cổng Thành Trung (2)
     [
       { x: 40, y: 325 },
       { x: 260, y: 325 },
       { x: 500, y: 410 },
       { x: 720, y: 325 },
-      { x: 900, y: 325 }
+      2
     ],
-    // Cánh Tây Nam -> Cổng Thành Nam
+    // Cánh Tây Nam -> Cổng Thành Nam (3)
     [
       { x: 40, y: 540 },
       { x: 280, y: 540 },
       { x: 540, y: 470 },
       { x: 740, y: 520 },
-      { x: 900, y: 520 }
+      3
     ]
   ],
   waterLanes: [
-    // Kênh Năng Lượng Ma Thuật Tím 1 -> Thành Bắc
+    // Kênh Năng Lượng Ma Thuật Tím 1 -> Thành Bắc (1)
     [
       { x: 200, y: 0 },
       { x: 380, y: 220 },
       { x: 660, y: 220 },
-      { x: 900, y: 130 }
+      1
     ],
-    // Kênh Năng Lượng Ma Thuật Tím 2 -> Thành Nam
+    // Kênh Năng Lượng Ma Thuật Tím 2 -> Thành Nam (3)
     [
       { x: 200, y: 650 },
       { x: 380, y: 430 },
       { x: 660, y: 430 },
-      { x: 900, y: 520 }
+      3
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 60 },
       { x: 460, y: 130 },
-      { x: 900, y: 130 }
+      1
     ],
     [
       { x: 40, y: 325 },
       { x: 460, y: 325 },
-      { x: 900, y: 325 }
+      2
     ],
     [
       { x: 40, y: 580 },
       { x: 460, y: 520 },
-      { x: 900, y: 520 }
+      3
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 110 }, // Cổng Tây Bắc
-    { x: 40, y: 325 }, // Cổng Chính Tây
-    { x: 40, y: 540 }  // Cổng Tây Nam
-  ],
-  waterSpawns: [
-    { x: 200, y: 0 },   // Kênh Bắc
-    { x: 200, y: 650 }  // Kênh Nam
-  ],
-  airStarts: [
-    { x: 40, y: 60 },
-    { x: 40, y: 325 },
-    { x: 40, y: 580 }
-  ],
+  waves: WAVES_ANCIENT_NECROPOLIS,
+  extendedWaves: EXTENDED_WAVES_ANCIENT_NECROPOLIS,
   laneBadges: ['3 Nhà Chính Tam Thành', '3 Tuyến Bộ Riêng Biệt', 'Tam Lộ Giáp Kẹp'],
   tribe: {
     name: 'Tộc Vong Linh U Hồn',
@@ -218,4 +177,3 @@ export const MAP_ANCIENT_NECROPOLIS: MapConfig = {
     description: 'Binh đoàn u hồn tử thần và oán hồn không trung xuyên thấu mọi lớp giáp vật lý cùng Pháp Sư Chiêu Hồn.'
   }
 };
-

@@ -105,38 +105,37 @@ export const MAP_SERPENT_CANYON: MapConfig = {
   themeColor: '#1c1917',
   roadColor: '#a16207',
   riverColor: '#0ea5e9',
-  width: 1000,
-  height: 650,
   roadWidth: 40,
   riverWidth: 36,
-  groundWaypoints: [
-    { x: 950, y: 110 },
-    { x: 140, y: 110 },
-    { x: 140, y: 310 },
-    { x: 860, y: 310 },
-    { x: 860, y: 520 },
-    { x: 80, y: 520 }
-  ],
-  waterWaypoints: [
-    { x: 980, y: 210 },
-    { x: 520, y: 210 },
-    { x: 520, y: 420 },
-    { x: 220, y: 420 },
-    { x: 80, y: 520 }
-  ],
-  airStart: { x: 950, y: 60 },
-  airWaypoints: [
-    { x: 950, y: 60 },
-    { x: 500, y: 280 },
-    { x: 80, y: 520 }
-  ],
-  playerBase: { x: 80, y: 520, radius: 45 },
   playerBases: [
     { x: 80, y: 520, radius: 45 }
   ],
-  groundSpawn: { x: 950, y: 110 },
-  waterSpawn: { x: 980, y: 210 },
-  towerSlots: [],
+  groundLanes: [
+    [
+      { x: 950, y: 110 },
+      { x: 140, y: 110 },
+      { x: 140, y: 310 },
+      { x: 860, y: 310 },
+      { x: 860, y: 520 },
+      1
+    ]
+  ],
+  waterLanes: [
+    [
+      { x: 980, y: 210 },
+      { x: 520, y: 210 },
+      { x: 520, y: 420 },
+      { x: 220, y: 420 },
+      1
+    ]
+  ],
+  airLanes: [
+    [
+      { x: 950, y: 60 },
+      { x: 500, y: 280 },
+      1
+    ]
+  ],
   waves: WAVES_SERPENT_CANYON,
   extendedWaves: EXTENDED_WAVES_SERPENT_CANYON,
   laneBadges: ['1 Nhà Chính Tây Nam', 'Đảo Hướng Đông -> Tây', '1 Tuyến Bộ 3 Tầng'],
@@ -147,4 +146,3 @@ export const MAP_SERPENT_CANYON: MapConfig = {
     description: 'Chiến binh Long Nhân Hỏa Nham, Phi Long Cuồng Phong và Giao Long Đáy Vực chực chờ phục kích.'
   }
 };
-

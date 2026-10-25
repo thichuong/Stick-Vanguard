@@ -1,5 +1,12 @@
 import { Vector2D, TowerType } from '../types/entities.types.js';
-import { MapConfig, getMapBases } from '../config/map.config.js';
+import {
+  MapConfig,
+  getMapBases,
+  getResolvedGroundLanes,
+  getResolvedWaterLanes,
+  getResolvedAirLanes,
+  getUniqueLaneSpawns
+} from '../config/map.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { GameState } from '../core/GameState.js';
 
@@ -9,7 +16,9 @@ export class MapRenderer {
     animTime: number,
     mapConfig: MapConfig
   ): void {
-    const { width, height, themeColor, roadColor, riverColor } = mapConfig;
+    const width = mapConfig.width || 1000;
+    const height = mapConfig.height || 650;
+    const { themeColor, roadColor, riverColor } = mapConfig;
 
     // 1. Tactical parchment background with map theme
     ctx.fillStyle = themeColor || '#1e293b';
@@ -33,32 +42,19 @@ export class MapRenderer {
     }
 
     // 2. Render Rivers (Water Paths - Multi-lane aware)
-    const allWaterLanes =
-      mapConfig.waterLanes && mapConfig.waterLanes.length > 0
-        ? mapConfig.waterLanes
-        : mapConfig.waterWaypoints && mapConfig.waterWaypoints.length > 0
-        ? [mapConfig.waterWaypoints]
-        : [];
+    const allWaterLanes = getResolvedWaterLanes(mapConfig);
     for (const lane of allWaterLanes) {
       this.renderRiver(ctx, lane, animTime, mapConfig.riverWidth || 38, riverColor);
     }
 
     // 3. Render Ground Roads (Dirt Paths - Multi-lane aware)
-    const allGroundLanes =
-      mapConfig.groundLanes && mapConfig.groundLanes.length > 0
-        ? mapConfig.groundLanes
-        : [mapConfig.groundWaypoints];
+    const allGroundLanes = getResolvedGroundLanes(mapConfig);
     for (const lane of allGroundLanes) {
       this.renderGroundRoad(ctx, lane, mapConfig.roadWidth || 42, roadColor);
     }
 
     // 4. Render Air Corridors (Dotted warning lines - Multi-lane aware)
-    const allAirLanes =
-      mapConfig.airLanes && mapConfig.airLanes.length > 0
-        ? mapConfig.airLanes
-        : mapConfig.airWaypoints && mapConfig.airWaypoints.length > 0
-        ? [mapConfig.airWaypoints]
-        : [];
+    const allAirLanes = getResolvedAirLanes(mapConfig);
     allAirLanes.forEach((lane, idx) => {
       this.renderAirCorridor(ctx, lane, animTime, idx);
     });
@@ -172,10 +168,7 @@ export class MapRenderer {
     mapConfig: MapConfig
   ): void {
     // 1. Ground spawns (Multi-spawn aware)
-    const groundSpawns =
-      mapConfig.groundSpawns && mapConfig.groundSpawns.length > 0
-        ? mapConfig.groundSpawns
-        : [mapConfig.groundSpawn];
+    const groundSpawns = getUniqueLaneSpawns(mapConfig.groundLanes);
 
     groundSpawns.forEach((gs, idx) => {
       ctx.save();
@@ -202,12 +195,7 @@ export class MapRenderer {
     });
 
     // 2. Water spawns (Multi-spawn aware)
-    const waterSpawns =
-      mapConfig.waterSpawns && mapConfig.waterSpawns.length > 0
-        ? mapConfig.waterSpawns
-        : mapConfig.waterSpawn
-        ? [mapConfig.waterSpawn]
-        : [];
+    const waterSpawns = getUniqueLaneSpawns(mapConfig.waterLanes);
 
     waterSpawns.forEach((ws, idx) => {
       ctx.save();

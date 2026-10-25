@@ -986,6 +986,50 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       }
     });
 
+    it('should validate dynamic base linking: changing playerBases updates all lane endpoints without errors', async () => {
+      const { MAPS_CONFIG, getResolvedGroundLanes, getResolvedWaterLanes, getResolvedAirLanes } = await import('../config/map.config.js');
+      const crossroads = MAPS_CONFIG.find((m) => m.id === 'twin_crossroads')!;
+      expect(crossroads).toBeDefined();
+
+      // Original base 1 is at (500, 70), base 2 is at (500, 580)
+      const groundLanesOrig = getResolvedGroundLanes(crossroads);
+      expect(groundLanesOrig[0][groundLanesOrig[0].length - 1]).toEqual({ x: 500, y: 70 });
+      expect(groundLanesOrig[1][groundLanesOrig[1].length - 1]).toEqual({ x: 500, y: 580 });
+
+      // Create a shallow copy with relocated bases
+      const relocatedMap = {
+        ...crossroads,
+        playerBases: [
+          { x: 520, y: 85, radius: 42 },
+          { x: 480, y: 595, radius: 42 }
+        ]
+      };
+
+      const groundLanesNew = getResolvedGroundLanes(relocatedMap);
+      const waterLanesNew = getResolvedWaterLanes(relocatedMap);
+      const airLanesNew = getResolvedAirLanes(relocatedMap);
+
+      // All ground, water, air lanes must dynamically lead to the new base coordinates
+      expect(groundLanesNew[0][groundLanesNew[0].length - 1]).toEqual({ x: 520, y: 85 });
+      expect(groundLanesNew[1][groundLanesNew[1].length - 1]).toEqual({ x: 480, y: 595 });
+      expect(waterLanesNew[0][waterLanesNew[0].length - 1]).toEqual({ x: 520, y: 85 });
+      expect(waterLanesNew[1][waterLanesNew[1].length - 1]).toEqual({ x: 480, y: 595 });
+      expect(airLanesNew[0][airLanesNew[0].length - 1]).toEqual({ x: 520, y: 85 });
+      expect(airLanesNew[1][airLanesNew[1].length - 1]).toEqual({ x: 480, y: 595 });
+
+      // Verify all 10 maps in MAPS_CONFIG have 1-based base index at the end of every lane
+      for (const map of MAPS_CONFIG) {
+        const numBases = map.playerBases.length;
+        const allLanes = [...map.groundLanes, ...map.waterLanes, ...map.airLanes];
+        for (const lane of allLanes) {
+          const lastElement = lane[lane.length - 1];
+          expect(typeof lastElement).toBe('number');
+          expect(lastElement).toBeGreaterThanOrEqual(1);
+          expect(lastElement).toBeLessThanOrEqual(numBases);
+        }
+      }
+    });
+
     it('should validate placement on multi-lane map correctly', async () => {
       const gs = new GameState();
       gs.setMap('infernal_caldera');
@@ -2385,7 +2429,6 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(celestial?.name).toBe('Thánh Điện Thiên Không');
       expect(celestial?.waves.length).toBe(10);
       expect(celestial?.airLanes?.length).toBe(6);
-      expect(celestial?.airStarts?.length).toBe(6);
       expect(celestial?.waterLanes?.length).toBe(2);
       expect(celestial?.groundLanes?.length).toBe(2);
       expect(celestial?.playerBases?.length).toBe(2);

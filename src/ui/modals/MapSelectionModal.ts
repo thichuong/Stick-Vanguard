@@ -1,5 +1,13 @@
 import { GameState } from '../../core/GameState.js';
-import { MAPS_CONFIG, MapConfig, getMapBases } from '../../config/map.config.js';
+import {
+  MAPS_CONFIG,
+  MapConfig,
+  getMapBases,
+  getResolvedGroundLanes,
+  getResolvedWaterLanes,
+  getResolvedAirLanes,
+  getUniqueLaneSpawns
+} from '../../config/map.config.js';
 import { ELEMENT_ICONS, ELEMENT_NAMES } from '../../config/elements.config.js';
 
 export class MapSelectionModal {
@@ -127,32 +135,19 @@ export class MapSelectionModal {
 
   public static generateMiniMapSvg(map: MapConfig): string {
     const scale = 0.24;
-    const w = Math.round(map.width * scale);
-    const h = Math.round(map.height * scale);
+    const width = map.width || 1000;
+    const height = map.height || 650;
+    const w = Math.round(width * scale);
+    const h = Math.round(height * scale);
 
     const toSvgPath = (pts: { x: number; y: number }[]) => {
       if (!pts || pts.length === 0) return '';
       return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${Math.round(p.x * scale)} ${Math.round(p.y * scale)}`).join(' ');
     };
 
-    const allGround =
-      map.groundLanes && map.groundLanes.length > 0
-        ? map.groundLanes
-        : [map.groundWaypoints];
-
-    const allWater =
-      map.waterLanes && map.waterLanes.length > 0
-        ? map.waterLanes
-        : map.waterWaypoints && map.waterWaypoints.length > 0
-        ? [map.waterWaypoints]
-        : [];
-
-    const allAir =
-      map.airLanes && map.airLanes.length > 0
-        ? map.airLanes
-        : map.airWaypoints && map.airWaypoints.length > 0
-        ? [map.airWaypoints]
-        : [];
+    const allGround = getResolvedGroundLanes(map);
+    const allWater = getResolvedWaterLanes(map);
+    const allAir = getResolvedAirLanes(map);
 
     const groundPathsSvg = allGround
       .map(
@@ -179,10 +174,7 @@ export class MapSelectionModal {
       )
       .join('');
 
-    const groundSpawns =
-      map.groundSpawns && map.groundSpawns.length > 0
-        ? map.groundSpawns
-        : [map.groundSpawn];
+    const groundSpawns = getUniqueLaneSpawns(map.groundLanes);
 
     const groundSpawnsSvg = groundSpawns
       .map(
@@ -192,12 +184,7 @@ export class MapSelectionModal {
       )
       .join('');
 
-    const waterSpawns =
-      map.waterSpawns && map.waterSpawns.length > 0
-        ? map.waterSpawns
-        : map.waterSpawn
-        ? [map.waterSpawn]
-        : [];
+    const waterSpawns = getUniqueLaneSpawns(map.waterLanes);
 
     const waterSpawnsSvg = waterSpawns
       .map(

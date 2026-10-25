@@ -100,102 +100,62 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
   themeColor: '#051f15',
   roadColor: '#166534',
   riverColor: '#84cc16',
-  width: 1000,
-  height: 650,
   roadWidth: 40,
   riverWidth: 36,
-  groundWaypoints: [
-    { x: 40, y: 140 },
-    { x: 220, y: 140 },
-    { x: 360, y: 280 },
-    { x: 560, y: 160 },
-    { x: 740, y: 200 },
-    { x: 920, y: 325 }
-  ],
-  waterWaypoints: [
-    { x: 300, y: 0 },
-    { x: 340, y: 180 },
-    { x: 460, y: 325 },
-    { x: 640, y: 280 },
-    { x: 820, y: 310 },
-    { x: 920, y: 325 }
-  ],
-  airStart: { x: 40, y: 80 },
-  airWaypoints: [
-    { x: 40, y: 80 },
-    { x: 460, y: 220 },
-    { x: 920, y: 325 }
-  ],
-  playerBase: { x: 120, y: 120, radius: 42 },
   playerBases: [
-    { x: 120, y: 120, radius: 42 }, // Căn Cứ Tây Bắc
-    { x: 880, y: 530, radius: 42 }  // Căn Cứ Đông Nam
+    { x: 120, y: 120, radius: 42 }, // 1: Căn Cứ Tây Bắc
+    { x: 880, y: 530, radius: 42 }  // 2: Căn Cứ Đông Nam
   ],
-  groundSpawn: { x: 40, y: 510 },
-  waterSpawn: { x: 300, y: 650 },
-  towerSlots: [],
-  waves: WAVES_PLAGUE_MORASS,
-  extendedWaves: EXTENDED_WAVES_PLAGUE_MORASS,
   groundLanes: [
-    // Tuyến 1: Từ Tây Nam -> Trung Tâm -> Căn Cứ Đông Nam
+    // Tuyến 1: Từ Tây Nam -> Trung Tâm -> Căn Cứ Đông Nam (2)
     [
       { x: 40, y: 510 },
       { x: 260, y: 510 },
       { x: 500, y: 325 },
       { x: 740, y: 530 },
-      { x: 880, y: 530 }
+      2
     ],
-    // Tuyến 2: Từ Đông Bắc -> Trung Tâm -> Căn Cứ Tây Bắc
+    // Tuyến 2: Từ Đông Bắc -> Trung Tâm -> Căn Cứ Tây Bắc (1)
     [
       { x: 960, y: 140 },
       { x: 740, y: 140 },
       { x: 500, y: 325 },
       { x: 260, y: 120 },
-      { x: 120, y: 120 }
+      1
     ]
   ],
   waterLanes: [
-    // Kênh Bùn 1: Nam -> Tâm -> Đông Nam
+    // Kênh Bùn 1: Nam -> Tâm -> Đông Nam (2)
     [
       { x: 300, y: 650 },
       { x: 360, y: 460 },
       { x: 500, y: 325 },
       { x: 680, y: 420 },
-      { x: 880, y: 530 }
+      2
     ],
-    // Kênh Bùn 2: Bắc -> Tâm -> Tây Bắc
+    // Kênh Bùn 2: Bắc -> Tâm -> Tây Bắc (1)
     [
       { x: 700, y: 0 },
       { x: 640, y: 190 },
       { x: 500, y: 325 },
       { x: 320, y: 230 },
-      { x: 120, y: 120 }
+      1
     ]
   ],
   airLanes: [
     [
       { x: 40, y: 570 },
       { x: 460, y: 430 },
-      { x: 880, y: 530 }
+      2
     ],
     [
       { x: 960, y: 80 },
       { x: 540, y: 220 },
-      { x: 120, y: 120 }
+      1
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 510 },
-    { x: 960, y: 140 }
-  ],
-  waterSpawns: [
-    { x: 300, y: 650 },
-    { x: 700, y: 0 }
-  ],
-  airStarts: [
-    { x: 40, y: 570 },
-    { x: 960, y: 80 }
-  ],
+  waves: WAVES_PLAGUE_MORASS,
+  extendedWaves: EXTENDED_WAVES_PLAGUE_MORASS,
   laneBadges: ['2 Nhà Chính Đối Cực Chéo', '2 Tuyến Đan Chéo Tâm', '2 Kênh Bùn Độc'],
   tribe: {
     name: 'Tộc Độc Trùng Biến Dị',
@@ -204,4 +164,3 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
     description: 'Vùng đầm lầy chết chóc nơi Nhện Độc, Dơi Huyết Độc và Thủy Quái Kịch Độc sinh sôi dưới sự cai trị của Trùm Mãng Xà Hư Không.'
   }
 };
-

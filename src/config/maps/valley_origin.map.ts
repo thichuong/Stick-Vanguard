@@ -105,48 +105,43 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
   themeColor: '#1e293b',
   roadColor: '#b45309',
   riverColor: '#0284c7',
-  width: 1000,
-  height: 650,
   roadWidth: 42,
   riverWidth: 38,
-  groundWaypoints: [
-    { x: 40, y: 160 },
-    { x: 220, y: 160 },
-    { x: 300, y: 240 },
-    { x: 300, y: 420 },
-    { x: 460, y: 500 },
-    { x: 620, y: 460 },
-    { x: 650, y: 260 },
-    { x: 780, y: 220 },
-    { x: 880, y: 320 },
-    { x: 920, y: 480 }
+  playerBases: [
+    { x: 920, y: 480, radius: 45 }
   ],
-  waterWaypoints: [
-    { x: 340, y: 0 },
-    { x: 380, y: 150 },
-    { x: 450, y: 280 },
-    { x: 540, y: 360 },
-    { x: 700, y: 420 },
-    { x: 820, y: 460 },
-    { x: 920, y: 480 }
+  groundLanes: [
+    [
+      { x: 40, y: 160 },
+      { x: 220, y: 160 },
+      { x: 300, y: 240 },
+      { x: 300, y: 420 },
+      { x: 460, y: 500 },
+      { x: 620, y: 460 },
+      { x: 650, y: 260 },
+      { x: 780, y: 220 },
+      { x: 880, y: 320 },
+      1
+    ]
   ],
-  airStart: { x: 40, y: 60 },
-  airWaypoints: [
-    { x: 40, y: 60 },
-    { x: 380, y: 100 },
-    { x: 680, y: 180 },
-    { x: 920, y: 480 }
+  waterLanes: [
+    [
+      { x: 340, y: 0 },
+      { x: 380, y: 150 },
+      { x: 450, y: 280 },
+      { x: 540, y: 360 },
+      { x: 700, y: 420 },
+      { x: 820, y: 460 },
+      1
+    ]
   ],
-  playerBase: { x: 920, y: 480, radius: 45 },
-  playerBases: [{ x: 920, y: 480, radius: 45 }],
-  groundSpawn: { x: 40, y: 160 },
-  waterSpawn: { x: 340, y: 0 },
-  towerSlots: [
-    { id: 'slot-r1', x: 150, y: 105, placement: 'ROADSIDE', currentTowerId: null },
-    { id: 'slot-r2', x: 230, y: 245, placement: 'ROADSIDE', currentTowerId: null },
-    { id: 'slot-r3', x: 235, y: 365, placement: 'ROADSIDE', currentTowerId: null },
-    { id: 'slot-t1', x: 160, y: 160, placement: 'PATH_TRAP', currentTowerId: null },
-    { id: 'slot-w1', x: 410, y: 210, placement: 'WATER_TRAP', currentTowerId: null }
+  airLanes: [
+    [
+      { x: 40, y: 60 },
+      { x: 380, y: 100 },
+      { x: 680, y: 180 },
+      1
+    ]
   ],
   waves: WAVES_VALLEY_ORIGIN,
   extendedWaves: EXTENDED_WAVES_VALLEY_ORIGIN,
@@ -158,4 +153,3 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
     description: 'Thung lũng ngập tràn sức sống cỏ cây với Mộc Tinh Chiến Binh, Tiên Linh Hoa Gió và Rùa Rêu Suối Nguồn.'
   }
 };
-

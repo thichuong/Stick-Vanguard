@@ -1,4 +1,4 @@
-import { Vector2D, TowerSlot } from '../types/entities.types.js';
+import { Vector2D } from '../types/entities.types.js';
 import { ElementType, NavigationMode } from '../types/elements.types.js';
 import {
   MAPS_CONFIG,
@@ -21,8 +21,7 @@ import {
   MAP_CELESTIAL_SANCTUM,
   WAVES_CELESTIAL_SANCTUM,
   MAP_VOID_SINGULARITY,
-  WAVES_VOID_SINGULARITY,
-  WAVES_EXTENDED_POST_10
+  WAVES_VOID_SINGULARITY
 } from './maps/index.js';
 
 export interface WaveEnemyEntry {
@@ -46,6 +45,15 @@ export interface MapTribeConfig {
   description: string;
 }
 
+export interface PlayerBaseConfig {
+  x: number;
+  y: number;
+  radius?: number;
+}
+
+// Each lane is a sequence of waypoints starting with at least 1 Vector2D, intermediate Vector2Ds, and ending with a base number (1-based: 1, 2, 3...)
+export type MapLane = [Vector2D, ...Vector2D[], number];
+
 export interface MapConfig {
   id: string;
   name: string;
@@ -54,60 +62,90 @@ export interface MapConfig {
   themeColor: string;
   roadColor: string;
   riverColor: string;
-  width: number;
-  height: number;
-  groundWaypoints: Vector2D[];
-  waterWaypoints: Vector2D[];
-  airStart: Vector2D;
-  airWaypoints: Vector2D[];
-  playerBase: { x: number; y: number; radius: number };
-  playerBases?: { x: number; y: number; radius: number }[];
-  groundSpawn: Vector2D;
-  waterSpawn: Vector2D;
-  roadWidth: number;
-  riverWidth: number;
-  towerSlots: TowerSlot[];
+  width?: number;
+  height?: number;
+  roadWidth?: number;
+  riverWidth?: number;
+  playerBases: PlayerBaseConfig[];
+  groundLanes: MapLane[];
+  waterLanes: MapLane[];
+  airLanes: MapLane[];
   waves: WaveConfig[];
   extendedWaves?: WaveConfig[];
-  // Multi-Lane Architecture
-  groundLanes?: Vector2D[][];
-  waterLanes?: Vector2D[][];
-  airLanes?: Vector2D[][];
-  groundSpawns?: Vector2D[];
-  waterSpawns?: Vector2D[];
-  airStarts?: Vector2D[];
   laneBadges?: string[];
   tribe?: MapTribeConfig;
 }
 
 export function getMapBases(mapConfig: MapConfig): { x: number; y: number; radius: number }[] {
   if (mapConfig.playerBases && mapConfig.playerBases.length > 0) {
-    return mapConfig.playerBases;
+    return mapConfig.playerBases.map((b) => ({
+      x: b.x,
+      y: b.y,
+      radius: b.radius !== undefined ? b.radius : 42
+    }));
   }
-  return [mapConfig.playerBase];
+  return [{ x: 500, y: 325, radius: 42 }];
+}
+
+/**
+ * Resolves a MapLane to a list of Vector2D waypoints where the final waypoint
+ * connects dynamically to the corresponding player base (1-based index: 1 -> playerBases[0]).
+ */
+export function resolveLaneWaypoints(lane: MapLane, playerBases: PlayerBaseConfig[]): Vector2D[] {
+  if (!lane || lane.length === 0) return [];
+  const waypoints = lane.slice(0, -1) as Vector2D[];
+  const lastItem = lane[lane.length - 1];
+  const baseNum = typeof lastItem === 'number' ? lastItem : 1;
+  const baseIndex = Math.max(0, Math.min(playerBases.length - 1, baseNum - 1));
+  const targetBase = playerBases[baseIndex] || playerBases[0];
+  if (targetBase) {
+    return [...waypoints, { x: targetBase.x, y: targetBase.y }];
+  }
+  return waypoints;
+}
+
+export function getResolvedGroundLanes(mapConfig: MapConfig): Vector2D[][] {
+  return (mapConfig.groundLanes || []).map((lane) => resolveLaneWaypoints(lane, mapConfig.playerBases));
+}
+
+export function getResolvedWaterLanes(mapConfig: MapConfig): Vector2D[][] {
+  return (mapConfig.waterLanes || []).map((lane) => resolveLaneWaypoints(lane, mapConfig.playerBases));
+}
+
+export function getResolvedAirLanes(mapConfig: MapConfig): Vector2D[][] {
+  return (mapConfig.airLanes || []).map((lane) => resolveLaneWaypoints(lane, mapConfig.playerBases));
+}
+
+export function getUniqueLaneSpawns(lanes: MapLane[]): Vector2D[] {
+  if (!lanes || lanes.length === 0) return [];
+  const seen = new Set<string>();
+  const spawns: Vector2D[] = [];
+  for (const lane of lanes) {
+    if (!lane || lane.length === 0) continue;
+    const first = lane[0];
+    if (typeof first === 'object' && first !== null && 'x' in first && 'y' in first) {
+      const key = `${first.x},${first.y}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        spawns.push({ x: first.x, y: first.y });
+      }
+    }
+  }
+  return spawns;
 }
 
 export function getTraversableLaneCount(mapConfig: MapConfig, navMode: NavigationMode): number {
   switch (navMode) {
     case 'WATER_PATH': {
-      if (mapConfig.waterLanes && mapConfig.waterLanes.length > 0) {
-        return mapConfig.waterLanes.length;
-      }
-      return mapConfig.waterWaypoints && mapConfig.waterWaypoints.length > 0 ? 1 : 1;
+      return mapConfig.waterLanes && mapConfig.waterLanes.length > 0 ? mapConfig.waterLanes.length : 1;
     }
     case 'AIR_DIRECT':
     case 'AIR_WAYPOINTS': {
-      if (mapConfig.airLanes && mapConfig.airLanes.length > 0) {
-        return mapConfig.airLanes.length;
-      }
-      return mapConfig.airWaypoints && mapConfig.airWaypoints.length > 0 ? 1 : 1;
+      return mapConfig.airLanes && mapConfig.airLanes.length > 0 ? mapConfig.airLanes.length : 1;
     }
     case 'GROUND_PATH':
     default: {
-      if (mapConfig.groundLanes && mapConfig.groundLanes.length > 0) {
-        return mapConfig.groundLanes.length;
-      }
-      return 1;
+      return mapConfig.groundLanes && mapConfig.groundLanes.length > 0 ? mapConfig.groundLanes.length : 1;
     }
   }
 }
@@ -224,8 +262,7 @@ export {
   MAP_CELESTIAL_SANCTUM,
   WAVES_CELESTIAL_SANCTUM,
   MAP_VOID_SINGULARITY,
-  WAVES_VOID_SINGULARITY,
-  WAVES_EXTENDED_POST_10
+  WAVES_VOID_SINGULARITY
 };
 
 export const MAP_CONFIG = MAPS_CONFIG[0];

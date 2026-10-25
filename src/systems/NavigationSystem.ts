@@ -1,6 +1,12 @@
 import { Vector2D } from '../types/entities.types.js';
 import { NavigationMode } from '../types/elements.types.js';
-import { MAP_CONFIG, MapConfig } from '../config/map.config.js';
+import {
+  MAP_CONFIG,
+  MapConfig,
+  getResolvedGroundLanes,
+  getResolvedWaterLanes,
+  getResolvedAirLanes
+} from '../config/map.config.js';
 
 export interface PathInfo {
   totalLength: number;
@@ -29,32 +35,16 @@ export class NavigationSystem {
   }
 
   private rebuildPaths(): void {
-    // 1. Build Ground Paths
-    const groundLanes =
-      this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
-        ? this.currentMap.groundLanes
-        : [this.currentMap.groundWaypoints];
-
+    // 1. Build Ground Paths (dynamically resolved to playerBases)
+    const groundLanes = getResolvedGroundLanes(this.currentMap);
     this.groundPaths = groundLanes.map((lane) => this.buildPathInfo(lane));
 
-    // 2. Build Water Paths
-    const waterLanes =
-      this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
-        ? this.currentMap.waterLanes
-        : this.currentMap.waterWaypoints && this.currentMap.waterWaypoints.length > 0
-        ? [this.currentMap.waterWaypoints]
-        : [];
-
+    // 2. Build Water Paths (dynamically resolved to playerBases)
+    const waterLanes = getResolvedWaterLanes(this.currentMap);
     this.waterPaths = waterLanes.map((lane) => this.buildPathInfo(lane));
 
-    // 3. Build Air Paths
-    const airLanes =
-      this.currentMap.airLanes && this.currentMap.airLanes.length > 0
-        ? this.currentMap.airLanes
-        : this.currentMap.airWaypoints && this.currentMap.airWaypoints.length > 0
-        ? [this.currentMap.airWaypoints]
-        : [];
-
+    // 3. Build Air Paths (dynamically resolved to playerBases)
+    const airLanes = getResolvedAirLanes(this.currentMap);
     this.airPaths = airLanes.map((lane) => this.buildPathInfo(lane));
   }
 

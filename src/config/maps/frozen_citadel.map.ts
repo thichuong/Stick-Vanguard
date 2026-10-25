@@ -99,55 +99,27 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
   themeColor: '#0a192f',
   roadColor: '#64748b',
   riverColor: '#38bdf8',
-  width: 1000,
-  height: 650,
   roadWidth: 40,
   riverWidth: 38,
-  groundWaypoints: [
-    { x: 120, y: 610 },
-    { x: 120, y: 420 },
-    { x: 360, y: 360 },
-    { x: 360, y: 180 },
-    { x: 500, y: 75 }
-  ],
-  waterWaypoints: [
-    { x: 40, y: 520 },
-    { x: 220, y: 480 },
-    { x: 240, y: 240 },
-    { x: 380, y: 110 },
-    { x: 500, y: 75 }
-  ],
-  airStart: { x: 80, y: 590 },
-  airWaypoints: [
-    { x: 80, y: 590 },
-    { x: 300, y: 280 },
-    { x: 500, y: 75 }
-  ],
-  playerBase: { x: 500, y: 75, radius: 45 },
   playerBases: [
     { x: 500, y: 75, radius: 45 }
   ],
-  groundSpawn: { x: 120, y: 610 },
-  waterSpawn: { x: 40, y: 520 },
-  towerSlots: [],
-  waves: WAVES_FROZEN_CITADEL,
-  extendedWaves: EXTENDED_WAVES_FROZEN_CITADEL,
   groundLanes: [
-    // Tuyến Bộ Tây Nam -> Đỉnh Bắc
+    // Tuyến Bộ Tây Nam -> Đỉnh Bắc (Nhà chính 1)
     [
       { x: 120, y: 610 },
       { x: 120, y: 420 },
       { x: 360, y: 360 },
       { x: 360, y: 180 },
-      { x: 500, y: 75 }
+      1
     ],
-    // Tuyến Bộ Đông Nam -> Đỉnh Bắc
+    // Tuyến Bộ Đông Nam -> Đỉnh Bắc (Nhà chính 1)
     [
       { x: 880, y: 610 },
       { x: 880, y: 420 },
       { x: 640, y: 360 },
       { x: 640, y: 180 },
-      { x: 500, y: 75 }
+      1
     ]
   ],
   waterLanes: [
@@ -157,7 +129,7 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
       { x: 220, y: 480 },
       { x: 240, y: 240 },
       { x: 380, y: 110 },
-      { x: 500, y: 75 }
+      1
     ],
     // Sông Băng Đông
     [
@@ -165,33 +137,23 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
       { x: 780, y: 480 },
       { x: 760, y: 240 },
       { x: 620, y: 110 },
-      { x: 500, y: 75 }
+      1
     ]
   ],
   airLanes: [
     [
       { x: 80, y: 590 },
       { x: 300, y: 280 },
-      { x: 500, y: 75 }
+      1
     ],
     [
       { x: 920, y: 590 },
       { x: 700, y: 280 },
-      { x: 500, y: 75 }
+      1
     ]
   ],
-  groundSpawns: [
-    { x: 120, y: 610 },
-    { x: 880, y: 610 }
-  ],
-  waterSpawns: [
-    { x: 40, y: 520 },
-    { x: 960, y: 520 }
-  ],
-  airStarts: [
-    { x: 80, y: 590 },
-    { x: 920, y: 590 }
-  ],
+  waves: WAVES_FROZEN_CITADEL,
+  extendedWaves: EXTENDED_WAVES_FROZEN_CITADEL,
   laneBadges: ['1 Nhà Chính Đỉnh Cực Bắc', 'Tiến Quân Nam -> Bắc', '2 Dòng Sông Băng'],
   tribe: {
     name: 'Tộc Hàn Băng Tuyết Linh',
@@ -200,4 +162,3 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
     description: 'Quân đoàn băng giá Khổng Lồ Băng Nham phối hợp cùng Tiên Linh Băng Tuyết và Thủy Xà Băng Đảo.'
   }
 };
-

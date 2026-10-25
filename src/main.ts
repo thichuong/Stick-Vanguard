@@ -317,7 +317,7 @@ class GameApp {
       this.waveSystem,
       this.totalAnimTime
     );
-    const basePos = this.state.currentMap.playerBase;
+    const basePos = this.state.currentMap.playerBases[0] || { x: 500, y: 325 };
     for (let i = this.state.enemies.length - 1; i >= 0; i--) {
       const enemy = this.state.enemies[i];
 

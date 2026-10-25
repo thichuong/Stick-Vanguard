@@ -115,50 +115,14 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
   themeColor: '#0a192f',
   roadColor: '#ca8a04',
   riverColor: '#38bdf8',
-  width: 1000,
-  height: 650,
   roadWidth: 38,
   riverWidth: 34,
-  groundWaypoints: [
-    { x: 40, y: 110 },
-    { x: 260, y: 110 },
-    { x: 380, y: 190 },
-    { x: 500, y: 325 },
-    { x: 620, y: 460 },
-    { x: 820, y: 530 },
-    { x: 880, y: 430 },
-    { x: 880, y: 325 },
-    { x: 680, y: 325 }
-  ],
-  waterWaypoints: [
-    { x: 180, y: 0 },
-    { x: 180, y: 110 },
-    { x: 220, y: 200 },
-    { x: 340, y: 230 },
-    { x: 500, y: 160 },
-    { x: 660, y: 230 },
-    { x: 760, y: 230 },
-    { x: 740, y: 300 },
-    { x: 680, y: 325 }
-  ],
-  airStart: { x: 960, y: 50 },
-  airWaypoints: [
-    { x: 960, y: 50 },
-    { x: 640, y: 170 },
-    { x: 320, y: 325 }
-  ],
-  playerBase: { x: 320, y: 325, radius: 42 },
   playerBases: [
-    { x: 320, y: 325, radius: 42 }, // Thánh Điện Tây
-    { x: 680, y: 325, radius: 42 }  // Thánh Điện Đông
+    { x: 320, y: 325, radius: 42 }, // 1: Thánh Điện Tây
+    { x: 680, y: 325, radius: 42 }  // 2: Thánh Điện Đông
   ],
-  groundSpawn: { x: 40, y: 110 },
-  waterSpawn: { x: 180, y: 0 },
-  towerSlots: [],
-  waves: WAVES_CELESTIAL_SANCTUM,
-  extendedWaves: EXTENDED_WAVES_CELESTIAL_SANCTUM,
   groundLanes: [
-    // Tuyến 1: Tây Bắc (40, 110) -> cắt qua tâm (500, 325) -> vòng qua Đông Nam -> về Điện Đông (680, 325)
+    // Tuyến 1: Tây Bắc (40, 110) -> cắt qua tâm (500, 325) -> vòng qua Đông Nam -> về Điện Đông (2)
     [
       { x: 40, y: 110 },
       { x: 260, y: 110 },
@@ -168,9 +132,9 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
       { x: 820, y: 530 },
       { x: 880, y: 430 },
       { x: 880, y: 325 },
-      { x: 680, y: 325 }
+      2
     ],
-    // Tuyến 2: Đông Bắc (960, 110) -> cắt qua tâm (500, 325) -> vòng qua Tây Nam -> về Điện Tây (320, 325)
+    // Tuyến 2: Đông Bắc (960, 110) -> cắt qua tâm (500, 325) -> vòng qua Tây Nam -> về Điện Tây (1)
     [
       { x: 960, y: 110 },
       { x: 740, y: 110 },
@@ -180,11 +144,11 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
       { x: 180, y: 530 },
       { x: 120, y: 430 },
       { x: 120, y: 325 },
-      { x: 320, y: 325 }
+      1
     ]
   ],
   waterLanes: [
-    // Suối Thánh Thượng Giới (Bắc): Bắt đầu từ suối phía Bắc (180, 0), uốn lượn qua Hồ Quang Thủy Bắc (500, 160) rồi tiến về Điện Đông
+    // Suối Thánh Thượng Giới (Bắc): Bắt đầu từ (180, 0), uốn qua Hồ Bắc (500, 160) về Điện Đông (2)
     [
       { x: 180, y: 0 },
       { x: 180, y: 110 },
@@ -194,9 +158,9 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
       { x: 660, y: 230 },
       { x: 760, y: 230 },
       { x: 740, y: 300 },
-      { x: 680, y: 325 }
+      2
     ],
-    // Suối Thánh Hạ Giới (Nam): Bắt đầu từ suối phía Nam (820, 650), uốn lượn qua Hồ Ngân Hà Nam (500, 490) rồi tiến về Điện Tây
+    // Suối Thánh Hạ Giới (Nam): Bắt đầu từ (820, 650), uốn qua Hồ Nam (500, 490) về Điện Tây (1)
     [
       { x: 820, y: 650 },
       { x: 820, y: 530 },
@@ -206,63 +170,49 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
       { x: 340, y: 420 },
       { x: 240, y: 420 },
       { x: 260, y: 350 },
-      { x: 320, y: 325 }
+      1
     ]
   ],
   airLanes: [
-    // Tuyến 1: Không Đạo Đông Bắc -> Điện Tây (Xuyên Không Đông sang Tây)
+    // Tuyến 1: Không Đạo Đông Bắc -> Điện Tây (1)
     [
       { x: 960, y: 50 },
       { x: 640, y: 170 },
-      { x: 320, y: 325 }
+      1
     ],
-    // Tuyến 2: Không Đạo Tây Bắc -> Điện Đông (Xuyên Không Tây sang Đông)
+    // Tuyến 2: Không Đạo Tây Bắc -> Điện Đông (2)
     [
       { x: 40, y: 50 },
       { x: 360, y: 170 },
-      { x: 680, y: 325 }
+      2
     ],
-    // Tuyến 3: Không Đạo Chính Bắc -> Điện Tây (Bổ nhào từ đỉnh mây phía Bắc)
+    // Tuyến 3: Không Đạo Chính Bắc -> Điện Tây (1)
     [
       { x: 500, y: 15 },
       { x: 420, y: 160 },
-      { x: 320, y: 325 }
+      1
     ],
-    // Tuyến 4: Không Đạo Chính Nam -> Điện Đông (Bốc lên từ đáy vực phía Nam)
+    // Tuyến 4: Không Đạo Chính Nam -> Điện Đông (2)
     [
       { x: 500, y: 635 },
       { x: 580, y: 490 },
-      { x: 680, y: 325 }
+      2
     ],
-    // Tuyến 5: Không Đạo Đông Nam -> Điện Tây (Xuyên Không Đông sang Tây)
+    // Tuyến 5: Không Đạo Đông Nam -> Điện Tây (1)
     [
       { x: 960, y: 600 },
       { x: 640, y: 480 },
-      { x: 320, y: 325 }
+      1
     ],
-    // Tuyến 6: Không Đạo Tây Nam -> Điện Đông (Xuyên Không Tây sang Đông)
+    // Tuyến 6: Không Đạo Tây Nam -> Điện Đông (2)
     [
       { x: 40, y: 600 },
       { x: 360, y: 480 },
-      { x: 680, y: 325 }
+      2
     ]
   ],
-  groundSpawns: [
-    { x: 40, y: 110 },
-    { x: 960, y: 110 }
-  ],
-  waterSpawns: [
-    { x: 180, y: 0 },
-    { x: 820, y: 650 }
-  ],
-  airStarts: [
-    { x: 960, y: 50 },
-    { x: 40, y: 50 },
-    { x: 500, y: 15 },
-    { x: 500, y: 635 },
-    { x: 960, y: 600 },
-    { x: 40, y: 600 }
-  ],
+  waves: WAVES_CELESTIAL_SANCTUM,
+  extendedWaves: EXTENDED_WAVES_CELESTIAL_SANCTUM,
   laneBadges: ['2 Nhà Chính Song Điện', 'Giao Cắt Chữ X', 'Suối Thánh Thượng - Hạ', '6 Hành Lang Không Chiến'],
   tribe: {
     name: 'Tộc Thiên Sứ Quang Phong',
