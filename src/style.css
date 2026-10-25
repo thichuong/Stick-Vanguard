@@ -47,12 +47,12 @@ html, body {
 }
 
 /* ==========================================================================
-   1. LEFT PANEL (Width: 260px)
+   1. LEFT PANEL (Width: 230px)
    ========================================================================== */
 #left-panel {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
   height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #090e1a 100%);
   border-right: 2px solid #1e293b;
@@ -206,6 +206,25 @@ html, body {
   font-size: 13px;
   font-weight: 700;
   width: 100%;
+}
+
+/* Left Actions Group (Minimal Buttons) */
+.left-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.left-action-btn {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 /* Map Selector Group */
@@ -686,31 +705,41 @@ html, body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   position: relative;
   overflow: hidden;
   background: radial-gradient(circle at center, #111827 0%, #030712 100%);
-  padding: 10px;
+  padding: 0;
+}
+
+#canvas-viewport {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 8px 12px;
 }
 
 /* Top Placement Hint Bar */
 .placement-hint-bar {
   position: absolute;
-  top: 12px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid #334155;
-  padding: 6px 16px;
+  padding: 5px 14px;
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   pointer-events: none;
 }
 
 .placement-hint {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #94a3b8;
   transition: all 0.2s;
 }
@@ -736,6 +765,94 @@ html, body {
   display: block;
   cursor: crosshair;
   border-radius: 8px;
+}
+
+/* Canvas Overlay Controls (Top-Right, Transparent Glass) */
+.canvas-controls-overlay {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 35;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.canvas-ctrl-btn {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f1f5f9;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.canvas-ctrl-btn:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: #38bdf8;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+}
+
+.canvas-ctrl-btn.danger-ctrl-btn:hover {
+  background: rgba(220, 38, 38, 0.85);
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* Bottom Arsenal Panel (Below Canvas) */
+.bottom-arsenal-panel {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, #090e1a 100%);
+  border-top: 1px solid #1e293b;
+  padding: 6px 14px 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 20;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.arsenal-subcluster {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arsenal-cluster-title {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.arsenal-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.arsenal-divider {
+  width: 1px;
+  height: 38px;
+  background: #334155;
+  margin: 12px 2px 0 2px;
+  align-self: center;
 }
 
 /* Action Menu Overlay (Used only for floating notices like Rally Point) */
@@ -802,12 +919,12 @@ html, body {
 }
 
 /* ==========================================================================
-   3. RIGHT PANEL (Width: 360px) - Arsenal & Inspector
+   3. RIGHT PANEL (Width: 340px) - Chỉ Trang Thông Tin & Thông Tin Màn Chơi
    ========================================================================== */
 #right-panel {
-  width: 360px;
-  min-width: 360px;
-  max-width: 360px;
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
   height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #090e1a 100%);
   border-left: 2px solid #1e293b;
@@ -818,21 +935,47 @@ html, body {
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
 }
 
-/* Arsenal Grid */
-.arsenal-subgroup-title {
-  font-size: 10px;
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
+.stage-info-header-section {
+  padding: 10px 14px;
+  border-bottom: 1px solid #1e293b;
+  background: rgba(15, 23, 42, 0.6);
 }
 
-.arsenal-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.stage-info-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #141e33;
+  border: 1px solid #2d3b55;
+  color: #94a3b8;
+  transition: all 0.2s ease;
 }
 
+.stage-info-toggle-btn:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  color: #fff;
+}
+
+.stage-info-toggle-btn.active {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border-color: #60a5fa;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.45);
+}
+
+.stage-info-toggle-btn .btn-icon {
+  font-size: 16px;
+}
+
+/* Hotbar Buttons */
 .hotbar-btn {
   display: flex;
   align-items: center;
@@ -840,12 +983,13 @@ html, body {
   background-color: #141e33;
   border: 1px solid #2d3b55;
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   cursor: pointer;
   color: #f1f5f9;
   transition: all 0.15s ease;
   position: relative;
   text-align: left;
+  min-width: 96px;
 }
 
 .hotbar-btn:hover:not(.disabled) {
@@ -920,6 +1064,312 @@ html, body {
   flex-direction: column;
   gap: 10px;
   font-size: 13px;
+}
+
+/* ==========================================================================
+   Stage Info & Wave Breakdown Styles
+   ========================================================================== */
+.insp-stage-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stage-overview-card {
+  padding: 12px;
+}
+
+.stage-map-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 2px 0 8px 0;
+}
+
+.stage-mini-map-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 6px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #334155;
+  background: #090e1a;
+  padding: 6px;
+}
+
+.stage-mini-map-wrap .mini-map-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.stage-tribe-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 6px 0;
+}
+
+.st-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.st-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #facc15;
+}
+
+.st-elems {
+  display: flex;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.st-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.stage-lanes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.map-lane-pill {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stage-map-desc {
+  font-size: 11.5px;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.stage-waves-header {
+  margin-top: 4px;
+  padding: 4px 2px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 8px;
+}
+
+.sw-header-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.sw-progress-badge {
+  font-size: 10.5px;
+  padding: 2px 7px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.sw-header-hint {
+  font-size: 10px;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 3px;
+  display: block;
+}
+
+.stage-waves-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.stage-wave-card {
+  background: #121a2d;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: all 0.15s ease;
+}
+
+.stage-wave-card.current-wave {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.stage-wave-card.past-wave {
+  opacity: 0.75;
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.stage-wave-card:hover {
+  border-color: #3b82f6;
+  background: #15223a;
+}
+
+.sw-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.sw-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sw-wave-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.sw-status-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sw-status-tag.current {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.sw-status-tag.past {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.sw-status-tag.future {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.sw-card-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sw-reward {
+  font-size: 11px;
+  font-weight: 700;
+  color: #facc15;
+}
+
+.sw-hp-bonus {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.sw-enemies-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.stage-enemy-item {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 5px;
+  padding: 5px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stage-enemy-item:hover {
+  border-color: #60a5fa;
+  background: #172554;
+  transform: translateY(-1px);
+}
+
+.stage-enemy-item.boss-item {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.sei-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.sei-name {
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95px;
+}
+
+.sei-count {
+  font-weight: 800;
+  color: #facc15;
+  font-size: 11.5px;
+}
+
+.sei-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.sei-move {
+  color: #94a3b8;
+}
+
+.enemy-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.enemy-badge.boss {
+  color: #fbbf24;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.enemy-badge.elite {
+  color: #c084fc;
+  font-weight: 800;
+  background: rgba(192, 132, 252, 0.15);
 }
 
 /* Placeholder Empty Inspector */

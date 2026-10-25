@@ -37,10 +37,10 @@ export class HUDManager {
     // Speed button
     const speedBtn = document.getElementById('btn-speed');
     if (speedBtn) {
-      speedBtn.textContent = `Tốc độ: x${this.state.gameSpeed}`;
+      speedBtn.textContent = `⚡ x${this.state.gameSpeed}`;
       speedBtn.addEventListener('click', () => {
         this.state.gameSpeed = this.state.gameSpeed === 1 ? 2 : 1;
-        speedBtn.textContent = `Tốc độ: x${this.state.gameSpeed}`;
+        speedBtn.textContent = `⚡ x${this.state.gameSpeed}`;
         this.state.saveSettingsToStorage();
       });
     }
@@ -78,10 +78,10 @@ export class HUDManager {
 
       const updateFullscreenLabel = () => {
         if (document.fullscreenElement) {
-          fullscreenBtn.innerHTML = '🗗 Thu nhỏ';
+          fullscreenBtn.innerHTML = '🗗';
           fullscreenBtn.title = 'Thoát toàn màn hình (F)';
         } else {
-          fullscreenBtn.innerHTML = '⛶ Toàn màn hình';
+          fullscreenBtn.innerHTML = '⛶';
           fullscreenBtn.title = 'Toàn màn hình (F)';
         }
       };

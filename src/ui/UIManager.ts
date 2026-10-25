@@ -37,12 +37,18 @@ export class UIManager {
     this.arsenalBar = new ArsenalBar(this.state, () => {
       this.inspector.handleResize();
     });
-    this.inspector = new InspectorPanel(this.state, this.sidePanel, () => {
-      this.arsenalBar.updateArsenalVisuals();
-    });
+    this.inspector = new InspectorPanel(
+      this.state,
+      this.sidePanel,
+      () => {
+        this.arsenalBar.updateArsenalVisuals();
+      },
+      () => this.openMapModal()
+    );
 
     this.bindKeyboard();
     this.bindCodexTriggers();
+    this.bindStageInfoTrigger();
   }
 
   public handleResize(): void {
@@ -76,7 +82,17 @@ export class UIManager {
   public updateHUD(currentWave: number, totalWaves: number, isWaveRunning: boolean): void {
     this.hudManager.updateHUD(currentWave, totalWaves, isWaveRunning);
     this.arsenalBar.updateArsenalVisuals();
-    this.inspector.render();
+    this.inspector.render(currentWave, totalWaves, isWaveRunning);
+  }
+
+  private bindStageInfoTrigger(): void {
+    const stageInfoBtn = document.getElementById('btn-stage-info');
+    if (stageInfoBtn) {
+      stageInfoBtn.addEventListener('click', () => {
+        this.inspector.openStageInfo();
+        this.arsenalBar.updateArsenalVisuals();
+      });
+    }
   }
 
   private bindCodexTriggers(): void {
@@ -86,16 +102,6 @@ export class UIManager {
         this.sidePanel.toggle();
       });
     }
-
-    const lookupBtns = document.querySelectorAll('#left-panel .lookup-pill, #left-panel .elem-mini-pill');
-    lookupBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLElement;
-        const cat = target.getAttribute('data-cat') || 'ELEMENTS';
-        const subTarget = target.getAttribute('data-target') || undefined;
-        this.sidePanel.open(cat, subTarget);
-      });
-    });
 
     // Delegate clicks for quick codex buttons throughout the UI
     document.addEventListener('click', (e) => {

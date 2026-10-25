@@ -8,7 +8,7 @@
   </head>
   <body>
     <div id="game-container">
-      <!-- 1. LEFT PANEL: Thông số, Cài đặt & Cẩm nang -->
+      <!-- 1. LEFT PANEL: Thông số gọn gàng & Các nút chức năng -->
       <aside id="left-panel">
         <div class="panel-section brand-section">
           <h1 class="game-logo">⚔️ STICK VANGUARD</h1>
@@ -47,197 +47,151 @@
           </button>
         </div>
 
-        <!-- Chọn Bản Đồ Chiến Đấu -->
-        <div class="panel-section map-select-group">
-          <div class="section-title">🗺️ BẢN ĐỒ CHIẾN TRƯỜNG</div>
-          <div class="current-map-card">
-            <div class="map-info-text">
-              <span id="hud-map-name" class="current-map-name">Thung Lũng Khởi Nguyên</span>
-              <span id="hud-map-waves" class="current-map-waves">Tối đa: 15 đợt</span>
-            </div>
-            <button id="btn-select-map" class="hud-btn highlight-btn map-select-btn" title="Đổi bản đồ chiến thuật">
-              🗺️ Chọn Bản Đồ
-            </button>
-          </div>
-        </div>
+        <!-- Các nút chức năng chính (Gọn gàng, không chi tiết rườm rà) -->
+        <div class="panel-section left-actions-group">
+          <button id="btn-select-map" class="hud-btn highlight-btn left-action-btn" title="Đổi bản đồ chiến thuật">
+            🗺️ Chọn Bản Đồ
+          </button>
 
-        <!-- Cài đặt & Điều khiển trận đấu -->
-        <div class="panel-section controls-group">
-          <div class="section-title">🎮 ĐIỀU KHIỂN</div>
-          <div class="settings-grid">
-            <button id="btn-speed" class="hud-btn control-btn">Tốc độ: x1</button>
-            <button id="btn-pause" class="hud-btn control-btn">⏸️ Tạm dừng</button>
-            <button id="btn-restart" class="hud-btn danger-btn control-btn">🔄 Chơi lại</button>
-            <button id="btn-fullscreen" class="hud-btn control-btn" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
-          </div>
-        </div>
-
-        <!-- Cài đặt trận đấu tùy chỉnh (Custom Match Settings Button) -->
-        <div class="panel-section custom-settings-group">
-          <div class="section-title">⚙️ CÀI ĐẶT TRẬN ĐẤU</div>
-          <button id="btn-open-settings-modal" class="hud-btn highlight-btn settings-main-btn" title="Mở bảng cài đặt trận đấu toàn màn hình">
+          <button id="btn-open-settings-modal" class="hud-btn left-action-btn" title="Cài đặt trận đấu tùy chỉnh">
             ⚙️ Cài Đặt Trận Đấu
           </button>
-          <div class="quick-settings-summary">
-            <div class="qss-row">
-              <span class="qss-lbl">Số đợt quái:</span>
-              <span id="quick-hud-waves" class="qss-val">15 đợt</span>
-            </div>
-            <div class="qss-row">
-              <span class="qss-lbl">Tỉ lệ vàng:</span>
-              <span id="quick-hud-gold" class="qss-val gold-txt">x1.0</span>
-            </div>
-            <div class="qss-row">
-              <span class="qss-lbl">Tỉ lệ sát thương:</span>
-              <span id="quick-hud-dmg" class="qss-val dmg-txt">x1.0</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Cẩm nang & Tra cứu nhanh -->
-        <div class="panel-section codex-group">
-          <div class="section-title">📖 CẨM NANG & TRA CỨU</div>
-          <button id="btn-codex" class="hud-btn highlight-btn codex-main-btn" title="Mở cẩm nang tra cứu & Cây nâng cấp (Phím B)">
-            📖 Mở Cẩm Nang Toàn Thư (B)
+          <button id="btn-codex" class="hud-btn left-action-btn" title="Mở cẩm nang tra cứu & Cây nâng cấp (Phím B)">
+            📖 Cẩm Nang Toàn Thư (B)
           </button>
-
-          <div class="quick-lookup-box">
-            <span class="quick-lookup-title">Tra cứu nhanh:</span>
-            <div class="lookup-pill-group">
-              <button class="lookup-pill" data-cat="ELEMENTS" title="Ma trận tương khắc 9 hệ nguyên tố">✨ Hệ Nguyên Tố</button>
-              <button class="lookup-pill" data-cat="NAVIGATION" title="Quy tắc di chuyển Bộ, Bay, Thủy">🚶 Di Chuyển</button>
-              <button class="lookup-pill" data-cat="ENEMIES" title="Danh sách & chủng loại quái vật">👾 Quái Vật</button>
-            </div>
-            <div class="lookup-pill-group mini-elements-group">
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="FIRE" title="Hệ Lửa">🔥</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="WATER" title="Hệ Nước">💧</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="EARTH" title="Hệ Đất">🪨</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="WIND" title="Hệ Gió">🌪️</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="LIGHTNING" title="Hệ Sét">⚡</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="ICE" title="Hệ Băng">❄️</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="LIGHT" title="Hệ Ánh Sáng">✨</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="DARK" title="Hệ Bóng Tối">🔮</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="GRASS" title="Hệ Cỏ (Mộc)">🌿</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="POISON" title="Hệ Độc">☠️</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="STEEL" title="Hệ Thép">⚙️</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="GHOST" title="Hệ Ma">👻</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="DRAGON" title="Hệ Rồng">🐉</button>
-              <button class="elem-mini-pill" data-cat="ELEMENTS" data-target="FAIRY" title="Hệ Tiên">🧚</button>
-            </div>
-          </div>
         </div>
 
         <div class="left-panel-footer">
-          <span>Phím tắt: [1]-[8] Chọn tháp | [B] Cẩm nang | [ESC] Hủy chọn</span>
+          <span>Phím tắt: [1]-[8] Chọn tháp | [B] Cẩm nang | [ESC] Hủy chọn | [Space] Gọi đợt</span>
         </div>
       </aside>
 
-      <!-- 2. CENTER STAGE: Khu vực bản đồ chính giữa -->
+      <!-- 2. CENTER STAGE: Khu vực bản đồ chính giữa & Panel công trình bên dưới -->
       <main id="canvas-stage">
-        <!-- Floating Hint Bar -->
-        <div id="placement-hint-bar" class="placement-hint-bar">
-          <span id="placement-hint" class="placement-hint">
-            Bấm chọn tháp bên phải hoặc phím [1]-[8] rồi nhấp vào ô đất để xây
-          </span>
+        <!-- Viewport co giãn chứa canvas và các overlay -->
+        <div id="canvas-viewport">
+          <!-- Floating Hint Bar -->
+          <div id="placement-hint-bar" class="placement-hint-bar">
+            <span id="placement-hint" class="placement-hint">
+              Bấm chọn tháp bên dưới hoặc phím [1]-[8] rồi nhấp vào ô đất để xây
+            </span>
+          </div>
+
+          <div id="canvas-wrapper">
+            <canvas id="game-canvas" width="1000" height="650"></canvas>
+
+            <!-- Panel điều khiển nổi trên góc trên canvas, nền trong suốt -->
+            <div id="canvas-controls-overlay" class="canvas-controls-overlay">
+              <button id="btn-speed" class="canvas-ctrl-btn" title="Tăng tốc độ trận đấu">⚡ x1</button>
+              <button id="btn-pause" class="canvas-ctrl-btn" title="Tạm dừng / Tiếp tục">⏸️ Tạm dừng</button>
+              <button id="btn-restart" class="canvas-ctrl-btn danger-ctrl-btn" title="Chơi lại màn đấu">🔄 Chơi lại</button>
+              <button id="btn-fullscreen" class="canvas-ctrl-btn" title="Toàn màn hình (F)">⛶</button>
+            </div>
+
+            <div id="menu-overlay"></div>
+            <div id="message-banner" class="hidden"></div>
+          </div>
         </div>
 
-        <div id="canvas-wrapper">
-          <canvas id="game-canvas" width="1000" height="650"></canvas>
-          <div id="menu-overlay"></div>
-          <div id="message-banner" class="hidden"></div>
+        <!-- Panel danh sách công trình nằm bên dưới canvas -->
+        <div id="bottom-arsenal-panel" class="bottom-arsenal-panel">
+          <div class="arsenal-subcluster towers-cluster">
+            <div class="arsenal-cluster-title">🏰 THÁP PHÒNG NGỰ (VEN ĐƯỜNG)</div>
+            <div class="arsenal-row">
+              <button class="hotbar-btn" data-type="BARRACKS" data-key="1" title="Trại Dân Quân (Phím 1)">
+                <span class="hotbar-key">[1]</span>
+                <span class="hotbar-icon">🛡️</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Trại Lính</span>
+                  <span class="hotbar-cost">🪙 70</span>
+                </div>
+              </button>
+              <button class="hotbar-btn" data-type="ARCHER" data-key="2" title="Tháp Cung Thủ (Phím 2)">
+                <span class="hotbar-key">[2]</span>
+                <span class="hotbar-icon">🏹</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Tháp Cung</span>
+                  <span class="hotbar-cost">🪙 60</span>
+                </div>
+              </button>
+              <button class="hotbar-btn" data-type="MAGE" data-key="3" title="Tháp Phép Thuật (Phím 3)">
+                <span class="hotbar-key">[3]</span>
+                <span class="hotbar-icon">🔮</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Tháp Phép</span>
+                  <span class="hotbar-cost">🪙 75</span>
+                </div>
+              </button>
+              <button class="hotbar-btn" data-type="ARTILLERY" data-key="4" title="Pháo Cối AoE (Phím 4)">
+                <span class="hotbar-key">[4]</span>
+                <span class="hotbar-icon">💣</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Pháo Cối</span>
+                  <span class="hotbar-cost">🪙 80</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="arsenal-divider"></div>
+
+          <div class="arsenal-subcluster traps-cluster">
+            <div class="arsenal-cluster-title">⚙️ BẪY CHIẾN THUẬT (ĐƯỜNG & NƯỚC)</div>
+            <div class="arsenal-row">
+              <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5" title="Bẫy Chông Gai (Phím 5)">
+                <span class="hotbar-key">[5]</span>
+                <span class="hotbar-icon">🪨</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Bẫy Chông</span>
+                  <span class="hotbar-cost">🪙 45</span>
+                </div>
+              </button>
+              <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6" title="Mìn Lửa (Phím 6)">
+                <span class="hotbar-key">[6]</span>
+                <span class="hotbar-icon">🔥</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Mìn Lửa</span>
+                  <span class="hotbar-cost">🪙 55</span>
+                </div>
+              </button>
+              <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7" title="Thủy Lôi/Băng (Phím 7)">
+                <span class="hotbar-key">[7]</span>
+                <span class="hotbar-icon">❄️</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Thủy Lôi/Băng</span>
+                  <span class="hotbar-cost">🪙 50</span>
+                </div>
+              </button>
+              <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8" title="Cọc Sét/Lưới Điện (Phím 8)">
+                <span class="hotbar-key">[8]</span>
+                <span class="hotbar-icon">⚡</span>
+                <div class="hotbar-info">
+                  <span class="hotbar-name">Cọc Sét</span>
+                  <span class="hotbar-cost">🪙 65</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </main>
 
-      <!-- 3. RIGHT PANEL: Chọn Tháp, Bẫy & Nâng Cấp -->
+      <!-- 3. RIGHT PANEL: Trang Thông Tin & Thông Tin Màn Chơi -->
       <aside id="right-panel">
-        <!-- Arsenal: Chọn nhanh Tháp & Bẫy -->
-        <div class="panel-section arsenal-section">
-          <div class="section-title">
-            <span>🏰 KHO QUÂN & CÔNG TRÌNH</span>
-            <span class="sub-title-hint">[1]-[8]</span>
-          </div>
-
-          <!-- Tabs or Section for Towers -->
-          <div class="arsenal-subgroup-title">THÁP PHÒNG NGỰ (VEN ĐƯỜNG)</div>
-          <div class="arsenal-grid">
-            <button class="hotbar-btn" data-type="BARRACKS" data-key="1">
-              <span class="hotbar-key">[1]</span>
-              <span class="hotbar-icon">🛡️</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Trại Lính</span>
-                <span class="hotbar-cost">🪙 70</span>
-              </div>
-            </button>
-            <button class="hotbar-btn" data-type="ARCHER" data-key="2">
-              <span class="hotbar-key">[2]</span>
-              <span class="hotbar-icon">🏹</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Tháp Cung</span>
-                <span class="hotbar-cost">🪙 60</span>
-              </div>
-            </button>
-            <button class="hotbar-btn" data-type="MAGE" data-key="3">
-              <span class="hotbar-key">[3]</span>
-              <span class="hotbar-icon">🔮</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Tháp Phép</span>
-                <span class="hotbar-cost">🪙 75</span>
-              </div>
-            </button>
-            <button class="hotbar-btn" data-type="ARTILLERY" data-key="4">
-              <span class="hotbar-key">[4]</span>
-              <span class="hotbar-icon">💣</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Pháo Cối</span>
-                <span class="hotbar-cost">🪙 80</span>
-              </div>
-            </button>
-          </div>
-
-          <div class="arsenal-subgroup-title" style="margin-top: 10px;">BẪY CHIẾN THUẬT (ĐƯỜNG & NƯỚC)</div>
-          <div class="arsenal-grid">
-            <button class="hotbar-btn trap-btn" data-type="TRAP_SPIKE" data-key="5">
-              <span class="hotbar-key">[5]</span>
-              <span class="hotbar-icon">🪨</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Bẫy Chông</span>
-                <span class="hotbar-cost">🪙 45</span>
-              </div>
-            </button>
-            <button class="hotbar-btn trap-btn" data-type="TRAP_FIRE" data-key="6">
-              <span class="hotbar-key">[6]</span>
-              <span class="hotbar-icon">🔥</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Mìn Lửa</span>
-                <span class="hotbar-cost">🪙 55</span>
-              </div>
-            </button>
-            <button class="hotbar-btn trap-btn" data-type="TRAP_FROST" data-key="7">
-              <span class="hotbar-key">[7]</span>
-              <span class="hotbar-icon">❄️</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Thủy Lôi/Băng</span>
-                <span class="hotbar-cost">🪙 50</span>
-              </div>
-            </button>
-            <button class="hotbar-btn trap-btn" data-type="TRAP_NET" data-key="8">
-              <span class="hotbar-key">[8]</span>
-              <span class="hotbar-icon">⚡</span>
-              <div class="hotbar-info">
-                <span class="hotbar-name">Cọc Sét</span>
-                <span class="hotbar-cost">🪙 65</span>
-              </div>
-            </button>
-          </div>
+        <div class="panel-section stage-info-header-section">
+          <button id="btn-stage-info" class="stage-info-toggle-btn active" title="Xem thông tin bản đồ và các đợt quái (waves)">
+            <span class="btn-icon">🗺️</span>
+            <span class="btn-text">Thông Tin Màn Chơi</span>
+          </button>
         </div>
 
-        <!-- Inspector: Hiện thông tin, Nâng cấp, Đổi chế độ, Gắn nguyên tố -->
+        <!-- Inspector: Hiện thông tin, Nâng cấp, Đổi chế độ, Gắn nguyên tố HOẶC Thông tin màn chơi -->
         <div id="inspector-section" class="panel-section inspector-section">
           <div class="section-title">
-            <span id="inspector-main-title">🔍 BẢNG ĐIỀU KHIỂN & NÂNG CẤP</span>
+            <span id="inspector-main-title">🗺️ THÔNG TIN MÀN CHƠI & ĐỢT QUÁI</span>
           </div>
           <div id="inspector-content" class="inspector-content">
-            <!-- Được render động bởi UIManager -->
+            <!-- Được render động bởi InspectorPanel -->
           </div>
         </div>
       </aside>

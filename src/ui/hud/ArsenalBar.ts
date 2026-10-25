@@ -14,7 +14,7 @@ export class ArsenalBar {
   }
 
   private bindEvents(): void {
-    const hotbarBtns = document.querySelectorAll('#right-panel .hotbar-btn');
+    const hotbarBtns = document.querySelectorAll('.hotbar-btn');
     hotbarBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
@@ -39,7 +39,7 @@ export class ArsenalBar {
   }
 
   public updateArsenalVisuals(): void {
-    const hotbarBtns = document.querySelectorAll('#right-panel .hotbar-btn');
+    const hotbarBtns = document.querySelectorAll('.hotbar-btn');
     hotbarBtns.forEach((btn) => {
       const type = btn.getAttribute('data-type') as TowerType;
       const bp = TOWER_BLUEPRINTS[type.startsWith('TRAP_') ? type : `${type}_1`];
@@ -67,8 +67,8 @@ export class ArsenalBar {
         this.placementHintEl.classList.add('highlight');
       } else if (this.state.selectedBuildPoint) {
         this.placementHintEl.textContent = this.state.selectedBuildPoint.validFor === 'TRAP'
-          ? '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐƯỜNG/SÔNG. Bấm chọn Bẫy [5]-[8] bên phải để đặt!'
-          : '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐẤT. Bấm chọn Tháp [1]-[4] bên phải để xây!';
+          ? '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐƯỜNG/SÔNG. Bấm chọn Bẫy [5]-[8] bên dưới để đặt!'
+          : '🎯 ĐÃ CHỌN TỌA ĐỘ TRÊN ĐẤT. Bấm chọn Tháp [1]-[4] bên dưới để xây!';
         this.placementHintEl.classList.add('highlight');
       } else {
         this.placementHintEl.textContent = 'Đặt tự do: Tháp đặt ngoài đường/sông | Bẫy đặt trên đường hoặc dưới sông [1]-[8]';

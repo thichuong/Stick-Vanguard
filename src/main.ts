@@ -73,13 +73,13 @@ class GameApp {
   }
 
   private setupResize(): void {
-    const stage = document.getElementById('canvas-stage');
+    const stage = document.getElementById('canvas-viewport') || document.getElementById('canvas-stage');
     const wrapper = document.getElementById('canvas-wrapper');
     if (!stage || !wrapper) return;
 
     const resize = () => {
-      const stageW = stage.clientWidth - 12;
-      const stageH = stage.clientHeight - 12;
+      const stageW = stage.clientWidth - 16;
+      const stageH = stage.clientHeight - 16;
       if (stageW <= 0 || stageH <= 0) return;
 
       const targetRatio = 1000 / 650;

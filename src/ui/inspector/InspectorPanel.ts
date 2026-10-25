@@ -10,6 +10,9 @@ import {
 import { TowerType } from '../../types/entities.types.js';
 import { MagicalElementType } from '../../types/elements.types.js';
 import { SideDetailPanel } from '../SideDetailPanel.js';
+import { MapSelectionModal } from '../modals/MapSelectionModal.js';
+import { WaveSystem } from '../../systems/WaveSystem.js';
+import { ENEMY_BLUEPRINTS } from '../../config/enemies.config.js';
 
 export class InspectorPanel {
   private inspectorContentEl: HTMLElement;
@@ -17,15 +20,21 @@ export class InspectorPanel {
   private menuOverlayEl: HTMLElement;
   private lastRenderKey: string = '';
   private confirmingSellTowerId: string | null = null;
+  private currentWave: number = 1;
+  private totalWaves: number = 15;
+  private isWaveRunning: boolean = false;
+  private onOpenMapModal?: () => void;
 
   constructor(
     private state: GameState,
     private sidePanel: SideDetailPanel,
-    private onArsenalVisualsUpdate: () => void
+    private onArsenalVisualsUpdate: () => void,
+    onOpenMapModal?: () => void
   ) {
     this.inspectorContentEl = document.getElementById('inspector-content')!;
     this.inspectorTitleEl = document.getElementById('inspector-main-title');
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
+    this.onOpenMapModal = onOpenMapModal;
   }
 
   public handleResize(): void {
@@ -33,12 +42,35 @@ export class InspectorPanel {
     this.render();
   }
 
-  public render(): void {
+  public openStageInfo(): void {
+    this.state.selectedTowerId = null;
+    this.state.selectedBuildPoint = null;
+    this.state.activePlacementType = null;
+    this.confirmingSellTowerId = null;
+    this.lastRenderKey = '';
+    this.render();
+  }
+
+  public render(currentWave?: number, totalWaves?: number, isWaveRunning?: boolean): void {
+    if (currentWave !== undefined) this.currentWave = currentWave;
+    if (totalWaves !== undefined) this.totalWaves = totalWaves;
+    if (isWaveRunning !== undefined) this.isWaveRunning = isWaveRunning;
+
     const inspectorSection = document.getElementById('inspector-section');
     const prevScrollTop = inspectorSection ? inspectorSection.scrollTop : (this.inspectorContentEl.scrollTop || 0);
 
     const tower = this.state.getSelectedTower();
     const buildPt = this.state.selectedBuildPoint;
+
+    const stageInfoBtn = document.getElementById('btn-stage-info');
+    const isItemSelected = !!(tower || buildPt || this.state.activePlacementType);
+    if (stageInfoBtn) {
+      if (isItemSelected) {
+        stageInfoBtn.classList.remove('active');
+      } else {
+        stageInfoBtn.classList.add('active');
+      }
+    }
 
     if (this.confirmingSellTowerId && (!tower || tower.id !== this.confirmingSellTowerId)) {
       this.confirmingSellTowerId = null;
@@ -70,7 +102,7 @@ export class InspectorPanel {
         .join('');
     }
 
-    const currentKey = `${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
+    const currentKey = `${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
       return;
     }
@@ -545,22 +577,168 @@ export class InspectorPanel {
       }
     }
 
-    // CASE 4: Default / Nothing selected
+    // CASE 4: Stage Info & Waves breakdown
     if (this.inspectorTitleEl) {
-      this.inspectorTitleEl.textContent = '🔍 BẢNG ĐIỀU KHIỂN & NÂNG CẤP';
+      this.inspectorTitleEl.textContent = '🗺️ THÔNG TIN MÀN CHƠI & ĐỢT QUÁI';
+    }
+
+    const currentMap = this.state.currentMap;
+    const tribe = currentMap.tribe;
+    const badges = currentMap.laneBadges || ['1 Đường Bộ', '1 Đường Thủy'];
+    const totalWavesCount = this.totalWaves || this.state.customTotalWaves || 15;
+    const waveSystem = new WaveSystem(currentMap, totalWavesCount);
+    const displayWavesLimit = Math.min(10, totalWavesCount);
+
+    let wavesListHtml = '';
+    for (let w = 0; w < displayWavesLimit; w++) {
+      const waveConfig = waveSystem.generateWaveConfig(w, totalWavesCount);
+      const waveNum = w + 1;
+      const isPast = waveNum < this.currentWave;
+      const isCurrent = waveNum === this.currentWave;
+
+      let statusTag = '';
+      let cardClass = 'stage-wave-card';
+      if (isCurrent) {
+        cardClass += ' current-wave';
+        statusTag = this.isWaveRunning
+          ? `<span class="sw-status-tag current">⚔️ Đang diễn ra</span>`
+          : `<span class="sw-status-tag current">⏳ Sắp tới</span>`;
+      } else if (isPast) {
+        cardClass += ' past-wave';
+        statusTag = `<span class="sw-status-tag past">✓ Đã vượt qua</span>`;
+      } else {
+        cardClass += ' future-wave';
+        statusTag = `<span class="sw-status-tag future">Đợt ${waveNum}</span>`;
+      }
+
+      const hpBonusPct = waveNum > 10 ? (waveNum - 10) * 10 : 0;
+      const hpBonusTag = hpBonusPct > 0 ? `<span class="sw-hp-bonus">❤️ +${hpBonusPct}% Máu</span>` : '';
+
+      const enemyPills = waveConfig.enemies.map((entry) => {
+        const bp = ENEMY_BLUEPRINTS[entry.typeId];
+        if (!bp) return '';
+        const elemIcon = ELEMENT_ICONS[bp.elementalProfile.primaryElement] || '';
+        const moveIcon = bp.movementType === 'FLY' ? '🦅' : bp.movementType === 'SWIM' ? '🌊' : '🚶';
+        const isBoss = bp.tags.includes('BOSS');
+        const isElite = bp.tags.includes('ELITE');
+        const badgeTag = isBoss
+          ? '<span class="enemy-badge boss">👑 TRÙM</span>'
+          : isElite
+          ? '<span class="enemy-badge elite">🌟 TINH NHUỆ</span>'
+          : '';
+
+        return `
+          <div class="stage-enemy-item ${isBoss ? 'boss-item' : ''}" data-open-codex="ENEMIES" data-codex-target="${bp.typeId}" title="Nhấp để xem chi tiết quái trong Cẩm Nang">
+            <div class="sei-header">
+              <span class="sei-name">${elemIcon} ${bp.name}</span>
+              <span class="sei-count">x${entry.count}</span>
+            </div>
+            <div class="sei-sub">
+              <span class="sei-move">${moveIcon} ${bp.movementType === 'FLY' ? 'Đường Bay' : bp.movementType === 'SWIM' ? 'Đường Thủy' : 'Đường Bộ'}</span>
+              ${badgeTag}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      wavesListHtml += `
+        <div class="${cardClass}">
+          <div class="sw-card-header">
+            <div class="sw-card-title-group">
+              <span class="sw-wave-name">${waveConfig.name}</span>
+              ${statusTag}
+            </div>
+            <div class="sw-card-meta">
+              <span class="sw-reward">🪙 +${waveConfig.rewardGold}</span>
+              ${hpBonusTag}
+            </div>
+          </div>
+          <div class="sw-enemies-grid">
+            ${enemyPills}
+          </div>
+        </div>
+      `;
+    }
+
+    if (totalWavesCount > 10) {
+      wavesListHtml += `
+        <div class="stage-wave-card post-10-notice-card" style="text-align: center; background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; padding: 10px;">
+          <div style="font-size: 11.5px; font-weight: 700; color: #94a3b8;">
+            🌊 Các đợt tiếp theo (Đợt 11 đến ${totalWavesCount})
+          </div>
+          <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">
+            Số lượng quái và độ khó tự động khuếch đại theo tiến trình chiến dịch.
+          </div>
+        </div>
+      `;
     }
 
     this.inspectorContentEl.innerHTML = `
-      <div class="inspector-empty">
-        <span class="inspector-empty-icon">🏰</span>
-        <p>
-          Chưa chọn công trình nào.<br /><br />
-          <b>Cách Đặt Tự Do:</b><br />
-          • Chọn tháp/bẫy ở trên [1]-[8] rồi nhấp vị trí hợp lệ trên bản đồ.<br />
-          • Hoặc nhấp chuột vào bất kỳ vị trí trống nào trên bản đồ để mở menu xây dựng.
-        </p>
+      <div class="insp-stage-info-container">
+        <!-- Map Info Header Card -->
+        <div class="insp-card stage-overview-card">
+          <div class="insp-header">
+            <div class="insp-title-box">
+              <span class="insp-title">${currentMap.name}</span>
+              <span class="insp-tier-badge" style="background: #3b82f6;">${totalWavesCount} Đợt</span>
+            </div>
+            <button id="btn-inspector-change-map" class="btn-detail-link" title="Đổi bản đồ chiến lược">
+              🗺️ Đổi Bản Đồ
+            </button>
+          </div>
+          <p class="stage-map-subtitle">${currentMap.subtitle}</p>
+
+          <div class="stage-mini-map-wrap">
+            ${MapSelectionModal.generateMiniMapSvg(currentMap)}
+          </div>
+
+          ${
+            tribe
+              ? `
+            <div class="stage-tribe-card">
+              <div class="st-header">
+                <span class="st-title">${tribe.icon} ${tribe.name}</span>
+                <div class="st-elems">
+                  ${tribe.elements.map((el) => `<span title="${ELEMENT_NAMES[el]}">${ELEMENT_ICONS[el]}</span>`).join('')}
+                </div>
+              </div>
+              <p class="st-desc">${tribe.description}</p>
+            </div>
+          `
+              : ''
+          }
+
+          <div class="stage-lanes-row">
+            ${badges.map((b) => `<span class="map-lane-pill">🛡️ ${b}</span>`).join('')}
+          </div>
+
+          <p class="stage-map-desc">${currentMap.description}</p>
+        </div>
+
+        <!-- Wave List Header -->
+        <div class="stage-waves-header">
+          <div class="sw-header-title">
+            <span>🌊 DANH SÁCH ĐỢT QUÁI (ĐỢT 1 - ${displayWavesLimit})</span>
+            <span class="sw-progress-badge">Đang ở Đợt ${this.currentWave}/${totalWavesCount}</span>
+          </div>
+          <span class="sw-header-hint">Hiển thị thông tin 10 đợt đầu • Nhấp vào quái vật để mở cẩm nang</span>
+        </div>
+
+        <div class="stage-waves-scroll-list">
+          ${wavesListHtml}
+        </div>
       </div>
     `;
+
+    document.getElementById('btn-inspector-change-map')?.addEventListener('click', () => {
+      if (this.onOpenMapModal) {
+        this.onOpenMapModal();
+      }
+    });
+
+    if (inspectorSection && prevScrollTop > 0) {
+      inspectorSection.scrollTop = prevScrollTop;
+    }
   }
 }
 
