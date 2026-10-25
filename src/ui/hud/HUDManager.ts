@@ -1,5 +1,6 @@
 import { GameState } from '../../core/GameState.js';
 import { MAPS_CONFIG } from '../../config/map.config.js';
+import { SoundSystem } from '../../systems/SoundSystem.js';
 
 export interface HUDCallbacks {
   onCallWave: () => void;
@@ -26,6 +27,15 @@ export class HUDManager {
   }
 
   private bindEvents(): void {
+    // Sound toggle button
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    if (soundBtn) {
+      soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+      soundBtn.addEventListener('click', () => {
+        this.toggleSound();
+      });
+    }
+
     // Left panel Wave button
     const nextWaveBtn = document.getElementById('btn-next-wave');
     if (nextWaveBtn) {
@@ -87,6 +97,19 @@ export class HUDManager {
       };
 
       document.addEventListener('fullscreenchange', updateFullscreenLabel);
+    }
+  }
+
+  public toggleSound(): void {
+    this.state.soundEnabled = !this.state.soundEnabled;
+    SoundSystem.setEnabled(this.state.soundEnabled);
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    if (soundBtn) {
+      soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+    }
+    this.state.saveSettingsToStorage();
+    if (this.state.soundEnabled) {
+      SoundSystem.playUIClick();
     }
   }
 

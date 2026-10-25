@@ -14,6 +14,7 @@ import { UIManager } from './ui/UIManager.js';
 import { MAPS_CONFIG } from './config/map.config.js';
 import { ELEMENT_COLORS } from './config/elements.config.js';
 import { ElementType } from './types/elements.types.js';
+import { SoundSystem } from './systems/SoundSystem.js';
 
 class GameApp {
   private canvas: HTMLCanvasElement;
@@ -105,6 +106,8 @@ class GameApp {
 
   private handleCallWave(): void {
     if (this.state.isGameOver || this.state.isVictory) return;
+
+    SoundSystem.playWaveStart();
 
     if (this.waveSystem.isWaveInProgress) {
       // Đã ở đợt quái cuối cùng (đầy waves) thì không thể gọi thêm đợt nữa
@@ -300,8 +303,10 @@ class GameApp {
         const scaledReward = Math.max(1, Math.round(reward * this.state.goldMultiplier));
         this.state.gold += scaledReward;
         this.state.addFloatingText(`+${scaledReward} 🪙 Hoàn thành Đợt!`, 500, 100, '#22c55e', 18);
+        SoundSystem.playWaveComplete();
         if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
           this.state.isVictory = true;
+          SoundSystem.playVictory();
         }
       },
       this.state.enemies.length
@@ -329,6 +334,9 @@ class GameApp {
 
       // Enemy Death Handling (Gold Multiplier & Death-Spawn / Split)
       if (enemy.hp <= 0 || enemy.state === 'DEAD') {
+        const tier = enemy.tags.includes('BOSS') ? 'BOSS' : enemy.tags.includes('ELITE') ? 'ELITE' : 'NORMAL';
+        SoundSystem.playEnemyDeath(tier);
+
         const scaledGold = enemy.rewardGold > 0 ? Math.max(1, Math.round(enemy.rewardGold * this.state.goldMultiplier)) : 0;
         this.state.gold += scaledGold;
         if (scaledGold > 0) {
@@ -360,8 +368,10 @@ class GameApp {
       enemy.facing = nav.facing;
 
       if (nav.isFinished) {
-        const damageToBase = enemy.tags.includes('BOSS') ? 5 : 1;
+        const isBoss = enemy.tags.includes('BOSS');
+        const damageToBase = isBoss ? 5 : 1;
         this.state.lives -= damageToBase;
+        SoundSystem.playBaseDamaged(isBoss);
         const hitX = enemy.x || basePos.x;
         const hitY = enemy.y || basePos.y;
         this.state.addFloatingText(`-${damageToBase} ❤️`, hitX, hitY - 20, '#ef4444', 16);
@@ -371,6 +381,7 @@ class GameApp {
         if (this.state.lives <= 0) {
           this.state.lives = 0;
           this.state.isGameOver = true;
+          SoundSystem.playGameOver();
         }
       }
     }
@@ -378,6 +389,7 @@ class GameApp {
     // 3. Update Traps on path and water
     const activeTraps = this.state.towers.filter((t) => t.placement !== 'ROADSIDE');
     TrapSystem.updateTraps(activeTraps, this.state.enemies, dt, (res, trap) => {
+      SoundSystem.playTrapTrigger(trap.type as any);
       this.state.addExplosionParticles(res.triggeredAt.x, res.triggeredAt.y, ELEMENT_COLORS[trap.element], 14);
       for (const hit of res.affectedEnemies) {
         const en = this.state.enemies.find((e) => e.id === hit.enemyId);
@@ -401,12 +413,24 @@ class GameApp {
     CombatSystem.updateCombat(this.state.soldiers, this.state.enemies, dt, (evt: CombatEvent) => {
       if (evt.type === 'MELEE_HIT' || evt.type === 'RANGED_JAVELIN') {
         const color = ELEMENT_COLORS[evt.element as ElementType] || '#ffffff';
+        if (evt.type === 'RANGED_JAVELIN') {
+          SoundSystem.playShoot('JAVELIN');
+        }
+        SoundSystem.playHit({
+          isImmune: evt.isImmune,
+          isReactionOrWeakness: !!evt.label && !evt.isImmune,
+          element: evt.element,
+          isMelee: evt.type === 'MELEE_HIT'
+        });
+
         if (evt.isImmune) {
           this.state.addFloatingText('MIỄN NHIỄM!', evt.x, evt.y - 12, '#94a3b8', 13);
         } else {
           this.state.addFloatingText(`${evt.label ? evt.label + ' ' : ''}-${evt.damage}`, evt.x, evt.y - 12, color, 13);
         }
         this.state.addExplosionParticles(evt.x, evt.y, color, 4);
+      } else if (evt.type === 'SOLDIER_DEATH') {
+        SoundSystem.playSoldierDeath();
       }
     });
 
@@ -416,9 +440,17 @@ class GameApp {
       this.state.enemies,
       dt,
       (proj) => {
+        const sourceTower = this.state.towers.find((t) => t.id === proj.sourceTowerId);
+        const shootType = sourceTower?.type === 'ARTILLERY'
+          ? 'ARTILLERY'
+          : sourceTower?.type === 'MAGE'
+          ? 'MAGE'
+          : 'ARCHER';
+        SoundSystem.playShoot(shootType);
         this.state.projectiles.push(proj);
       },
       (hit) => {
+        SoundSystem.playHit({ element: 'MAGE' });
         this.state.addFloatingText(`-${hit.damage}`, hit.enemy.x, hit.enemy.y - 14, hit.color, 13);
         this.state.addExplosionParticles(hit.enemy.x, hit.enemy.y, hit.color, 4);
       }
@@ -430,6 +462,10 @@ class GameApp {
       this.state.enemies,
       dt,
       (params) => {
+        SoundSystem.playHit({
+          isImmune: params.isImmune,
+          isReactionOrWeakness: !!params.label && !params.isImmune
+        });
         if (params.isImmune) {
           this.state.addFloatingText('MIỄN NHIỄM!', params.x, params.y - 14, '#94a3b8', 13);
         } else {
@@ -444,6 +480,7 @@ class GameApp {
         this.state.addExplosionParticles(params.x, params.y, params.color, 6);
       },
       (x, y, color) => {
+        SoundSystem.playExplosion('SMALL');
         this.state.addExplosionParticles(x, y, color, 16);
       }
     );

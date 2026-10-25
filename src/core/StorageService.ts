@@ -8,6 +8,8 @@ export interface SavedSettings {
   damageMultiplier: number;
   gameSpeed: 1 | 2;
   currentMapId: string;
+  soundEnabled: boolean;
+  soundVolume: number;
 }
 
 export const STORAGE_KEY_SETTINGS = 'stick_vanguard_settings_v1';
@@ -18,7 +20,9 @@ export const DEFAULT_SETTINGS: SavedSettings = {
   goldMultiplier: 1.0,
   damageMultiplier: 1.0,
   gameSpeed: 1,
-  currentMapId: MAPS_CONFIG[0]?.id || 'valley_origin'
+  currentMapId: MAPS_CONFIG[0]?.id || 'valley_origin',
+  soundEnabled: true,
+  soundVolume: 0.7
 };
 
 export class StorageService {
@@ -78,13 +82,25 @@ export class StorageService {
       gameSpeed = raw.gameSpeed;
     }
 
+    let soundEnabled = DEFAULT_SETTINGS.soundEnabled;
+    if (typeof raw.soundEnabled === 'boolean') {
+      soundEnabled = raw.soundEnabled;
+    }
+
+    let soundVolume = DEFAULT_SETTINGS.soundVolume;
+    if (typeof raw.soundVolume === 'number' && !isNaN(raw.soundVolume)) {
+      soundVolume = Math.max(0, Math.min(1.0, Math.round(raw.soundVolume * 100) / 100));
+    }
+
     return {
       version: 1,
       customTotalWaves,
       goldMultiplier,
       damageMultiplier,
       gameSpeed,
-      currentMapId
+      currentMapId,
+      soundEnabled,
+      soundVolume
     };
   }
 
@@ -133,7 +149,9 @@ export class StorageService {
       goldMultiplier: state.goldMultiplier,
       damageMultiplier: state.damageMultiplier,
       gameSpeed: (state.gameSpeed === 2 ? 2 : 1) as 1 | 2,
-      currentMapId: state.currentMapId
+      currentMapId: state.currentMapId,
+      soundEnabled: state.soundEnabled,
+      soundVolume: state.soundVolume
     };
     return this.saveSettings(data);
   }
@@ -150,6 +168,8 @@ export class StorageService {
     state.goldMultiplier = settings.goldMultiplier;
     state.damageMultiplier = settings.damageMultiplier;
     state.gameSpeed = settings.gameSpeed;
+    state.soundEnabled = settings.soundEnabled;
+    state.soundVolume = settings.soundVolume;
     return settings;
   }
 

@@ -31,6 +31,7 @@ import {
   ELEMENT_NAMES
 } from '../config/elements.config.js';
 import { StorageService } from './StorageService.js';
+import { SoundSystem } from '../systems/SoundSystem.js';
 
 export class GameState {
   public gold: number = 320;
@@ -45,6 +46,10 @@ export class GameState {
   public customTotalWaves: number = 15;
   public goldMultiplier: number = 1.0;   // 0.1 to 10.0
   public damageMultiplier: number = 1.0; // 0.1 to 10.0
+
+  // Sound Settings
+  public soundEnabled: boolean = true;
+  public soundVolume: number = 0.7; // 0.0 to 1.0
 
   public currentMapId: string = MAPS_CONFIG[0].id;
   public currentMap: MapConfig = MAPS_CONFIG[0];
@@ -228,11 +233,13 @@ export class GameState {
     // Validate placement rules
     const validation = this.validatePlacement(x, y, type);
     if (!validation.valid) {
+      SoundSystem.playError();
       this.addFloatingText(validation.reason || 'Vị trí không hợp lệ!', x, y - 10, '#ef4444');
       return false;
     }
 
     if (this.gold < bp.cost) {
+      SoundSystem.playError();
       this.addFloatingText('Không đủ vàng!', x, y - 10, '#ef4444');
       return false;
     }
@@ -338,6 +345,7 @@ export class GameState {
 
     this.recalculateTowerBuffs();
 
+    SoundSystem.playBuild();
     this.addFloatingText(`-${bp.cost} 🪙`, x, y - 15, '#eab308');
     return true;
   }
@@ -383,6 +391,7 @@ export class GameState {
     if (!nextBp) return false;
 
     if (this.gold < nextBp.cost) {
+      SoundSystem.playError();
       this.addFloatingText('Không đủ vàng nâng cấp!', tower.x, tower.y, '#ef4444');
       return false;
     }
@@ -503,6 +512,7 @@ export class GameState {
 
     this.recalculateTowerBuffs();
 
+    SoundSystem.playUpgrade();
     this.addFloatingText(`CẤP ${nextTier}! -${nextBp.cost} 🪙`, tower.x, tower.y - 20, '#38bdf8');
     return true;
   }
@@ -568,6 +578,7 @@ export class GameState {
       }
 
       this.recalculateTowerBuffs();
+      SoundSystem.playTowerDamaged('DOWNGRADED');
       this.addFloatingText(`⬇️ RƠI CẤP (CẤP ${prevTier})!`, tower.x, tower.y - 20, '#ef4444', 16);
       this.addExplosionParticles(tower.x, tower.y, '#ef4444', 12);
       return 'DOWNGRADED';
@@ -591,6 +602,7 @@ export class GameState {
     }
 
     this.recalculateTowerBuffs();
+    SoundSystem.playTowerDamaged('DESTROYED');
     this.addFloatingText('💥 PHÁ HỦY THÁP!', x, y - 20, '#dc2626', 18);
     this.addExplosionParticles(x, y, '#dc2626', 22);
     return 'DESTROYED';
@@ -610,6 +622,7 @@ export class GameState {
     const cost = tower.type === 'MAGE' && slotIndex === 2 ? MAGE_SECOND_ELEMENT_COST : ELEMENT_IMBUE_COST;
 
     if (this.gold < cost) {
+      SoundSystem.playError();
       this.addFloatingText('Không đủ vàng gắn nguyên tố!', tower.x, tower.y, '#ef4444');
       return false;
     }
@@ -638,6 +651,7 @@ export class GameState {
     const icon = ELEMENT_ICONS[element];
     const name = ELEMENT_NAMES[element];
     this.recalculateTowerBuffs();
+    SoundSystem.playImbue();
     this.addFloatingText(`${icon} Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
     return true;
   }
@@ -688,6 +702,7 @@ export class GameState {
       tower.y - 15,
       '#38bdf8'
     );
+    SoundSystem.playRally();
     return true;
   }
 
@@ -719,6 +734,7 @@ export class GameState {
 
     this.recalculateTowerBuffs();
 
+    SoundSystem.playSell();
     this.addFloatingText(`+${refund} 🪙 Bán tháp`, tower.x, tower.y, '#22c55e');
     return true;
   }
@@ -732,6 +748,7 @@ export class GameState {
 
     const dist = Math.hypot(targetX - tower.x, targetY - tower.y);
     if (dist > tower.range) {
+      SoundSystem.playError();
       this.addFloatingText('Ngoài phạm vi điều động!', targetX, targetY, '#ef4444');
       return false;
     }
@@ -755,6 +772,7 @@ export class GameState {
     }
 
     this.isSettingRallyPoint = false;
+    SoundSystem.playRally();
     this.addFloatingText('🚩 Đã đổi điểm tập kết!', targetX, targetY - 10, '#eab308');
     return true;
   }
@@ -820,6 +838,8 @@ export class GameState {
    */
   public loadSettingsFromStorage(): void {
     StorageService.applyToGameState(this);
+    SoundSystem.setEnabled(this.soundEnabled);
+    SoundSystem.setVolume(this.soundVolume);
   }
 
   /**

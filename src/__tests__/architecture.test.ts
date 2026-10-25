@@ -6,6 +6,9 @@ import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
 import { DamagePayload } from '../types/elements.types.js';
+import { SoundSystem } from '../systems/SoundSystem.js';
+import { EnemySkillSystem } from '../systems/EnemySkillSystem.js';
+import { WaveSystem } from '../systems/WaveSystem.js';
 
 describe('Stick Vanguard - Core Architecture Tests', () => {
   describe('NavigationSystem (Multi-Domain Movement)', () => {
@@ -2769,6 +2772,203 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         expect(bossLanes.has(0)).toBe(true);
         expect(bossLanes.has(1)).toBe(true);
       }
+    });
+  });
+
+  describe('SoundSystem & Audio Event Integration Tests', () => {
+    it('should manage sound enabled and volume clamping cleanly', () => {
+      SoundSystem.setEnabled(false);
+      expect(SoundSystem.soundEnabled).toBe(false);
+
+      SoundSystem.setEnabled(true);
+      expect(SoundSystem.soundEnabled).toBe(true);
+
+      SoundSystem.setVolume(1.5); // clamped to 1.0
+      expect(SoundSystem.soundVolume).toBe(1.0);
+
+      SoundSystem.setVolume(-0.2); // clamped to 0.0
+      expect(SoundSystem.soundVolume).toBe(0.0);
+
+      SoundSystem.setVolume(0.7);
+      expect(SoundSystem.soundVolume).toBe(0.7);
+    });
+
+    it('should record procedural SFX trigger calls across all categories', () => {
+      SoundSystem.recordedEvents = [];
+
+      // Combat shooting & attacks
+      SoundSystem.playShoot('ARCHER');
+      SoundSystem.playShoot('MAGE');
+      SoundSystem.playShoot('ARTILLERY');
+      SoundSystem.playShoot('JAVELIN');
+
+      // Hits & reactions
+      SoundSystem.playHit({ isMelee: true });
+      SoundSystem.playHit({ isImmune: true });
+      SoundSystem.playHit({ isReactionOrWeakness: true });
+
+      // Traps & Explosions
+      SoundSystem.playExplosion('LARGE');
+      SoundSystem.playTrapTrigger('TRAP_SPIKE');
+      SoundSystem.playTrapTrigger('TRAP_FIRE');
+      SoundSystem.playTrapTrigger('TRAP_FROST');
+      SoundSystem.playTrapTrigger('TRAP_NET');
+
+      // Casualties & Damage
+      SoundSystem.playEnemyDeath('NORMAL');
+      SoundSystem.playEnemyDeath('ELITE');
+      SoundSystem.playEnemyDeath('BOSS');
+      SoundSystem.playSoldierDeath();
+      SoundSystem.playBaseDamaged(true);
+      SoundSystem.playTowerDamaged('DISABLED');
+      SoundSystem.playTowerDamaged('DOWNGRADED');
+      SoundSystem.playTowerDamaged('DESTROYED');
+
+      // Skills & Match Progress
+      SoundSystem.playEnemySkill('SUMMON');
+      SoundSystem.playEnemySkill('SPLIT');
+      SoundSystem.playWaveStart();
+      SoundSystem.playWaveComplete();
+      SoundSystem.playVictory();
+      SoundSystem.playGameOver();
+
+      const eventNames = SoundSystem.recordedEvents.map((e) => e.sound);
+      expect(eventNames).toContain('SHOOT');
+      expect(eventNames).toContain('HIT');
+      expect(eventNames).toContain('EXPLOSION');
+      expect(eventNames).toContain('TRAP_TRIGGER');
+      expect(eventNames).toContain('ENEMY_DEATH');
+      expect(eventNames).toContain('SOLDIER_DEATH');
+      expect(eventNames).toContain('BASE_DAMAGED');
+      expect(eventNames).toContain('TOWER_DAMAGED');
+      expect(eventNames).toContain('ENEMY_SKILL');
+      expect(eventNames).toContain('WAVE_START');
+      expect(eventNames).toContain('WAVE_COMPLETE');
+      expect(eventNames).toContain('VICTORY');
+      expect(eventNames).toContain('GAME_OVER');
+    });
+
+    it('should trigger corresponding audio events from GameState actions', () => {
+      const state = new GameState();
+      state.gold = 1000;
+      SoundSystem.recordedEvents = [];
+
+      // 1. Build tower -> BUILD
+      state.buildTowerAt(150, 95, 'ARCHER');
+      const tower = state.towers[0];
+      expect(SoundSystem.recordedEvents.some((e) => e.sound === 'BUILD')).toBe(true);
+
+      // 2. Upgrade tower -> UPGRADE
+      SoundSystem.recordedEvents = [];
+      state.upgradeTower(tower.id);
+      expect(SoundSystem.recordedEvents.some((e) => e.sound === 'UPGRADE')).toBe(true);
+
+      // 3. Imbue element -> IMBUE
+      SoundSystem.recordedEvents = [];
+      state.setTowerElement(tower.id, 'FIRE');
+      expect(SoundSystem.recordedEvents.some((e) => e.sound === 'IMBUE')).toBe(true);
+
+      // 4. Downgrade tower -> TOWER_DAMAGED (DOWNGRADED)
+      SoundSystem.recordedEvents = [];
+      state.downgradeOrDestroyTower(tower.id);
+      const downgradeEvt = SoundSystem.recordedEvents.find((e) => e.sound === 'TOWER_DAMAGED');
+      expect(downgradeEvt?.data?.severity).toBe('DOWNGRADED');
+
+      // 5. Destroy tower -> TOWER_DAMAGED (DESTROYED)
+      SoundSystem.recordedEvents = [];
+      state.downgradeOrDestroyTower(tower.id);
+      const destroyEvt = SoundSystem.recordedEvents.find((e) => e.sound === 'TOWER_DAMAGED');
+      expect(destroyEvt?.data?.severity).toBe('DESTROYED');
+
+      // 6. Barracks & Rally
+      SoundSystem.recordedEvents = [];
+      state.buildTowerAt(150, 95, 'BARRACKS');
+      const barracks = state.towers[0];
+      state.setBarracksSoldierMode(barracks.id, 'RANGED');
+      expect(SoundSystem.recordedEvents.some((e) => e.sound === 'RALLY')).toBe(true);
+
+      // 7. Sell tower -> SELL
+      SoundSystem.recordedEvents = [];
+      state.sellTower(barracks.id);
+      expect(SoundSystem.recordedEvents.some((e) => e.sound === 'SELL')).toBe(true);
+    });
+
+    it('should trigger audio events from EnemySkillSystem (Disable, Summon, Split)', () => {
+      const state = new GameState();
+      state.gold = 500;
+      state.buildTowerAt(150, 95, 'ARCHER');
+      const tower = state.towers[0];
+
+      SoundSystem.recordedEvents = [];
+      const enemy: EnemyEntity = {
+        id: 'e-boss',
+        typeId: 'ANCIENT_TREANT_BOSS',
+        name: 'Treant',
+        x: 150,
+        y: 110,
+        hp: 1000,
+        maxHp: 1000,
+        speed: 20,
+        baseSpeed: 20,
+        damage: 30,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 100,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 100,
+        pathTotalLength: 1000,
+        elementalProfile: { primaryElement: 'GRASS', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: ['BOSS'],
+        altitude: 0,
+        size: 25,
+        facing: 0,
+        abilities: [
+          { type: 'DISABLE_TOWER', radius: 150, duration: 4.0 },
+          { type: 'DEATH_SPAWN', spawnTypeId: 'STICK_RUNNER', count: 2 }
+        ]
+      };
+
+      // Test DISABLE_TOWER skill
+      (EnemySkillSystem as any).executeAbility(enemy, enemy.abilities![0], [enemy], [tower], state);
+      expect(tower.disabledTimer).toBeGreaterThan(0);
+      const disableEvt = SoundSystem.recordedEvents.find((e) => e.sound === 'TOWER_DAMAGED');
+      expect(disableEvt?.data?.severity).toBe('DISABLED');
+
+      // Test DEATH_SPAWN split
+      const navSys = new NavigationSystem(state.currentMap);
+      const waveSys = new WaveSystem(state.currentMap, 15);
+      SoundSystem.recordedEvents = [];
+      EnemySkillSystem.handleDeath(enemy, state, navSys, waveSys, 0);
+      const splitEvt = SoundSystem.recordedEvents.find((e) => e.sound === 'ENEMY_SKILL');
+      expect(splitEvt?.data?.skill).toBe('SPLIT');
+    });
+
+    it('should persist and load sound settings through StorageService', async () => {
+      const { StorageService } = await import('../core/StorageService.js');
+      StorageService.clear();
+
+      // Test sanitization with sound settings
+      const sanitized = StorageService.sanitizeSettings({
+        soundEnabled: false,
+        soundVolume: 0.35
+      });
+      expect(sanitized.soundEnabled).toBe(false);
+      expect(sanitized.soundVolume).toBe(0.35);
+
+      // Test save and load
+      StorageService.saveSettings({
+        soundEnabled: true,
+        soundVolume: 0.8
+      });
+      const loaded = StorageService.loadSettings();
+      expect(loaded.soundEnabled).toBe(true);
+      expect(loaded.soundVolume).toBe(0.8);
+
+      StorageService.clear();
     });
   });
 });

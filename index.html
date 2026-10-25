@@ -63,7 +63,7 @@
         </div>
 
         <div class="left-panel-footer">
-          <span>Phím tắt: [1]-[8] Chọn tháp | [B] Cẩm nang | [ESC] Hủy chọn | [Space] Gọi đợt</span>
+          <span>Phím tắt: [1]-[8] Chọn tháp | [M] Âm thanh | [B] Cẩm nang | [ESC] Hủy chọn | [Space] Gọi đợt</span>
         </div>
       </aside>
 
@@ -83,6 +83,7 @@
 
             <!-- Panel điều khiển nổi trên góc trên canvas, nền trong suốt -->
             <div id="canvas-controls-overlay" class="canvas-controls-overlay">
+              <button id="btn-sound-toggle" class="canvas-ctrl-btn" title="Bật/Tắt âm thanh (Phím M)">🔊</button>
               <button id="btn-speed" class="canvas-ctrl-btn" title="Tăng tốc độ trận đấu">⚡ x1</button>
               <button id="btn-pause" class="canvas-ctrl-btn" title="Tạm dừng / Tiếp tục">⏸️ Tạm dừng</button>
               <button id="btn-restart" class="canvas-ctrl-btn danger-ctrl-btn" title="Chơi lại màn đấu">🔄 Chơi lại</button>
@@ -361,6 +362,36 @@
                   <button class="preset-btn" data-type="dmg" data-val="2.0">x2.0 (Hỏa lực mạnh)</button>
                   <button class="preset-btn" data-type="dmg" data-val="5.0">x5.0 (Càn quét)</button>
                   <button class="preset-btn" data-type="dmg" data-val="10.0">x10.0 (Hủy diệt)</button>
+                </div>
+              </div>
+
+              <!-- Card 4: Âm lượng hiệu ứng âm thanh -->
+              <div class="settings-card sp-card">
+                <div class="sc-header">
+                  <div class="sc-icon-title">
+                    <span class="sc-icon">🔊</span>
+                    <div>
+                      <h3 class="sc-title">Âm Lượng Hiệu Ứng (Sound Effects)</h3>
+                      <span class="sc-sub">Mặc định: 70% • Bật/Tắt nhanh bằng phím [M]</span>
+                    </div>
+                  </div>
+                  <span id="lbl-sound-volume" class="sc-badge-val" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.5); color: #38bdf8;">70%</span>
+                </div>
+                <p class="sc-desc">
+                  Âm thanh trực quan tổng hợp qua Web Audio API: Tiếng đòn đánh, tiếng quái chết, tiếng lính hy sinh, âm cảnh báo tháp bị vô hiệu hóa/sập và tiếng pháo nổ chiến trường.
+                </p>
+                <div class="sc-control-box">
+                  <input type="range" id="input-volume-range" min="0" max="100" step="5" value="70" class="cs-slider" style="accent-color: #38bdf8;" />
+                  <div class="sc-input-group">
+                    <span class="slider-min-max">0% (Tắt tiếng) ➔ 50% (Vừa phải) ➔ 100% (Sống động)</span>
+                  </div>
+                </div>
+                <div class="sc-preset-buttons">
+                  <span class="preset-label">Mức âm lượng:</span>
+                  <button class="preset-btn" data-type="vol" data-val="0">🔇 Tắt</button>
+                  <button class="preset-btn" data-type="vol" data-val="40">🔉 40%</button>
+                  <button class="preset-btn active" data-type="vol" data-val="70">🔊 70% (Chuẩn)</button>
+                  <button class="preset-btn" data-type="vol" data-val="100">📢 100% (Tối đa)</button>
                 </div>
               </div>
             </div>

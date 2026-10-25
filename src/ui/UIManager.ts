@@ -172,6 +172,12 @@ export class UIManager {
         return;
       }
 
+      // Hotkey 'M' for Mute/Unmute sound
+      if (key === 'M') {
+        this.hudManager.toggleSound();
+        return;
+      }
+
       // Hotkeys [1] to [8] for building selection
       const keyMap: Record<string, TowerType> = {
         '1': 'BARRACKS',

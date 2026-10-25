@@ -3,6 +3,7 @@ import { GameState } from '../core/GameState.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
 import { NavigationSystem } from './NavigationSystem.js';
 import { WaveSystem } from './WaveSystem.js';
+import { SoundSystem } from './SoundSystem.js';
 
 export class EnemySkillSystem {
   public static update(
@@ -48,6 +49,7 @@ export class EnemySkillSystem {
     for (const ability of enemy.abilities) {
       if (ability.type === 'DEATH_SPAWN' && ability.spawnTypeId) {
         const count = ability.count || 1;
+        SoundSystem.playEnemySkill('SPLIT');
         state.addFloatingText('💥 Phân tách!', enemy.x, enemy.y - 24, '#f97316', 15);
 
         for (let s = 0; s < count; s++) {
@@ -92,6 +94,7 @@ export class EnemySkillSystem {
       case 'SUMMON': {
         if (!ability.spawnTypeId || !navSystem || !waveSystem) break;
         const count = ability.count || 1;
+        SoundSystem.playEnemySkill('SUMMON');
         state.addFloatingText('🔮 Triệu hồi!', sourceEnemy.x, sourceEnemy.y - 20, '#a855f7', 15);
         state.addExplosionParticles(sourceEnemy.x, sourceEnemy.y, '#a855f7', 10);
 
@@ -137,6 +140,7 @@ export class EnemySkillSystem {
         for (const item of validTowers) {
           const t = item.tower;
           t.disabledTimer = Math.max(t.disabledTimer || 0, duration);
+          SoundSystem.playTowerDamaged('DISABLED');
           state.addFloatingText('⚡ VÔ HIỆU THÁP!', t.x, t.y - 22, '#facc15', 14);
           state.addExplosionParticles(t.x, t.y, '#facc15', 10);
           state.addExplosionParticles(sourceEnemy.x, sourceEnemy.y, '#a855f7', 6);

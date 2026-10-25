@@ -1,5 +1,6 @@
 import { GameState } from '../../core/GameState.js';
 import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
+import { SoundSystem } from '../../systems/SoundSystem.js';
 
 export class SettingsModal {
   private backdropEl: HTMLElement | null;
@@ -58,6 +59,17 @@ export class SettingsModal {
     document.querySelectorAll('.preset-btn[data-type="dmg"]').forEach((btn) => {
       const v = parseFloat(btn.getAttribute('data-val') || '0');
       btn.classList.toggle('active', Math.abs(v - dmgVal) < 0.05);
+    });
+
+    const volRange = document.getElementById('input-volume-range') as HTMLInputElement | null;
+    const volLbl = document.getElementById('lbl-sound-volume');
+    const volVal = Math.round(this.state.soundVolume * 100);
+    if (volRange) volRange.value = `${volVal}`;
+    if (volLbl) volLbl.textContent = `${volVal}%`;
+
+    document.querySelectorAll('.preset-btn[data-type="vol"]').forEach((btn) => {
+      const v = parseInt(btn.getAttribute('data-val') || '0', 10);
+      btn.classList.toggle('active', Math.abs(v - volVal) < 3);
     });
   }
 
@@ -150,6 +162,38 @@ export class SettingsModal {
       this.triggerAutoSaveNotice();
     };
 
+    const volRange = document.getElementById('input-volume-range') as HTMLInputElement | null;
+    const volLbl = document.getElementById('lbl-sound-volume');
+
+    const updateVolume = (val: number, previewSound: boolean = true) => {
+      const clamped = Math.max(0, Math.min(100, Math.round(val)));
+      this.state.soundVolume = clamped / 100;
+      this.state.soundEnabled = clamped > 0;
+
+      SoundSystem.setVolume(this.state.soundVolume);
+      SoundSystem.setEnabled(this.state.soundEnabled);
+
+      if (volRange) volRange.value = `${clamped}`;
+      if (volLbl) volLbl.textContent = `${clamped}%`;
+
+      const soundBtn = document.getElementById('btn-sound-toggle');
+      if (soundBtn) {
+        soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+      }
+
+      document.querySelectorAll('.preset-btn[data-type="vol"]').forEach((btn) => {
+        const v = parseInt(btn.getAttribute('data-val') || '0', 10);
+        btn.classList.toggle('active', Math.abs(v - clamped) < 3);
+      });
+
+      this.state.saveSettingsToStorage();
+      this.triggerAutoSaveNotice();
+
+      if (previewSound && this.state.soundEnabled) {
+        SoundSystem.playUIClick();
+      }
+    };
+
     if (wavesRange) {
       wavesRange.addEventListener('input', () => updateWaves(parseInt(wavesRange.value, 10)));
     }
@@ -162,6 +206,10 @@ export class SettingsModal {
     if (dmgRange) {
       dmgRange.addEventListener('input', () => updateDmg(parseFloat(dmgRange.value)));
     }
+    if (volRange) {
+      volRange.addEventListener('input', () => updateVolume(parseInt(volRange.value, 10), false));
+      volRange.addEventListener('change', () => updateVolume(parseInt(volRange.value, 10), true));
+    }
 
     // Preset buttons inside settings modal
     document.querySelectorAll('.preset-btn').forEach((btn) => {
@@ -172,6 +220,7 @@ export class SettingsModal {
         if (type === 'waves') updateWaves(val);
         else if (type === 'gold') updateGold(val);
         else if (type === 'dmg') updateDmg(val);
+        else if (type === 'vol') updateVolume(val, true);
       });
     });
 
@@ -180,6 +229,7 @@ export class SettingsModal {
         updateWaves(15);
         updateGold(1.0);
         updateDmg(1.0);
+        updateVolume(70, false);
         this.triggerAutoSaveNotice();
       });
     }
