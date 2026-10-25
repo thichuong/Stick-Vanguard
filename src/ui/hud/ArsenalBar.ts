@@ -80,5 +80,13 @@ export class ArsenalBar {
   public updateHotbarVisuals(): void {
     this.updateArsenalVisuals();
   }
+
+  /**
+   * Helper to retrieve live summoned units information for any summon tower.
+   * Enables UI components to access real-time health, armor, state and count.
+   */
+  public getLiveSummonedUnits(towerId: string) {
+    return this.state.soldiers.filter((s) => s.towerId === towerId);
+  }
 }
 

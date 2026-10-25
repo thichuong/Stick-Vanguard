@@ -10,6 +10,8 @@ import { GameState } from '../core/GameState.js';
 import { CombatSystem } from '../systems/CombatSystem.js';
 import { TowerSystem } from '../systems/TowerSystem.js';
 import { SoldierEntity, EnemyEntity, TowerEntity } from '../types/entities.types.js';
+import { ArsenalBar } from '../ui/hud/ArsenalBar.js';
+import { InspectorPanel } from '../ui/inspector/InspectorPanel.js';
 
 describe('Defense System Restructure & New Summon Towers', () => {
   it('correctly classifies towers into 3 categories', () => {
@@ -518,5 +520,64 @@ describe('Defense System Restructure & New Summon Towers', () => {
 
     expect(spawnedProjectiles.length).toBe(1);
     expect(spawnedProjectiles[0].sourceTowerId).toBe('archer_tower_1');
+  });
+
+  it('verifies Heroic Altar has fixed GHOST element and cannot change or select elements', () => {
+    const state = new GameState();
+    state.gold = 5000;
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+
+    // Build Heroic Altar
+    state.buildTowerAt(100, 100, 'HEROIC_ALTAR');
+    const altar = state.towers.find((t) => t.type === 'HEROIC_ALTAR');
+    expect(altar).toBeDefined();
+    expect(altar!.element).toBe('GHOST');
+    expect(altar!.secondaryElement).toBeNull();
+
+    // Attempting to change or imbue element on Heroic Altar must be rejected
+    const imbueResult = state.setTowerElement(altar!.id, 'FIRE');
+    expect(imbueResult).toBe(false);
+    expect(altar!.element).toBe('GHOST');
+    expect(altar!.secondaryElement).toBeNull();
+  });
+
+  it('verifies InspectorPanel and ArsenalBar render live summoned units with HP and status', () => {
+    const state = new GameState();
+    state.gold = 5000;
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+
+    // Build Barracks
+    state.buildTowerAt(100, 100, 'BARRACKS');
+    const barracks = state.towers.find((t) => t.type === 'BARRACKS')!;
+    expect(barracks).toBeDefined();
+
+    // Verify ArsenalBar helper returns summoned units
+    const mockEl = { addEventListener: () => {}, querySelectorAll: () => [] } as any;
+    const origDoc = (globalThis as any).document;
+    (globalThis as any).document = {
+      getElementById: () => mockEl,
+      querySelectorAll: () => []
+    };
+
+    try {
+      const arsenalBar = new ArsenalBar(state, () => {});
+      const liveUnits = arsenalBar.getLiveSummonedUnits(barracks.id);
+      expect(liveUnits.length).toBe(3);
+      expect(liveUnits[0].hp).toBe(100);
+      expect(liveUnits[0].maxHp).toBe(100);
+
+      // Verify InspectorPanel summon unit rendering
+      const mockSidePanel = { open: () => {}, toggle: () => {} };
+      const inspector = new InspectorPanel(state, mockSidePanel as any, () => {});
+      const html = inspector.renderSummonedUnitsSectionHtml(barracks);
+
+      expect(html).toContain('ĐƠN VỊ ĐANG TRIỆU HỒI');
+      expect(html).toContain('Lính 1');
+      expect(html).toContain('100/100');
+      expect(html).toContain('suc-hp-fill');
+      expect(html).toContain('Chốt chặn');
+    } finally {
+      (globalThis as any).document = origDoc;
+    }
   });
 });

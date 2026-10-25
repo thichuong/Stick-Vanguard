@@ -53,12 +53,21 @@ describe('Modular UI Architecture Tests', () => {
   });
 
   describe('CodexSoldiers', () => {
-    it('should render soldier comparison between Melee and Ranged stances', () => {
+    it('should render unified summon codex with all 4 summon systems and overview comparison', () => {
       const soldiers = new CodexSoldiers();
       const html = soldiers.getSoldiersCategoryHtml();
-      expect(html).toContain('Lính Đánh Gần (Melee Swordsman)');
-      expect(html).toContain('Lính Bắn Tên (Ranged Archer)');
-      expect(html).toContain('BẢNG SO SÁNH CHỈ SỐ CỦA 3 CHIẾN BINH');
+      // Verifies unified sub-navigation buttons
+      expect(html).toContain('Trại Dân Quân');
+      expect(html).toContain('Tổ Rồng');
+      expect(html).toContain('Cây Tiên');
+      expect(html).toContain('Tế Đàn Anh Linh');
+      expect(html).toContain('Tổng Quan & So Sánh');
+
+      // Verifies soldier stances and comprehensive stat tables
+      expect(html).toContain('Lính Cận Chiến');
+      expect(html).toContain('Lính Bắn Tên');
+      expect(html).toContain('BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (THÁP & ĐƠN VỊ TRIỆU HỒI)');
+      expect(html).toContain('MÔ PHỎNG NGUYÊN TỐ CHO ĐƠN VỊ');
     });
   });
 

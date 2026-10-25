@@ -896,7 +896,7 @@ export class GameState {
     slotIndex: 1 | 2 = 1
   ): boolean {
     const tower = this.towers.find((t) => t.id === towerId);
-    if (!tower) return false;
+    if (!tower || tower.type === 'HEROIC_ALTAR') return false;
 
     const cost = tower.type === 'MAGE' && slotIndex === 2 ? MAGE_SECOND_ELEMENT_COST : ELEMENT_IMBUE_COST;
 

@@ -1,272 +1,622 @@
+import { TOWER_BLUEPRINTS, TowerBlueprint } from '../../config/towers.config.js';
+import {
+  ELEMENT_COLORS,
+  ELEMENT_ICONS,
+  ELEMENT_NAMES,
+  SELECTABLE_ELEMENTS
+} from '../../config/elements.config.js';
+import { ElementType } from '../../types/elements.types.js';
+import { TowerType } from '../../types/entities.types.js';
+
+export type SummonCodexSubTab = 'BARRACKS' | 'DRAGON_NEST' | 'FAIRY_TREE' | 'HEROIC_ALTAR' | 'OVERVIEW';
+
 export class CodexSoldiers {
+  public currentSubTab: SummonCodexSubTab = 'BARRACKS';
+  public selectedTierKey: string = 'BARRACKS_1';
+  public previewElement: ElementType = 'FIRE';
+  public barracksStance: 'MELEE' | 'RANGED' = 'MELEE';
+
+  constructor(public onNavigate?: (cat: string, subId?: string) => void) {}
+
   public getSoldiersCategoryHtml(): string {
+    return this.renderUnifiedSummonHtml();
+  }
+
+  public renderUnifiedSummonHtml(): string {
     return `
-      <!-- Banner Hướng Dẫn Chuyển Đổi Trong Trận -->
-      <div class="sp-section sp-card" style="border-left: 5px solid #10b981; background: linear-gradient(90deg, #0f241d 0%, #121b2d 100%);">
+      <div class="summon-codex-container">
+        <!-- Sub-navigation selector bar -->
+        <div class="summon-subnav-bar">
+          <button class="summon-subnav-btn ${this.currentSubTab === 'BARRACKS' ? 'active' : ''}" data-summon-sub="BARRACKS">
+            <span class="ssb-icon">🛡️</span>
+            <div class="ssb-text">
+              <span class="ssb-title">Trại Dân Quân</span>
+              <span class="ssb-sub">Lính Cận Chiến / Bắn Tên</span>
+            </div>
+          </button>
+
+          <button class="summon-subnav-btn ${this.currentSubTab === 'DRAGON_NEST' ? 'active' : ''}" data-summon-sub="DRAGON_NEST">
+            <span class="ssb-icon">🐉</span>
+            <div class="ssb-text">
+              <span class="ssb-title">Tổ Rồng</span>
+              <span class="ssb-sub">Hỏa Long • AoE • Chặn Bay</span>
+            </div>
+          </button>
+
+          <button class="summon-subnav-btn ${this.currentSubTab === 'FAIRY_TREE' ? 'active' : ''}" data-summon-sub="FAIRY_TREE">
+            <span class="ssb-icon">🧚</span>
+            <div class="ssb-text">
+              <span class="ssb-title">Cây Tiên</span>
+              <span class="ssb-sub">Bầy Tiên (2-5) • Tầm Xa</span>
+            </div>
+          </button>
+
+          <button class="summon-subnav-btn ${this.currentSubTab === 'HEROIC_ALTAR' ? 'active' : ''}" data-summon-sub="HEROIC_ALTAR">
+            <span class="ssb-icon">🏛️</span>
+            <div class="ssb-text">
+              <span class="ssb-title">Tế Đàn Anh Linh</span>
+              <span class="ssb-sub">Chiêu Hồn • Hệ Ma Cố Định</span>
+            </div>
+          </button>
+
+          <button class="summon-subnav-btn ${this.currentSubTab === 'OVERVIEW' ? 'active' : ''}" data-summon-sub="OVERVIEW">
+            <span class="ssb-icon">📊</span>
+            <div class="ssb-text">
+              <span class="ssb-title">Tổng Quan & So Sánh</span>
+              <span class="ssb-sub">Bảng Đối Chiếu 4 Hệ</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="summon-main-view">
+          ${this.currentSubTab === 'OVERVIEW' ? this.renderOverviewComparisonHtml() : this.renderSingleSummonSystemHtml(this.currentSubTab)}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderSingleSummonSystemHtml(type: 'BARRACKS' | 'DRAGON_NEST' | 'FAIRY_TREE' | 'HEROIC_ALTAR'): string {
+    const metaMap = {
+      BARRACKS: {
+        title: 'Trại Dân Quân & Đội Quân Người Que',
+        badge: 'Cận Chiến Đánh Chặn & Xạ Thủ Bắn Tỉa Đa Miền',
+        desc: 'Triệu tập đội hình 3 đến 5 chiến binh người que. Trại lính không trực tiếp tấn công, chỉ có binh lính xuất trận tại Điểm Tập Kết (Rally Point) để chốt chặn quái hoặc bắn tỉa.',
+        unitName: 'Chiến Binh Người Que',
+        unitArchetype: 'SOLDIER',
+        unitDesc: 'Người chơi có quyền đổi qua lại giữa <b>⚔️ Lính Cận Chiến</b> và <b>🏹 Lính Bắn Tên</b> bất kỳ lúc nào hoàn toàn MIỄN PHÍ. Lính cận chiến chốt chặn 1v1 trên đường; Lính cung đứng an toàn bắn tỉa cả 3 đường (Bộ, Bay, Bơi).'
+      },
+      DRAGON_NEST: {
+        title: 'Tổ Rồng & Thần Long Cổ Đại',
+        badge: 'Hỏa Long Bay Lượn • Sát Thương AoE Nổ Lan • Chốt Chặn Quái Bay',
+        desc: 'Triệu hồi 1 con rồng uy mãnh chốt chặn chiến trường. Tổ rồng không trực tiếp tấn công, rồng bay lượn trên không chốt chặn cả quái Bay và quái Đi Bộ.',
+        unitName: 'Hỏa Long (Dragon)',
+        unitArchetype: 'DRAGON',
+        unitDesc: 'Rồng sở hữu sẵn nguyên tố <b>🐉 RỒNG</b> và được chọn thêm 1 nguyên tố thứ 2 (+60% sát thương). Đòn cắn và khè lửa gây <b>sát thương AoE nổ lan 70%</b> trong bán kính 55-85px lên mọi quái xung quanh!'
+      },
+      FAIRY_TREE: {
+        title: 'Cây Tiên & Bầy Tinh Linh Rừng Xanh',
+        badge: 'Bầy Tiên Tăng Theo Cấp (2 ➔ 5) • Phép Tầm Xa • Chốt Chặn Quái Bay',
+        desc: 'Cổ thụ thần thoại triệu hồi các tiên nhỏ bay lượn bảo vệ lãnh địa. Càng nâng cấp tháp thì số lượng tiên xuất trận càng đông đảo (2 ➔ 3 ➔ 4 ➔ 5 nàng tiên).',
+        unitName: 'Tinh Linh Tiên (Fairy)',
+        unitArchetype: 'FAIRY',
+        unitDesc: 'Bầy tiên mang sẵn nguyên tố <b>🧚 TIÊN</b> và được chọn thêm 1 nguyên tố thứ 2 (+60% sát thương). Bay lượn trên không chốt chặn quái Bay & Đi Bộ, đồng thời bắn phép tầm xa áp chế mục tiêu cả 3 địa hình!'
+      },
+      HEROIC_ALTAR: {
+        title: 'Tế Đàn Anh Linh & Đội Quân Bóng Ma',
+        badge: 'Hồi Sinh Bất Tử • Hệ Ma (+50% DMG) • Kế Thừa Chiến Binh Đã Khuất',
+        desc: 'Tế đàn cổ đại thu thập linh hồn các đơn vị đồng minh ngã xuống trong phạm vi (Binh lính, Rồng, Tiên) và tái sinh họ dưới dạng Anh Linh bóng ma đầy uy lực.',
+        unitName: 'Anh Linh Bóng Ma (Heroic Spirit)',
+        unitArchetype: 'SPIRIT',
+        unitDesc: 'Tế đàn mang hệ <b>👻 MA (GHOST)</b> cố định. Khi đồng minh tử trận trong tầm tế đàn, có tỉ lệ được hồi sinh thành Anh Linh, giữ nguyên hình thái và được <b>nhận thêm Hệ Ma (+50% DMG Ma)</b>!'
+      }
+    };
+
+    const meta = metaMap[type];
+    const bp1 = TOWER_BLUEPRINTS[`${type}_1`];
+    const bp2 = TOWER_BLUEPRINTS[`${type}_2`];
+    const bp3 = TOWER_BLUEPRINTS[`${type}_3`];
+    const bp4A = TOWER_BLUEPRINTS[`${type}_4_A`];
+    const bp4B = TOWER_BLUEPRINTS[`${type}_4_B`];
+
+    if (!bp1) return '';
+
+    if (!this.selectedTierKey.startsWith(type)) {
+      this.selectedTierKey = `${type}_1`;
+    }
+    const selectedBp = TOWER_BLUEPRINTS[this.selectedTierKey] || bp1;
+
+    // Unit calculations for selected BP
+    const maxSoldiers = selectedBp.maxSoldiers || (type === 'HEROIC_ALTAR' ? 2 : 1);
+    const unitHp = selectedBp.soldierHp || 100;
+    const unitArmor = selectedBp.soldierArmor || 0.1;
+    const unitRespawn = selectedBp.soldierRespawn || 8;
+    const baseDmg = selectedBp.damage;
+
+    return `
+      <div class="summon-system-layout">
+        <!-- HEADER HERO -->
+        <div class="sp-section sp-card summon-hero-card">
+          <div class="sh-title-row">
+            <div class="sh-left">
+              <span class="sh-icon">${type === 'BARRACKS' ? '🛡️' : type === 'DRAGON_NEST' ? '🐉' : type === 'FAIRY_TREE' ? '🧚' : '🏛️'}</span>
+              <div>
+                <h3 class="sh-title">${meta.title}</h3>
+                <span class="sh-badge">${meta.badge}</span>
+              </div>
+            </div>
+            <div class="sh-right">
+              <span class="sh-cost-pill">🪙 Cấp 1: ${bp1.cost} Vàng</span>
+            </div>
+          </div>
+          <p class="sh-desc">${meta.desc}</p>
+        </div>
+
+        <!-- 2 COLUMNS: LEFT (UPGRADE TREE & ROLE) / RIGHT (UNIT PROFILE, ELEMENT SIM & STATS TABLE) -->
+        <div class="codex-two-col">
+          <!-- CỘT TRÁI: CÂY NÂNG CẤP & CƠ CHẾ -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Upgrade Tree Diagram -->
+            <div class="sp-section sp-card">
+              <div class="sp-sec-header">
+                <h4 class="sp-sec-title">🌳 CÂY NÂNG CẤP THÁP (CẤP 1 ➔ 4A/4B)</h4>
+                <span class="sp-hint">Bấm vào từng cấp để xem thay đổi chỉ số</span>
+              </div>
+              <div class="upgrade-tree-container">
+                ${this.renderTreeNode(bp1, 'CẤP 1', `${type}_1`)}
+                <div class="tree-arrow">▼</div>
+                ${this.renderTreeNode(bp2, 'CẤP 2', `${type}_2`)}
+                <div class="tree-arrow">▼</div>
+                ${this.renderTreeNode(bp3, 'CẤP 3', `${type}_3`)}
+                <div class="tree-split-arrow">
+                  <span>┌───────┴───────┐</span>
+                  <span>▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼</span>
+                </div>
+                <div class="tree-branch-split">
+                  ${this.renderTreeNode(bp4A, '4-A', `${type}_4_A`, true)}
+                  ${this.renderTreeNode(bp4B, '4-B', `${type}_4_B`, true)}
+                </div>
+              </div>
+            </div>
+
+            <!-- Cơ Chế Đơn Vị Triệu Hồi -->
+            <div class="sp-section sp-card" style="border-left: 4px solid #a855f7;">
+              <h4 class="sp-sec-title" style="color: #c084fc;">🎖️ HỒ SƠ ĐƠN VỊ: ${meta.unitName.toUpperCase()}</h4>
+              <p class="sp-desc">${meta.unitDesc}</p>
+              
+              <div class="unit-traits-list">
+                ${this.renderUnitTraitsHtml(type, selectedBp)}
+              </div>
+            </div>
+          </div>
+
+          <!-- CỘT PHẢI: BẢNG CHỈ SỐ CỦA CẤP ĐANG CHỌN, MÔ PHỎNG NGUYÊN TỐ & BẢNG SO SÁNH 4 CẤP -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Card Chi Tiết Cấp Độ Đang Chọn (Tháp + Đơn Vị) -->
+            <div class="sp-section sp-card highlighted-detail-card">
+              <div class="dt-header">
+                <span class="dt-tier-badge">CHI TIẾT CẤP ĐỘ: ${selectedBp.name.toUpperCase()}</span>
+                <span class="dt-cost">🪙 ${selectedBp.cost} Vàng</span>
+              </div>
+              <p class="dt-desc">${selectedBp.description}</p>
+
+              ${
+                type === 'BARRACKS'
+                  ? `
+                <div class="stance-toggle-box">
+                  <span style="font-size: 11.5px; font-weight: 700; color: #94a3b8;">XEM CHỈ SỐ CHẾ ĐỘ:</span>
+                  <div class="stance-btns-group">
+                    <button class="stance-btn ${this.barracksStance === 'MELEE' ? 'active' : ''}" data-stance="MELEE">⚔️ Lính Cận Chiến (100% HP & Giáp)</button>
+                    <button class="stance-btn ${this.barracksStance === 'RANGED' ? 'active' : ''}" data-stance="RANGED">🏹 Lính Bắn Tên (Đa Miền 3 Đường)</button>
+                  </div>
+                </div>
+              `
+                  : ''
+              }
+
+              <!-- Stats Grid -->
+              <div class="dt-stats-grid">
+                <div class="stat-box">
+                  <span class="s-label">Tầm cắm cờ (Rally)</span>
+                  <span class="s-val">${selectedBp.range} px 🚩</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Số lượng đơn vị</span>
+                  <span class="s-val" style="color: #38bdf8;">${maxSoldiers} Đơn vị 👥</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Máu mỗi đơn vị</span>
+                  <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(unitHp * 0.65) : unitHp} ❤️</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Tổng máu toàn đội</span>
+                  <span class="s-val highlight-dps">${(type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(unitHp * 0.65) : unitHp) * maxSoldiers} ❤️</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Sát thương / đòn</span>
+                  <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(baseDmg * 0.7) : baseDmg} ⚔️</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Tốc độ đánh</span>
+                  <span class="s-val">${selectedBp.fireRate}/s ⚡</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Giáp vật lý</span>
+                  <span class="s-val">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? unitArmor * 0.5 : unitArmor) * 100)}% 🛡️</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Địa hình tấn công</span>
+                  <span class="s-val" style="color: #34d399;">${type === 'BARRACKS' && this.barracksStance === 'MELEE' ? 'Chỉ Đi Bộ (WALK)' : 'Bộ, Bay, Bơi (Đa Miền)'}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Địa hình chốt chặn</span>
+                  <span class="s-val" style="color: #fbbf24;">${type === 'BARRACKS' ? 'Chặn Đi Bộ (1v1)' : type === 'HEROIC_ALTAR' ? 'Theo hình thái gốc' : 'Chặn Đi Bộ & Bay 🦅'}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="s-label">Hồi sinh / Chiêu hồn</span>
+                  <span class="s-val" style="color: #a855f7;">${type === 'HEROIC_ALTAR' ? `Tỉ lệ: ${Math.round((selectedBp.resurrectChance || 0.3) * 100)}%` : `${unitRespawn}s ⏳`}</span>
+                </div>
+                ${
+                  selectedBp.aoeRadius
+                    ? `
+                  <div class="stat-box">
+                    <span class="s-label">Bán kính nổ lan AoE</span>
+                    <span class="s-val" style="color: #f97316;">${selectedBp.aoeRadius} px 💥</span>
+                  </div>
+                `
+                    : ''
+                }
+                <div class="stat-box">
+                  <span class="s-label">Tổng DPS toàn đội</span>
+                  <span class="s-val highlight-dps">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(baseDmg * 0.7) : baseDmg) * selectedBp.fireRate * maxSoldiers)} DPS</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mô phỏng hiệu ứng nguyên tố cho đơn vị triệu hồi -->
+            ${this.renderSummonElementalSimulator(type, selectedBp)}
+
+            <!-- Bảng chỉ số đầy đủ cả 4 cấp -->
+            <div class="sp-section sp-card">
+              <div class="sp-sec-header">
+                <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (THÁP & ĐƠN VỊ TRIỆU HỒI)</h4>
+                <span class="sp-hint">${type === 'HEROIC_ALTAR' ? '👻 Hệ Ma cố định (+50% DMG Ma)' : type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 'Gắn nguyên tố thứ 2: +60% Sát thương Phép' : 'Gắn nguyên tố: +45% Sát thương Phép'}</span>
+              </div>
+              <div class="table-responsive">
+                <table class="stats-table">
+                  <thead>
+                    <tr>
+                      <th>Cấp</th>
+                      <th>Tên Tháp</th>
+                      <th>Giá</th>
+                      <th>Số Lượng</th>
+                      <th>Máu / Lính (Tổng)</th>
+                      <th>Giáp</th>
+                      <th>DMG Gốc + Phép</th>
+                      <th>Tốc</th>
+                      <th>Tổng DPS</th>
+                      <th>Đặc Tính Chiến Đấu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${this.renderSummonStatsRow(bp1, 'Cấp 1', type)}
+                    ${this.renderSummonStatsRow(bp2, 'Cấp 2', type)}
+                    ${this.renderSummonStatsRow(bp3, 'Cấp 3', type)}
+                    ${this.renderSummonStatsRow(bp4A, '4-A 🌟', type, 'branch-row-a')}
+                    ${this.renderSummonStatsRow(bp4B, '4-B 🌟', type, 'branch-row-b')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderUnitTraitsHtml(type: TowerType, bp: TowerBlueprint): string {
+    if (type === 'BARRACKS') {
+      return `
+        <div class="trait-item">
+          <b>⚔️ Lính Cận Chiến:</b> Máu dày (100 ❤️ - 480 ❤️), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi máu liên tục mỗi giây (+15 HP/s); Nhánh 4-B tăng mạnh sát thương và tần suất xuất chiêu.
+        </div>
+        <div class="trait-item">
+          <b>🏹 Lính Bắn Tên:</b> Tầm bắn xa (147px - 183px), <b>bắn được CẢ 3 ĐỊA HÌNH: Đi Bộ, Trên Không và Dưới Nước</b>. Đứng an toàn tại cờ xả mưa tên liên thanh hỗ trợ đồng đội.
+        </div>
+        <div class="trait-item">
+          <b>🔄 Chuyển Đổi Miễn Phí:</b> Bấm vào Nhà Lính trong trận ➔ Chọn [Cận Chiến] hoặc [Bắn Tên] tức thì mà không tốn vàng hay thời gian chờ!
+        </div>
+      `;
+    }
+    if (type === 'DRAGON_NEST') {
+      return `
+        <div class="trait-item">
+          <b>🐉 Cá Thể Chiến Binh Đơn Độc (1 Rồng):</b> Nâng cấp không tăng số lượng mà tăng vọt Máu (220 ➔ 850 ❤️), Giáp (20% ➔ 65%) và Sát thương (30 ➔ 150 DMG).
+        </div>
+        <div class="trait-item">
+          <b>🦅 Chốt Chặn Quái Bay:</b> Rồng bay lượn trên không nên có thể chặn đứng và đấu tay đôi với cả quái Bay (FLY) lẫn quái Đi Bộ (WALK).
+        </div>
+        <div class="trait-item">
+          <b>💥 Sát Thương Nổ Lan AoE:</b> Đòn cắn và khè lửa gây nổ lan 70% sát thương trong bán kính ${bp.aoeRadius || 55}px lên toàn bộ quái xung quanh. Tấn công được quái Bơi (SWIM) mà không bị kẹt!
+        </div>
+      `;
+    }
+    if (type === 'FAIRY_TREE') {
+      return `
+        <div class="trait-item">
+          <b>🧚 Bầy Tiên Tinh Linh (2 ➔ 5 Tiên):</b> Càng nâng cấp thì số lượng tiên càng đông đảo (Cấp 1: 2 tiên, Cấp 2: 3 tiên, Cấp 3: 4 tiên, Cấp 4: 5 tiên).
+        </div>
+        <div class="trait-item">
+          <b>🦅 Chặn Quái Bay & Đa Miền:</b> Tiên bay lượn trên không, chặn được quái Bay & quái Đi Bộ, đồng thời phóng đạn phép tầm xa diệt quái Bơi lội (SWIM).
+        </div>
+        <div class="trait-item">
+          <b>🌟 Đột Phá Cấp 4:</b> Nhánh 4-A (Đại Thụ Tinh Linh) tự hồi máu và ban phước hồi máu cho đồng minh; Nhánh 4-B (Thần Mộc Huyền Quang) tốc đánh thần tốc và làm suy yếu quái vật.
+        </div>
+      `;
+    }
+    if (type === 'HEROIC_ALTAR') {
+      return `
+        <div class="trait-item">
+          <b>👻 Hồi Sinh Linh Hồn (Resurrection):</b> Khi Lính, Rồng hoặc Tiên tử trận trong phạm vi ${bp.range}px, có ${Math.round((bp.resurrectChance || 0.3) * 100)}% tỉ lệ hồi sinh thành Anh Linh (tối đa ${bp.maxSoldiers || 2} Anh Linh cùng lúc).
+        </div>
+        <div class="trait-item">
+          <b>🔮 Nhận Thêm Hệ Ma (GHOST):</b> Anh Linh giữ nguyên hình thái đơn vị gốc nhưng được ban thêm thuộc tính Ma (+50% sát thương Ma) bỏ qua một phần phòng thủ địch.
+        </div>
+        <div class="trait-item">
+          <b>🌟 Đột Phá Cấp 4:</b> Nhánh 4-A (Đền Bất Diệt) tăng tối đa 6 Anh Linh và +30% Máu & Sát thương; Nhánh 4-B (Minh Giới) phát nổ Hồn Ma AoE 65px mỗi khi hồi sinh!
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  private renderSummonStatsRow(
+    bp: TowerBlueprint,
+    tierLabel: string,
+    type: TowerType,
+    customClass: string = ''
+  ): string {
+    const isCurrent = bp.type === this.selectedTierKey;
+    const maxSoldiers = bp.maxSoldiers || (type === 'HEROIC_ALTAR' ? 2 : 1);
+    const hp = bp.soldierHp || 100;
+    const armor = Math.round((bp.soldierArmor || 0) * 100);
+    const baseDamage = bp.damage;
+
+    // Elemental bonus calculation
+    let elemBonusRatio = 0.45;
+    if (type === 'DRAGON_NEST' || type === 'FAIRY_TREE') elemBonusRatio = 0.6;
+    if (type === 'HEROIC_ALTAR') elemBonusRatio = 0.5;
+
+    const bonusDmg = Math.round(baseDamage * elemBonusRatio);
+    const totalDmg = baseDamage + bonusDmg;
+    const totalDps = Math.round(totalDmg * bp.fireRate * maxSoldiers);
+
+    let specialTrait = '';
+    if (type === 'BARRACKS') {
+      specialTrait = `Hồi sinh ${bp.soldierRespawn}s • ⚔️ Cận Chiến & 🏹 Bắn Tên`;
+    } else if (type === 'DRAGON_NEST') {
+      specialTrait = `AoE ${bp.aoeRadius}px • Chặn Bay 🦅 • Hồi sinh ${bp.soldierRespawn}s`;
+    } else if (type === 'FAIRY_TREE') {
+      specialTrait = `Bắn phép tầm xa • Chặn Bay 🦅 • Hồi sinh ${bp.soldierRespawn}s`;
+    } else if (type === 'HEROIC_ALTAR') {
+      specialTrait = `Tỉ lệ chiêu hồn ${Math.round((bp.resurrectChance || 0.3) * 100)}% • Tối đa ${maxSoldiers} Anh Linh`;
+    }
+
+    return `
+      <tr class="${customClass} ${isCurrent ? 'selected-row' : ''}">
+        <td><b>${tierLabel}</b></td>
+        <td>${bp.name}</td>
+        <td style="color: #facc15">🪙 ${bp.cost}</td>
+        <td style="color: #38bdf8; font-weight: 700;">${maxSoldiers}</td>
+        <td>${hp} ❤️ <span style="font-size: 11px; color: #94a3b8;">(${hp * maxSoldiers})</span></td>
+        <td>${armor}% 🛡️</td>
+        <td style="color: #38bdf8;">
+          ${baseDamage} + <span style="color: #c084fc;">${bonusDmg}</span> = <b>${totalDmg}</b>
+        </td>
+        <td>${bp.fireRate}/s</td>
+        <td class="table-dps-val">${totalDps} DPS</td>
+        <td style="font-size: 11px; color: #cbd5e1;">${specialTrait}</td>
+      </tr>
+    `;
+  }
+
+  private renderSummonElementalSimulator(type: TowerType, bp: TowerBlueprint): string {
+    if (type === 'HEROIC_ALTAR') {
+      return `
+        <div class="sp-section sp-card" style="border-left: 4px solid #818cf8; background: linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%);">
+          <div class="sp-sec-header">
+            <h4 class="sp-sec-title" style="color: #a5b4fc;">👻 THUỘC TÍNH NGUYÊN TỐ CỦA ANH LINH BÓNG MA</h4>
+            <span class="sp-hint">Thuộc tính Ma (GHOST) cố định</span>
+          </div>
+          <p class="sp-desc" style="color: #cbd5e1; margin-bottom: 6px;">
+            Tế Đàn Anh Linh không gắn thêm nguyên tố từ bên ngoài. Toàn bộ Anh Linh được triệu hồi sẽ tự động kế thừa nguyên tố của đơn vị đã tử trận và được ban thêm <b>👻 Hệ Ma (+50% Sát Thương Ma)</b>!
+          </p>
+          <div class="sim-effect-box" style="border-left-color: #818cf8;">
+            <div class="sim-effect-title" style="color: #818cf8;">👻 Uy Lực Anh Linh Cổ Đại</div>
+            <p class="sim-effect-desc">Đòn tấn công của Anh Linh gây thêm sát thương Ma, xuyên giáp vật lý và có khả năng công kích cả 3 loại địa hình.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    const elemColor = ELEMENT_COLORS[this.previewElement] || '#ffffff';
+    const elemIcon = ELEMENT_ICONS[this.previewElement] || '✨';
+    const elemName = ELEMENT_NAMES[this.previewElement] || this.previewElement;
+
+    const baseDmg = bp.damage;
+    const bonusRatio = type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 0.6 : 0.45;
+    const bonusDmg = Math.round(baseDmg * bonusRatio);
+    const totalDmg = baseDmg + bonusDmg;
+    const maxSoldiers = bp.maxSoldiers || 1;
+    const totalDps = Math.round(totalDmg * bp.fireRate * maxSoldiers);
+
+    const effectInfo = this.getSummonSpecificEffectText(type, this.previewElement);
+
+    const elemButtonsHtml = SELECTABLE_ELEMENTS.map((el) => {
+      const isSelected = this.previewElement === el;
+      const color = ELEMENT_COLORS[el];
+      const icon = ELEMENT_ICONS[el];
+      return `
+        <button class="sim-elem-btn ${isSelected ? 'active' : ''}" 
+                data-elem="${el}" 
+                style="${isSelected ? `border-color: ${color}; box-shadow: 0 0 10px ${color}80;` : ''}">
+          <span>${icon}</span>
+          <span style="color: ${color}">${ELEMENT_NAMES[el].split(' ')[0]}</span>
+        </button>
+      `;
+    }).join('');
+
+    return `
+      <div class="sp-section sp-card simulation-panel">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #34d399; margin-bottom: 0;">🔄 CƠ CHẾ CHUYỂN ĐỔI LINH HOẠT TRONG TRẬN ĐẤU</h4>
-          <span class="sp-hint">Chuyển đổi tức thì • Hoàn toàn Miễn Phí (0 Vàng)</span>
-        </div>
-        <p class="sp-desc" style="margin-bottom: 8px;">
-          Mỗi Trại Dân Quân (Barracks) triệu tập <b>3 chiến binh người que</b>. Người chơi có quyền tự do lựa chọn cho đội quân này cầm <b>Kiếm & Khiên (Lính Đánh Gần)</b> hoặc <b>Cung & Lao (Lính Bắn Tên)</b> để ứng biến theo từng đợt quái:
-        </p>
-        <div class="sp-mechanic-box" style="border-left-color: #10b981;">
-          <p><b>🕹️ Cách thao tác:</b> Bấm vào Nhà Lính trên bản đồ ➔ Nhấn nút <b>[⚔️ Lính Cận Chiến]</b> hoặc <b>[🏹 Lính Bắn Tên]</b> trên bảng điều khiển bên phải. 3 chiến binh sẽ tự động đổi vũ khí ngay tại điểm tập kết mà không làm gián đoạn trận đánh!</p>
-          <p class="sp-tip-text">🚩 Bạn có thể cắm lại cờ (Rally Point) bất kỳ lúc nào để dàn quân tại khúc cua hiểm trở hoặc kéo xạ thủ ra sát bờ sông để bắn tỉa thủy quái!</p>
-        </div>
-      </div>
-
-      <!-- Hai Cột So Sánh Trực Quan Giữa 2 Loại Lính -->
-      <div class="soldiers-comparison-grid">
-        <!-- 1. LÍNH ĐÁNH GẦN -->
-        <div class="soldier-class-card melee-theme">
-          <div class="soldier-class-header">
-            <span class="soldier-icon-big">🛡️⚔️</span>
-            <div class="soldier-title-box">
-              <h3>Lính Đánh Gần (Melee Swordsman)</h3>
-              <span class="soldier-sub-tag melee-tag">Bức Tường Thép • Chốt Chặn 1v1</span>
-            </div>
-          </div>
-          <p class="sp-desc">
-            Trang bị giáp sắt, khiên chắn và kiếm cận chiến. Trọng trách hàng đầu là nghênh chiến trực diện, giữ chân quái vật không cho lọt qua phòng tuyến.
-          </p>
-
-          <ul class="soldier-feature-list">
-            <li>🛡️ <b>Chống Chịu Cực Cao:</b> Lượng máu dồi dào (100 ❤️ ở Cấp 1, lên đến 480 - 600 ❤️ ở Cấp 4) cùng giáp vật lý giảm tới 40% - 50% sát thương nhận vào.</li>
-            <li>⚔️ <b>Khóa Chân Quái Vật (1v1 Block):</b> Khi quái chạm vào lính, cả hai sẽ dừng lại đấu kiếm. 3 lính chặn đứng tối đa 3 quái cùng lúc, tạo "vùng chết chóc" cho Pháo cối và Tháp Cung xả đạn.</li>
-            <li>🎯 <b>Mục Tiêu Tác Chiến:</b> Chuyên trị quái <b>Đi Bộ (WALK)</b>, quái chạy nhanh, quái tàng hình và Boss mặt đất.</li>
-            <li>⚠️ <b>Hạn Chế:</b> Không thể tấn công quái Bay (FLY) hay quái bơi Kênh Nước (SWIM).</li>
-            <li>🌟 <b>Đột Phá Cấp 4:</b>
-              <br>• <i>Nhánh 4-A (Thánh Điện Hộ Vệ):</i> Tự hồi máu liên tục mỗi giây (+12 HP/s), cực kỳ trâu bò.
-              <br>• <i>Nhánh 4-B (Đấu Sĩ Cuồng Nộ):</i> Sát thương tăng vọt (55 DPS), chém sát thương diện rộng xung quanh.
-            </li>
-          </ul>
-
-          <div class="soldier-stats-summary">
-            <div class="stat-box">
-              <span class="s-label">Tầm Tác Chiến</span>
-              <span class="s-val">Tiếp xúc (Melee)</span>
-            </div>
-            <div class="stat-box">
-              <span class="s-label">Chống Chịu</span>
-              <span class="s-val" style="color: #60a5fa">Rất Cao (❤️❤️❤️)</span>
-            </div>
-            <div class="stat-box">
-              <span class="s-label">Mục Tiêu</span>
-              <span class="s-val" style="color: #cbd5e1">Chỉ Đi Bộ</span>
-            </div>
-          </div>
+          <h4 class="sp-sec-title">🧪 MÔ PHỎNG NGUYÊN TỐ CHO ĐƠN VỊ CỦA ${bp.name.toUpperCase()}</h4>
+          <span class="sp-hint">Bấm chọn nguyên tố để xem biến đổi chỉ số & hiệu ứng</span>
         </div>
 
-        <!-- 2. LÍNH BẮN TÊN -->
-        <div class="soldier-class-card ranged-theme">
-          <div class="soldier-class-header">
-            <span class="soldier-icon-big">🏹🎯</span>
-            <div class="soldier-title-box">
-              <h3>Lính Bắn Tên (Ranged Archer)</h3>
-              <span class="soldier-sub-tag ranged-tag">Bắn Tỉa Viễn Chiến • Đa Miền Địa Hình</span>
-            </div>
+        <div class="sim-controls-group">
+          <span class="sim-group-label">
+            ${type === 'DRAGON_NEST' ? '🔥 Chọn Nguyên Tố Thứ 2 Cho Rồng (+60% Sát Thương Phép):' : type === 'FAIRY_TREE' ? '✨ Chọn Nguyên Tố Thứ 2 Cho Tiên (+60% Sát Thương Phép):' : '⚡ Chọn 1 Nguyên Tố Trang Bị Cho Binh Lính (+45% Sát Thương Phép):'}
+          </span>
+          <div class="sim-elem-grid">${elemButtonsHtml}</div>
+        </div>
+
+        <div class="sim-result-box" style="border-left-color: ${elemColor}">
+          <div class="sim-result-header">
+            <span class="sim-res-title">
+              ĐÒN ĐÁNH CỦA ĐƠN VỊ: 
+              <b style="color: #cbd5e1">${baseDmg} Gốc (${type === 'DRAGON_NEST' ? '🐉 Rồng' : type === 'FAIRY_TREE' ? '🧚 Tiên' : '⚔️ Vật Lý'})</b>
+              + 
+              <b style="color: ${elemColor}">${elemIcon} ${bonusDmg} Phép ${elemName}</b>
+              = <span class="highlight-total-dmg">${totalDmg} DMG / đòn</span>
+            </span>
+            <span class="sim-total-dps">Toàn đội (${maxSoldiers} đơn vị): ${totalDps} DPS</span>
           </div>
-          <p class="sp-desc">
-            Trang bị cung tên dài và lao phóng. Đứng an toàn tại điểm cắm cờ (Rally Point) xả mưa tên hỗ trợ tầm xa lên mọi hướng tấn công của kẻ địch.
-          </p>
 
-          <ul class="soldier-feature-list">
-            <li>🌟 <b>ĐẶC QUYỀN ĐA MIỀN:</b> Tấn công được <b>CẢ 3 LOẠI QUÁI: Đi Bộ (WALK), Bay Trên Trời (FLY) và Bơi Dưới Sông (SWIM)</b>!</li>
-            <li>🎯 <b>Tầm Bắn Xa 150 px:</b> Tự do đặt cờ ở vị trí an toàn lề đường hoặc sát bờ kênh để bắn tỉa quái mà không sợ bị quái cận chiến áp sát.</li>
-            <li>⚡ <b>Tốc Độ Ra Đạn Nhanh:</b> Bắn đều đặn 1.2 - 1.5 mũi tên/giây mỗi lính. 3 lính tạo ra mật độ 3.6 - 4.5 phát bắn/giây!</li>
-            <li>🛡️ <b>Cơ Chế Tự Vệ:</b> Nếu quái đi bộ bước đè lên đúng vị trí lính đứng, lính vẫn tự động rút dao găm tự vệ và chống trả cận chiến.</li>
-            <li>🌟 <b>Đột Phá Cấp 4:</b>
-              <br>• <i>Nhánh 4-A (Thần Tiễn Tầm Xa):</i> Tầm bắn kéo dài lên 200px, bắn xuyên giáp vật lý.
-              <br>• <i>Nhánh 4-B (Mưa Tên Xuyên Phá):</i> Bắn cùng lúc 2 mũi tên mỗi phát bắn (tương đương 6 mũi tên/lượt cả 3 lính).
-            </li>
-          </ul>
-
-          <div class="soldier-stats-summary">
-            <div class="stat-box">
-              <span class="s-label">Tầm Tác Chiến</span>
-              <span class="s-val">150 - 200 px</span>
+          <div class="sim-effect-box" style="border-left-color: ${elemColor}">
+            <div class="sim-effect-title" style="color: ${elemColor}">
+              ${elemIcon} ${effectInfo.name}
             </div>
-            <div class="stat-box">
-              <span class="s-label">Chống Chịu</span>
-              <span class="s-val" style="color: #94a3b8">Trung Bình (❤️)</span>
-            </div>
-            <div class="stat-box">
-              <span class="s-label">Mục Tiêu</span>
-              <span class="s-val" style="color: #34d399">Đi Bộ, Bay, Bơi</span>
-            </div>
+            <p class="sim-effect-desc">${effectInfo.desc}</p>
+            <div class="sim-synergy-tag">${effectInfo.synergy}</div>
           </div>
         </div>
       </div>
+    `;
+  }
 
-      <!-- ĐƠN VỊ TRIỆU HỒI HUYỀN BÍ (RỒNG, TIÊN, ANH LINH) -->
-      <div class="sp-section sp-card" style="border-left: 5px solid #a855f7;">
-        <h4 class="sp-sec-title" style="color: #c084fc;">🐉🧚👻 CÁC THỰC THỂ TRIỆU HỒI HUYỀN BÍ</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 10px;">
-          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span style="font-size: 24px;">🐉</span>
-              <div>
-                <b style="color: #f87171;">Hỏa Long (Tổ Rồng)</b>
-                <div style="font-size: 10.5px; color: #94a3b8;">1 Cá Thể Duy Nhất • AoE Splash</div>
-              </div>
-            </div>
-            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
-              Chốt chặn không phận, bay lượn trên trời và <b>chặn đứng quái Bay (FLY) & Đi Bộ</b>. Khè lửa/cắn nổ lan AoE toàn vùng. Sở hữu sẵn hệ <b>RỒNG</b> và 1 hệ tự chọn.
-            </p>
-          </div>
+  private getSummonSpecificEffectText(
+    _type: TowerType,
+    elem: ElementType
+  ): { name: string; desc: string; synergy: string } {
+    const elemName = ELEMENT_NAMES[elem];
+    switch (elem) {
+      case 'LIGHT':
+        return {
+          name: `Ban Phước Ánh Sáng Thần Thánh (${elemName})`,
+          desc: `Mỗi đòn đánh của đơn vị triệu hồi tự động hồi phục ngay +5 HP cho bản thân! Giúp đơn vị trụ vững bền bỉ trước các đàn quái hung tợn.`,
+          synergy: `✨ Tự hồi phục máu liên tục trên từng đòn đánh • Cực kỳ trâu bò!`
+        };
+      case 'GRASS':
+        return {
+          name: `Dây Leo Trói Buộc & Hút Hồn (${elemName})`,
+          desc: `Đòn đánh trói chân quái vật (Root) khiến quái dừng bước, đồng thời hút +3 HP hồi lại cho đơn vị triệu hồi.`,
+          synergy: `🌿 Khống chế tại chỗ + hồi phục máu!`
+        };
+      case 'ICE':
+        return {
+          name: `Băng Hàn Đóng Băng & Giảm Tốc (${elemName})`,
+          desc: `Làm chậm 45% tốc độ di chuyển và tốc đánh của quái, kèm 25% tỉ lệ Đóng Băng hoàn toàn trong 0.6s.`,
+          synergy: `❄️ Chốt chặn bất động quái chạy nhanh và boss hung hãn!`
+        };
+      case 'FIRE':
+        return {
+          name: `Hỏa Ngục Thiêu Đốt Rút Máu (${elemName})`,
+          desc: `Gây hiệu ứng Bỏng thiêu đốt DoT rút máu liên tục mỗi 0.5s bỏ qua giáp phòng ngự của quái vật.`,
+          synergy: `🔥 Thiêu rụi quái có lượng máu dày và quái bọc thép!`
+        };
+      case 'LIGHTNING':
+        return {
+          name: `Sốc Điện Tê Liệt & Giật Nảy Chuỗi (${elemName})`,
+          desc: `Gây choáng 0.35s ngắt đòn đánh của quái vật, đồng thời phóng tia sét nảy sang 1 kẻ địch gần nhất gây 35% sát thương.`,
+          synergy: `⚡ Ngắt chiêu của quái vật và dọn dẹp cụm quái đông!`
+        };
+      case 'STEEL':
+        return {
+          name: `Kình Lực Phá Giáp (${elemName})`,
+          desc: `Phá tan lớp giáp bảo hộ của kẻ địch, khiến quái nhận thêm +30% sát thương từ mọi đòn tấn công của tháp và đồng minh.`,
+          synergy: `⚔️ Khắc chế cứng quái bọc giáp sắt, Golem và Boss!`
+        };
+      case 'DARK':
+        return {
+          name: `Dấu Ấn Nguyền Rủa Hắc Ám (${elemName})`,
+          desc: `Gắn lời nguyền hắc ám lên quái vật khiến chúng nhận thêm +35% sát thương từ tất cả công trình xung quanh.`,
+          synergy: `🌑 Khuếch đại sát thương cho toàn bộ hệ thống phòng thủ!`
+        };
+      default:
+        return {
+          name: `Cường Hóa Thuộc Tính ${elemName}`,
+          desc: `Gia tăng mạnh sát thương nguyên tố và kích hoạt trạng thái khắc chế nguyên tố tương ứng lên kẻ thù.`,
+          synergy: `✨ Tối ưu hóa sát thương khắc hệ theo từng đợt quái!`
+        };
+    }
+  }
 
-          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span style="font-size: 24px;">🧚</span>
-              <div>
-                <b style="color: #f472b6;">Bầy Tiên (Cây Tiên)</b>
-                <div style="font-size: 10.5px; color: #94a3b8;">Số Lượng Tăng Dần (2 ➔ 5)</div>
-              </div>
-            </div>
-            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
-              Các tinh linh ánh sáng bay lượn, có khả năng <b>chặn quái Bay (FLY) & Đi Bộ</b>. Bắn đạn phép tầm xa liên thanh. Sở hữu sẵn hệ <b>TIÊN</b> và 1 hệ tự chọn.
-            </p>
-          </div>
-
-          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span style="font-size: 24px;">👻</span>
-              <div>
-                <b style="color: #a78bfa;">Anh Linh (Tế Đàn)</b>
-                <div style="font-size: 10.5px; color: #94a3b8;">Tái Sinh Từ Đơn Vị Tử Trận</div>
-              </div>
-            </div>
-            <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4; margin: 0;">
-              Khi lính, rồng, tiên tử trận gần Tế Đàn, có tỉ lệ hồi sinh thành thực thể bóng ma. Giữ nguyên hình thái nhưng được <b>thêm hệ MA (GHOST)</b> và sát thương cường hóa!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bảng So Sánh Chỉ Số Cụ Thể Theo Từng Cấp -->
+  private renderOverviewComparisonHtml(): string {
+    return `
       <div class="sp-section sp-card">
-        <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CỦA 3 CHIẾN BINH THEO CẤP NHÀ LÍNH</h4>
+        <div class="sp-sec-header">
+          <h4 class="sp-sec-title">📊 BẢNG TỔNG QUAN SO SÁNH 4 HỆ THỐNG THÁP & ĐƠN VỊ TRIỆU HỒI</h4>
+          <span class="sp-hint">Stick Vanguard Summoning System Comparison</span>
+        </div>
         <div class="table-responsive">
           <table class="stats-table">
             <thead>
               <tr>
-                <th>Cấp Nhà Lính</th>
-                <th>Vũ Khí Lính</th>
-                <th>Máu (HP/Lính)</th>
-                <th>Sát Thương</th>
-                <th>Tốc Đánh</th>
-                <th>DPS / Lính</th>
-                <th>Tổng 3 Lính</th>
-                <th>Tầm Đánh</th>
-                <th>Địa Hình Tác Chiến</th>
+                <th>Hệ Triệu Hồi</th>
+                <th>Thực Thể</th>
+                <th>Số Lượng</th>
+                <th>Cơ Chế Chốt Chặn</th>
+                <th>Địa Hình Tấn Công</th>
+                <th>Đặc Quyền Cốt Lõi</th>
+                <th>Khả Năng Gắn Nguyên Tố</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td rowspan="2"><b>Cấp 1</b> (100g)</td>
-                <td><span class="badge-melee">⚔️ Cận Chiến</span></td>
-                <td>100 ❤️ (Giáp 10%)</td>
-                <td>8 DMG</td>
-                <td>1.0/s</td>
-                <td>8 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">24 DPS</td>
-                <td>Tiếp xúc</td>
-                <td>Chỉ Đi Bộ (WALK)</td>
+                <td><b>🛡️ Trại Dân Quân (Barracks)</b></td>
+                <td>Chiến Binh Người Que</td>
+                <td>3 ➔ 4 ➔ 5</td>
+                <td>Chốt chặn Đi Bộ (1v1)</td>
+                <td>Bộ (Cận chiến) / <b>Bộ, Bay, Bơi (Cung)</b></td>
+                <td>Chuyển đổi tức thì <b>Cận Chiến vs Bắn Tên</b> miễn phí</td>
+                <td>Tự do gắn 1 trong 12 nguyên tố (+45% Phép)</td>
               </tr>
               <tr>
-                <td><span class="badge-ranged">🏹 Bắn Tên</span></td>
-                <td>65 ❤️ (Giáp 0%)</td>
-                <td>6 DMG</td>
-                <td>1.2/s</td>
-                <td>7.2 DPS</td>
-                <td style="color: #34d399; font-weight: 700;">21.6 DPS</td>
-                <td>150 px</td>
+                <td><b>🐉 Tổ Rồng (Dragon Nest)</b></td>
+                <td>Hỏa Long</td>
+                <td>1 Cá thể duy nhất</td>
+                <td><b>Chặn Đi Bộ & Bay 🦅</b></td>
                 <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
-              </tr>
-              <tr style="background: rgba(255, 255, 255, 0.02)">
-                <td rowspan="2"><b>Cấp 2</b> (160g)</td>
-                <td><span class="badge-melee">⚔️ Cận Chiến</span></td>
-                <td>180 ❤️ (Giáp 20%)</td>
-                <td>14 DMG</td>
-                <td>1.0/s</td>
-                <td>14 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">42 DPS</td>
-                <td>Tiếp xúc</td>
-                <td>Chỉ Đi Bộ (WALK)</td>
-              </tr>
-              <tr style="background: rgba(255, 255, 255, 0.02)">
-                <td><span class="badge-ranged">🏹 Bắn Tên</span></td>
-                <td>110 ❤️ (Giáp 5%)</td>
-                <td>11 DMG</td>
-                <td>1.3/s</td>
-                <td>14.3 DPS</td>
-                <td style="color: #34d399; font-weight: 700;">42.9 DPS</td>
-                <td>160 px</td>
-                <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
+                <td><b>Sát thương AoE nổ lan 70%</b> • Máu dày, tự hồi máu</td>
+                <td>Gốc hệ Rồng + Chọn thêm 1 hệ (+60% Phép)</td>
               </tr>
               <tr>
-                <td rowspan="2"><b>Cấp 3</b> (240g)</td>
-                <td><span class="badge-melee">⚔️ Cận Chiến</span></td>
-                <td>300 ❤️ (Giáp 30%)</td>
-                <td>24 DMG</td>
-                <td>1.1/s</td>
-                <td>26.4 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">79.2 DPS</td>
-                <td>Tiếp xúc</td>
-                <td>Chỉ Đi Bộ (WALK)</td>
+                <td><b>🧚 Cây Tiên (Fairy Tree)</b></td>
+                <td>Tinh Linh Tiên</td>
+                <td>2 ➔ 3 ➔ 4 ➔ 5</td>
+                <td><b>Chặn Đi Bộ & Bay 🦅</b></td>
+                <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
+                <td>Bắn đạn phép tầm xa liên thanh • Phân tán chặn địch</td>
+                <td>Gốc hệ Tiên + Chọn thêm 1 hệ (+60% Phép)</td>
               </tr>
               <tr>
-                <td><span class="badge-ranged">🏹 Bắn Tên</span></td>
-                <td>170 ❤️ (Giáp 10%)</td>
-                <td>18 DMG</td>
-                <td>1.4/s</td>
-                <td>25.2 DPS</td>
-                <td style="color: #34d399; font-weight: 700;">75.6 DPS</td>
-                <td>175 px</td>
+                <td><b>🏛️ Tế Đàn Anh Linh (Heroic Altar)</b></td>
+                <td>Anh Linh Bóng Ma</td>
+                <td>2 ➔ 3 ➔ 4 ➔ 6</td>
+                <td>Theo hình thái gốc</td>
                 <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
-              </tr>
-              <tr class="branch-row-a">
-                <td rowspan="2"><b>Cấp 4-A</b> (320g)</td>
-                <td><span class="badge-melee">⚔️ Thánh Điện Hộ Vệ</span></td>
-                <td>480 ❤️ (+12 HP/s)</td>
-                <td>35 DMG</td>
-                <td>1.2/s</td>
-                <td>42 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">126 DPS</td>
-                <td>Tiếp xúc</td>
-                <td>Chỉ Đi Bộ (WALK)</td>
-              </tr>
-              <tr class="branch-row-a">
-                <td><span class="badge-ranged">🏹 Thần Tiễn Tầm Xa</span></td>
-                <td>240 ❤️ (Giáp 15%)</td>
-                <td>28 DMG</td>
-                <td>1.5/s</td>
-                <td>42 DPS</td>
-                <td style="color: #34d399; font-weight: 700;">126 DPS</td>
-                <td><b>200 px</b></td>
-                <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
-              </tr>
-              <tr class="branch-row-b">
-                <td rowspan="2"><b>Cấp 4-B</b> (320g)</td>
-                <td><span class="badge-melee">⚔️ Đấu Sĩ Cuồng Nộ</span></td>
-                <td>420 ❤️ (Chém AoE)</td>
-                <td>48 DMG</td>
-                <td>1.3/s</td>
-                <td>62.4 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">187.2 DPS</td>
-                <td>Tiếp xúc</td>
-                <td>Chỉ Đi Bộ (WALK)</td>
-              </tr>
-              <tr class="branch-row-b">
-                <td><span class="badge-ranged">🏹 Mưa Tên Xuyên Phá</span></td>
-                <td>220 ❤️ (Bắn 2 Tên)</td>
-                <td>22 x 2 DMG</td>
-                <td>1.4/s</td>
-                <td>61.6 DPS</td>
-                <td style="color: #38bdf8; font-weight: 700;">184.8 DPS</td>
-                <td>170 px</td>
-                <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
+                <td><b>Hồi sinh đồng minh tử trận</b> • Ban thêm Hệ Ma (+50% DMG)</td>
+                <td><b>Hệ Ma cố định</b> • Kế thừa nguyên tố gốc của lính</td>
               </tr>
             </tbody>
           </table>
@@ -274,5 +624,91 @@ export class CodexSoldiers {
       </div>
     `;
   }
-}
 
+  private renderTreeNode(
+    bp: TowerBlueprint,
+    tierBadge: string,
+    tierKey: string,
+    isBranch: boolean = false
+  ): string {
+    const isSelected = this.selectedTierKey === tierKey;
+    const elemColor = ELEMENT_COLORS[bp.element] || '#ffffff';
+    const elemIcon = ELEMENT_ICONS[bp.element] || '🏰';
+
+    return `
+      <div class="tree-node ${isSelected ? 'active-node' : ''} ${isBranch ? 'branch-node' : ''}" 
+           data-tier-key="${tierKey}">
+        <div class="tn-badge">${tierBadge}</div>
+        <div class="tn-title">
+          <span style="color: ${elemColor}">${elemIcon}</span>
+          <span>${bp.name}</span>
+        </div>
+        <div class="tn-stats">
+          <span>🪙 <b>${bp.cost}</b></span>
+          <span>👥 <b>${bp.maxSoldiers || 1}</b></span>
+          <span>❤️ <b>${bp.soldierHp || 100}</b></span>
+        </div>
+        <div class="tn-brief">${bp.description}</div>
+      </div>
+    `;
+  }
+
+  public bindEvents(container: HTMLElement): void {
+    // 1. Sub-nav button clicks
+    container.querySelectorAll('[data-summon-sub]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const sub = (e.currentTarget as HTMLElement).getAttribute('data-summon-sub') as SummonCodexSubTab;
+        if (sub) {
+          this.currentSubTab = sub;
+          if (sub !== 'OVERVIEW') {
+            this.selectedTierKey = `${sub}_1`;
+          }
+          container.innerHTML = this.renderUnifiedSummonHtml();
+          this.bindEvents(container);
+        }
+      });
+    });
+
+    // 2. Tree node clicks
+    container.querySelectorAll('.tree-node').forEach((node) => {
+      node.addEventListener('click', (e) => {
+        const key = (e.currentTarget as HTMLElement).getAttribute('data-tier-key');
+        if (key) {
+          this.selectedTierKey = key;
+          const scroll = container.scrollTop;
+          container.innerHTML = this.renderUnifiedSummonHtml();
+          container.scrollTop = scroll;
+          this.bindEvents(container);
+        }
+      });
+    });
+
+    // 3. Stance toggle buttons for Barracks
+    container.querySelectorAll('[data-stance]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const stance = (e.currentTarget as HTMLElement).getAttribute('data-stance') as 'MELEE' | 'RANGED';
+        if (stance) {
+          this.barracksStance = stance;
+          const scroll = container.scrollTop;
+          container.innerHTML = this.renderUnifiedSummonHtml();
+          container.scrollTop = scroll;
+          this.bindEvents(container);
+        }
+      });
+    });
+
+    // 4. Element selector buttons in simulation panel
+    container.querySelectorAll('.sim-elem-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const elem = (e.currentTarget as HTMLElement).getAttribute('data-elem') as ElementType;
+        if (elem) {
+          this.previewElement = elem;
+          const scroll = container.scrollTop;
+          container.innerHTML = this.renderUnifiedSummonHtml();
+          container.scrollTop = scroll;
+          this.bindEvents(container);
+        }
+      });
+    });
+  }
+}

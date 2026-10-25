@@ -1,7 +1,6 @@
 import { TowerType } from '../types/entities.types.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { CodexBuildings } from './codex/CodexBuildings.js';
-import { CodexSoldiers } from './codex/CodexSoldiers.js';
 import { CodexTraps } from './codex/CodexTraps.js';
 import { CodexImbue } from './codex/CodexImbue.js';
 import { CodexElements } from './codex/CodexElements.js';
@@ -21,7 +20,6 @@ export class SideDetailPanel {
 
   // Sub-modules
   private buildingsCodex: CodexBuildings;
-  private soldiersCodex: CodexSoldiers;
   private trapsCodex: CodexTraps;
   private imbueCodex: CodexImbue;
   private elementsCodex: CodexElements;
@@ -36,10 +34,9 @@ export class SideDetailPanel {
     this.iconEl = document.getElementById('codex-modal-icon')!;
 
     this.buildingsCodex = new CodexBuildings(() => {
-      this.currentBuildingSubTab = 'SOLDIERS';
+      this.currentBuildingSubTab = 'BARRACKS';
       this.renderBuildingsCategory();
     });
-    this.soldiersCodex = new CodexSoldiers();
     this.trapsCodex = new CodexTraps();
     this.imbueCodex = new CodexImbue();
     this.elementsCodex = new CodexElements();
@@ -103,6 +100,12 @@ export class SideDetailPanel {
       this.currentCategory = 'BUILDINGS';
       this.currentBuildingSubTab = category;
       if (targetSubId) {
+        this.buildingsCodex.selectedTierKey = targetSubId;
+      }
+    } else if (category === 'BUILDINGS') {
+      this.currentCategory = 'BUILDINGS';
+      if (targetSubId) {
+        this.currentBuildingSubTab = targetSubId;
         this.buildingsCodex.selectedTierKey = targetSubId;
       }
     } else if (category === 'ELEMENTS') {
@@ -210,7 +213,7 @@ export class SideDetailPanel {
 
     this.titleEl.textContent = 'Bách Khoa Công Trình & Bẫy Phòng Thủ';
     this.iconEl.textContent = '🏰';
-    this.badgeEl.textContent = '3 Nhánh Tháp • 4 Tháp Triệu Hồi • Bẫy • Khảm Ngọc';
+    this.badgeEl.textContent = '3 Tháp Phòng Ngự • 4 Tháp Triệu Hồi • Bẫy • Khảm Ngọc';
 
     let rightContentHtml = '';
     switch (this.currentBuildingSubTab) {
@@ -225,9 +228,6 @@ export class SideDetailPanel {
           this.currentBuildingSubTab as TowerType,
           this.buildingsCodex.selectedTierKey
         );
-        break;
-      case 'SOLDIERS':
-        rightContentHtml = this.soldiersCodex.getSoldiersCategoryHtml();
         break;
       case 'TRAPS':
         rightContentHtml = this.trapsCodex.getTrapsCategoryHtml();
@@ -303,15 +303,8 @@ export class SideDetailPanel {
 
           <div class="codex-sidebar-title" style="margin-top: 10px;">
             <span>BẪY & HỖ TRỢ</span>
-            <span style="color: #10b981;">3 Mục</span>
+            <span style="color: #10b981;">2 Mục</span>
           </div>
-          <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'SOLDIERS' ? 'active' : ''}" data-building-sub="SOLDIERS">
-            <span style="font-size: 18px;">⚔️</span>
-            <div>
-              <div style="font-weight: 700;">Binh Lính & Đơn Vị Triệu Hồi</div>
-              <div style="font-size: 11px; color: #64748b;">So sánh chi tiết lính, rồng & tiên</div>
-            </div>
-          </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'TRAPS' ? 'active' : ''}" data-building-sub="TRAPS">
             <span style="font-size: 18px;">⚙️</span>
             <div>
@@ -345,7 +338,7 @@ export class SideDetailPanel {
         const sub = (e.currentTarget as HTMLElement).getAttribute('data-building-sub');
         if (sub) {
           this.currentBuildingSubTab = sub;
-          if (['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'].includes(sub)) {
+          if (['ARCHER', 'MAGE', 'ARTILLERY', 'BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'].includes(sub)) {
             this.buildingsCodex.selectedTierKey = `${sub}_1`;
           }
           this.renderBuildingsCategory();
@@ -354,7 +347,8 @@ export class SideDetailPanel {
     });
 
     // Bind inner listeners if on tower
-    if (['BARRACKS', 'ARCHER', 'MAGE', 'ARTILLERY'].includes(this.currentBuildingSubTab)) {
+    const allTowerTypes = ['ARCHER', 'MAGE', 'ARTILLERY', 'BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
+    if (allTowerTypes.includes(this.currentBuildingSubTab)) {
       this.buildingsCodex.bindTowerEventListeners(this.currentBuildingSubTab as TowerType);
     }
   }

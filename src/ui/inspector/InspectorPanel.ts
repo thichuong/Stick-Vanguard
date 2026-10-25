@@ -7,7 +7,7 @@ import {
   ELEMENT_IMBUE_COST,
   MAGE_SECOND_ELEMENT_COST
 } from '../../config/elements.config.js';
-import { TowerType } from '../../types/entities.types.js';
+import { TowerEntity, TowerType } from '../../types/entities.types.js';
 import { MagicalElementType } from '../../types/elements.types.js';
 import { SideDetailPanel } from '../SideDetailPanel.js';
 import { MapSelectionModal } from '../modals/MapSelectionModal.js';
@@ -149,6 +149,9 @@ export class InspectorPanel {
 
     const currentKey = `${this.currentTab}_${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
+      if (tower && (tower.type === 'BARRACKS' || tower.type === 'DRAGON_NEST' || tower.type === 'FAIRY_TREE' || tower.type === 'HEROIC_ALTAR')) {
+        this.updateLiveSummonedUnits(tower);
+      }
       return;
     }
     this.lastRenderKey = currentKey;
@@ -360,6 +363,18 @@ export class InspectorPanel {
               </div>
             </div>
           `;
+        } else if (tower.type === 'HEROIC_ALTAR') {
+          elementPickerHtml = `
+            <div class="elem-picker-section" style="border-left: 3px solid #818cf8; background: rgba(99, 102, 241, 0.08); padding: 8px 10px; border-radius: 6px;">
+              <div class="picker-header">
+                <span>👻 THUỘC TÍNH BẢN THỂ:</span>
+              </div>
+              <div class="current-elem-text">Đang dùng: <b>👻 Hệ Ma (Cố định)</b></div>
+              <p style="font-size: 11px; color: #94a3b8; margin: 4px 0 0 0; line-height: 1.4;">
+                Tế Đàn Anh Linh không gắn thêm nguyên tố. Khi lính, rồng hoặc tiên tử trận, Anh Linh được triệu hồi sẽ tự động mang thêm Hệ Ma (+50% Sát thương Ma).
+              </p>
+            </div>
+          `;
         } else {
           elementPickerHtml = `
             <div class="elem-picker-section">
@@ -455,6 +470,8 @@ export class InspectorPanel {
               </div>
             `
         }
+
+        ${isSummon ? this.renderSummonedUnitsSectionHtml(tower) : ''}
       `;
 
       document.getElementById('btn-open-tree')?.addEventListener('click', () => {
@@ -956,6 +973,212 @@ export class InspectorPanel {
     if (inspectorSection && prevScrollTop > 0) {
       inspectorSection.scrollTop = prevScrollTop;
     }
+  }
+
+  /**
+   * Render real-time list of summoned units for selected summon tower
+   */
+  public renderSummonedUnitsSectionHtml(tower: TowerEntity): string {
+    const units = this.state.soldiers.filter((s) => s.towerId === tower.id);
+    const aliveCount = units.filter((s) => s.state !== 'DEAD' && s.hp > 0).length;
+    const maxCapacity = tower.maxSoldiers || (tower.type === 'HEROIC_ALTAR' ? 2 : 1);
+
+    let unitsListHtml = '';
+    if (units.length === 0) {
+      if (tower.type === 'HEROIC_ALTAR') {
+        unitsListHtml = `
+          <div class="summoned-unit-empty">
+            <span>👻 Chưa có Anh Linh nào xuất hiện.</span>
+            <span style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
+              Khi chiến binh đồng minh (Lính/Rồng/Tiên) ngã xuống trong phạm vi ${tower.range}px, có ${Math.round((tower.resurrectChance || 0.3) * 100)}% tỉ lệ triệu hồi lại thành Anh Linh!
+            </span>
+          </div>
+        `;
+      } else {
+        unitsListHtml = `
+          <div class="summoned-unit-empty">
+            <span>Đang chuẩn bị điều động binh sĩ...</span>
+          </div>
+        `;
+      }
+    } else {
+      unitsListHtml = units.map((u, idx) => {
+        const isDead = u.state === 'DEAD' || u.hp <= 0;
+        const curHp = Math.max(0, Math.ceil(u.hp));
+        const maxHp = u.maxHp || 100;
+        const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
+        const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
+
+        // Unit icon & title
+        let icon = '🗡️';
+        if (u.archetype === 'DRAGON') icon = '🐉';
+        else if (u.archetype === 'FAIRY') icon = '🧚';
+        else if (u.isSpirit) icon = '👻';
+        else if (u.combatMode === 'RANGED') icon = '🏹';
+
+        let nameDisplay = u.name;
+        if (u.combatMode === 'RANGED' && !u.archetype) {
+          nameDisplay = `Xạ Thủ ${idx + 1}`;
+        }
+
+        let stateLabel = '';
+        let stateClass = '';
+        if (isDead) {
+          stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
+          stateClass = 'state-dead';
+        } else if (u.state === 'ATTACKING') {
+          stateLabel = '⚔️ Đang giao chiến';
+          stateClass = 'state-fighting';
+        } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
+          stateLabel = '🏃 Đang di chuyển';
+          stateClass = 'state-moving';
+        } else {
+          stateLabel = '🛡️ Chốt chặn';
+          stateClass = 'state-guarding';
+        }
+
+        const armorPct = Math.round((u.armor || 0) * 100);
+        const elemIcon = ELEMENT_ICONS[u.element] || '';
+        const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
+
+        return `
+          <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}">
+            <div class="suc-top">
+              <div class="suc-name-box">
+                <span class="suc-icon">${icon}</span>
+                <span class="suc-name">${nameDisplay}</span>
+                <span class="suc-elems">${elemIcon}${secIcon}</span>
+              </div>
+              <div class="suc-hp-text">
+                <span class="suc-hp-val">${curHp}/${maxHp}</span>
+                <span class="suc-hp-heart">❤️</span>
+              </div>
+            </div>
+
+            <!-- Health Bar -->
+            <div class="suc-hp-track">
+              <div class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
+            </div>
+
+            <div class="suc-bottom">
+              <span class="suc-stat">⚔️ ${u.damage} DMG • 🛡️ ${armorPct}%</span>
+              <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="summoned-units-section">
+        <div class="sus-header">
+          <div class="sus-title-group">
+            <span class="sus-icon">🛡️</span>
+            <span class="sus-title">ĐƠN VỊ ĐANG TRIỆU HỒI</span>
+          </div>
+          <span class="sus-counter ${aliveCount === 0 ? 'all-dead' : ''}">${aliveCount}/${maxCapacity} Sẵn sàng</span>
+        </div>
+        <div id="inspector-summoned-units-container" class="summoned-units-list">
+          ${unitsListHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Smoothly update live summoned units list without re-rendering the whole inspector panel
+   */
+  public updateLiveSummonedUnits(tower: TowerEntity): void {
+    const container = document.getElementById('inspector-summoned-units-container');
+    if (!container) return;
+
+    const units = this.state.soldiers.filter((s) => s.towerId === tower.id);
+    const aliveCount = units.filter((s) => s.state !== 'DEAD' && s.hp > 0).length;
+    const maxCapacity = tower.maxSoldiers || (tower.type === 'HEROIC_ALTAR' ? 2 : 1);
+
+    const counterEl = this.inspectorContentEl.querySelector('.sus-counter');
+    if (counterEl) {
+      counterEl.textContent = `${aliveCount}/${maxCapacity} Sẵn sàng`;
+      counterEl.classList.toggle('all-dead', aliveCount === 0);
+    }
+
+    if (units.length === 0) {
+      if (tower.type === 'HEROIC_ALTAR') {
+        container.innerHTML = `
+          <div class="summoned-unit-empty">
+            <span>👻 Chưa có Anh Linh nào xuất hiện.</span>
+            <span style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
+              Khi chiến binh đồng minh (Lính/Rồng/Tiên) ngã xuống trong phạm vi ${tower.range}px, có ${Math.round((tower.resurrectChance || 0.3) * 100)}% tỉ lệ triệu hồi lại thành Anh Linh!
+            </span>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    container.innerHTML = units.map((u, idx) => {
+      const isDead = u.state === 'DEAD' || u.hp <= 0;
+      const curHp = Math.max(0, Math.ceil(u.hp));
+      const maxHp = u.maxHp || 100;
+      const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
+      const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
+
+      let icon = '🗡️';
+      if (u.archetype === 'DRAGON') icon = '🐉';
+      else if (u.archetype === 'FAIRY') icon = '🧚';
+      else if (u.isSpirit) icon = '👻';
+      else if (u.combatMode === 'RANGED') icon = '🏹';
+
+      let nameDisplay = u.name;
+      if (u.combatMode === 'RANGED' && !u.archetype) {
+        nameDisplay = `Xạ Thủ ${idx + 1}`;
+      }
+
+      let stateLabel = '';
+      let stateClass = '';
+      if (isDead) {
+        stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
+        stateClass = 'state-dead';
+      } else if (u.state === 'ATTACKING') {
+        stateLabel = '⚔️ Đang giao chiến';
+        stateClass = 'state-fighting';
+      } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
+        stateLabel = '🏃 Đang di chuyển';
+        stateClass = 'state-moving';
+      } else {
+        stateLabel = '🛡️ Chốt chặn';
+        stateClass = 'state-guarding';
+      }
+
+      const armorPct = Math.round((u.armor || 0) * 100);
+      const elemIcon = ELEMENT_ICONS[u.element] || '';
+      const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
+
+      return `
+        <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}">
+          <div class="suc-top">
+            <div class="suc-name-box">
+              <span class="suc-icon">${icon}</span>
+              <span class="suc-name">${nameDisplay}</span>
+              <span class="suc-elems">${elemIcon}${secIcon}</span>
+            </div>
+            <div class="suc-hp-text">
+              <span class="suc-hp-val">${curHp}/${maxHp}</span>
+              <span class="suc-hp-heart">❤️</span>
+            </div>
+          </div>
+
+          <div class="suc-hp-track">
+            <div class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
+          </div>
+
+          <div class="suc-bottom">
+            <span class="suc-stat">⚔️ ${u.damage} DMG • 🛡️ ${armorPct}%</span>
+            <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 }
 

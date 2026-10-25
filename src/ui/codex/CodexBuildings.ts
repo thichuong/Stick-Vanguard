@@ -12,6 +12,7 @@ export class CodexBuildings {
   public selectedTierKey: string = 'BARRACKS_1';
   public previewElement: ElementType = 'FIRE';
   public mageSecondaryElement: ElementType = 'LIGHTNING';
+  public barracksStance: 'MELEE' | 'RANGED' = 'MELEE';
 
   constructor(private onNavigateToSoldiers: () => void) {}
 
@@ -23,11 +24,11 @@ export class CodexBuildings {
       BARRACKS: {
         title: 'Trại Dân Quân (Barracks)',
         icon: '🛡️',
-        badge: 'Cận Chiến & Bắn Cung Linh Hoạt',
-        role: 'Triệu hồi 3 chiến binh người que tinh nhuệ. Trại lính không trực tiếp tấn công, chỉ có binh lính được điều động ra chặn đường hoặc bắn cung.',
+        badge: 'Cận Chiến Chặn Quái & Bắn Tên Đa Miền',
+        role: 'Triệu hồi 3 đến 5 chiến binh người que tinh nhuệ. Trại lính không trực tiếp tấn công, binh lính được điều động ra chốt chặn đường hoặc bắn cung.',
         mechanics:
           'Trại lính không trực tiếp tấn công. Lính Đánh Gần có máu và DPS cao, chốt chặn quái đi bộ 1v1. Lính Bắn Tên đứng tại điểm tập kết bắn cung tầm xa tấn công được cả Đi bộ, Dưới nước và Trên không. Cả 2 đều dùng sát thương hỗn hợp Vật lý + Nguyên tố tự chọn!',
-        tip: '💡 Bấm vào tháp để đổi qua lại giữa Lính Đánh Gần và Lính Bắn Tên bất kỳ lúc nào; gắn nguyên tố để đòn đánh có thêm sát thương phép và hiệu ứng riêng.'
+        tip: '💡 Bấm vào tháp trong trận để đổi qua lại giữa Lính Đánh Gần và Lính Bắn Tên bất kỳ lúc nào hoàn toàn MIỄN PHÍ!'
       },
       ARCHER: {
         title: 'Tháp Cung (Archer Tower)',
@@ -62,8 +63,8 @@ export class CodexBuildings {
         badge: 'Rồng Hỏa Long • Sát Thương AoE • Chặn Quái Bay',
         role: 'Triệu hồi 1 con rồng uy mãnh chốt chặn chiến trường. Tổ rồng không trực tiếp tấn công, chỉ có Rồng xuất trận chiến đấu. Nâng cấp tăng mạnh sát thương, máu và tầm nổ lan mà không tăng số lượng rồng.',
         mechanics:
-          'Tổ rồng không trực tiếp tấn công. Rồng sở hữu sẵn nguyên tố RỒNG (DRAGON) và được chọn thêm 1 nguyên tố thứ 2 (mặc định LỬA). Rồng bay lượn trên không nên có thể chặn đứng và không chiến với cả quái Bay (FLY) lẫn quái Đi bộ.',
-        tip: '💡 Rồng gây sát thương nổ lan AoE lên mọi quái vật xung quanh mục tiêu bị cắn/khè lửa!'
+          'Tổ rồng không trực tiếp tấn công. Rồng sở hữu sẵn nguyên tố RỒNG (DRAGON) và được chọn thêm 1 nguyên tố thứ 2 (+60% sát thương). Rồng bay lượn trên không nên có thể chặn đứng và không chiến với cả quái Bay (FLY) lẫn quái Đi bộ.',
+        tip: '💡 Rồng gây sát thương nổ lan AoE (70% sát thương) lên mọi quái vật xung quanh mục tiêu bị cắn/khè lửa!'
       },
       FAIRY_TREE: {
         title: 'Cây Tiên (Fairy Tree)',
@@ -71,16 +72,16 @@ export class CodexBuildings {
         badge: 'Bầy Tiên Tinh Linh • Chặn Quái Bay • Số Lượng Tăng Theo Cấp',
         role: 'Cổ thụ thần thoại triệu hồi các tiên nhỏ bay lượn bảo vệ lãnh địa. Cây tiên không trực tiếp tấn công, chỉ bầy tiên tham chiến. Càng nâng cấp tháp thì số lượng tiên xuất trận càng đông (2 ➔ 3 ➔ 4 ➔ 5 tiên).',
         mechanics:
-          'Cây tiên không trực tiếp tấn công. Bầy tiên sở hữu sẵn nguyên tố TIÊN (FAIRY) và được chọn thêm 1 nguyên tố thứ 2 (mặc định ÁNH SÁNG). Có khả năng bay trên không để chốt chặn và tấn công quái Bay (FLY) cũng như quái mặt đất.',
+          'Cây tiên không trực tiếp tấn công. Bầy tiên sở hữu sẵn nguyên tố TIÊN (FAIRY) và được chọn thêm 1 nguyên tố thứ 2 (+60% sát thương). Có khả năng bay trên không để chốt chặn và tấn công quái Bay (FLY) cũng như quái mặt đất.',
         tip: '💡 Tiên tấn công phép thuật tầm xa và phân tán chặn đánh nhiều kẻ địch cùng lúc trên không và mặt đất.'
       },
       HEROIC_ALTAR: {
         title: 'Tế Đàn Anh Linh (Heroic Altar)',
         icon: '🏛️',
-        badge: 'Hồi Sinh Linh Hồn • Hệ Ma • Quần Thể Bất Tử',
+        badge: 'Hồi Sinh Linh Hồn • Hệ Ma Cố Định • Quần Thể Bất Tử',
         role: 'Tế đàn cổ đại thu thập linh hồn các đơn vị đồng minh ngã xuống trong phạm vi (Binh lính, Rồng, Tiên) và tái sinh họ dưới dạng Anh Linh bóng ma. Tế đàn không trực tiếp tấn công, các Anh Linh hồi sinh sẽ tham chiến.',
         mechanics:
-          'Tế đàn không trực tiếp tấn công. Khi một đơn vị tử trận trong phạm vi tế đàn, có tỉ lệ được hồi sinh thành Anh Linh nhận thêm hệ MA (GHOST) và tăng mạnh sát thương. Cấp tháp càng cao tỉ lệ hồi sinh càng lớn và giới hạn Anh Linh tối đa càng nhiều.',
+          'Tế đàn mang hệ MA (GHOST) cố định, không chọn thêm nguyên tố. Khi một đơn vị tử trận trong phạm vi tế đàn, có tỉ lệ được hồi sinh thành Anh Linh nhận thêm hệ MA (GHOST +50% DMG) và tăng mạnh sát thương. Cấp tháp càng cao tỉ lệ hồi sinh càng lớn và giới hạn Anh Linh tối đa càng nhiều.',
         tip: '💡 Đặt Tế Đàn gần điểm tập kết của Trại Lính, Cây Tiên hoặc Tổ Rồng để tối ưu hóa khả năng hồi sinh liên tục!'
       },
       TRAP_SPIKE: { title: 'Bẫy', icon: '⚙️', badge: 'Bẫy', role: '', mechanics: '', tip: '' },
@@ -98,12 +99,18 @@ export class CodexBuildings {
 
     if (!bp1) return '';
 
-    this.selectedTierKey = selectedKey || `${type}_1`;
+    if (!selectedKey || !selectedKey.startsWith(type)) {
+      this.selectedTierKey = `${type}_1`;
+    } else {
+      this.selectedTierKey = selectedKey;
+    }
     const selectedBp = TOWER_BLUEPRINTS[this.selectedTierKey] || bp1;
+
+    const isSummonTower = type === 'BARRACKS' || type === 'DRAGON_NEST' || type === 'FAIRY_TREE' || type === 'HEROIC_ALTAR';
 
     return `
       <div class="codex-two-col">
-        <!-- CỘT TRÁI: VAI TRÒ & CÂY NÂNG CẤP -->
+        <!-- CỘT TRÁI: VAI TRÒ, CÂY NÂNG CẤP & HỒ SƠ ĐƠN VỊ -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <!-- Role and Mechanics Explanation -->
           <div class="sp-section sp-card">
@@ -121,12 +128,26 @@ export class CodexBuildings {
               <div class="sp-section sp-card" style="border-left: 5px solid #10b981; background: linear-gradient(90deg, #0f241d 0%, #121b2d 100%);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <h4 class="sp-sec-title" style="margin-bottom: 0; color: #34d399;">⚔️ LÍNH CẬN CHIẾN vs 🏹 LÍNH BẮN TÊN</h4>
-                  <button id="btn-goto-soldiers-guide" class="codex-tab" style="padding: 4px 12px; font-size: 13px; border-color: #10b981; color: #34d399;">Xem So Sánh Chi Tiết ➔</button>
+                  <button id="btn-goto-soldiers-guide" class="codex-tab" style="padding: 4px 12px; font-size: 13px; border-color: #10b981; color: #34d399;">Xem Bảng Lính ➔</button>
                 </div>
                 <p class="sp-desc" style="margin-bottom: 6px;">
-                  Người chơi có thể chuyển đổi linh hoạt giữa <b>Lính Đánh Gần</b> (Máu dày, giáp cao, chốt chặn quái đi bộ 1v1) và <b>Lính Bắn Tên</b> (Tầm bắn xa 150px, bắn được <b>CẢ 3 LOẠI: Đi Bộ, Trên Không & Dưới Nước</b>).
+                  Người chơi có thể chuyển đổi linh hoạt giữa <b>Lính Đánh Gần</b> (Máu dày, giáp cao, chốt chặn quái đi bộ 1v1) và <b>Lính Bắn Tên</b> (Tầm bắn xa 147-183px, bắn được <b>CẢ 3 LOẠI: Đi Bộ, Trên Không & Dưới Nước</b>).
                 </p>
                 <span class="sp-tip-text">💡 Thao tác: Bấm vào Nhà Lính trong trận ➔ Chọn [⚔️ Cận Chiến] hoặc [🏹 Bắn Tên] - Hoàn toàn MIỄN PHÍ!</span>
+              </div>
+            `
+              : ''
+          }
+
+          ${
+            isSummonTower
+              ? `
+              <!-- Hồ sơ đơn vị triệu hồi -->
+              <div class="sp-section sp-card" style="border-left: 4px solid #a855f7;">
+                <h4 class="sp-sec-title" style="color: #c084fc;">🎖️ HỒ SƠ ĐƠN VỊ ĐƯỢC TRIỆU HỒI</h4>
+                <div class="unit-traits-list">
+                  ${this.renderSummonTraitsHtml(type, selectedBp)}
+                </div>
               </div>
             `
               : ''
@@ -177,13 +198,27 @@ export class CodexBuildings {
             </div>
             <p class="dt-desc">${selectedBp.description}</p>
 
+            ${
+              type === 'BARRACKS'
+                ? `
+              <div class="stance-toggle-box" style="margin-bottom: 10px;">
+                <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">XEM CHỈ SỐ THEO VŨ KHÍ:</span>
+                <div class="stance-btns-group">
+                  <button class="stance-btn ${this.barracksStance === 'MELEE' ? 'active' : ''}" data-stance="MELEE">⚔️ Cận Chiến (100% HP & Giáp)</button>
+                  <button class="stance-btn ${this.barracksStance === 'RANGED' ? 'active' : ''}" data-stance="RANGED">🏹 Bắn Tên (3 Địa Hình)</button>
+                </div>
+              </div>
+            `
+                : ''
+            }
+
             <div class="dt-stats-grid">
               <div class="stat-box">
-                <span class="s-label">Sát thương gốc</span>
-                <span class="s-val">${selectedBp.damage} ${type === 'MAGE' ? '🔮' : '⚔️'}</span>
+                <span class="s-label">${isSummonTower ? 'Sát thương đơn vị' : 'Sát thương gốc'}</span>
+                <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage} ${type === 'MAGE' ? '🔮' : '⚔️'}</span>
               </div>
               <div class="stat-box">
-                <span class="s-label">Tầm bắn</span>
+                <span class="s-label">${isSummonTower ? 'Tầm điều động (Rally)' : 'Tầm bắn'}</span>
                 <span class="s-val">${selectedBp.range} px</span>
               </div>
               <div class="stat-box">
@@ -198,26 +233,46 @@ export class CodexBuildings {
               </div>
               <div class="stat-box">
                 <span class="s-label">Mục tiêu</span>
-                <span class="s-val">${selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
+                <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'MELEE' ? 'Chỉ Đi Bộ (WALK)' : selectedBp.targetingFilter.allowedMovement.join(', ')}</span>
               </div>
               <div class="stat-box">
-                <span class="s-label">DPS Cơ Bản</span>
-                <span class="s-val highlight-dps">${Math.round(selectedBp.damage * selectedBp.fireRate)} DPS</span>
+                <span class="s-label">${isSummonTower ? 'Tổng DPS Toàn Đội' : 'DPS Cơ Bản'}</span>
+                <span class="s-val highlight-dps">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round(selectedBp.damage * 0.7) : selectedBp.damage) * selectedBp.fireRate * (selectedBp.maxSoldiers || 1))} DPS</span>
               </div>
               ${
                 selectedBp.maxSoldiers
                   ? `
                   <div class="stat-box">
-                    <span class="s-label">Số lính</span>
-                    <span class="s-val">${selectedBp.maxSoldiers} Lính</span>
+                    <span class="s-label">Số lượng đơn vị</span>
+                    <span class="s-val" style="color: #38bdf8;">${selectedBp.maxSoldiers} Đơn vị</span>
                   </div>
                   <div class="stat-box">
-                    <span class="s-label">Máu lính (HP)</span>
-                    <span class="s-val">${selectedBp.soldierHp} ❤️</span>
+                    <span class="s-label">Máu mỗi đơn vị</span>
+                    <span class="s-val">${type === 'BARRACKS' && this.barracksStance === 'RANGED' ? Math.round((selectedBp.soldierHp || 100) * 0.65) : selectedBp.soldierHp} ❤️</span>
                   </div>
                   <div class="stat-box">
-                    <span class="s-label">Giáp lính</span>
-                    <span class="s-val">${Math.round((selectedBp.soldierArmor || 0) * 100)}% 🛡️</span>
+                    <span class="s-label">Giáp đơn vị</span>
+                    <span class="s-val">${Math.round((type === 'BARRACKS' && this.barracksStance === 'RANGED' ? (selectedBp.soldierArmor || 0) * 0.5 : (selectedBp.soldierArmor || 0)) * 100)}% 🛡️</span>
+                  </div>
+                `
+                  : ''
+              }
+              ${
+                selectedBp.soldierRespawn
+                  ? `
+                  <div class="stat-box">
+                    <span class="s-label">Thời gian hồi sinh</span>
+                    <span class="s-val" style="color: #a855f7;">${selectedBp.soldierRespawn}s ⏳</span>
+                  </div>
+                `
+                  : ''
+              }
+              ${
+                selectedBp.resurrectChance
+                  ? `
+                  <div class="stat-box">
+                    <span class="s-label">Tỉ lệ chiêu hồn</span>
+                    <span class="s-val" style="color: #a855f7;">${Math.round(selectedBp.resurrectChance * 100)}% 👻</span>
                   </div>
                 `
                   : ''
@@ -227,7 +282,7 @@ export class CodexBuildings {
                   ? `
                   <div class="stat-box">
                     <span class="s-label">Bán kính nổ AOE</span>
-                    <span class="s-val">${selectedBp.aoeRadius} px 💥</span>
+                    <span class="s-val" style="color: #f97316;">${selectedBp.aoeRadius} px 💥</span>
                   </div>
                 `
                   : ''
@@ -242,7 +297,7 @@ export class CodexBuildings {
           <div class="sp-section sp-card">
             <div class="sp-sec-header">
               <h4 class="sp-sec-title">📊 BẢNG SO SÁNH CHỈ SỐ CẢ 4 CẤP (CẢ SÁT THƯƠNG NGUYÊN TỐ)</h4>
-              <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +100% Sát thương Phép (Tỷ lệ 1:1)' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
+              <span class="sp-hint">${type === 'MAGE' ? 'Khe 2: +100% Sát thương Phép (Tỷ lệ 1:1)' : type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 'Gắn Nguyên tố: +60% Sát thương Phép' : type === 'HEROIC_ALTAR' ? '👻 Hệ Ma Cố Định (+50% DMG Ma)' : 'Gắn Nguyên tố: +45% Sát thương Phép'}</span>
             </div>
             <div class="table-responsive">
               <table class="stats-table">
@@ -251,8 +306,10 @@ export class CodexBuildings {
                     <th>Cấp Độ</th>
                     <th>Tên Tháp</th>
                     <th>Giá</th>
-                    <th>DMG Gốc</th>
-                    <th>DMG + Nguyên Tố</th>
+                    ${isSummonTower ? '<th>Số Lượng</th>' : ''}
+                    <th>${isSummonTower ? 'DMG Gốc + Phép' : 'DMG Gốc'}</th>
+                    ${!isSummonTower ? '<th>DMG + Nguyên Tố</th>' : ''}
+                    ${isSummonTower ? '<th>Máu / Lính</th>' : ''}
                     <th>Tầm</th>
                     <th>Tốc</th>
                     <th>DPS Tổng</th>
@@ -271,6 +328,53 @@ export class CodexBuildings {
         </div>
       </div>
     `;
+  }
+
+  private renderSummonTraitsHtml(type: TowerType, bp: TowerBlueprint): string {
+    if (type === 'BARRACKS') {
+      return `
+        <div class="trait-item">
+          <b>⚔️ Lính Cận Chiến:</b> Máu dày (100 ❤️ - 480 ❤️), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi phục +15 HP/s; Nhánh 4-B bùng nổ sát thương.
+        </div>
+        <div class="trait-item">
+          <b>🏹 Lính Bắn Tên:</b> Tầm bắn xa (147px - 183px), <b>tấn công được CẢ 3 ĐỊA HÌNH: Đi Bộ, Trên Không & Dưới Nước</b>.
+        </div>
+      `;
+    }
+    if (type === 'DRAGON_NEST') {
+      return `
+        <div class="trait-item">
+          <b>🐉 1 Hỏa Long Duy Nhất:</b> Nâng cấp không tăng số lượng mà tăng mạnh Máu (220 ➔ 850 ❤️) và Sát thương (30 ➔ 150 DMG).
+        </div>
+        <div class="trait-item">
+          <b>🦅 Chốt Chặn Quái Bay:</b> Bay lượn trên không chốt chặn cả quái Bay (FLY) và Đi Bộ (WALK).
+        </div>
+        <div class="trait-item">
+          <b>💥 Sát Thương Nổ Lan AoE:</b> Đòn cắn/khè lửa nổ lan 70% sát thương trong bán kính ${bp.aoeRadius || 55}px. Đánh được cả quái Bơi (SWIM)!
+        </div>
+      `;
+    }
+    if (type === 'FAIRY_TREE') {
+      return `
+        <div class="trait-item">
+          <b>🧚 Bầy Tiên Tăng Theo Cấp (2 ➔ 5):</b> Cấp 1 (2 tiên), Cấp 2 (3 tiên), Cấp 3 (4 tiên), Cấp 4 (5 tiên).
+        </div>
+        <div class="trait-item">
+          <b>🦅 Chốt Chặn Quái Bay:</b> Bay lượn trên không chốt chặn quái Bay & Đi Bộ, đồng thời bắn phép tầm xa diệt quái Bơi lội (SWIM).
+        </div>
+      `;
+    }
+    if (type === 'HEROIC_ALTAR') {
+      return `
+        <div class="trait-item">
+          <b>👻 Hồi Sinh Bất Tử:</b> Khi Lính/Rồng/Tiên tử trận trong tầm ${bp.range}px, có ${Math.round((bp.resurrectChance || 0.3) * 100)}% tỉ lệ hồi sinh thành Anh Linh (tối đa ${bp.maxSoldiers || 2}).
+        </div>
+        <div class="trait-item">
+          <b>🔮 Ban Thêm Hệ Ma:</b> Kế thừa nguyên tố gốc và nhận thêm <b>Hệ Ma (+50% DMG Ma)</b>! Nhánh 4-B nổ Hồn Ma AoE 65px khi xuất hiện.
+        </div>
+      `;
+    }
+    return '';
   }
 
   public bindTowerEventListeners(type: TowerType): void {
@@ -310,6 +414,20 @@ export class CodexBuildings {
       });
     });
 
+    // Stance toggle buttons for Barracks
+    detailPane.querySelectorAll('[data-stance]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const stance = (e.currentTarget as HTMLElement).getAttribute('data-stance') as 'MELEE' | 'RANGED';
+        if (stance) {
+          this.barracksStance = stance;
+          const currentScroll = detailPane.scrollTop;
+          detailPane.innerHTML = this.getTowerCategoryHtml(type, this.selectedTierKey);
+          detailPane.scrollTop = currentScroll;
+          this.bindTowerEventListeners(type);
+        }
+      });
+    });
+
     // Bind quick button to soldiers guide
     const gotoSoldiersBtn = detailPane.querySelector('#btn-goto-soldiers-guide');
     if (gotoSoldiersBtn) {
@@ -328,9 +446,36 @@ export class CodexBuildings {
     const isCurrent = bp.type === this.selectedTierKey;
     const baseDamage = bp.damage;
     const isMage = type === 'MAGE';
-    const bonusDmg = isMage ? baseDamage * 1.0 : Math.round(baseDamage * 0.45);
+    const isSummon = type === 'BARRACKS' || type === 'DRAGON_NEST' || type === 'FAIRY_TREE' || type === 'HEROIC_ALTAR';
+
+    let elemBonusRatio = 0.45;
+    if (isMage) elemBonusRatio = 1.0;
+    else if (type === 'DRAGON_NEST' || type === 'FAIRY_TREE') elemBonusRatio = 0.6;
+    else if (type === 'HEROIC_ALTAR') elemBonusRatio = 0.5;
+
+    const bonusDmg = Math.round(baseDamage * elemBonusRatio);
     const totalDmg = baseDamage + bonusDmg;
-    const totalDps = Math.round(totalDmg * bp.fireRate);
+    const maxSoldiers = bp.maxSoldiers || (type === 'HEROIC_ALTAR' ? 2 : 1);
+    const totalDps = Math.round(totalDmg * bp.fireRate * (isSummon ? maxSoldiers : 1));
+
+    if (isSummon) {
+      const hp = bp.soldierHp || 100;
+      return `
+        <tr class="${customClass} ${isCurrent ? 'selected-row' : ''}">
+          <td><b>${tierLabel}</b></td>
+          <td>${bp.name}</td>
+          <td style="color: #facc15">🪙 ${bp.cost}</td>
+          <td style="color: #38bdf8; font-weight: 700;">${maxSoldiers}</td>
+          <td style="color: #38bdf8; font-weight: 700;">
+            ${baseDamage} + <span style="color: #a855f7;">${bonusDmg}</span> = ${totalDmg}
+          </td>
+          <td>${hp} ❤️</td>
+          <td>${bp.range} px</td>
+          <td>${bp.fireRate}/s</td>
+          <td class="table-dps-val">${totalDps} DPS</td>
+        </tr>
+      `;
+    }
 
     return `
       <tr class="${customClass} ${isCurrent ? 'selected-row' : ''}">
@@ -349,13 +494,28 @@ export class CodexBuildings {
   }
 
   private renderTowerElementalSim(type: TowerType, bp: TowerBlueprint): string {
+    if (type === 'HEROIC_ALTAR') {
+      return `
+        <div class="sp-section sp-card" style="border-left: 4px solid #818cf8; background: linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%);">
+          <h4 class="sp-sec-title" style="color: #a5b4fc;">👻 THUỘC TÍNH NGUYÊN TỐ CỦA TẾ ĐÀN ANH LINH</h4>
+          <p class="sp-desc" style="color: #cbd5e1; margin-bottom: 6px;">
+            Tế Đàn Anh Linh sở hữu thuộc tính <b>👻 Hệ Ma (GHOST) cố định</b> và <b>không chọn thêm nguyên tố</b>.
+          </p>
+          <span class="sp-tip-text">
+            💡 Khi chiến binh ngã xuống, Anh Linh hồi sinh sẽ giữ nguyên các nguyên tố gốc của đơn vị đó và được ban thêm <b>Hệ Ma (+50% sát thương Ma)</b>!
+          </span>
+        </div>
+      `;
+    }
+
     const isMage = type === 'MAGE';
     const elemColor = ELEMENT_COLORS[this.previewElement] || '#ffffff';
     const elemIcon = ELEMENT_ICONS[this.previewElement] || '✨';
     const elemName = ELEMENT_NAMES[this.previewElement] || this.previewElement;
 
     const baseDmg = bp.damage;
-    const bonusDmg = isMage ? baseDmg * 1.0 : Math.round(baseDmg * 0.45);
+    const bonusRatio = isMage ? 1.0 : (type === 'DRAGON_NEST' || type === 'FAIRY_TREE' ? 0.6 : 0.45);
+    const bonusDmg = isMage ? baseDmg * 1.0 : Math.round(baseDmg * bonusRatio);
 
     const mageSecColor = ELEMENT_COLORS[this.mageSecondaryElement] || '#ffffff';
     const mageSecIcon = ELEMENT_ICONS[this.mageSecondaryElement] || '✨';
@@ -363,7 +523,8 @@ export class CodexBuildings {
     const mageSecDmg = baseDmg * 1.0;
 
     const totalDmg = isMage ? baseDmg + mageSecDmg : baseDmg + bonusDmg;
-    const totalDps = Math.round(totalDmg * bp.fireRate);
+    const maxSoldiers = bp.maxSoldiers || 1;
+    const totalDps = Math.round(totalDmg * bp.fireRate * (bp.maxSoldiers ? maxSoldiers : 1));
 
     const effectInfo = this.getTowerSpecificEffectText(type, this.previewElement);
     const mageSecEffectInfo = isMage ? this.getTowerSpecificEffectText(type, this.mageSecondaryElement) : null;
@@ -409,7 +570,7 @@ export class CodexBuildings {
 
         <div class="sim-controls-group">
           <span class="sim-group-label">
-            ${isMage ? '🔮 Khe Nguyên Tố 1 (Tỷ lệ 100% Sát thương Phép):' : '⚡ Chọn 1 Nguyên Tố Để Gắn (+45% Sát Thương Phép):'}
+            ${isMage ? '🔮 Khe Nguyên Tố 1 (Tỷ lệ 100% Sát thương Phép):' : type === 'DRAGON_NEST' ? '🔥 Chọn Nguyên Tố Thứ 2 Cho Rồng (+60% Sát thương Phép):' : type === 'FAIRY_TREE' ? '✨ Chọn Nguyên Tố Thứ 2 Cho Tiên (+60% Sát thương Phép):' : '⚡ Chọn 1 Nguyên Tố Để Gắn (+45% Sát Thương Phép):'}
           </span>
           <div class="sim-elem-grid">${elemButtonsHtml}</div>
         </div>
@@ -431,7 +592,7 @@ export class CodexBuildings {
           <div class="sim-result-header">
             <span class="sim-res-title">
               KẾT QUẢ ĐÒN ĐÁNH: 
-              <b style="color: #cbd5e1">${baseDmg} Sát Thương ${isMage ? 'Phép 1' : 'Vật Lý'}</b>
+              <b style="color: #cbd5e1">${baseDmg} Sát Thương ${isMage ? 'Phép 1' : type === 'DRAGON_NEST' ? 'Hệ Rồng' : type === 'FAIRY_TREE' ? 'Hệ Tiên' : 'Vật Lý'}</b>
               + 
               <b style="color: ${elemColor}">${elemIcon} ${bonusDmg} Phép ${elemName}</b>
               ${isMage ? ` + <b style="color: ${mageSecColor}">${mageSecIcon} ${mageSecDmg} Phép ${mageSecName}</b>` : ''}
@@ -550,4 +711,3 @@ export class CodexBuildings {
     `;
   }
 }
-
