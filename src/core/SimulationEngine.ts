@@ -9,6 +9,7 @@ import { TargetingRuleEngine } from '../systems/TargetingRuleEngine.js';
 import { EnemySkillSystem } from '../systems/EnemySkillSystem.js';
 import { SpatialIndex } from './SpatialIndex.js';
 import { SimWorkerBridge } from './SimWorkerBridge.js';
+import { WasmBridge } from './WasmBridge.js';
 import { swapRemove, particlePool, floatingTextPool } from './ObjectPool.js';
 import { ELEMENT_COLORS } from '../config/elements.config.js';
 import { ElementType } from '../types/elements.types.js';
@@ -20,6 +21,7 @@ export class SimulationEngine {
 
   public spatialIndex: SpatialIndex;
   public workerBridge: SimWorkerBridge;
+  public wasmBridge: WasmBridge;
 
   private accumulator = 0;
   private interpolationAlpha = 1.0;
@@ -33,10 +35,13 @@ export class SimulationEngine {
     this.spatialIndex = new SpatialIndex();
     this.workerBridge = new SimWorkerBridge();
     this.workerBridge.syncPaths(this.navSystem);
+    this.wasmBridge = WasmBridge.getInstance();
+    this.wasmBridge.syncPaths(this.navSystem);
   }
 
   public onMapChanged(): void {
     this.workerBridge.syncPaths(this.navSystem);
+    this.wasmBridge.syncPaths(this.navSystem);
   }
 
   public getInterpolationAlpha(): number {
@@ -95,6 +100,9 @@ export class SimulationEngine {
         newEnemy.prevX = newEnemy.x;
         newEnemy.prevY = newEnemy.y;
         this.state.enemies.push(newEnemy);
+        if (this.wasmBridge.isAvailable()) {
+          this.wasmBridge.spawnEnemy(newEnemy);
+        }
       },
       (reward) => {
         const scaledReward = Math.max(1, Math.round(reward * this.state.goldMultiplier));
@@ -126,6 +134,9 @@ export class SimulationEngine {
 
     // Rebuild spatial grid after deaths/movements for accurate combat targeting
     this.spatialIndex.rebuild(this.state.enemies);
+    if (this.wasmBridge.isAvailable()) {
+      this.wasmBridge.rebuildSpatialGrid();
+    }
 
     // 5. Update Traps on path and water
     const activeTraps = this.state.towers.filter((t) => t.placement !== 'ROADSIDE');
@@ -294,6 +305,11 @@ export class SimulationEngine {
 
   private updateEnemies(dt: number): void {
     const basePos = this.state.currentMap.playerBases[0] || { x: 500, y: 325 };
+    const useWasm = this.wasmBridge.isAvailable();
+
+    if (useWasm) {
+      this.wasmBridge.stepSimulation(dt, this.totalAnimTime);
+    }
 
     for (let i = this.state.enemies.length - 1; i >= 0; i--) {
       const enemy = this.state.enemies[i];
@@ -318,17 +334,30 @@ export class SimulationEngine {
 
         EnemySkillSystem.handleDeath(enemy, this.state, this.navSystem, this.waveSystem, this.totalAnimTime);
 
+        if (useWasm) {
+          this.wasmBridge.removeId(enemy.id);
+        }
         swapRemove(this.state.enemies, i);
         continue;
       }
 
       if (enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING') {
+        if (useWasm) {
+          this.wasmBridge.updateEnemyStatus(enemy);
+        }
         continue;
       }
 
       // Move along path in-place
       enemy.pathDistance += enemy.speed * dt;
-      const isFinished = this.navSystem.updateEnemyTransform(enemy, this.totalAnimTime);
+      let isFinished = this.navSystem.updateEnemyTransform(enemy, this.totalAnimTime);
+
+      if (useWasm) {
+        this.wasmBridge.updateEnemyStatus(enemy);
+        if (this.wasmBridge.hasEnemyFinished(enemy.id)) {
+          isFinished = true;
+        }
+      }
 
       if (isFinished) {
         const isBoss = enemy.tags.includes('BOSS');
@@ -339,6 +368,10 @@ export class SimulationEngine {
         const hitY = enemy.y || basePos.y;
         this.state.addFloatingText(`-${damageToBase} ❤️`, hitX, hitY - 20, '#ef4444', 16);
         this.state.addExplosionParticles(hitX, hitY, '#ef4444', 15);
+
+        if (useWasm) {
+          this.wasmBridge.removeId(enemy.id);
+        }
         swapRemove(this.state.enemies, i);
 
         if (this.state.lives <= 0) {

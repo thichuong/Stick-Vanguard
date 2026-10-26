@@ -1,4 +1,5 @@
 import { EnemyEntity } from '../types/entities.types.js';
+import { WasmBridge } from './WasmBridge.js';
 
 /**
  * 2D Spatial Hash Grid for high-performance O(1) proximity queries.
@@ -80,6 +81,21 @@ export class SpatialIndex {
     out: EnemyEntity[] = []
   ): EnemyEntity[] {
     out.length = 0;
+
+    const wasm = WasmBridge.getInstance();
+    if (wasm.isAvailable()) {
+      const ids = wasm.queryRadius(x, y, radius);
+      if (ids.length > 0) {
+        for (let i = 0; i < ids.length; i++) {
+          const en = this.enemyMap.get(ids[i]);
+          if (en && en.hp > 0 && en.state !== 'DEAD') {
+            out.push(en);
+          }
+        }
+        return out;
+      }
+    }
+
     const cellSize = SpatialIndex.CELL_SIZE;
     const cols = SpatialIndex.COLS;
     const rows = SpatialIndex.ROWS;
@@ -121,6 +137,15 @@ export class SpatialIndex {
     range: number,
     canTargetFilter?: (enemy: EnemyEntity) => boolean
   ): EnemyEntity | null {
+    const wasm = WasmBridge.getInstance();
+    if (wasm.isAvailable() && !canTargetFilter) {
+      const bestId = wasm.findBestTargetInRange(x, y, range, 'FIRST');
+      if (bestId) {
+        const en = this.enemyMap.get(bestId);
+        if (en && en.hp > 0 && en.state !== 'DEAD') return en;
+      }
+    }
+
     const cellSize = SpatialIndex.CELL_SIZE;
     const cols = SpatialIndex.COLS;
     const rows = SpatialIndex.ROWS;

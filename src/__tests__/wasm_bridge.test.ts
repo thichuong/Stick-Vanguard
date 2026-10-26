@@ -1,0 +1,144 @@
+import { describe, it, expect } from 'vitest';
+import { WasmBridge } from '../core/WasmBridge.js';
+import { EnemyEntity } from '../types/entities.types.js';
+
+describe('WasmBridge Core & Fallback Architecture', () => {
+  it('should maintain singleton instance and ID mapping', () => {
+    const bridge = WasmBridge.getInstance();
+    expect(bridge).toBeDefined();
+
+    const id1 = bridge.getOrCreateU32Id('enemy-1');
+    const id2 = bridge.getOrCreateU32Id('enemy-2');
+    const id1Repeat = bridge.getOrCreateU32Id('enemy-1');
+
+    expect(id1).toBeGreaterThan(0);
+    expect(id2).toBeGreaterThan(id1);
+    expect(id1Repeat).toBe(id1);
+
+    expect(bridge.getStrId(id1)).toBe('enemy-1');
+    expect(bridge.getStrId(id2)).toBe('enemy-2');
+
+    bridge.removeEnemy('enemy-1');
+    expect(bridge.getStrId(id1)).toBeUndefined();
+
+    bridge.clearAll();
+    expect(bridge.getStrId(id2)).toBeUndefined();
+  });
+
+  it('should handle fallback gracefully when wasm is uninitialized', () => {
+    const bridge = new WasmBridge();
+    expect(bridge.isAvailable()).toBe(false);
+    expect(bridge.getRenderView()).toBeNull();
+    expect(bridge.findBestTargetInRange(100, 100, 50)).toBeNull();
+    expect(bridge.queryRadius(100, 100, 50)).toEqual([]);
+    expect(bridge.hasEnemyFinished('enemy-1')).toBe(false);
+  });
+
+  it('should initialize and execute simulation when wasm binary is loaded', async () => {
+    const bridge = new WasmBridge();
+
+    // Dynamically read binary in vitest/node runner without static node imports
+    let wasmBuffer: Uint8Array | null = null;
+    try {
+      const fsMod: any = await import(/* @vite-ignore */ 'node:' + 'fs');
+      const pathMod: any = await import(/* @vite-ignore */ 'node:' + 'path');
+      const proc: any = (globalThis as any).process;
+      const wasmPath = pathMod.resolve(proc.cwd(), 'src/wasm/wasm_sim_bg.wasm');
+      if (fsMod.existsSync(wasmPath)) {
+        wasmBuffer = fsMod.readFileSync(wasmPath);
+      }
+    } catch {
+      // In browser or non-node runner
+    }
+
+    if (wasmBuffer) {
+      const ok = await bridge.init(wasmBuffer);
+      expect(ok).toBe(true);
+      expect(bridge.isAvailable()).toBe(true);
+
+      const enemy: EnemyEntity = {
+        id: 'test-enemy-1',
+        typeId: 'GOBLIN',
+        name: 'Goblin Test',
+        x: 100,
+        y: 100,
+        hp: 150,
+        maxHp: 150,
+        speed: 60,
+        baseSpeed: 60,
+        damage: 5,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 50,
+        pathTotalLength: 1000,
+        size: 16,
+        altitude: 0,
+        facing: 0,
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        elementalProfile: {
+          primaryElement: 'EARTH',
+          immunities: []
+        }
+      };
+
+      bridge.spawnEnemy(enemy);
+      bridge.stepSimulation(1 / 60, 0.1);
+
+      const view = bridge.getRenderView();
+      expect(view).not.toBeNull();
+      expect(view!.length).toBeGreaterThanOrEqual(12);
+      expect(bridge.getRenderStride()).toBe(12);
+
+      // Check Spatial Query in Rust
+      const target = bridge.findBestTargetInRange(100, 100, 150, 'FIRST');
+      expect(target).toBe('test-enemy-1');
+
+      const aoeHits = bridge.queryRadius(100, 100, 150);
+      expect(aoeHits).toContain('test-enemy-1');
+
+      // Edge cases: out of bounds, negative coords, zero radius
+      expect(bridge.queryRadius(-100, -100, 20)).toEqual([]);
+      expect(bridge.queryRadius(2000, 2000, 50)).toEqual([]);
+      expect(bridge.queryRadius(100, 100, 0)).toEqual([]);
+      expect(bridge.queryRadius(100, 100, -10)).toEqual([]);
+      expect(bridge.findBestTargetInRange(-50, -50, 10)).toBeNull();
+      expect(bridge.findBestTargetInRange(100, 100, -10)).toBeNull();
+
+      // Stress test: spawn multiple enemies, step, remove one, query radius immediately (bug regression check)
+      const enemy2: EnemyEntity = { ...enemy, id: 'test-enemy-2', pathDistance: 80 };
+      const enemy3: EnemyEntity = { ...enemy, id: 'test-enemy-3', pathDistance: 120 };
+      bridge.spawnEnemy(enemy2);
+      bridge.spawnEnemy(enemy3);
+      bridge.stepSimulation(1 / 60, 0.2);
+
+      // Remove enemy in the middle or end
+      bridge.removeEnemy('test-enemy-2');
+
+      // queryRadius must NEVER panic when enemies are removed after stepSimulation
+      const hitsAfterRemoval = bridge.queryRadius(100, 100, 200);
+      expect(hitsAfterRemoval).not.toContain('test-enemy-2');
+      expect(hitsAfterRemoval).toContain('test-enemy-1');
+      expect(hitsAfterRemoval).toContain('test-enemy-3');
+
+      bridge.rebuildSpatialGrid();
+      const hitsAfterRebuild = bridge.queryRadius(100, 100, 200);
+      expect(hitsAfterRebuild).not.toContain('test-enemy-2');
+
+      // Test status update and removal
+      enemy.hp = 0;
+      enemy.state = 'DEAD';
+      bridge.updateEnemyStatus(enemy);
+      bridge.removeEnemy('test-enemy-1');
+      bridge.removeEnemy('test-enemy-3');
+      bridge.clearAll();
+      expect(bridge.getRenderView()?.length || 0).toBe(0);
+    }
+  });
+});
+

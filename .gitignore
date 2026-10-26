@@ -6,6 +6,8 @@ node_modules/
 # Production build output
 dist/
 dist-ssr/
+target/
+wasm-sim/target/
 
 # Local env files
 .env

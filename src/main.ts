@@ -2,6 +2,7 @@ import { GameState } from './core/GameState.js';
 import { NavigationSystem } from './systems/NavigationSystem.js';
 import { WaveSystem } from './systems/WaveSystem.js';
 import { SimulationEngine } from './core/SimulationEngine.js';
+import { WasmBridge } from './core/WasmBridge.js';
 import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
 import { MapRenderer } from './render/MapRenderer.js';
 import { StickmanRenderer } from './render/StickmanRenderer.js';
@@ -40,6 +41,13 @@ class GameApp {
 
     this.setupResize();
     this.bindCanvasEvents();
+
+    WasmBridge.getInstance().init().then((active) => {
+      if (active) {
+        this.simEngine.onMapChanged();
+      }
+    });
+
     requestAnimationFrame((t) => this.loop(t));
   }
 
@@ -64,6 +72,7 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
+    WasmBridge.getInstance().clearAll();
     this.simEngine.onMapChanged();
     MapRenderer.clearCache();
 
@@ -148,6 +157,7 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
+    WasmBridge.getInstance().clearAll();
     this.simEngine.onMapChanged();
     MapRenderer.clearCache();
   }
