@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_TWIN_CROSSROADS } from './waves_extended.js';
 
 export const WAVES_TWIN_CROSSROADS: WaveConfig[] = [
@@ -160,7 +161,7 @@ export const MAP_TWIN_CROSSROADS: MapConfig = {
   laneBadges: ['2 Nhà Chính Bắc-Nam', 'Giao Lộ Chữ Thập', 'Song Tuyến Đông-Tây'],
   tribe: {
     name: 'Tộc Thiết Giáp Cơ Giới',
-    icon: '⚙️⚡',
+    icon: `${ELEMENT_ICONS.STEEL}${ELEMENT_ICONS.LIGHTNING}`,
     elements: ['STEEL', 'LIGHTNING', 'PHYSICAL'],
     description: 'Binh đoàn cơ giới giáp sắt dày cộm, chỉ huy bởi Khổng Lồ Thép Sét kết hợp cùng Lươn Điện dưới sông.'
   }

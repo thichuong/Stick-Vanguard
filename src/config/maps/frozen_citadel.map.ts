@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_FROZEN_CITADEL } from './waves_extended.js';
 
 export const WAVES_FROZEN_CITADEL: WaveConfig[] = [
@@ -157,7 +158,7 @@ export const MAP_FROZEN_CITADEL: MapConfig = {
   laneBadges: ['1 Nhà Chính Đỉnh Cực Bắc', 'Tiến Quân Nam -> Bắc', '2 Dòng Sông Băng'],
   tribe: {
     name: 'Tộc Hàn Băng Tuyết Linh',
-    icon: '❄️🧚',
+    icon: `${ELEMENT_ICONS.ICE}${ELEMENT_ICONS.FAIRY}`,
     elements: ['ICE', 'FAIRY', 'WATER'],
     description: 'Quân đoàn băng giá Khổng Lồ Băng Nham phối hợp cùng Tiên Linh Băng Tuyết và Thủy Xà Băng Đảo.'
   }

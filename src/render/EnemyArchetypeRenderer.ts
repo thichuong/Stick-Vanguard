@@ -1,4 +1,5 @@
 import { EnemyEntity } from '../types/entities.types.js';
+import { ARCHETYPE_SVG_ICONS } from '../config/ui/icons/index.js';
 
 export type EnemyVisualArchetype =
   | 'HUMANOID'
@@ -125,63 +126,63 @@ export class EnemyArchetypeRenderer {
         return {
           archetype,
           name: 'Tộc Rồng',
-          icon: '🐲',
+          icon: ARCHETYPE_SVG_ICONS.DRAGON,
           description: 'Sừng cong, mõm nhọn, đuôi dài có mũi giáo và cánh xương vỗ rộng.'
         };
       case 'SERPENT':
         return {
           archetype,
           name: 'Tộc Mãng Xà & Thủy Xà',
-          icon: '🐍',
+          icon: ARCHETYPE_SVG_ICONS.SERPENT,
           description: 'Thân nhiều đốt uốn lượn hình sóng, đầu bẹt lưỡi chẻ đôi (Trùm Hư Không có 3 đầu).'
         };
       case 'AVIAN_BAT':
         return {
           archetype,
           name: 'Tộc Quái Bay & Tiên Linh',
-          icon: '🦇',
+          icon: ARCHETYPE_SVG_ICONS.AVIAN_BAT,
           description: 'Cánh dơi nhiều khớp gập mở hoặc 4 cánh bướm trong suốt lấp lánh.'
         };
       case 'ARACHNID':
         return {
           archetype,
           name: 'Tộc Nhện Độc',
-          icon: '🕷️',
+          icon: ARCHETYPE_SVG_ICONS.ARACHNID,
           description: 'Bụng độc tròn, 4 mắt đỏ, kìm nanh chồm tới và 8 chân que gập góc bò so le.'
         };
       case 'TURTLE_BEAST':
         return {
           archetype,
           name: 'Tộc Rùa & Thủy Quái Giáp',
-          icon: '🐢',
+          icon: ARCHETYPE_SVG_ICONS.TURTLE_BEAST,
           description: 'Mai rêu lục giác, đầu thụt thò và 4 chân chèo bơi nước nhịp nhàng.'
         };
       case 'SLIME_CRYSTAL':
         return {
           archetype,
           name: 'Tộc Dung Nham & Băng Tinh',
-          icon: '💧',
+          icon: ARCHETYPE_SVG_ICONS.SLIME_CRYSTAL,
           description: 'Khối giọt đàn hồi squash & stretch hoặc tinh thể băng xoay đa diện.'
         };
       case 'COLOSSUS':
         return {
           archetype,
           name: 'Tộc Khổng Lồ Golem',
-          icon: '🗿',
+          icon: ARCHETYPE_SVG_ICONS.COLOSSUS,
           description: 'Thân hình thang hộ pháp, vai bọc giáp gai/đinh tán và vung nắm đấm búa tạ.'
         };
       case 'WRAITH_REAPER':
         return {
           archetype,
           name: 'Tộc Hồn Ma & Tử Thần',
-          icon: '👻',
+          icon: ARCHETYPE_SVG_ICONS.WRAITH_REAPER,
           description: 'Tà áo choàng bay lượn lơ lửng, vung Lưỡi Hái Tử Thần chém quét.'
         };
       case 'SIREN':
         return {
           archetype,
           name: 'Tộc Tiên Cá Gọi Bão',
-          icon: '🧜‍♀️',
+          icon: ARCHETYPE_SVG_ICONS.SIREN,
           description: 'Vương miện san hô, đuôi cá quạt sóng, quyền trượng đinh ba sét.'
         };
       case 'HUMANOID':
@@ -189,7 +190,7 @@ export class EnemyArchetypeRenderer {
         return {
           archetype: 'HUMANOID',
           name: 'Tộc Người Que Chiến Binh',
-          icon: '🤺',
+          icon: ARCHETYPE_SVG_ICONS.HUMANOID,
           description: 'Bộ khung người que trang bị vũ khí riêng (gươm, đinh ba, trượng đầu lâu, băng trán).'
         };
     }

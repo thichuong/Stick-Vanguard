@@ -6,6 +6,8 @@ import {
   Vector2D
 } from '../types/entities.types.js';
 import { ELEMENT_COLORS } from '../config/elements.config.js';
+import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
+import { drawElementSvgOnCanvas } from '../config/elements/icons/index.js';
 
 export class TowerRenderer {
   public static renderTowers(
@@ -348,17 +350,23 @@ export class TowerRenderer {
         const activeCount = tower.soldierIds ? tower.soldierIds.length : 0;
         ctx.fillStyle = '#e0e7ff';
         ctx.font = 'bold 8.5px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`👻 ${activeCount}/${tower.maxSoldiers || 2}`, x, y + 6);
+        ctx.textAlign = 'left';
+        drawUiSvgOnCanvas(ctx, 'ARCH_WRAITH', x - 18, y - 2, 10, 10);
+        ctx.fillText(`${activeCount}/${tower.maxSoldiers || 2}`, x - 6, y + 6);
         break;
       }
     }
 
     // Tier badge (stars)
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('★'.repeat(tier), x, y + 26);
+    if (tier > 0) {
+      const starSize = 10;
+      const spacing = 2;
+      const totalWidth = tier * starSize + (tier - 1) * spacing;
+      const startX = x - totalWidth / 2;
+      for (let i = 0; i < tier; i++) {
+        drawUiSvgOnCanvas(ctx, 'STAR', startX + i * (starSize + spacing), y + 17, starSize, starSize);
+      }
+    }
 
     // Disabled / Stunned visual ring & timer
     if (tower.disabledTimer && tower.disabledTimer > 0) {
@@ -372,8 +380,9 @@ export class TowerRenderer {
 
       ctx.fillStyle = '#f87171';
       ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`⚡ ${tower.disabledTimer.toFixed(1)}s`, x, y - 30);
+      ctx.textAlign = 'left';
+      drawUiSvgOnCanvas(ctx, 'BOLT', x - 22, y - 38, 12, 12);
+      ctx.fillText(`${tower.disabledTimer.toFixed(1)}s`, x - 8, y - 28);
       ctx.restore();
     }
   }
@@ -409,11 +418,7 @@ export class TowerRenderer {
       ctx.beginPath();
       ctx.arc(x, y, 12 + (isReady ? Math.sin(animTime * 6) * 2 : 0), 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = '#ef4444';
-      ctx.font = '13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🔥', x, y);
+      drawElementSvgOnCanvas(ctx, 'FIRE', x - 7, y - 7, 14);
     } else if (type === 'TRAP_FROST') {
       // Frost rune
       ctx.strokeStyle = isReady ? '#06b6d4' : '#164e63';
@@ -421,11 +426,7 @@ export class TowerRenderer {
       ctx.beginPath();
       ctx.arc(x, y, 12, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = '#06b6d4';
-      ctx.font = '13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('❄️', x, y);
+      drawElementSvgOnCanvas(ctx, 'ICE', x - 7, y - 7, 14);
     } else if (type === 'TRAP_NET') {
       // Sky Net pylon
       ctx.fillStyle = '#fbbf24';

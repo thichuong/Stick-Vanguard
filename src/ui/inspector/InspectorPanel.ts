@@ -7,6 +7,7 @@ import {
   ELEMENT_IMBUE_COST,
   MAGE_SECOND_ELEMENT_COST
 } from '../../config/elements.config.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { TowerEntity, TowerType } from '../../types/entities.types.js';
 import { MagicalElementType } from '../../types/elements.types.js';
 import { SideDetailPanel } from '../SideDetailPanel.js';
@@ -159,7 +160,7 @@ export class InspectorPanel {
     if (this.state.isSettingRallyPoint) {
       this.menuOverlayEl.innerHTML = `
         <div class="floating-panel" style="position: absolute; left: 50%; top: 20px; transform: translateX(-50%); text-align: center;">
-          <div style="font-weight: 700; color: #facc15; margin-bottom: 4px;">🚩 CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
+          <div style="font-weight: 700; color: #facc15; margin-bottom: 4px;">${UI_ICONS.FLAG} CHỈ ĐỊNH ĐIỂM TẬP KẾT</div>
           <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px;">Nhấp chuột vào một điểm trên đường đi để lính chạy ra chặn quái.</p>
           <button id="btn-cancel-rally" class="action-btn" style="background: #334155; color: #fff; width: auto; padding: 4px 12px;">Hủy bỏ</button>
         </div>
@@ -176,7 +177,7 @@ export class InspectorPanel {
     // CASE 1: Built tower or trap selected
     if (tower) {
       if (this.inspectorTitleEl) {
-        this.inspectorTitleEl.textContent = '🏰 CHI TIẾT CÔNG TRÌNH & NÂNG CẤP';
+        this.inspectorTitleEl.innerHTML = `${UI_ICONS.CASTLE} CHI TIẾT CÔNG TRÌNH & NÂNG CẤP`;
       }
 
       const isBarracks = tower.type === 'BARRACKS';
@@ -197,8 +198,8 @@ export class InspectorPanel {
           const canAfford = this.state.gold >= nextBp.cost;
           upgradeHtml = `
             <button id="btn-upgrade" class="action-btn upgrade-btn ${canAfford ? '' : 'disabled'}">
-              <div>🔼 Nâng cấp lên Cấp ${tower.tier + 1}: ${nextBp.name}</div>
-              <div class="sub-cost">🪙 ${nextBp.cost} Vàng</div>
+              <div>${UI_ICONS.UPGRADE} Nâng cấp lên Cấp ${tower.tier + 1}: ${nextBp.name}</div>
+              <div class="sub-cost">${UI_ICONS.GOLD} ${nextBp.cost} Vàng</div>
             </button>
           `;
         }
@@ -210,21 +211,21 @@ export class InspectorPanel {
 
         upgradeHtml = `
           <div class="branch-section">
-            <div class="branch-title">🌟 CHỌN NHÁNH RẼ CẤP 4:</div>
+            <div class="branch-title">${UI_ICONS.STAR} CHỌN NHÁNH RẼ CẤP 4:</div>
             <button id="btn-branch-a" class="branch-btn ${canA ? '' : 'disabled'}">
               <div class="b-name">${bpA.name}</div>
               <div class="b-desc">${ELEMENT_ICONS[bpA.element]} ${bpA.description}</div>
-              <div class="b-cost">🪙 ${bpA.cost} Vàng</div>
+              <div class="b-cost">${UI_ICONS.GOLD} ${bpA.cost} Vàng</div>
             </button>
             <button id="btn-branch-b" class="branch-btn ${canB ? '' : 'disabled'}">
               <div class="b-name">${bpB.name}</div>
               <div class="b-desc">${ELEMENT_ICONS[bpB.element]} ${bpB.description}</div>
-              <div class="b-cost">🪙 ${bpB.cost} Vàng</div>
+              <div class="b-cost">${UI_ICONS.GOLD} ${bpB.cost} Vàng</div>
             </button>
           </div>
         `;
       } else {
-        upgradeHtml = `<p class="max-tier-note">✨ ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP 4)</p>`;
+        upgradeHtml = `<p class="max-tier-note">${UI_ICONS.SPARKLES} ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP 4)</p>`;
       }
 
       let damageDisplay = '';
@@ -236,22 +237,22 @@ export class InspectorPanel {
           damageDisplay += ` + <b>${secDmg}</b>${isAura ? '/s' : ''} (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
       } else if (tower.type === 'DRAGON_NEST') {
-        damageDisplay = `<b>${tower.damage}</b> (🐉 Hệ Rồng - 💥 Nổ Lan ${tower.aoeRadius || 55}px - 🦅 Chặn Quái Bay)`;
+        damageDisplay = `<b>${tower.damage}</b> (${ELEMENT_ICONS.DRAGON} Hệ Rồng - ${UI_ICONS.EXPLOSION} Nổ Lan ${tower.aoeRadius || 55}px - ${UI_ICONS.FLY} Chặn Quái Bay)`;
         if (tower.secondaryElement) {
           const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
           damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
       } else if (tower.type === 'FAIRY_TREE') {
-        damageDisplay = `<b>${tower.damage}</b> (🧚 Hệ Tiên - 🦅 Chặn Quái Bay)`;
+        damageDisplay = `<b>${tower.damage}</b> (${ELEMENT_ICONS.FAIRY} Hệ Tiên - ${UI_ICONS.FLY} Chặn Quái Bay)`;
         if (tower.secondaryElement) {
           const secDmg = Math.max(1, Math.round(tower.damage * 0.6));
           damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
         }
       } else if (tower.type === 'HEROIC_ALTAR') {
         const ghostPct = Math.round((tower.spiritGhostRatio ?? (tower.branch === 'B' ? 1.0 : 0.5)) * 100);
-        damageDisplay = `<span style="color: #a5b4fc;">👻 Hồi sinh đồng minh tử trận (+${ghostPct}% DMG Ma)</span><br><span style="color: #818cf8;">Tỉ lệ chiêu hồn: <b>${Math.round((tower.resurrectChance || 0.3) * 100)}%</b> • Anh Linh: <b>${tower.soldierIds?.length || 0}/${tower.maxSoldiers || 2}</b></span>`;
+        damageDisplay = `<span style="color: #a5b4fc;">${ELEMENT_ICONS.GHOST} Hồi sinh đồng minh tử trận (+${ghostPct}% DMG Ma)</span><br><span style="color: #818cf8;">Tỉ lệ chiêu hồn: <b>${Math.round((tower.resurrectChance || 0.3) * 100)}%</b> • Anh Linh: <b>${tower.soldierIds?.length || 0}/${tower.maxSoldiers || 2}</b></span>`;
       } else {
-        damageDisplay = `<b>${tower.damage}</b> (⚔️ Vật lý)`;
+        damageDisplay = `<b>${tower.damage}</b> (${UI_ICONS.SWORDS} Vật lý)`;
         if (tower.secondaryElement) {
           const secDmg = Math.max(1, Math.round(tower.damage * 0.45));
           damageDisplay += ` + <b>${secDmg}</b> (${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]})`;
@@ -264,7 +265,7 @@ export class InspectorPanel {
             tower.type === 'MAGE'
               ? tower.damage
               : Math.max(1, Math.round(tower.damage * 0.45));
-          damageDisplay += ` + <b style="color: #38bdf8;">${bDmg}</b> (${ELEMENT_ICONS[bElem]} ${ELEMENT_NAMES[bElem].split(' ')[0]} 🌟)`;
+          damageDisplay += ` + <b style="color: #38bdf8;">${bDmg}</b> (${ELEMENT_ICONS[bElem]} ${ELEMENT_NAMES[bElem].split(' ')[0]} ${UI_ICONS.STAR})`;
         }
       }
 
@@ -273,13 +274,13 @@ export class InspectorPanel {
         const isMelee = tower.soldierMode !== 'RANGED';
         soldierModeHtml = `
           <div class="soldier-mode-section">
-            <div class="section-subtitle">🛡️ CHỌN LOẠI BINH CHỦNG:</div>
+            <div class="section-subtitle">${UI_ICONS.SHIELD} CHỌN LOẠI BINH CHỦNG:</div>
             <div class="soldier-mode-toggle">
               <button id="btn-mode-melee" class="mode-btn ${isMelee ? 'active' : ''}">
-                🗡️ Đánh Gần (HP & DPS lớn)
+                ${UI_ICONS.SWORD} Đánh Gần (HP & DPS lớn)
               </button>
               <button id="btn-mode-ranged" class="mode-btn ${!isMelee ? 'active' : ''}">
-                🏹 Bắn Tên (Bộ, Nước & Bay)
+                ${UI_ICONS.BOW} Bắn Tên (Bộ, Nước & Bay)
               </button>
             </div>
           </div>
@@ -292,8 +293,8 @@ export class InspectorPanel {
           elementPickerHtml = `
             <div class="elem-picker-section">
               <div class="picker-header">
-                <span>🔮 NGUYÊN TỐ CHÍNH (KHE 1):</span>
-                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+                <span>${UI_ICONS.ORB} NGUYÊN TỐ CHÍNH (KHE 1):</span>
+                <span class="cost-pill">${UI_ICONS.GOLD} ${ELEMENT_IMBUE_COST}</span>
               </div>
               <div class="current-elem-text">Đang dùng: <b>${ELEMENT_ICONS[tower.element]} ${ELEMENT_NAMES[tower.element]}</b></div>
               <div class="elem-buttons-grid">
@@ -308,8 +309,8 @@ export class InspectorPanel {
               </div>
 
               <div class="picker-header" style="margin-top: 8px;">
-                <span>✨ NGUYÊN TỐ PHỤ (KHE 2):</span>
-                <span class="cost-pill">🪙 ${MAGE_SECOND_ELEMENT_COST}</span>
+                <span>${UI_ICONS.SPARKLES} NGUYÊN TỐ PHỤ (KHE 2):</span>
+                <span class="cost-pill">${UI_ICONS.GOLD} ${MAGE_SECOND_ELEMENT_COST}</span>
               </div>
               <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : 'Chưa gắn'}</b></div>
               <div class="elem-buttons-grid">
@@ -328,10 +329,10 @@ export class InspectorPanel {
           elementPickerHtml = `
             <div class="elem-picker-section">
               <div class="picker-header">
-                <span>🔥 NGUYÊN TỐ THỨ 2 CỦA RỒNG (GỐC: 🐉 HỆ RỒNG):</span>
-                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+                <span>${ELEMENT_ICONS.FIRE} NGUYÊN TỐ THỨ 2 CỦA RỒNG (GỐC: ${ELEMENT_ICONS.DRAGON} HỆ RỒNG):</span>
+                <span class="cost-pill">${UI_ICONS.GOLD} ${ELEMENT_IMBUE_COST}</span>
               </div>
-              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : '🔥 Hỏa (Mặc định)'}</b></div>
+              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : `${ELEMENT_ICONS.FIRE} Hỏa (Mặc định)`}</b></div>
               <div class="elem-buttons-grid">
                 ${SELECTABLE_ELEMENTS.map(
                   (elem) => `
@@ -348,10 +349,10 @@ export class InspectorPanel {
           elementPickerHtml = `
             <div class="elem-picker-section">
               <div class="picker-header">
-                <span>✨ NGUYÊN TỐ THỨ 2 CỦA TIÊN (GỐC: 🧚 HỆ TIÊN):</span>
-                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+                <span>${ELEMENT_ICONS.LIGHT} NGUYÊN TỐ THỨ 2 CỦA TIÊN (GỐC: ${ELEMENT_ICONS.FAIRY} HỆ TIÊN):</span>
+                <span class="cost-pill">${UI_ICONS.GOLD} ${ELEMENT_IMBUE_COST}</span>
               </div>
-              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : '✨ Quang (Mặc định)'}</b></div>
+              <div class="current-elem-text">Đang dùng: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : `${ELEMENT_ICONS.LIGHT} Quang (Mặc định)`}</b></div>
               <div class="elem-buttons-grid">
                 ${SELECTABLE_ELEMENTS.map(
                   (elem) => `
@@ -368,9 +369,9 @@ export class InspectorPanel {
           elementPickerHtml = `
             <div class="elem-picker-section" style="border-left: 3px solid #818cf8; background: rgba(99, 102, 241, 0.08); padding: 8px 10px; border-radius: 6px;">
               <div class="picker-header">
-                <span>👻 THUỘC TÍNH BẢN THỂ:</span>
+                <span>${ELEMENT_ICONS.GHOST} THUỘC TÍNH BẢN THỂ:</span>
               </div>
-              <div class="current-elem-text">Đang dùng: <b>👻 Hệ Ma (Cố định)</b></div>
+              <div class="current-elem-text">Đang dùng: <b>${ELEMENT_ICONS.GHOST} Hệ Ma (Cố định)</b></div>
               <p style="font-size: 11px; color: #94a3b8; margin: 4px 0 0 0; line-height: 1.4;">
                 Tế Đàn Anh Linh không gắn thêm nguyên tố. Khi lính, rồng hoặc tiên tử trận, Anh Linh được triệu hồi sẽ tự động mang thêm Hệ Ma (+50% Sát thương Ma).
               </p>
@@ -380,8 +381,8 @@ export class InspectorPanel {
           elementPickerHtml = `
             <div class="elem-picker-section">
               <div class="picker-header">
-                <span>✨ GẮN THUỘC TÍNH NGUYÊN TỐ:</span>
-                <span class="cost-pill">🪙 ${ELEMENT_IMBUE_COST}</span>
+                <span>${UI_ICONS.SPARKLES} GẮN THUỘC TÍNH NGUYÊN TỐ:</span>
+                <span class="cost-pill">${UI_ICONS.GOLD} ${ELEMENT_IMBUE_COST}</span>
               </div>
               <div class="current-elem-text">Thuộc tính: <b>${tower.secondaryElement ? `${ELEMENT_ICONS[tower.secondaryElement]} ${ELEMENT_NAMES[tower.secondaryElement]}` : 'Chưa gắn (Thuần Vật Lý)'}</b></div>
               <div class="elem-buttons-grid">
@@ -407,7 +408,7 @@ export class InspectorPanel {
               <span class="insp-tier-badge">Cấp ${tower.tier}</span>
             </div>
             <button id="btn-open-tree" class="btn-detail-link" title="Xem giải thích, thông số & cây nâng cấp">
-              📖 Xem chi tiết
+              ${UI_ICONS.BOOK} Xem chi tiết
             </button>
           </div>
           <div class="insp-stats-grid">
@@ -421,7 +422,7 @@ export class InspectorPanel {
             </div>
             <div class="insp-stat-item">
               <span class="isi-lbl">Đã đầu tư</span>
-              <span class="isi-val">🪙 ${tower.totalInvested}</span>
+              <span class="isi-val">${UI_ICONS.GOLD} ${tower.totalInvested}</span>
             </div>
           </div>
           <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
@@ -429,12 +430,12 @@ export class InspectorPanel {
           </div>
           ${
             isSummon
-              ? `<div style="margin-top: 4px; font-size: 10.5px; color: #38bdf8;">🚩 Tháp triệu hồi không trực tiếp tấn công; đơn vị triệu hồi sẽ ra chốt chặn và chiến đấu.</div>`
+              ? `<div style="margin-top: 4px; font-size: 10.5px; color: #38bdf8;">${UI_ICONS.FLAG} Tháp triệu hồi không trực tiếp tấn công; đơn vị triệu hồi sẽ ra chốt chặn và chiến đấu.</div>`
               : ''
           }
           ${
             tower.disabledTimer && tower.disabledTimer > 0
-              ? `<div style="margin-top: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 6px; padding: 6px 10px; color: #f87171; font-size: 11.5px; font-weight: 700; text-align: center;">⚡ THÁP ĐANG BỊ VÔ HIỆU HÓA (${tower.disabledTimer.toFixed(1)}s)</div>`
+              ? `<div style="margin-top: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 6px; padding: 6px 10px; color: #f87171; font-size: 11.5px; font-weight: 700; text-align: center;">${UI_ICONS.BOLT} THÁP ĐANG BỊ VÔ HIỆU HÓA (${tower.disabledTimer.toFixed(1)}s)</div>`
               : ''
           }
         </div>
@@ -448,15 +449,15 @@ export class InspectorPanel {
             ? `
               ${
                 isSummon
-                  ? `<div class="button-row"><button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button></div>`
+                  ? `<div class="button-row"><button id="btn-rally" class="action-btn rally-btn">${UI_ICONS.FLAG} Điểm Tập Kết</button></div>`
                   : ''
               }
               <div class="confirm-sell-box">
-                <div class="confirm-sell-msg">⚠️ Bạn có chắc muốn bán công trình này?</div>
-                <div class="confirm-sell-refund">Nhận lại: <b class="gold-text">🪙 +${refund} Vàng</b> (70% đã đầu tư)</div>
+                <div class="confirm-sell-msg">${UI_ICONS.WARNING} Bạn có chắc muốn bán công trình này?</div>
+                <div class="confirm-sell-refund">Nhận lại: <b class="gold-text">${UI_ICONS.GOLD} +${refund} Vàng</b> (70% đã đầu tư)</div>
                 <div class="confirm-sell-actions">
-                  <button id="btn-confirm-sell" class="action-btn confirm-sell-btn">✔️ Xác Nhận Bán</button>
-                  <button id="btn-cancel-sell" class="action-btn cancel-sell-btn">✖️ Hủy</button>
+                  <button id="btn-confirm-sell" class="action-btn confirm-sell-btn">${UI_ICONS.CHECK} Xác Nhận Bán</button>
+                  <button id="btn-cancel-sell" class="action-btn cancel-sell-btn">${UI_ICONS.CLOSE} Hủy</button>
                 </div>
               </div>
             `
@@ -464,10 +465,10 @@ export class InspectorPanel {
               <div class="button-row">
                 ${
                   isSummon
-                    ? `<button id="btn-rally" class="action-btn rally-btn">🚩 Điểm Tập Kết</button>`
+                    ? `<button id="btn-rally" class="action-btn rally-btn">${UI_ICONS.FLAG} Điểm Tập Kết</button>`
                     : ''
                 }
-                <button id="btn-sell" class="action-btn sell-btn">💰 Bán (+${refund} 🪙)</button>
+                <button id="btn-sell" class="action-btn sell-btn">${UI_ICONS.GOLD} Bán (+${refund} ${UI_ICONS.GOLD})</button>
               </div>
             `
         }
@@ -571,9 +572,9 @@ export class InspectorPanel {
     if (buildPt) {
       const isTrapArea = buildPt.validFor === 'TRAP';
       if (this.inspectorTitleEl) {
-        this.inspectorTitleEl.textContent = isTrapArea
-          ? `⚙️ ĐẶT BẪY TẠI (${buildPt.x}, ${buildPt.y})`
-          : `🏰 XÂY THÁP TẠI (${buildPt.x}, ${buildPt.y})`;
+        this.inspectorTitleEl.innerHTML = isTrapArea
+          ? `${UI_ICONS.GEAR} ĐẶT BẪY TẠI (${buildPt.x}, ${buildPt.y})`
+          : `${UI_ICONS.CASTLE} XÂY THÁP TẠI (${buildPt.x}, ${buildPt.y})`;
       }
 
       const renderOption = (type: TowerType) => {
@@ -581,12 +582,12 @@ export class InspectorPanel {
         const bp = TOWER_BLUEPRINTS[bpKey];
         if (!bp) return '';
         const canAfford = this.state.gold >= bp.cost;
-        const icon = ELEMENT_ICONS[bp.element] || (isTrapArea ? '⚙️' : '⚔️');
+        const icon = ELEMENT_ICONS[bp.element] || (isTrapArea ? UI_ICONS.GEAR : UI_ICONS.SWORDS);
         return `
           <button class="build-option ${canAfford ? '' : 'disabled'}" data-type="${type}">
             <div class="opt-top">
               <span class="opt-name">${bp.name}</span>
-              <span class="opt-cost">🪙 ${bp.cost}</span>
+              <span class="opt-cost">${UI_ICONS.GOLD} ${bp.cost}</span>
             </div>
             <div class="opt-desc">${icon} [${bp.element}] ${bp.description}</div>
           </button>
@@ -597,17 +598,17 @@ export class InspectorPanel {
       if (isTrapArea) {
         const trapTypes: TowerType[] = ['TRAP_SPIKE', 'TRAP_FIRE', 'TRAP_FROST', 'TRAP_NET'];
         optionsSectionHtml = `
-          <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">⚙️ 3. BẪY CHIẾN THUẬT</div>
+          <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">${UI_ICONS.GEAR} 3. BẪY CHIẾN THUẬT</div>
           <div class="build-options-list">${trapTypes.map(renderOption).join('')}</div>
         `;
       } else {
         const defenseTypes: TowerType[] = ['ARCHER', 'MAGE', 'ARTILLERY'];
         const summonTypes: TowerType[] = ['BARRACKS', 'DRAGON_NEST', 'FAIRY_TREE', 'HEROIC_ALTAR'];
         optionsSectionHtml = `
-          <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">🏰 1. THÁP PHÒNG NGỰ</div>
+          <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">${UI_ICONS.CASTLE} 1. THÁP PHÒNG NGỰ</div>
           <div class="build-options-list" style="margin-bottom: 10px;">${defenseTypes.map(renderOption).join('')}</div>
 
-          <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">🐉 2. THÁP TRIỆU HỒI</div>
+          <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">${ELEMENT_ICONS.DRAGON} 2. THÁP TRIỆU HỒI</div>
           <div class="build-options-list">${summonTypes.map(renderOption).join('')}</div>
         `;
       }
@@ -617,7 +618,7 @@ export class InspectorPanel {
           <div class="insp-header">
             <span class="insp-title">${isTrapArea ? 'Vị Trí Đường/Sông (Cho Phép Bẫy)' : 'Vị Trí Đất Trống (Cho Phép Tháp)'}</span>
             <button id="btn-slot-tree" class="btn-detail-link" title="Xem giải thích cẩm nang">
-              📖 Cẩm nang
+              ${UI_ICONS.BOOK} Cẩm nang
             </button>
           </div>
           <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
@@ -668,7 +669,7 @@ export class InspectorPanel {
     // CASE 3: Tower Catalog Mode (or active placement type selected)
     if (this.currentTab === 'CHOOSE_TOWER' || this.state.activePlacementType !== null) {
       if (this.inspectorTitleEl) {
-        this.inspectorTitleEl.textContent = '🏗️ DANH SÁCH THÁP & BẪY';
+        this.inspectorTitleEl.innerHTML = `${UI_ICONS.BUILD} DANH SÁCH THÁP & BẪY`;
       }
 
       const activeType = this.state.activePlacementType;
@@ -682,21 +683,21 @@ export class InspectorPanel {
         bannerHtml = `
           <div class="insp-card" style="border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.12); margin-bottom: 8px;">
             <div style="font-weight: 700; color: #60a5fa; font-size: 12.5px; margin-bottom: 4px;">
-              📍 ĐANG CHỌN: ${activeBp.name.toUpperCase()} (🪙 ${activeBp.cost})
+              ${UI_ICONS.PIN} ĐANG CHỌN: ${activeBp.name.toUpperCase()} (${UI_ICONS.GOLD} ${activeBp.cost})
             </div>
             <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.4;">
               ${
                 isTrap
-                  ? '👉 Nhấp chuột vào <b>ĐƯỜNG BỘ</b> hoặc <b>DÒNG SÔNG</b> màu xanh để đặt bẫy!'
-                  : '👉 Nhấp chuột vào <b>ĐẤT TRỐNG</b> (ngoài đường & sông) màu xanh để xây tháp!'
+                  ? `${UI_ICONS.ARROW_RIGHT} Nhấp chuột vào <b>ĐƯỜNG BỘ</b> hoặc <b>DÒNG SÔNG</b> màu xanh để đặt bẫy!`
+                  : `${UI_ICONS.ARROW_RIGHT} Nhấp chuột vào <b>ĐẤT TRỐNG</b> (ngoài đường & sông) màu xanh để xây tháp!`
               }
             </p>
             <div style="display: flex; gap: 8px;">
               <button id="btn-cancel-placement-cat" class="action-btn" style="background: #334155; padding: 4px 10px; font-size: 11px; width: auto;">
-                ✖ Hủy chọn (ESC)
+                ${UI_ICONS.CLOSE} Hủy chọn (ESC)
               </button>
               <button id="btn-view-codex-cat" class="action-btn" style="background: #1e3a8a; padding: 4px 10px; font-size: 11px; width: auto;">
-                📖 Cẩm nang
+                ${UI_ICONS.BOOK} Cẩm nang
               </button>
             </div>
           </div>
@@ -705,7 +706,7 @@ export class InspectorPanel {
         bannerHtml = `
           <div class="insp-card" style="margin-bottom: 8px;">
             <div style="font-weight: 700; color: #facc15; font-size: 12px; margin-bottom: 2px;">
-              💡 CHỌN THÁP ĐỂ XÂY DỰNG
+              ${UI_ICONS.BULB} CHỌN THÁP ĐỂ XÂY DỰNG
             </div>
             <p style="font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.4;">
               Bấm chọn một tháp bên dưới (hoặc phím [1]-[0]), sau đó nhấp vào bản đồ để đặt. Bạn cũng có thể nhấp vào ô đất trống trên bản đồ trước!
@@ -734,7 +735,7 @@ export class InspectorPanel {
         if (!bp) return '';
         const canAfford = this.state.gold >= bp.cost;
         const isSelected = this.state.activePlacementType === type;
-        const icon = ELEMENT_ICONS[bp.element] || (type.startsWith('TRAP_') ? '⚙️' : '⚔️');
+        const icon = ELEMENT_ICONS[bp.element] || (type.startsWith('TRAP_') ? UI_ICONS.GEAR : UI_ICONS.SWORDS);
         const hotkey = keyNumberMap[type] || '';
         const rangeText = type.startsWith('TRAP_')
           ? `${bp.triggerRadius || bp.range || 40}px`
@@ -746,9 +747,9 @@ export class InspectorPanel {
                 <span class="opt-key">[${hotkey}]</span>
                 <span class="opt-name">${bp.name}</span>
               </span>
-              <span class="opt-cost">🪙 ${bp.cost}</span>
+              <span class="opt-cost">${UI_ICONS.GOLD} ${bp.cost}</span>
             </div>
-            <div class="opt-desc">${icon} [${bp.element}] • ⚔️ ${bp.damage} • 🎯 ${rangeText} • ${bp.description}</div>
+            <div class="opt-desc">${icon} [${bp.element}] • ${UI_ICONS.SWORDS} ${bp.damage} • ${UI_ICONS.TARGET} ${rangeText} • ${bp.description}</div>
           </button>
         `;
       };
@@ -759,13 +760,13 @@ export class InspectorPanel {
 
       this.inspectorContentEl.innerHTML = `
         ${bannerHtml}
-        <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">🏰 1. THÁP PHÒNG NGỰ</div>
+        <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin: 8px 0 4px 2px;">${UI_ICONS.CASTLE} 1. THÁP PHÒNG NGỰ</div>
         <div class="build-options-list" style="margin-bottom: 10px;">${defenseTypes.map(renderCatalogOption).join('')}</div>
 
-        <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">🐉 2. THÁP TRIỆU HỒI</div>
+        <div style="font-size: 11px; font-weight: 700; color: #a78bfa; margin: 8px 0 4px 2px;">${ELEMENT_ICONS.DRAGON} 2. THÁP TRIỆU HỒI</div>
         <div class="build-options-list" style="margin-bottom: 10px;">${summonTypes.map(renderCatalogOption).join('')}</div>
 
-        <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">⚙️ 3. BẪY CHIẾN THUẬT (ĐƯỜNG & SÔNG)</div>
+        <div style="font-size: 11px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px 2px;">${UI_ICONS.GEAR} 3. BẪY CHIẾN THUẬT (ĐƯỜNG & SÔNG)</div>
         <div class="build-options-list">${trapTypes.map(renderCatalogOption).join('')}</div>
       `;
 
@@ -814,7 +815,7 @@ export class InspectorPanel {
 
     // CASE 4: Stage Info & Waves breakdown
     if (this.inspectorTitleEl) {
-      this.inspectorTitleEl.textContent = '🗺️ THÔNG TIN MÀN CHƠI & ĐỢT QUÁI';
+      this.inspectorTitleEl.innerHTML = `${UI_ICONS.MAP} THÔNG TIN MÀN CHƠI & ĐỢT QUÁI`;
     }
 
     const currentMap = this.state.currentMap;
@@ -836,30 +837,30 @@ export class InspectorPanel {
       if (isCurrent) {
         cardClass += ' current-wave';
         statusTag = this.isWaveRunning
-          ? `<span class="sw-status-tag current">⚔️ Đang diễn ra</span>`
-          : `<span class="sw-status-tag current">⏳ Sắp tới</span>`;
+          ? `<span class="sw-status-tag current">${UI_ICONS.SWORDS} Đang diễn ra</span>`
+          : `<span class="sw-status-tag current">${UI_ICONS.TIMER} Sắp tới</span>`;
       } else if (isPast) {
         cardClass += ' past-wave';
-        statusTag = `<span class="sw-status-tag past">✓ Đã vượt qua</span>`;
+        statusTag = `<span class="sw-status-tag past">${UI_ICONS.CHECK} Đã vượt qua</span>`;
       } else {
         cardClass += ' future-wave';
         statusTag = `<span class="sw-status-tag future">Đợt ${waveNum}</span>`;
       }
 
       const hpBonusPct = waveNum > 10 ? (waveNum - 10) * 10 : 0;
-      const hpBonusTag = hpBonusPct > 0 ? `<span class="sw-hp-bonus">❤️ +${hpBonusPct}% Máu</span>` : '';
+      const hpBonusTag = hpBonusPct > 0 ? `<span class="sw-hp-bonus">${UI_ICONS.HEART} +${hpBonusPct}% Máu</span>` : '';
 
       const enemyPills = waveConfig.enemies.map((entry) => {
         const bp = ENEMY_BLUEPRINTS[entry.typeId];
         if (!bp) return '';
         const elemIcon = ELEMENT_ICONS[bp.elementalProfile.primaryElement] || '';
-        const moveIcon = bp.movementType === 'FLY' ? '🦅' : bp.movementType === 'SWIM' ? '🌊' : '🚶';
+        const moveIcon = bp.movementType === 'FLY' ? UI_ICONS.FLY : bp.movementType === 'SWIM' ? UI_ICONS.SWIM : UI_ICONS.WALK;
         const isBoss = bp.tags.includes('BOSS');
         const isElite = bp.tags.includes('ELITE');
         const badgeTag = isBoss
-          ? '<span class="enemy-badge boss">👑 TRÙM</span>'
+          ? `<span class="enemy-badge boss">${UI_ICONS.CROWN} TRÙM</span>`
           : isElite
-          ? '<span class="enemy-badge elite">🌟 TINH NHUỆ</span>'
+          ? `<span class="enemy-badge elite">${UI_ICONS.STAR} TINH NHUỆ</span>`
           : '';
 
         return `
@@ -884,7 +885,7 @@ export class InspectorPanel {
               ${statusTag}
             </div>
             <div class="sw-card-meta">
-              <span class="sw-reward">🪙 +${waveConfig.rewardGold}</span>
+              <span class="sw-reward">${UI_ICONS.GOLD} +${waveConfig.rewardGold}</span>
               ${hpBonusTag}
             </div>
           </div>
@@ -899,7 +900,7 @@ export class InspectorPanel {
       wavesListHtml += `
         <div class="stage-wave-card post-10-notice-card" style="text-align: center; background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; padding: 10px;">
           <div style="font-size: 11.5px; font-weight: 700; color: #94a3b8;">
-            🌊 Các đợt tiếp theo (Đợt 11 đến ${totalWavesCount})
+            ${UI_ICONS.WAVE} Các đợt tiếp theo (Đợt 11 đến ${totalWavesCount})
           </div>
           <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">
             Số lượng quái và độ khó tự động khuếch đại theo tiến trình chiến dịch.
@@ -918,7 +919,7 @@ export class InspectorPanel {
               <span class="insp-tier-badge" style="background: #3b82f6;">${totalWavesCount} Đợt</span>
             </div>
             <button id="btn-inspector-change-map" class="btn-detail-link" title="Đổi bản đồ chiến lược">
-              🗺️ Đổi Bản Đồ
+              ${UI_ICONS.MAP} Đổi Bản Đồ
             </button>
           </div>
           <p class="stage-map-subtitle">${currentMap.subtitle}</p>
@@ -944,7 +945,7 @@ export class InspectorPanel {
           }
 
           <div class="stage-lanes-row">
-            ${badges.map((b) => `<span class="map-lane-pill">🛡️ ${b}</span>`).join('')}
+            ${badges.map((b) => `<span class="map-lane-pill">${UI_ICONS.SHIELD} ${b}</span>`).join('')}
           </div>
 
           <p class="stage-map-desc">${currentMap.description}</p>
@@ -953,7 +954,7 @@ export class InspectorPanel {
         <!-- Wave List Header -->
         <div class="stage-waves-header">
           <div class="sw-header-title">
-            <span>🌊 DANH SÁCH ĐỢT QUÁI (ĐỢT 1 - ${displayWavesLimit})</span>
+            <span>${UI_ICONS.WAVE} DANH SÁCH ĐỢT QUÁI (ĐỢT 1 - ${displayWavesLimit})</span>
             <span class="sw-progress-badge">Đang ở Đợt ${this.currentWave}/${totalWavesCount}</span>
           </div>
           <span class="sw-header-hint">Hiển thị thông tin 10 đợt đầu • Nhấp vào quái vật để mở cẩm nang</span>
@@ -989,7 +990,7 @@ export class InspectorPanel {
       if (tower.type === 'HEROIC_ALTAR') {
         unitsListHtml = `
           <div class="summoned-unit-empty">
-            <span>👻 Chưa có Anh Linh nào xuất hiện.</span>
+            <span>${ELEMENT_ICONS.GHOST} Chưa có Anh Linh nào xuất hiện.</span>
             <span style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
               Khi chiến binh đồng minh (Lính/Rồng/Tiên) ngã xuống trong phạm vi ${tower.range}px, có ${Math.round((tower.resurrectChance || 0.3) * 100)}% tỉ lệ triệu hồi lại thành Anh Linh!
             </span>
@@ -1011,11 +1012,11 @@ export class InspectorPanel {
         const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
 
         // Unit icon & title
-        let icon = '🗡️';
-        if (u.archetype === 'DRAGON') icon = '🐉';
-        else if (u.archetype === 'FAIRY') icon = '🧚';
-        else if (u.isSpirit) icon = '👻';
-        else if (u.combatMode === 'RANGED') icon = '🏹';
+        let icon = UI_ICONS.SWORD;
+        if (u.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
+        else if (u.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
+        else if (u.isSpirit) icon = ELEMENT_ICONS.GHOST;
+        else if (u.combatMode === 'RANGED') icon = UI_ICONS.BOW;
 
         let nameDisplay = u.name;
         if (u.combatMode === 'RANGED' && !u.archetype) {
@@ -1028,13 +1029,13 @@ export class InspectorPanel {
           stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
           stateClass = 'state-dead';
         } else if (u.state === 'ATTACKING') {
-          stateLabel = '⚔️ Đang giao chiến';
+          stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
           stateClass = 'state-fighting';
         } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
-          stateLabel = '🏃 Đang di chuyển';
+          stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
           stateClass = 'state-moving';
         } else {
-          stateLabel = '🛡️ Chốt chặn';
+          stateLabel = `${UI_ICONS.SHIELD} Chốt chặn`;
           stateClass = 'state-guarding';
         }
 
@@ -1052,7 +1053,7 @@ export class InspectorPanel {
               </div>
               <div class="suc-hp-text">
                 <span class="suc-hp-val">${curHp}/${maxHp}</span>
-                <span class="suc-hp-heart">❤️</span>
+                <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
               </div>
             </div>
 
@@ -1062,7 +1063,7 @@ export class InspectorPanel {
             </div>
 
             <div class="suc-bottom">
-              <span class="suc-stat">⚔️ ${u.damage} DMG • 🛡️ ${armorPct}%</span>
+              <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%</span>
               <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
             </div>
           </div>
@@ -1074,7 +1075,7 @@ export class InspectorPanel {
       <div class="summoned-units-section">
         <div class="sus-header">
           <div class="sus-title-group">
-            <span class="sus-icon">🛡️</span>
+            <span class="sus-icon">${UI_ICONS.SHIELD}</span>
             <span class="sus-title">ĐƠN VỊ ĐANG TRIỆU HỒI</span>
           </div>
           <span class="sus-counter ${aliveCount === 0 ? 'all-dead' : ''}">${aliveCount}/${maxCapacity} Sẵn sàng</span>
@@ -1107,7 +1108,7 @@ export class InspectorPanel {
       if (tower.type === 'HEROIC_ALTAR') {
         container.innerHTML = `
           <div class="summoned-unit-empty">
-            <span>👻 Chưa có Anh Linh nào xuất hiện.</span>
+            <span>${ELEMENT_ICONS.GHOST} Chưa có Anh Linh nào xuất hiện.</span>
             <span style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">
               Khi chiến binh đồng minh (Lính/Rồng/Tiên) ngã xuống trong phạm vi ${tower.range}px, có ${Math.round((tower.resurrectChance || 0.3) * 100)}% tỉ lệ triệu hồi lại thành Anh Linh!
             </span>
@@ -1124,11 +1125,11 @@ export class InspectorPanel {
       const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
       const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
 
-      let icon = '🗡️';
-      if (u.archetype === 'DRAGON') icon = '🐉';
-      else if (u.archetype === 'FAIRY') icon = '🧚';
-      else if (u.isSpirit) icon = '👻';
-      else if (u.combatMode === 'RANGED') icon = '🏹';
+      let icon = UI_ICONS.SWORD;
+      if (u.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
+      else if (u.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
+      else if (u.isSpirit) icon = ELEMENT_ICONS.GHOST;
+      else if (u.combatMode === 'RANGED') icon = UI_ICONS.BOW;
 
       let nameDisplay = u.name;
       if (u.combatMode === 'RANGED' && !u.archetype) {
@@ -1141,13 +1142,13 @@ export class InspectorPanel {
         stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
         stateClass = 'state-dead';
       } else if (u.state === 'ATTACKING') {
-        stateLabel = '⚔️ Đang giao chiến';
+        stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
         stateClass = 'state-fighting';
       } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
-        stateLabel = '🏃 Đang di chuyển';
+        stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
         stateClass = 'state-moving';
       } else {
-        stateLabel = '🛡️ Chốt chặn';
+        stateLabel = `${UI_ICONS.SHIELD} Chốt chặn`;
         stateClass = 'state-guarding';
       }
 
@@ -1165,7 +1166,7 @@ export class InspectorPanel {
             </div>
             <div class="suc-hp-text">
               <span class="suc-hp-val">${curHp}/${maxHp}</span>
-              <span class="suc-hp-heart">❤️</span>
+              <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
             </div>
           </div>
 
@@ -1174,7 +1175,7 @@ export class InspectorPanel {
           </div>
 
           <div class="suc-bottom">
-            <span class="suc-stat">⚔️ ${u.damage} DMG • 🛡️ ${armorPct}%</span>
+            <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%</span>
             <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
           </div>
         </div>

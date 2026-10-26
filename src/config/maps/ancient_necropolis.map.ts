@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_ANCIENT_NECROPOLIS } from './waves_extended.js';
 
 export const WAVES_ANCIENT_NECROPOLIS: WaveConfig[] = [
@@ -172,7 +173,7 @@ export const MAP_ANCIENT_NECROPOLIS: MapConfig = {
   laneBadges: ['3 Nhà Chính Tam Thành', '3 Tuyến Bộ Riêng Biệt', 'Tam Lộ Giáp Kẹp'],
   tribe: {
     name: 'Tộc Vong Linh U Hồn',
-    icon: '👻🔮',
+    icon: `${ELEMENT_ICONS.GHOST}${ELEMENT_ICONS.DARK}`,
     elements: ['GHOST', 'DARK', 'ICE'],
     description: 'Binh đoàn u hồn tử thần và oán hồn không trung xuyên thấu mọi lớp giáp vật lý cùng Pháp Sư Chiêu Hồn.'
   }

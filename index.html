@@ -11,28 +11,28 @@
       <!-- 1. LEFT PANEL: Thông số gọn gàng & Các nút chức năng -->
       <aside id="left-panel">
         <div class="panel-section brand-section">
-          <h1 class="game-logo">⚔️ STICK VANGUARD</h1>
+          <h1 class="game-logo"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SWORDS"><path d="M14.5 4l5.5 5.5-9 9-3-1-2 2-2-2 2-2-1-3 9.5-8.5z" fill="#e2e8f0" stroke="#475569" stroke-width="1.2"/><path d="M9.5 4L4 9.5l9 9 3-1 2 2 2-2-2-2 1-3L9.5 4z" fill="#cbd5e1" stroke="#334155" stroke-width="1.2"/><circle cx="12" cy="12" r="1.5" fill="#facc15"/></svg> STICK VANGUARD</h1>
           <span class="game-tagline">Thủ Thành Người Que</span>
         </div>
 
         <!-- Trạng thái trận đấu (Vàng, Máu, Đợt) -->
         <div class="panel-section stats-hud-group">
           <div class="hud-item gold-box">
-            <span class="hud-icon">🪙</span>
+            <span class="hud-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="GOLD"><circle cx="12" cy="12" r="9" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/><circle cx="12" cy="12" r="6.5" fill="#eab308" stroke="#ca8a04" stroke-width="1"/><path d="M12 7.5v9M9.5 9.5h5a1.5 1.5 0 0 1 0 3h-5a1.5 1.5 0 0 0 0 3h5.5" fill="none" stroke="#713f12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <div class="hud-item-content">
               <span class="hud-lbl">VÀNG HIỆN CÓ</span>
               <span id="hud-gold" class="hud-val">320</span>
             </div>
           </div>
           <div class="hud-item lives-box">
-            <span class="hud-icon">❤️</span>
+            <span class="hud-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="HEART"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ef4444" stroke="#991b1b" stroke-width="1.2"/></svg></span>
             <div class="hud-item-content">
               <span class="hud-lbl">MÁU CĂN CỨ</span>
               <span id="hud-lives" class="hud-val">20/20</span>
             </div>
           </div>
           <div class="hud-item wave-box">
-            <span class="hud-icon">🌊</span>
+            <span class="hud-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="WAVE"><path d="M2 13c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round"/><path d="M2 17c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/></svg></span>
             <div class="hud-item-content">
               <span class="hud-lbl">ĐỢT QUÁI</span>
               <div class="hud-wave-val-wrapper">
@@ -43,24 +43,24 @@
           </div>
 
           <button id="btn-next-wave" class="hud-btn primary-btn wave-call-btn">
-            ⚔️ Bắt đầu Đợt Quái
+            <svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SWORDS"><path d="M14.5 4l5.5 5.5-9 9-3-1-2 2-2-2 2-2-1-3 9.5-8.5z" fill="#e2e8f0" stroke="#475569" stroke-width="1.2"/><path d="M9.5 4L4 9.5l9 9 3-1 2 2 2-2-2-2 1-3L9.5 4z" fill="#cbd5e1" stroke="#334155" stroke-width="1.2"/><circle cx="12" cy="12" r="1.5" fill="#facc15"/></svg> Bắt đầu Đợt Quái
           </button>
         </div>
 
         <!-- Các nút chức năng chính (Gọn gàng, không chi tiết rườm rà) -->
         <div class="panel-section left-actions-group">
           <button id="btn-select-map" class="hud-btn left-action-btn btn-action-map" title="Đổi bản đồ chiến thuật">
-            <span class="btn-icon">🗺️</span>
+            <span class="btn-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="MAP"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round"/><line x1="9" y1="3" x2="9" y2="18" stroke="#38bdf8" stroke-width="1.8"/><line x1="15" y1="6" x2="15" y2="21" stroke="#38bdf8" stroke-width="1.8"/></svg></span>
             <span>Chọn Bản Đồ</span>
           </button>
 
           <button id="btn-open-settings-modal" class="hud-btn left-action-btn btn-action-settings" title="Cài đặt trận đấu tùy chỉnh">
-            <span class="btn-icon">⚙️</span>
+            <span class="btn-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="GEAR"><circle cx="12" cy="12" r="3" fill="#cbd5e1"/><path d="M12 2l1 2.5 2.5-.5 1 2.5 2.5.5.5 2.5 2.5 1v2.5l-2.5 1-.5 2.5-2.5.5-1 2.5-2.5-.5-1 2.5h-2l-1-2.5-2.5.5-1-2.5-2.5-.5-.5-2.5-2.5-1v-2.5l2.5-1 .5-2.5 2.5-.5 1-2.5 2.5.5 1-2.5z" fill="none" stroke="#cbd5e1" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
             <span>Cài Đặt Trận Đấu</span>
           </button>
 
           <button id="btn-codex" class="hud-btn left-action-btn btn-action-codex" title="Mở cẩm nang tra cứu & Cây nâng cấp (Phím B)">
-            <span class="btn-icon">📖</span>
+            <span class="btn-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="BOOK"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <span>Cẩm Nang Toàn Thư (B)</span>
           </button>
         </div>
@@ -86,11 +86,11 @@
 
             <!-- Panel điều khiển nổi trên góc trên canvas, nền trong suốt -->
             <div id="canvas-controls-overlay" class="canvas-controls-overlay">
-              <button id="btn-sound-toggle" class="canvas-ctrl-btn" title="Bật/Tắt âm thanh (Phím M)">🔊</button>
-              <button id="btn-speed" class="canvas-ctrl-btn" title="Tăng tốc độ trận đấu">⚡ x1</button>
-              <button id="btn-pause" class="canvas-ctrl-btn" title="Tạm dừng / Tiếp tục">⏸️ Tạm dừng</button>
-              <button id="btn-restart" class="canvas-ctrl-btn danger-ctrl-btn" title="Chơi lại màn đấu">🔄 Chơi lại</button>
-              <button id="btn-fullscreen" class="canvas-ctrl-btn" title="Toàn màn hình (F)">⛶</button>
+              <button id="btn-sound-toggle" class="canvas-ctrl-btn" title="Bật/Tắt âm thanh (Phím M)"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_ON"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#38bdf8"/><path d="M16 8a5 5 0 0 1 0 8m3-11a9 9 0 0 1 0 14" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/></svg></button>
+              <button id="btn-speed" class="canvas-ctrl-btn" title="Tăng tốc độ trận đấu"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="BOLT"><polygon points="13,2 4,14 11,14 9,22 20,9 13,9" fill="#facc15" stroke="#ca8a04" stroke-width="1.2" stroke-linejoin="round"/></svg> x1</button>
+              <button id="btn-pause" class="canvas-ctrl-btn" title="Tạm dừng / Tiếp tục"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="PAUSE"><rect x="5" y="4" width="5" height="16" rx="1" fill="#facc15"/><rect x="14" y="4" width="5" height="16" rx="1" fill="#facc15"/></svg> Tạm dừng</button>
+              <button id="btn-restart" class="canvas-ctrl-btn danger-ctrl-btn" title="Chơi lại màn đấu"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="RESTART"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round"/><polyline points="3,3 3,8 8,8" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Chơi lại</button>
+              <button id="btn-fullscreen" class="canvas-ctrl-btn" title="Toàn màn hình (F)"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="FULLSCREEN"><path d="M4 8V4h4m8 0h4v4m0 8v4h-4m-8 0H4v-4" fill="none" stroke="#cbd5e1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             </div>
 
             <div id="menu-overlay"></div>
@@ -103,11 +103,11 @@
       <aside id="right-panel">
         <div class="panel-section stage-info-header-section right-panel-tab-bar">
           <button id="btn-choose-tower" class="right-tab-btn active" title="Xem danh sách tháp phòng ngự, tháp triệu hồi và bẫy (Phím 1-7, 8-0)">
-            <span class="btn-icon">🏗️</span>
+            <span class="btn-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="BUILD"><path d="M3 21h18M5 21V8l7-5 7 5v13" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linejoin="round"/><rect x="9" y="13" width="6" height="8" fill="#f59e0b"/></svg></span>
             <span class="btn-text">Chọn Tháp</span>
           </button>
           <button id="btn-stage-info" class="right-tab-btn" title="Xem thông tin bản đồ và các đợt quái (waves)">
-            <span class="btn-icon">🗺️</span>
+            <span class="btn-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="MAP"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round"/><line x1="9" y1="3" x2="9" y2="18" stroke="#38bdf8" stroke-width="1.8"/><line x1="15" y1="6" x2="15" y2="21" stroke="#38bdf8" stroke-width="1.8"/></svg></span>
             <span class="btn-text">Màn Chơi</span>
           </button>
         </div>
@@ -115,7 +115,7 @@
         <!-- Inspector: Hiện thông tin, Nâng cấp, Đổi chế độ, Gắn nguyên tố HOẶC Thông tin màn chơi -->
         <div id="inspector-section" class="panel-section inspector-section">
           <div class="section-title">
-            <span id="inspector-main-title">🗺️ THÔNG TIN MÀN CHƠI & ĐỢT QUÁI</span>
+            <span id="inspector-main-title"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="MAP"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round"/><line x1="9" y1="3" x2="9" y2="18" stroke="#38bdf8" stroke-width="1.8"/><line x1="15" y1="6" x2="15" y2="21" stroke="#38bdf8" stroke-width="1.8"/></svg> THÔNG TIN MÀN CHƠI & ĐỢT QUÁI</span>
           </div>
           <div id="inspector-content" class="inspector-content">
             <!-- Được render động bởi InspectorPanel -->
@@ -128,7 +128,7 @@
         <div id="codex-modal" class="codex-modal-container">
           <div class="codex-modal-header">
             <div class="codex-header-left">
-              <span id="codex-modal-icon" class="codex-icon">📖</span>
+              <span id="codex-modal-icon" class="codex-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="BOOK"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <div class="codex-title-group">
                 <h2 id="codex-modal-title">Cẩm Nang Bách Khoa Toàn Thư</h2>
                 <span id="codex-modal-badge" class="codex-badge">Stick Vanguard Codex</span>
@@ -139,10 +139,10 @@
 
           <!-- Category Nav Tabs -->
           <nav class="codex-modal-tabs">
-            <button class="codex-tab active" data-cat="BUILDINGS">🏰 Công Trình & Bẫy</button>
-            <button class="codex-tab" data-cat="ELEMENTS">✨ Hệ Nguyên Tố</button>
-            <button class="codex-tab" data-cat="ENEMIES">👾 Bách Khoa Quái Vật</button>
-            <button class="codex-tab" data-cat="NAVIGATION">🧭 Cơ Chế Di Chuyển</button>
+            <button class="codex-tab active" data-cat="BUILDINGS"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="CASTLE"><path d="M3 21h18V10h-3v3h-2V7h-3v3h-2V7H7v6H5v-3H3v11z" fill="#64748b" stroke="#334155" stroke-width="1.5"/><path d="M10 21v-5a2 2 0 0 1 4 0v5" fill="#1e293b"/></svg> Công Trình & Bẫy</button>
+            <button class="codex-tab" data-cat="ELEMENTS"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SPARKLES"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z" fill="#facc15" stroke="#eab308" stroke-width="0.8"/><circle cx="19" cy="5" r="1.5" fill="#fef08a"/><circle cx="5" cy="18" r="1.5" fill="#fef08a"/></svg> Hệ Nguyên Tố</button>
+            <button class="codex-tab" data-cat="ENEMIES"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="MONSTER"><path d="M4 6h2v2H4zm14 0h2v2h-2zM6 10h12v6H6zm-2 6h2v4H4zm14 0h2v4h-2zM8 12h2v2H8zm6 0h2v2h-2z" fill="#c084fc"/></svg> Bách Khoa Quái Vật</button>
+            <button class="codex-tab" data-cat="NAVIGATION"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="COMPASS"><circle cx="12" cy="12" r="9" fill="none" stroke="#10b981" stroke-width="1.8"/><polygon points="12,6 14.5,12 12,11" fill="#ef4444"/><polygon points="12,18 9.5,12 12,13" fill="#cbd5e1"/><circle cx="12" cy="12" r="1.5" fill="#0f172a"/></svg> Cơ Chế Di Chuyển</button>
           </nav>
 
           <!-- Codex Modal Body -->
@@ -157,7 +157,7 @@
         <div class="map-modal-container">
           <div class="codex-modal-header">
             <div class="codex-header-left">
-              <span class="codex-icon">🗺️</span>
+              <span class="codex-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="MAP"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round"/><line x1="9" y1="3" x2="9" y2="18" stroke="#38bdf8" stroke-width="1.8"/><line x1="15" y1="6" x2="15" y2="21" stroke="#38bdf8" stroke-width="1.8"/></svg></span>
               <div class="codex-title-group">
                 <h2>Chọn Bản Đồ Chiến Trường</h2>
                 <span class="codex-badge">Địa Hình & Chiến Lược Đa Dạng</span>
@@ -168,7 +168,7 @@
 
           <div class="map-modal-content">
             <p class="map-modal-intro">
-              🎯 Mỗi bản đồ có tuyến đường bộ, dòng sông thủy quái và hành lang không kích khác nhau. 
+              <svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="TARGET"><circle cx="12" cy="12" r="9" fill="none" stroke="#ef4444" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#ef4444" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="#ef4444"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg> Mỗi bản đồ có tuyến đường bộ, dòng sông thủy quái và hành lang không kích khác nhau. 
               Bạn có thể tự do đặt <b>Bẫy trên đường/sông</b> và <b>Tháp ở ngoài đường/sông</b> tại bất kỳ vị trí chiến lược nào!
             </p>
             <div id="map-cards-grid" class="map-cards-grid">
@@ -183,12 +183,12 @@
         <div class="codex-modal-container settings-modal-container">
           <div class="codex-modal-header">
             <div class="codex-header-left">
-              <span class="codex-icon">⚙️</span>
+              <span class="codex-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="GEAR"><circle cx="12" cy="12" r="3" fill="#cbd5e1"/><path d="M12 2l1 2.5 2.5-.5 1 2.5 2.5.5.5 2.5 2.5 1v2.5l-2.5 1-.5 2.5-2.5.5-1 2.5-2.5-.5-1 2.5h-2l-1-2.5-2.5.5-1-2.5-2.5-.5-.5-2.5-2.5-1v-2.5l2.5-1 .5-2.5 2.5-.5 1-2.5 2.5.5 1-2.5z" fill="none" stroke="#cbd5e1" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
               <div class="codex-title-group">
                 <h2>Bảng Cài Đặt Trận Đấu</h2>
                 <div style="display: flex; gap: 8px; align-items: center; margin-top: 3px;">
                   <span class="codex-badge">Custom Match Parameters</span>
-                  <span id="settings-autosave-status" class="codex-badge" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #34d399;">💾 Tự động lưu trên máy</span>
+                  <span id="settings-autosave-status" class="codex-badge" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #34d399;"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SAVE"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="#34d399" opacity="0.3"/><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="none" stroke="#34d399" stroke-width="2" stroke-linejoin="round"/><polyline points="17,21 17,13 7,13 7,21" fill="#0f172a"/><polyline points="7,3 7,8 15,8" fill="#34d399"/></svg> Tự động lưu trên máy</span>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@
               <div class="settings-card sp-card">
                 <div class="sc-header">
                   <div class="sc-icon-title">
-                    <span class="sc-icon">🌊</span>
+                    <span class="sc-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="WAVE"><path d="M2 13c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round"/><path d="M2 17c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/></svg></span>
                     <div>
                       <h3 class="sc-title">Số Đợt Quái Mỗi Màn (Wave Count)</h3>
                       <span class="sc-sub">Thay đổi độ dài và quy mô chiến dịch</span>
@@ -233,7 +233,7 @@
               <div class="settings-card sp-card">
                 <div class="sc-header">
                   <div class="sc-icon-title">
-                    <span class="sc-icon">🪙</span>
+                    <span class="sc-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="GOLD"><circle cx="12" cy="12" r="9" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/><circle cx="12" cy="12" r="6.5" fill="#eab308" stroke="#ca8a04" stroke-width="1"/><path d="M12 7.5v9M9.5 9.5h5a1.5 1.5 0 0 1 0 3h-5a1.5 1.5 0 0 0 0 3h5.5" fill="none" stroke="#713f12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     <div>
                       <h3 class="sc-title">Tỉ Lệ Vàng Rơi Xuống (Gold Drop Rate)</h3>
                       <span class="sc-sub">Mặc định: x1.0 • Phạm vi: x0.1 đến x10.0</span>
@@ -264,7 +264,7 @@
               <div class="settings-card sp-card">
                 <div class="sc-header">
                   <div class="sc-icon-title">
-                    <span class="sc-icon">⚔️</span>
+                    <span class="sc-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SWORDS"><path d="M14.5 4l5.5 5.5-9 9-3-1-2 2-2-2 2-2-1-3 9.5-8.5z" fill="#e2e8f0" stroke="#475569" stroke-width="1.2"/><path d="M9.5 4L4 9.5l9 9 3-1 2 2 2-2-2-2 1-3L9.5 4z" fill="#cbd5e1" stroke="#334155" stroke-width="1.2"/><circle cx="12" cy="12" r="1.5" fill="#facc15"/></svg></span>
                     <div>
                       <h3 class="sc-title">Tỉ Lệ Sát Thương (Damage Rate)</h3>
                       <span class="sc-sub">Mặc định: x1.0 • Phạm vi: x0.1 đến x10.0</span>
@@ -295,7 +295,7 @@
               <div class="settings-card sp-card">
                 <div class="sc-header">
                   <div class="sc-icon-title">
-                    <span class="sc-icon">🔊</span>
+                    <span class="sc-icon"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_ON"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#38bdf8"/><path d="M16 8a5 5 0 0 1 0 8m3-11a9 9 0 0 1 0 14" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/></svg></span>
                     <div>
                       <h3 class="sc-title">Âm Lượng Hiệu Ứng (Sound Effects)</h3>
                       <span class="sc-sub">Mặc định: 70% • Bật/Tắt nhanh bằng phím [M]</span>
@@ -314,22 +314,25 @@
                 </div>
                 <div class="sc-preset-buttons">
                   <span class="preset-label">Mức âm lượng:</span>
-                  <button class="preset-btn" data-type="vol" data-val="0">🔇 Tắt</button>
-                  <button class="preset-btn" data-type="vol" data-val="40">🔉 40%</button>
-                  <button class="preset-btn active" data-type="vol" data-val="70">🔊 70% (Chuẩn)</button>
-                  <button class="preset-btn" data-type="vol" data-val="100">📢 100% (Tối đa)</button>
+                  <button class="preset-btn" data-type="vol" data-val="0"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_OFF"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#64748b"/><line x1="16" y1="9" x2="22" y2="15" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><line x1="22" y1="9" x2="16" y2="15" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg> Tắt</button>
+                  <button class="preset-btn" data-type="vol" data-val="40"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_LOW"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#38bdf8"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/></svg> 40%</button>
+                  <button class="preset-btn active" data-type="vol" data-val="70"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_ON"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#38bdf8"/><path d="M16 8a5 5 0 0 1 0 8m3-11a9 9 0 0 1 0 14" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/></svg> 70% (Chuẩn)</button>
+                  <button class="preset-btn" data-type="vol" data-val="100"><svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="SOUND_MAX"><polygon points="3,9 7,9 12,4 12,20 7,15 3,15" fill="#38bdf8"/><path d="M15.5 6.5a7 7 0 0 1 0 11m3-14a11 11 0 0 1 0 17" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round"/></svg> 100% (Tối đa)</button>
                 </div>
               </div>
             </div>
 
             <div class="settings-modal-footer">
               <button id="btn-reset-settings" class="action-btn" style="background: #334155; color: #cbd5e1; width: auto; padding: 10px 20px;">
-                🔄 Khôi phục mặc định
+                <svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="RESTART"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round"/><polyline points="3,3 3,8 8,8" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Khôi phục mặc định
               </button>
               <button id="btn-confirm-settings" class="action-btn primary-btn" style="width: auto; padding: 10px 30px; font-weight: 800;">
-                ✓ Áp Dụng & Đóng
+                <svg class="ui-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" aria-label="CHECK"><polyline points="20,6 9,17 4,12" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Áp Dụng & Đóng
               </button>
             </div>
+          </div>
+        </div>
+      </div>
           </div>
         </div>
       </div>

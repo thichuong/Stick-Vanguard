@@ -1,6 +1,7 @@
 import { GameState } from '../../core/GameState.js';
 import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
 import { SoundSystem } from '../../systems/SoundSystem.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 
 export class SettingsModal {
   private backdropEl: HTMLElement | null;
@@ -76,11 +77,11 @@ export class SettingsModal {
   private triggerAutoSaveNotice(): void {
     const statusEl = document.getElementById('settings-autosave-status');
     if (statusEl) {
-      statusEl.textContent = '✓ Đã tự động lưu';
+      statusEl.innerHTML = `${UI_ICONS.CHECK} Đã tự động lưu`;
       statusEl.style.color = '#6ee7b7';
       setTimeout(() => {
         if (statusEl) {
-          statusEl.textContent = '💾 Tự động lưu trên máy';
+          statusEl.innerHTML = `${UI_ICONS.SAVE} Tự động lưu trên máy`;
           statusEl.style.color = '#34d399';
         }
       }, 1500);
@@ -178,7 +179,7 @@ export class SettingsModal {
 
       const soundBtn = document.getElementById('btn-sound-toggle');
       if (soundBtn) {
-        soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+        soundBtn.innerHTML = this.state.soundEnabled ? UI_ICONS.SOUND_ON : UI_ICONS.SOUND_OFF;
       }
 
       document.querySelectorAll('.preset-btn[data-type="vol"]').forEach((btn) => {

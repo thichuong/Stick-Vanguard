@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_PLAGUE_MORASS } from './waves_extended.js';
 
 export const WAVES_PLAGUE_MORASS: WaveConfig[] = [
@@ -159,7 +160,7 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
   laneBadges: ['2 Nhà Chính Đối Cực Chéo', '2 Tuyến Đan Chéo Tâm', '2 Kênh Bùn Độc'],
   tribe: {
     name: 'Tộc Độc Trùng Biến Dị',
-    icon: '☠️🌿',
+    icon: `${ELEMENT_ICONS.POISON}${ELEMENT_ICONS.GRASS}`,
     elements: ['POISON', 'GRASS', 'DARK'],
     description: 'Vùng đầm lầy chết chóc nơi Nhện Độc, Dơi Huyết Độc và Thủy Quái Kịch Độc sinh sôi dưới sự cai trị của Trùm Mãng Xà Hư Không.'
   }

@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_DELTA_FORTRESS } from './waves_extended.js';
 
 export const WAVES_DELTA_FORTRESS: WaveConfig[] = [
@@ -157,7 +158,7 @@ export const MAP_DELTA_FORTRESS: MapConfig = {
   laneBadges: ['1 Nhà Chính Trung Tâm', 'Tứ Hướng Ép Vào', 'Phòng Thủ Đồng Bằng'],
   tribe: {
     name: 'Tộc Hải Thần Bão Tố',
-    icon: '💧⚡',
+    icon: `${ELEMENT_ICONS.WATER}${ELEMENT_ICONS.LIGHTNING}`,
     elements: ['WATER', 'LIGHTNING', 'STEEL'],
     description: 'Thủy quái Tiên Cá Gọi Bão, Lôi Điện Thủy Xà cùng đạo quân Chiến Binh Thiết Giáp tràn vào cửa biển.'
   }

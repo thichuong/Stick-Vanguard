@@ -2114,10 +2114,21 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
     it('should configure next wave button states correctly and not show HP buff on button', async () => {
       const { HUDManager } = await import('../ui/hud/HUDManager.js');
       const { GameState } = await import('../core/GameState.js');
+      const { UI_ICONS } = await import('../config/ui/icons/index.js');
 
       const mockElements: Record<string, any> = {
         'message-banner': { classList: { add: () => {}, remove: () => {} }, innerHTML: '', addEventListener: () => {} },
-        'btn-next-wave': { textContent: '', innerHTML: '', disabled: false, addEventListener: () => {} },
+        'btn-next-wave': {
+          _html: '',
+          get innerHTML() { return this._html; },
+          set innerHTML(val: string) {
+            this._html = val;
+            this.textContent = val.replace(/<[^>]*>/g, '').trim();
+          },
+          textContent: '',
+          disabled: false,
+          addEventListener: () => {}
+        },
         'hud-gold': { textContent: '' },
         'hud-lives': { textContent: '' },
         'hud-wave': { textContent: '', title: '' },
@@ -2146,26 +2157,30 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         // Wave 1, not running
         hud.updateHUD(1, 15, false);
         expect(btn.disabled).toBe(false);
-        expect(btn.textContent).toBe('⚔️ Bắt đầu Đợt Quái');
-        expect(btn.textContent).not.toContain('% Máu');
+        expect(btn.innerHTML).toContain('Bắt đầu Đợt Quái');
+        expect(btn.innerHTML).toContain(UI_ICONS.SWORDS);
+        expect(btn.innerHTML).not.toContain('% Máu');
 
         // Wave 1, running
         hud.updateHUD(1, 15, true);
         expect(btn.disabled).toBe(false);
-        expect(btn.textContent).toBe('⚡ Gọi đợt kế tiếp (+ Vàng)');
-        expect(btn.textContent).not.toContain('% Máu');
+        expect(btn.innerHTML).toContain('Gọi đợt kế tiếp (+ Vàng)');
+        expect(btn.innerHTML).toContain(UI_ICONS.BOLT);
+        expect(btn.innerHTML).not.toContain('% Máu');
 
         // Wave 12 (> 10), running, current < total
         hud.updateHUD(12, 15, true);
         expect(btn.disabled).toBe(false);
-        expect(btn.textContent).toBe('⚡ Gọi đợt kế tiếp (+ Vàng)');
-        expect(btn.textContent).not.toContain('% Máu');
+        expect(btn.innerHTML).toContain('Gọi đợt kế tiếp (+ Vàng)');
+        expect(btn.innerHTML).toContain(UI_ICONS.BOLT);
+        expect(btn.innerHTML).not.toContain('% Máu');
 
         // Wave 15 (last wave, full waves), running: button must be disabled!
         hud.updateHUD(15, 15, true);
         expect(btn.disabled).toBe(true);
-        expect(btn.textContent).toBe('⚔️ Đang diễn ra đợt cuối');
-        expect(btn.textContent).not.toContain('% Máu');
+        expect(btn.innerHTML).toContain('Đang diễn ra đợt cuối');
+        expect(btn.innerHTML).toContain(UI_ICONS.SWORDS);
+        expect(btn.innerHTML).not.toContain('% Máu');
       } finally {
         (globalThis as any).document = originalDocument;
       }

@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_INFERNAL_CALDERA } from './waves_extended.js';
 
 export const WAVES_INFERNAL_CALDERA: WaveConfig[] = [
@@ -160,7 +161,7 @@ export const MAP_INFERNAL_CALDERA: MapConfig = {
   laneBadges: ['2 Nhà Chính Đông Bắc & Đông Nam', '2 Tuyến Bộ Song Cánh', 'Song Nhánh Nham Thạch'],
   tribe: {
     name: 'Tộc Hỏa Ngục Viêm Long',
-    icon: '🔥🐉',
+    icon: `${ELEMENT_ICONS.FIRE}${ELEMENT_ICONS.DRAGON}`,
     elements: ['FIRE', 'DRAGON', 'EARTH'],
     description: 'Bầy Tiểu Quỷ Hỏa Diệm, Khối Dung Nham và Long Nhân Hỏa Nham tràn xuống từ vách núi lửa đỏ rực.'
   }

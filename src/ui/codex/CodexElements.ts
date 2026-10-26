@@ -11,6 +11,7 @@ import {
   getElementSynergyTable,
   searchElementalReactions
 } from '../../config/elements/index.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
 
 export class CodexElements {
@@ -35,7 +36,7 @@ export class CodexElements {
     }
 
     titleEl.textContent = 'Hệ Thống Nguyên Tố & Bảng Tra Cứu Tương Khắc';
-    iconEl.textContent = '✨';
+    iconEl.innerHTML = UI_ICONS.SPARKLES;
     badgeEl.textContent = '15 Hệ • Bảng Gây/Nhận Sát Thương • Phối Hợp Combo & Tìm Kiếm';
 
     const getRightHtml = (sub: string) => {
@@ -98,7 +99,7 @@ export class CodexElements {
             <span style="color: #f59e0b;">${ELEMENTAL_REACTIONS.length} Combo</span>
           </div>
           <button class="codex-subnav-btn ${this.currentElementSubTab === 'REACTIONS' ? 'active' : ''}" data-sub-elem="REACTIONS">
-            <span style="font-size: 18px;">💥</span>
+            <span style="font-size: 18px;">${UI_ICONS.EXPLOSION}</span>
             <div>
               <div style="font-weight: 700; color: #fbbf24;">Phản Ứng Nguyên Tố (Combos)</div>
               <div style="font-size: 11px; color: #94a3b8;">Tìm kiếm & tra cứu toàn bộ phối hợp</div>
@@ -173,7 +174,7 @@ export class CodexElements {
         if (results.length === 0) {
           listGrid.innerHTML = `
             <div style="grid-column: 1 / -1; padding: 30px; text-align: center; color: #94a3b8;">
-              <span style="font-size: 32px;">🔍</span>
+              <span style="font-size: 32px; display: inline-flex; align-items: center; justify-content: center;">${UI_ICONS.SEARCH}</span>
               <p style="margin-top: 8px; font-size: 14px;">Không tìm thấy phản ứng nào phù hợp với từ khóa hoặc bộ lọc.</p>
             </div>
           `;
@@ -207,21 +208,21 @@ export class CodexElements {
   }
 
   private renderReactionCardHtml(r: (typeof ELEMENTAL_REACTIONS)[0]): string {
-    const triggerIcon = ELEMENT_ICONS[r.triggerElement] || '✨';
+    const triggerIcon = ELEMENT_ICONS[r.triggerElement] || UI_ICONS.SPARKLES;
     const triggerColor = ELEMENT_COLORS[r.triggerElement] || '#ffffff';
     const reqElem = STATUS_TO_ELEMENT[r.requiredStatus] || 'PHYSICAL';
     const reqColor = ELEMENT_COLORS[reqElem] || '#ffffff';
-    const reqIcon = ELEMENT_ICONS[reqElem] || '✨';
+    const reqIcon = ELEMENT_ICONS[reqElem] || UI_ICONS.SPARKLES;
 
     let categoryBadge = '';
     if (r.category === 'DRAGON_BOOST') {
-      categoryBadge = '<span class="reaction-cat-badge dragon-cat">🐉 Long Uy Khuếch Đại</span>';
+      categoryBadge = `<span class="reaction-cat-badge dragon-cat">${ELEMENT_ICONS.DRAGON} Long Uy Khuếch Đại</span>`;
     } else if (r.category === 'FAIRY_BLESS') {
-      categoryBadge = '<span class="reaction-cat-badge fairy-cat">🧚 Tiên Linh Tăng Phúc</span>';
+      categoryBadge = `<span class="reaction-cat-badge fairy-cat">${ELEMENT_ICONS.FAIRY} Tiên Linh Tăng Phúc</span>`;
     } else if (r.category === 'DARK_SYNERGY') {
-      categoryBadge = '<span class="reaction-cat-badge dark-cat">🔮 Hắc Ám Thôn Phệ</span>';
+      categoryBadge = `<span class="reaction-cat-badge dark-cat">${ELEMENT_ICONS.DARK} Hắc Ám Thôn Phệ</span>`;
     } else {
-      categoryBadge = '<span class="reaction-cat-badge natural-cat">🌿 Phản Ứng Tự Nhiên</span>';
+      categoryBadge = `<span class="reaction-cat-badge natural-cat">${ELEMENT_ICONS.GRASS} Phản Ứng Tự Nhiên</span>`;
     }
 
     return `
@@ -241,7 +242,7 @@ export class CodexElements {
           <span class="formula-elem" style="color: ${triggerColor}">
             ${triggerIcon} Đòn đánh ${ELEMENT_NAMES[r.triggerElement]}
           </span>
-          <span class="formula-arrow">➔</span>
+          <span class="formula-arrow">${UI_ICONS.ARROW_RIGHT}</span>
           <span class="formula-result" style="color: ${triggerColor}">${r.label}</span>
         </div>
         <p class="reaction-desc">${r.description}</p>
@@ -263,15 +264,15 @@ export class CodexElements {
 
     return `
       <div class="sp-section sp-card">
-        <h4 class="sp-sec-title">💥 BÁCH KHOA PHẢN ỨNG NGUYÊN TỐ (ELEMENTAL REACTIONS & COMBOS)</h4>
+        <h4 class="sp-sec-title">${UI_ICONS.EXPLOSION} BÁCH KHOA PHẢN ỨNG NGUYÊN TỐ (ELEMENTAL REACTIONS & COMBOS)</h4>
         <p class="sp-desc">
           Khi một kẻ địch đang chịu <b>Hiệu ứng trạng thái</b> và trúng tiếp đòn đánh mang <b>Nguyên tố kích hoạt phù hợp</b>, phản ứng sẽ bùng nổ, nhân bội sát thương và tạo ra các hiệu ứng hủy diệt!
         </p>
         <div class="reaction-rules-box">
-          <div class="reaction-rule-pill"><span style="color: #f97316;">🐉 Long Uy:</span> Tăng uy lực và bộc phát sát thương cho mọi nguyên tố phối hợp cùng Rồng.</div>
-          <div class="reaction-rule-pill"><span style="color: #f472b6;">🧚 Tiên Linh:</span> Tăng phúc mọi chiêu nguyên tố, <b>ngoại trừ Hắc Ám, Ma, Độc và Vật Lý</b>.</div>
-          <div class="reaction-rule-pill"><span style="color: #c084fc;">🔮 Ám + Ma:</span> Bùng nổ Minh Giới Ám Hồn x1.85 DMG và gia tốc trảm sát theo % máu đã mất.</div>
-          <div class="reaction-rule-pill"><span style="color: #8b5cf6;">🔮 Hắc Ám:</span> Phối hợp khuếch đại với các nguyên tố khác, <b>ngoại trừ Tiên và Quang</b>.</div>
+          <div class="reaction-rule-pill"><span style="color: #f97316;">${ELEMENT_ICONS.DRAGON} Long Uy:</span> Tăng uy lực và bộc phát sát thương cho mọi nguyên tố phối hợp cùng Rồng.</div>
+          <div class="reaction-rule-pill"><span style="color: #f472b6;">${ELEMENT_ICONS.FAIRY} Tiên Linh:</span> Tăng phúc mọi chiêu nguyên tố, <b>ngoại trừ Hắc Ám, Ma, Độc và Vật Lý</b>.</div>
+          <div class="reaction-rule-pill"><span style="color: #c084fc;">${ELEMENT_ICONS.DARK} Ám + Ma:</span> Bùng nổ Minh Giới Ám Hồn x1.85 DMG và gia tốc trảm sát theo % máu đã mất.</div>
+          <div class="reaction-rule-pill"><span style="color: #8b5cf6;">${ELEMENT_ICONS.DARK} Hắc Ám:</span> Phối hợp khuếch đại với các nguyên tố khác, <b>ngoại trừ Tiên và Quang</b>.</div>
         </div>
       </div>
 
@@ -279,7 +280,7 @@ export class CodexElements {
       <div class="sp-section sp-card reaction-filter-section">
         <div class="reaction-search-row">
           <div class="reaction-input-wrap">
-            <span class="reaction-search-icon">🔍</span>
+            <span class="reaction-search-icon">${UI_ICONS.SEARCH}</span>
             <input 
               type="text" 
               id="codex-reaction-search" 
@@ -289,14 +290,14 @@ export class CodexElements {
             />
           </div>
           <select id="codex-reaction-cat-filter" class="codex-filter-select">
-            <option value="ALL" ${this.reactionCategoryFilter === 'ALL' ? 'selected' : ''}>🏷️ Mọi Nhóm Phối Hợp</option>
-            <option value="NATURAL" ${this.reactionCategoryFilter === 'NATURAL' ? 'selected' : ''}>🌿 Phản Ứng Tự Nhiên</option>
-            <option value="DRAGON_BOOST" ${this.reactionCategoryFilter === 'DRAGON_BOOST' ? 'selected' : ''}>🐉 Rồng: Long Uy Khuếch Đại</option>
-            <option value="FAIRY_BLESS" ${this.reactionCategoryFilter === 'FAIRY_BLESS' ? 'selected' : ''}>🧚 Tiên: Tiên Linh Tăng Phúc</option>
-            <option value="DARK_SYNERGY" ${this.reactionCategoryFilter === 'DARK_SYNERGY' ? 'selected' : ''}>🔮 Hắc Ám & Ám + Ma</option>
+            <option value="ALL" ${this.reactionCategoryFilter === 'ALL' ? 'selected' : ''}>Mọi Nhóm Phối Hợp</option>
+            <option value="NATURAL" ${this.reactionCategoryFilter === 'NATURAL' ? 'selected' : ''}>Phản Ứng Tự Nhiên</option>
+            <option value="DRAGON_BOOST" ${this.reactionCategoryFilter === 'DRAGON_BOOST' ? 'selected' : ''}>Rồng: Long Uy Khuếch Đại</option>
+            <option value="FAIRY_BLESS" ${this.reactionCategoryFilter === 'FAIRY_BLESS' ? 'selected' : ''}>Tiên: Tiên Linh Tăng Phúc</option>
+            <option value="DARK_SYNERGY" ${this.reactionCategoryFilter === 'DARK_SYNERGY' ? 'selected' : ''}>Hắc Ám & Ám + Ma</option>
           </select>
           <select id="codex-reaction-elem-filter" class="codex-filter-select">
-            <option value="ALL" ${this.reactionElementFilter === 'ALL' ? 'selected' : ''}>✨ Mọi Hệ Nguyên Tố</option>
+            <option value="ALL" ${this.reactionElementFilter === 'ALL' ? 'selected' : ''}>Mọi Hệ Nguyên Tố</option>
             ${ALL_15_ELEMENTS.map((el) => `
               <option value="${el}" ${this.reactionElementFilter === el ? 'selected' : ''}>
                 ${ELEMENT_NAMES[el]} (${el})
@@ -306,7 +307,7 @@ export class CodexElements {
         </div>
         <div class="reaction-filter-footer">
           <span id="codex-reaction-count" class="reaction-count-tag">${results.length} / ${ELEMENTAL_REACTIONS.length} Phản Ứng</span>
-          <span class="reaction-tip-tag">💡 Mẹo: Dùng Tháp Phù Thủy (2 Khe Nguyên Tố) hoặc phối hợp Tháp Cung + Tháp Phép để kích hoạt liên tục!</span>
+          <span class="reaction-tip-tag">${UI_ICONS.BULB} Mẹo: Dùng Tháp Phù Thủy (2 Khe Nguyên Tố) hoặc phối hợp Tháp Cung + Tháp Phép để kích hoạt liên tục!</span>
         </div>
       </div>
 
@@ -497,7 +498,7 @@ export class CodexElements {
                     </td>
                     <td>
                       <span class="lookup-role-badge ${isSetup ? 'role-setup' : 'role-trigger'}">
-                        ${isSetup ? '🔵 Trạng Thái Nền' : '⚡ Đòn Kích Nổ'}
+                        ${isSetup ? `${UI_ICONS.ORB} Trạng Thái Nền` : `${UI_ICONS.BOLT} Đòn Kích Nổ`}
                       </span>
                     </td>
                     <td>
@@ -532,31 +533,31 @@ export class CodexElements {
 
         <!-- Status Effect & Mechanics Highlights -->
         <div class="elem-effect-box" style="border-left-color: ${color}; margin-top: 14px;">
-          <h4 style="color: ${color}">⚡ Hiệu Ứng Trạng Thái Đặc Trưng: ${def.statusEffectName}</h4>
+          <h4 style="color: ${color}">${UI_ICONS.BOLT} Hiệu Ứng Trạng Thái Đặc Trưng: ${def.statusEffectName}</h4>
           <p style="margin-bottom: 8px;">${def.statusEffectDesc}</p>
           <ul class="combat-highlight-list">
-            ${def.combatHighlights.map((h) => `<li>🔹 <b>${h}</b></li>`).join('')}
+            ${def.combatHighlights.map((h) => `<li>${UI_ICONS.CHECK} <b>${h}</b></li>`).join('')}
           </ul>
         </div>
 
         <!-- 4 Building Imbue Breakdown -->
         <div class="building-imbue-breakdown-box" style="margin-top: 14px;">
-          <h4 class="lookup-sec-title" style="color: #38bdf8;">🏰 Ứng Dụng Khi Khảm Lên 4 Loại Công Trình:</h4>
+          <h4 class="lookup-sec-title" style="color: #38bdf8;">${UI_ICONS.CASTLE} Ứng Dụng Khi Khảm Lên 4 Loại Công Trình:</h4>
           <div class="towers-imbue-grid">
             <div class="tower-imbue-col">
-              <span class="ti-title">🛡️ Trại Dân Quân (Barracks)</span>
+              <span class="ti-title">${UI_ICONS.SHIELD} Trại Dân Quân (Barracks)</span>
               <p class="ti-desc">${def.buildingEffects.barracks}</p>
             </div>
             <div class="tower-imbue-col">
-              <span class="ti-title">🏹 Tháp Cung (Archer)</span>
+              <span class="ti-title">${UI_ICONS.BOW} Tháp Cung (Archer)</span>
               <p class="ti-desc">${def.buildingEffects.archer}</p>
             </div>
             <div class="tower-imbue-col">
-              <span class="ti-title">🔮 Tháp Phù Thủy (Mage)</span>
+              <span class="ti-title">${UI_ICONS.ORB} Tháp Phù Thủy (Mage)</span>
               <p class="ti-desc">${def.buildingEffects.mage}</p>
             </div>
             <div class="tower-imbue-col">
-              <span class="ti-title">💣 Pháo Cối (Artillery)</span>
+              <span class="ti-title">${UI_ICONS.BOMB} Pháo Cối (Artillery)</span>
               <p class="ti-desc">${def.buildingEffects.artillery}</p>
             </div>
           </div>
@@ -566,7 +567,7 @@ export class CodexElements {
       <!-- 2. BẢNG TRA CỨU GÂY SÁT THƯƠNG -->
       <div class="sp-section sp-card" style="border-left: 4px solid #4ade80;">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #4ade80;">⚔️ BẢNG TRA CỨU GÂY SÁT THƯƠNG (OFFENSIVE TABLE)</h4>
+          <h4 class="sp-sec-title" style="color: #4ade80;">${UI_ICONS.SWORDS} BẢNG TRA CỨU GÂY SÁT THƯƠNG (OFFENSIVE TABLE)</h4>
           <span class="sp-hint">Khi dùng Hệ ${def.nameVi} tấn công 15 hệ khác</span>
         </div>
         <p class="sp-desc" style="margin-bottom: 10px;">
@@ -578,7 +579,7 @@ export class CodexElements {
       <!-- 3. BẢNG TRA CỨU NHẬN SÁT THƯƠNG -->
       <div class="sp-section sp-card" style="border-left: 4px solid #f87171;">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #f87171;">🛡️ BẢNG TRA CỨU NHẬN SÁT THƯƠNG (DEFENSIVE TABLE)</h4>
+          <h4 class="sp-sec-title" style="color: #f87171;">${UI_ICONS.SHIELD} BẢNG TRA CỨU NHẬN SÁT THƯƠNG (DEFENSIVE TABLE)</h4>
           <span class="sp-hint">Khi mục tiêu mang Hệ ${def.nameVi} bị 15 hệ khác tấn công</span>
         </div>
         <p class="sp-desc" style="margin-bottom: 10px;">
@@ -590,7 +591,7 @@ export class CodexElements {
       <!-- 4. BẢNG PHỐI HỢP HIỆU ỨNG & PHẢN ỨNG NGUYÊN TỐ -->
       <div class="sp-section sp-card" style="border-left: 4px solid #fbbf24;">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #fbbf24;">💥 BẢNG PHỐI HỢP HIỆU ỨNG (SYNERGY & REACTIONS)</h4>
+          <h4 class="sp-sec-title" style="color: #fbbf24;">${UI_ICONS.EXPLOSION} BẢNG PHỐI HỢP HIỆU ỨNG (SYNERGY & REACTIONS)</h4>
           <span class="sp-hint">${synergyRows.length} Phối hợp liên quan</span>
         </div>
         <p class="sp-desc" style="margin-bottom: 10px;">
@@ -602,11 +603,11 @@ export class CodexElements {
       <!-- Sample Monsters & Advice -->
       <div class="sp-section sp-card" style="background: #0b1322;">
         <div class="sample-monsters-box">
-          <b>👾 Quái vật điển hình mang Hệ ${def.nameVi}:</b> 
+          <b>${UI_ICONS.MONSTER} Quái vật điển hình mang Hệ ${def.nameVi}:</b> 
           <span style="color: #38bdf8;">${def.sampleMonsters.join(', ') || 'Đang cập nhật'}</span>
         </div>
         <p class="sp-tip-text" style="margin-top: 10px;">
-          💡 Lời khuyên chiến lược: Khi quái vật chủ đạo trong đợt mang Hệ ${def.nameVi}, hãy tra cứu <b>Bảng Nhận Sát Thương</b> ở trên để chọn đúng các hệ khắc tinh gây x1.5 đến x2.0 sát thương bạo kích, đồng thời tránh dùng các hệ bị kháng!
+          ${UI_ICONS.BULB} Lời khuyên chiến lược: Khi quái vật chủ đạo trong đợt mang Hệ ${def.nameVi}, hãy tra cứu <b>Bảng Nhận Sát Thương</b> ở trên để chọn đúng các hệ khắc tinh gây x1.5 đến x2.0 sát thương bạo kích, đồng thời tránh dùng các hệ bị kháng!
         </p>
       </div>
     `;

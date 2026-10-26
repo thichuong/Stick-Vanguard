@@ -9,6 +9,7 @@ import {
 } from '../config/map.config.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
 import { GameState } from '../core/GameState.js';
+import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
 
 export class MapRenderer {
   public static renderBackground(
@@ -156,9 +157,13 @@ export class MapRenderer {
     const labelX = (waypoints[0].x + waypoints[1].x) / 2;
     const labelY = (waypoints[0].y + waypoints[1].y) / 2 - 12;
     ctx.fillStyle = '#34d399';
-    ctx.font = '11px sans-serif';
-    const tag = laneIdx > 0 ? `✈️ HÀNH LANG BAY #${laneIdx + 1}` : '✈️ HÀNH LANG BAY';
-    ctx.fillText(tag, labelX, Math.max(20, labelY));
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const tag = laneIdx > 0 ? `HÀNH LANG BAY #${laneIdx + 1}` : 'HÀNH LANG BAY';
+    const drawY = Math.max(16, labelY);
+    drawUiSvgOnCanvas(ctx, 'FLY', labelX - 58, drawY - 7, 14, 14);
+    ctx.fillText(tag, labelX - 40, drawY);
     ctx.restore();
   }
 
@@ -185,12 +190,16 @@ export class MapRenderer {
       ctx.arc(gs.x, gs.y, 18, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = groundSpawns.length > 1 ? 'bold 11px sans-serif' : '13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const label = groundSpawns.length > 1 ? `💀${idx + 1}` : '💀';
-      ctx.fillText(label, gs.x, gs.y);
+      if (groundSpawns.length > 1) {
+        drawUiSvgOnCanvas(ctx, 'SKULL', gs.x - 13, gs.y - 7, 14, 14);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${idx + 1}`, gs.x + 3, gs.y);
+      } else {
+        drawUiSvgOnCanvas(ctx, 'SKULL', gs.x - 9, gs.y - 9, 18, 18);
+      }
       ctx.restore();
     });
 
@@ -212,12 +221,16 @@ export class MapRenderer {
       ctx.arc(ws.x, ws.y, 17, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = waterSpawns.length > 1 ? 'bold 11px sans-serif' : '13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const label = waterSpawns.length > 1 ? `🌊${idx + 1}` : '🌊';
-      ctx.fillText(label, ws.x, ws.y);
+      if (waterSpawns.length > 1) {
+        drawUiSvgOnCanvas(ctx, 'WAVE', ws.x - 13, ws.y - 7, 14, 14);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${idx + 1}`, ws.x + 3, ws.y);
+      } else {
+        drawUiSvgOnCanvas(ctx, 'WAVE', ws.x - 8, ws.y - 8, 16, 16);
+      }
       ctx.restore();
     });
 
@@ -242,12 +255,16 @@ export class MapRenderer {
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = allBases.length > 1 ? 'bold 16px sans-serif' : '22px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const label = allBases.length > 1 ? `🏰${idx + 1}` : '🏰';
-      ctx.fillText(label, base.x, base.y);
+      if (allBases.length > 1) {
+        drawUiSvgOnCanvas(ctx, 'CASTLE', base.x - 14, base.y - 9, 18, 18);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${idx + 1}`, base.x + 6, base.y);
+      } else {
+        drawUiSvgOnCanvas(ctx, 'CASTLE', base.x - 11, base.y - 11, 22, 22);
+      }
       ctx.restore();
     });
   }
@@ -300,22 +317,17 @@ export class MapRenderer {
       ctx.stroke();
 
       // Icon in center
-      ctx.fillStyle = '#ffffff';
-      ctx.font = isTrap ? '14px sans-serif' : '16px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const icon = isTrap ? '⚙️' : '🏰';
-      ctx.fillText(icon, mousePos.x, mousePos.y);
+      drawUiSvgOnCanvas(ctx, isTrap ? 'GEAR' : 'CASTLE', mousePos.x - 9, mousePos.y - 9, 18, 18);
 
       // Status Tooltip above cursor
       ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
       if (isValid) {
         ctx.fillStyle = '#22c55e';
-        ctx.fillText(`✓ BẤM ĐỂ XÂY [${bp.name.toUpperCase()}] (🪙 ${bp.cost})`, mousePos.x, mousePos.y - 28);
+        ctx.fillText(`BẤM ĐỂ XÂY [${bp.name.toUpperCase()}] (${bp.cost} VÀNG)`, mousePos.x, mousePos.y - 28);
       } else {
         ctx.fillStyle = '#ef4444';
-        ctx.fillText(validation.reason || '✕ VỊ TRÍ KHÔNG HỢP LỆ', mousePos.x, mousePos.y - 28);
+        ctx.fillText(validation.reason || 'VỊ TRÍ KHÔNG HỢP LỆ', mousePos.x, mousePos.y - 28);
       }
       ctx.restore();
     }
@@ -333,9 +345,11 @@ export class MapRenderer {
 
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'center';
-      const label = selectedBuildPoint.validFor === 'TRAP' ? '📍 ĐIỂM ĐẶT BẪY' : '📍 ĐIỂM ĐẶT THÁP';
-      ctx.fillText(label, selectedBuildPoint.x, selectedBuildPoint.y - 24);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const label = selectedBuildPoint.validFor === 'TRAP' ? 'ĐIỂM ĐẶT BẪY' : 'ĐIỂM ĐẶT THÁP';
+      drawUiSvgOnCanvas(ctx, 'PIN', selectedBuildPoint.x - 56, selectedBuildPoint.y - 29, 14, 14);
+      ctx.fillText(label, selectedBuildPoint.x - 38, selectedBuildPoint.y - 21);
       ctx.restore();
 
       // If hovering over a tower option in the right panel list, preview its range!
@@ -363,11 +377,13 @@ export class MapRenderer {
           // Range badge with icon and name
           ctx.fillStyle = '#38bdf8';
           ctx.font = 'bold 12px sans-serif';
-          ctx.textAlign = 'center';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          drawUiSvgOnCanvas(ctx, 'TARGET', selectedBuildPoint.x - 70, selectedBuildPoint.y - range - 14, 14, 14);
           ctx.fillText(
-            `🎯 Tầm bắn: ${range}px • ${bp.name}`,
-            selectedBuildPoint.x,
-            selectedBuildPoint.y - range - 8
+            `Tầm bắn: ${range}px • ${bp.name}`,
+            selectedBuildPoint.x - 52,
+            selectedBuildPoint.y - range - 6
           );
           ctx.restore();
         }
@@ -395,8 +411,10 @@ export class MapRenderer {
 
         ctx.fillStyle = '#38bdf8';
         ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`🎯 Tầm: ${range}px • ${bp.name}`, mousePos.x, mousePos.y - range - 6);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        drawUiSvgOnCanvas(ctx, 'TARGET', mousePos.x - 60, mousePos.y - range - 12, 13, 13);
+        ctx.fillText(`Tầm: ${range}px • ${bp.name}`, mousePos.x - 44, mousePos.y - range - 5);
         ctx.restore();
       }
     }

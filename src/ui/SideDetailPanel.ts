@@ -1,5 +1,7 @@
 import { TowerType } from '../types/entities.types.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
+import { UI_ICONS } from '../config/ui/icons/index.js';
+import { ELEMENT_ICONS } from '../config/elements.config.js';
 import { CodexBuildings } from './codex/CodexBuildings.js';
 import { CodexTraps } from './codex/CodexTraps.js';
 import { CodexImbue } from './codex/CodexImbue.js';
@@ -212,7 +214,7 @@ export class SideDetailPanel {
     const prevSidebarScroll = existingSidebar ? existingSidebar.scrollTop : 0;
 
     this.titleEl.textContent = 'Bách Khoa Công Trình & Bẫy Phòng Thủ';
-    this.iconEl.textContent = '🏰';
+    this.iconEl.innerHTML = UI_ICONS.CASTLE;
     this.badgeEl.textContent = '3 Tháp Phòng Ngự • 4 Tháp Triệu Hồi • Bẫy • Khảm Ngọc';
 
     let rightContentHtml = '';
@@ -247,21 +249,21 @@ export class SideDetailPanel {
             <span style="color: #38bdf8;">3 Tháp</span>
           </div>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'ARCHER' ? 'active' : ''}" data-building-sub="ARCHER">
-            <span style="font-size: 18px;">🏹</span>
+            <span style="font-size: 18px;">${UI_ICONS.BOW}</span>
             <div>
               <div style="font-weight: 700;">Tháp Cung Thủ (Archer)</div>
               <div style="font-size: 11px; color: #64748b;">Bắn nhanh, linh hoạt 3 địa hình</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'MAGE' ? 'active' : ''}" data-building-sub="MAGE">
-            <span style="font-size: 18px;">🔮</span>
+            <span style="font-size: 18px;">${UI_ICONS.ORB}</span>
             <div>
               <div style="font-weight: 700;">Tháp Phù Thủy (Mage)</div>
               <div style="font-size: 11px; color: #64748b;">AoE, Song nguyên tố & Hào quang buff</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'ARTILLERY' ? 'active' : ''}" data-building-sub="ARTILLERY">
-            <span style="font-size: 18px;">💣</span>
+            <span style="font-size: 18px;">${UI_ICONS.BOMB}</span>
             <div>
               <div style="font-weight: 700;">Pháo Cối (Artillery)</div>
               <div style="font-size: 11px; color: #64748b;">Đại bác nổ lan mặt đất & kênh sông</div>
@@ -273,28 +275,28 @@ export class SideDetailPanel {
             <span style="color: #a78bfa;">4 Tháp</span>
           </div>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'BARRACKS' ? 'active' : ''}" data-building-sub="BARRACKS">
-            <span style="font-size: 18px;">🛡️</span>
+            <span style="font-size: 18px;">${UI_ICONS.SHIELD}</span>
             <div>
               <div style="font-weight: 700;">Trại Dân Quân (Barracks)</div>
               <div style="font-size: 11px; color: #64748b;">Lính kiếm chặn đường & Lính cung</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'DRAGON_NEST' ? 'active' : ''}" data-building-sub="DRAGON_NEST">
-            <span style="font-size: 18px;">🐉</span>
+            <span style="font-size: 18px;">${ELEMENT_ICONS.DRAGON}</span>
             <div>
               <div style="font-weight: 700;">Tổ Rồng (Dragon Nest)</div>
               <div style="font-size: 11px; color: #64748b;">Rồng sát thương AoE, chặn quái bay</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'FAIRY_TREE' ? 'active' : ''}" data-building-sub="FAIRY_TREE">
-            <span style="font-size: 18px;">🧚</span>
+            <span style="font-size: 18px;">${ELEMENT_ICONS.FAIRY}</span>
             <div>
               <div style="font-weight: 700;">Cây Tiên (Fairy Tree)</div>
               <div style="font-size: 11px; color: #64748b;">Bầy tiên tăng theo cấp, chặn quái bay</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'HEROIC_ALTAR' ? 'active' : ''}" data-building-sub="HEROIC_ALTAR">
-            <span style="font-size: 18px;">🏛️</span>
+            <span style="font-size: 18px;">${UI_ICONS.TEMPLE}</span>
             <div>
               <div style="font-weight: 700;">Tế Đàn Anh Linh (Heroic Altar)</div>
               <div style="font-size: 11px; color: #64748b;">Hồi sinh Anh Linh, nhận thêm hệ ma</div>
@@ -306,14 +308,14 @@ export class SideDetailPanel {
             <span style="color: #10b981;">2 Mục</span>
           </div>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'TRAPS' ? 'active' : ''}" data-building-sub="TRAPS">
-            <span style="font-size: 18px;">⚙️</span>
+            <span style="font-size: 18px;">${UI_ICONS.GEAR}</span>
             <div>
               <div style="font-weight: 700;">Hệ Thống Bẫy Chiến Thuật</div>
               <div style="font-size: 11px; color: #64748b;">Chông gai, mìn lửa & thủy lôi ngầm</div>
             </div>
           </button>
           <button class="codex-subnav-btn ${this.currentBuildingSubTab === 'IMBUE' ? 'active' : ''}" data-building-sub="IMBUE">
-            <span style="font-size: 18px;">⚡</span>
+            <span style="font-size: 18px;">${UI_ICONS.BOLT}</span>
             <div>
               <div style="font-weight: 700;">Truyền Nguyên Tố Tháp</div>
               <div style="font-size: 11px; color: #64748b;">Khảm ngọc, tương tác & cộng hưởng</div>

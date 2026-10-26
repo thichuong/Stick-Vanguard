@@ -5,6 +5,7 @@ import {
   ELEMENT_NAMES,
   ALL_ELEMENT_DEFINITIONS
 } from '../../config/elements.config.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
 import { StickmanRenderer } from '../../render/StickmanRenderer.js';
 import { EnemyArchetypeRenderer } from '../../render/EnemyArchetypeRenderer.js';
@@ -40,7 +41,7 @@ export class CodexEnemies {
     badgeEl: HTMLElement
   ): void {
     titleEl.textContent = 'Bách Khoa Quái Vật & Ma Trận Sát Thương';
-    iconEl.textContent = '👾';
+    iconEl.innerHTML = UI_ICONS.SKULL;
     badgeEl.textContent = 'Tìm Kiếm Đa Chiều • Canvas Mô Phỏng • Bảng Nhận Sát Thương 15 Hệ';
 
     const allEnemies = Object.values(ENEMY_BLUEPRINTS);
@@ -105,47 +106,47 @@ export class CodexEnemies {
         const pElem = bp.elementalProfile.primaryElement;
         const sElem = bp.elementalProfile.secondaryElement;
         const pColor = ELEMENT_COLORS[pElem] || '#94a3b8';
-        const pIcon = ELEMENT_ICONS[pElem] || '⚔️';
+        const pIcon = ELEMENT_ICONS[pElem] || UI_ICONS.SWORDS;
         const sIcon = sElem ? ELEMENT_ICONS[sElem] : '';
-        const moveIcon = bp.movementType === 'FLY' ? '✈️' : bp.movementType === 'SWIM' ? '🏊' : '🚶';
+        const moveIcon = bp.movementType === 'FLY' ? UI_ICONS.FLY : bp.movementType === 'SWIM' ? UI_ICONS.SWIM : UI_ICONS.WALK;
         const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
         const isCurrent = bp.typeId === selectedBp.typeId;
 
         let badges = '';
         if (bp.tags.includes('BOSS')) {
-          badges += `<span style="font-size: 10px; background: rgba(239, 68, 68, 0.25); color: #f87171; padding: 1px 4px; border-radius: 3px;">👑</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(239, 68, 68, 0.25); color: #f87171; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.CROWN}</span>`;
         } else if (bp.tags.includes('ELITE')) {
-          badges += `<span style="font-size: 10px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 1px 4px; border-radius: 3px;">⭐</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.STAR}</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'DEATH_SPAWN')) {
-          badges += `<span style="font-size: 10px; background: rgba(249, 115, 22, 0.25); color: #f97316; padding: 1px 4px; border-radius: 3px;">💥</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(249, 115, 22, 0.25); color: #f97316; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.EXPLOSION}</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'SUMMON')) {
-          badges += `<span style="font-size: 10px; background: rgba(168, 85, 247, 0.25); color: #c084fc; padding: 1px 4px; border-radius: 3px;">🔮</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(168, 85, 247, 0.25); color: #c084fc; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.ORB}</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'DOWNGRADE_TOWER')) {
-          badges += `<span style="font-size: 10px; background: rgba(220, 38, 38, 0.25); color: #f87171; padding: 1px 4px; border-radius: 3px;">⬇️</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(220, 38, 38, 0.25); color: #f87171; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.ARROW_DOWN}</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'DISABLE_TOWER')) {
-          badges += `<span style="font-size: 10px; background: rgba(234, 179, 8, 0.25); color: #facc15; padding: 1px 4px; border-radius: 3px;">⚡</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(234, 179, 8, 0.25); color: #facc15; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.BOLT}</span>`;
         }
         if (bp.abilities?.some((a) => a.type.includes('SHIELD'))) {
-          badges += `<span style="font-size: 10px; background: rgba(203, 213, 225, 0.25); color: #cbd5e1; padding: 1px 4px; border-radius: 3px;">🛡️</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(203, 213, 225, 0.25); color: #cbd5e1; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.SHIELD}</span>`;
         }
         if (bp.abilities?.some((a) => a.type === 'HEAL_AURA')) {
-          badges += `<span style="font-size: 10px; background: rgba(34, 197, 94, 0.25); color: #4ade80; padding: 1px 4px; border-radius: 3px;">💚</span>`;
+          badges += `<span style="font-size: 10px; background: rgba(34, 197, 94, 0.25); color: #4ade80; padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center;">${UI_ICONS.HEAL}</span>`;
         }
 
         return `
           <div class="codex-monster-item ${isCurrent ? 'active' : ''}" data-monster-type="${bp.typeId}" style="border-left-color: ${pColor};">
             <div class="cmi-info">
               <div class="cmi-name">
-                <span>${pIcon}${sIcon} ${bp.name}</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;">${pIcon}${sIcon} ${bp.name}</span>
               </div>
               <div class="cmi-sub">
-                <span>${archInfo.icon} ${moveIcon} ${bp.speed} px/s</span>
-                <span style="color: #ef4444;">${bp.hp} ❤️</span>
-                <span style="color: #facc15;">+${bp.rewardGold}🪙</span>
+                <span style="display: inline-flex; align-items: center; gap: 3px;">${archInfo.icon} ${moveIcon} ${bp.speed} px/s</span>
+                <span style="color: #ef4444; display: inline-flex; align-items: center; gap: 2px;">${bp.hp} ${UI_ICONS.HEART}</span>
+                <span style="color: #facc15; display: inline-flex; align-items: center; gap: 2px;">+${bp.rewardGold}${UI_ICONS.GOLD}</span>
               </div>
             </div>
             <div class="cmi-badges">${badges}</div>
@@ -171,32 +172,32 @@ export class CodexEnemies {
           </div>
 
           <div class="codex-search-box">
-            <input type="text" id="codex-enemy-search" class="codex-search-input" placeholder="🔍 Nhập tên hoặc đặc tính quái..." value="${this.enemySearchQuery}" />
+            <input type="text" id="codex-enemy-search" class="codex-search-input" placeholder="Nhập tên hoặc đặc tính quái..." value="${this.enemySearchQuery}" />
             <div class="codex-filter-grid">
               <select id="codex-filter-element" class="codex-filter-select">
-                <option value="ALL" ${this.enemyElementFilter === 'ALL' ? 'selected' : ''}>✨ Mọi Hệ</option>
+                <option value="ALL" ${this.enemyElementFilter === 'ALL' ? 'selected' : ''}>Mọi Hệ</option>
                 ${ALL_15_ELEMENTS.map((el) => `<option value="${el}" ${this.enemyElementFilter === el ? 'selected' : ''}>${ELEMENT_NAMES[el]} (${el})</option>`).join('')}
               </select>
               <select id="codex-filter-movement" class="codex-filter-select">
-                <option value="ALL" ${this.enemyMovementFilter === 'ALL' ? 'selected' : ''}>🚶 Mọi Di Chuyển</option>
-                <option value="WALK" ${this.enemyMovementFilter === 'WALK' ? 'selected' : ''}>🚶 Đường Bộ</option>
-                <option value="FLY" ${this.enemyMovementFilter === 'FLY' ? 'selected' : ''}>✈️ Trên Không</option>
-                <option value="SWIM" ${this.enemyMovementFilter === 'SWIM' ? 'selected' : ''}>🏊 Kênh Sông</option>
+                <option value="ALL" ${this.enemyMovementFilter === 'ALL' ? 'selected' : ''}>Mọi Di Chuyển</option>
+                <option value="WALK" ${this.enemyMovementFilter === 'WALK' ? 'selected' : ''}>Đường Bộ</option>
+                <option value="FLY" ${this.enemyMovementFilter === 'FLY' ? 'selected' : ''}>Trên Không</option>
+                <option value="SWIM" ${this.enemyMovementFilter === 'SWIM' ? 'selected' : ''}>Kênh Sông</option>
               </select>
             </div>
             <div class="codex-filter-grid">
               <select id="codex-filter-tag" class="codex-filter-select" style="grid-column: span 2;">
-                <option value="ALL" ${this.enemyTagFilter === 'ALL' ? 'selected' : ''}>🏷️ Mọi Phân Loại</option>
-                <option value="BOSS" ${this.enemyTagFilter === 'BOSS' ? 'selected' : ''}>👑 Trùm (Boss)</option>
-                <option value="ELITE" ${this.enemyTagFilter === 'ELITE' ? 'selected' : ''}>⭐ Tinh Anh (Elite)</option>
-                <option value="SWARM" ${this.enemyTagFilter === 'SWARM' ? 'selected' : ''}>👥 Bầy Đàn (Swarm)</option>
-                <option value="DEATH_SPAWN" ${this.enemyTagFilter === 'DEATH_SPAWN' ? 'selected' : ''}>💥 Phân Tách Khi Chết</option>
-                <option value="SUMMONER" ${this.enemyTagFilter === 'SUMMONER' ? 'selected' : ''}>🔮 Kỹ Năng Triệu Hồi</option>
-                <option value="DISABLE_TOWER" ${this.enemyTagFilter === 'DISABLE_TOWER' ? 'selected' : ''}>⚡ Vô Hiệu Hóa Tháp</option>
-                <option value="DOWNGRADE_TOWER" ${this.enemyTagFilter === 'DOWNGRADE_TOWER' ? 'selected' : ''}>⬇️ Làm Tháp Rơi Cấp</option>
-                <option value="SHIELD" ${this.enemyTagFilter === 'SHIELD' ? 'selected' : ''}>🛡️ Giáp Ảo / Khiên Phép</option>
-                <option value="HEAL" ${this.enemyTagFilter === 'HEAL' ? 'selected' : ''}>💚 Hồi Máu Đồng Minh</option>
-                <option value="DUAL_ELEMENT" ${this.enemyTagFilter === 'DUAL_ELEMENT' ? 'selected' : ''}>✨ Mang 2 Thuộc Tính</option>
+                <option value="ALL" ${this.enemyTagFilter === 'ALL' ? 'selected' : ''}>Mọi Phân Loại</option>
+                <option value="BOSS" ${this.enemyTagFilter === 'BOSS' ? 'selected' : ''}>Trùm (Boss)</option>
+                <option value="ELITE" ${this.enemyTagFilter === 'ELITE' ? 'selected' : ''}>Tinh Anh (Elite)</option>
+                <option value="SWARM" ${this.enemyTagFilter === 'SWARM' ? 'selected' : ''}>Bầy Đàn (Swarm)</option>
+                <option value="DEATH_SPAWN" ${this.enemyTagFilter === 'DEATH_SPAWN' ? 'selected' : ''}>Phân Tách Khi Chết</option>
+                <option value="SUMMONER" ${this.enemyTagFilter === 'SUMMONER' ? 'selected' : ''}>Kỹ Năng Triệu Hồi</option>
+                <option value="DISABLE_TOWER" ${this.enemyTagFilter === 'DISABLE_TOWER' ? 'selected' : ''}>Vô Hiệu Hóa Tháp</option>
+                <option value="DOWNGRADE_TOWER" ${this.enemyTagFilter === 'DOWNGRADE_TOWER' ? 'selected' : ''}>Làm Tháp Rơi Cấp</option>
+                <option value="SHIELD" ${this.enemyTagFilter === 'SHIELD' ? 'selected' : ''}>Giáp Ảo / Khiên Phép</option>
+                <option value="HEAL" ${this.enemyTagFilter === 'HEAL' ? 'selected' : ''}>Hồi Máu Đồng Minh</option>
+                <option value="DUAL_ELEMENT" ${this.enemyTagFilter === 'DUAL_ELEMENT' ? 'selected' : ''}>Mang 2 Thuộc Tính</option>
               </select>
             </div>
           </div>
@@ -325,43 +326,43 @@ export class CodexEnemies {
     const pElem = bp.elementalProfile.primaryElement;
     const sElem = bp.elementalProfile.secondaryElement;
     const pColor = ELEMENT_COLORS[pElem] || '#94a3b8';
-    const pIcon = ELEMENT_ICONS[pElem] || '⚔️';
+    const pIcon = ELEMENT_ICONS[pElem] || UI_ICONS.SWORDS;
     const sIcon = sElem ? ELEMENT_ICONS[sElem] : '';
     const sName = sElem ? ` + ${ELEMENT_NAMES[sElem]}` : '';
 
-    const moveText = bp.movementType === 'FLY' ? '✈️ Đường Bay (Air)' : bp.movementType === 'SWIM' ? '🏊 Kênh Sông (Water)' : '🚶 Đường Bộ (Ground)';
+    const moveText = bp.movementType === 'FLY' ? `${UI_ICONS.FLY} Đường Bay (Air)` : bp.movementType === 'SWIM' ? `${UI_ICONS.SWIM} Kênh Sông (Water)` : `${UI_ICONS.WALK} Đường Bộ (Ground)`;
     const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
 
     // Badges
     let abilityBadges = '';
-    abilityBadges += `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(147, 51, 234, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;" title="${archInfo.description}">${archInfo.icon} ${archInfo.name}</span>`;
+    abilityBadges += `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(147, 51, 234, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="${archInfo.description}">${archInfo.icon} ${archInfo.name}</span>`;
     if (bp.tags.includes('BOSS')) {
-      abilityBadges += `<span style="background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800;">👑 TRÙM CUỐI (BOSS)</span>`;
+      abilityBadges += `<span style="background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.CROWN} TRÙM CUỐI (BOSS)</span>`;
     } else if (bp.tags.includes('ELITE')) {
-      abilityBadges += `<span style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800;">⭐ TINH ANH (ELITE)</span>`;
+      abilityBadges += `<span style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.STAR} TINH ANH (ELITE)</span>`;
     }
     if (sElem) {
-      abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">✨ Song Thuộc Tính</span>`;
+      abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.SPARKLES} Song Thuộc Tính</span>`;
     }
 
     if (bp.abilities) {
       for (const ab of bp.abilities) {
         if (ab.type === 'DEATH_SPAWN') {
-          abilityBadges += `<span style="background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">💥 Phân tách x${ab.count || 1}</span>`;
+          abilityBadges += `<span style="background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.EXPLOSION} Phân tách x${ab.count || 1}</span>`;
         } else if (ab.type === 'SUMMON') {
-          abilityBadges += `<span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔮 Triệu hồi mỗi ${ab.interval || 6}s</span>`;
+          abilityBadges += `<span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.ORB} Triệu hồi mỗi ${ab.interval || 6}s</span>`;
         } else if (ab.type === 'DOWNGRADE_TOWER') {
-          abilityBadges += `<span style="background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">⬇️ Hạ Cấp Tháp</span>`;
+          abilityBadges += `<span style="background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.ARROW_DOWN} Hạ Cấp Tháp</span>`;
         } else if (ab.type === 'DISABLE_TOWER') {
-          abilityBadges += `<span style="background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">⚡ Vô Hiệu Tháp</span>`;
+          abilityBadges += `<span style="background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.BOLT} Vô Hiệu Tháp</span>`;
         } else if (ab.type === 'ARMOR_SHIELD_AURA') {
-          abilityBadges += `<span style="background: rgba(203, 213, 225, 0.2); color: #cbd5e1; border: 1px solid rgba(203, 213, 225, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🛡️ Giáp Ảo +${ab.value}</span>`;
+          abilityBadges += `<span style="background: rgba(203, 213, 225, 0.2); color: #cbd5e1; border: 1px solid rgba(203, 213, 225, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.SHIELD} Giáp Ảo +${ab.value}</span>`;
         } else if (ab.type === 'MAGIC_SHIELD_AURA') {
-          abilityBadges += `<span style="background: rgba(192, 132, 252, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔮 Khiên Phép +${ab.value}</span>`;
+          abilityBadges += `<span style="background: rgba(192, 132, 252, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.MAGIC_SHIELD} Khiên Phép +${ab.value}</span>`;
         } else if (ab.type === 'HEAL_AURA') {
-          abilityBadges += `<span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">💚 Hồi Máu +${ab.value}</span>`;
+          abilityBadges += `<span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.HEAL} Hồi Máu +${ab.value}</span>`;
         } else if (ab.type === 'DAMAGE_REDUCTION_AURA') {
-          abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700;">🔰 Giảm -${Math.round((ab.value || 0) * 100)}% Dmg</span>`;
+          abilityBadges += `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${UI_ICONS.DAMAGE_REDUCE} Giảm -${Math.round((ab.value || 0) * 100)}% Dmg</span>`;
         }
       }
     }
@@ -440,21 +441,21 @@ export class CodexEnemies {
           <div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
               <div>
-                <h2 style="font-size: 22px; font-weight: 800; color: #f8fafc; margin: 0 0 4px 0;">
+                <h2 style="font-size: 22px; font-weight: 800; color: #f8fafc; margin: 0 0 4px 0; display: flex; align-items: center; gap: 4px;">
                   ${pIcon}${sIcon} ${bp.name}
                 </h2>
                 <span style="font-size: 11px; font-family: monospace; color: #64748b;">TYPE_ID: ${bp.typeId}</span>
               </div>
-              <span style="color: #facc15; font-size: 17px; font-weight: 800; background: rgba(250, 204, 21, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(250, 204, 21, 0.3);">
-                🪙 +${bp.rewardGold} Vàng
+              <span style="color: #facc15; font-size: 17px; font-weight: 800; background: rgba(250, 204, 21, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(250, 204, 21, 0.3); display: inline-flex; align-items: center; gap: 4px;">
+                ${UI_ICONS.GOLD} +${bp.rewardGold} Vàng
               </span>
             </div>
 
             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
-              <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; color: ${pColor};">
+              <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; color: ${pColor}; display: inline-flex; align-items: center; gap: 4px;">
                 ${pIcon} Hệ ${ELEMENT_NAMES[pElem]}${sName}
               </span>
-              <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; color: #cbd5e1;">
+              <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
                 ${moveText}
               </span>
               ${abilityBadges}
@@ -467,11 +468,11 @@ export class CodexEnemies {
           <div class="codex-stats-grid">
             <div class="codex-stat-item">
               <span class="csi-lbl">Máu Tối Đa</span>
-              <span class="csi-val" style="color: #ef4444;">${bp.hp} ❤️</span>
+              <span class="csi-val" style="color: #ef4444; display: inline-flex; align-items: center; gap: 4px;">${bp.hp} ${UI_ICONS.HEART}</span>
             </div>
             <div class="codex-stat-item">
               <span class="csi-lbl">Sát Thương</span>
-              <span class="csi-val" style="color: #f97316;">${bp.damage} ⚔️</span>
+              <span class="csi-val" style="color: #f97316; display: inline-flex; align-items: center; gap: 4px;">${bp.damage} ${UI_ICONS.SWORDS}</span>
             </div>
             <div class="codex-stat-item">
               <span class="csi-lbl">Tốc Độ Chạy</span>
@@ -498,13 +499,13 @@ export class CodexEnemies {
         sElem || bp.tags.includes('BOSS') || bp.tags.includes('ELITE') || (bp.abilities && bp.abilities.length > 0)
           ? `
           <div class="sp-section sp-card" style="border-left: 4px solid #a855f7; background: #0c1424;">
-            <h4 class="sp-sec-title" style="color: #c084fc; margin-bottom: 8px;">🔮 ĐẶC TÍNH CHIẾN ĐẤU & KỸ NĂNG ĐẶC BIỆT</h4>
+            <h4 class="sp-sec-title" style="color: #c084fc; margin-bottom: 8px;">${UI_ICONS.ORB} ĐẶC TÍNH CHIẾN ĐẤU & KỸ NĂNG ĐẶC BIỆT</h4>
             <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: #cbd5e1;">
               ${
                 bp.tags.includes('BOSS')
-                  ? `<div>👑 <b>Kháng Khống Chế Trùm (Boss):</b> Miễn nhiễm 100% Khống chế cứng (Đóng băng, Choáng, Đẩy lùi). Khống chế mềm (Làm chậm) chỉ nhận 50% hiệu quả & 50% thời gian!</div>`
+                  ? `<div>${UI_ICONS.CROWN} <b>Kháng Khống Chế Trùm (Boss):</b> Miễn nhiễm 100% Khống chế cứng (Đóng băng, Choáng, Đẩy lùi). Khống chế mềm (Làm chậm) chỉ nhận 50% hiệu quả & 50% thời gian!</div>`
                   : bp.tags.includes('ELITE')
-                  ? `<div>⭐ <b>Kháng Khống Chế Tinh Anh (Elite):</b> Khống chế cứng (Đóng băng, Choáng, Trói, Đẩy lùi) chỉ nhận 50% hiệu quả & 50% thời gian duy trì!</div>`
+                  ? `<div>${UI_ICONS.STAR} <b>Kháng Khống Chế Tinh Anh (Elite):</b> Khống chế cứng (Đóng băng, Choáng, Trói, Đẩy lùi) chỉ nhận 50% hiệu quả & 50% thời gian duy trì!</div>`
                   : ''
               }
               ${
@@ -512,21 +513,21 @@ export class CodexEnemies {
                   ? bp.abilities
                       .map((ab) => {
                         if (ab.type === 'DEATH_SPAWN') {
-                          return `<div>💥 <b>Kỹ Năng Phân Tách:</b> Khi bị hạ gục, lập tức phân tách thành <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> tiếp tục hành trình xâm lăng!</div>`;
+                          return `<div>${UI_ICONS.EXPLOSION} <b>Kỹ Năng Phân Tách:</b> Khi bị hạ gục, lập tức phân tách thành <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> tiếp tục hành trình xâm lăng!</div>`;
                         } else if (ab.type === 'SUMMON') {
-                          return `<div>🔮 <b>Kỹ Năng Triệu Hồi:</b> Cứ mỗi <b>${ab.interval || 6} giây</b> trên đường đi, tự động triệu tập <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> bảo vệ xung quanh!</div>`;
+                          return `<div>${UI_ICONS.ORB} <b>Kỹ Năng Triệu Hồi:</b> Cứ mỗi <b>${ab.interval || 6} giây</b> trên đường đi, tự động triệu tập <b>x${ab.count || 1} ${ENEMY_BLUEPRINTS[ab.spawnTypeId || '']?.name || ab.spawnTypeId}</b> bảo vệ xung quanh!</div>`;
                         } else if (ab.type === 'DISABLE_TOWER') {
-                          return `<div>⚡ <b>Vô Hiệu Hóa Tháp:</b> Mỗi <b>${ab.interval}s</b>, phóng xung điện từ làm tê liệt <b>${ab.maxTargets || 1} tháp</b> trong bán kính <b>${ab.radius}px</b> suốt <b>${ab.duration}s</b>!</div>`;
+                          return `<div>${UI_ICONS.BOLT} <b>Vô Hiệu Hóa Tháp:</b> Mỗi <b>${ab.interval}s</b>, phóng xung điện từ làm tê liệt <b>${ab.maxTargets || 1} tháp</b> trong bán kính <b>${ab.radius}px</b> suốt <b>${ab.duration}s</b>!</div>`;
                         } else if (ab.type === 'DOWNGRADE_TOWER') {
-                          return `<div>⬇️ <b>Hạ Cấp / Phá Hủy Tháp:</b> Mỗi <b>${ab.interval}s</b>, bắn tia tà thuật vào tháp trong bán kính <b>${ab.radius}px</b> làm <b>tháp tụt 1 cấp độ</b> (nếu tháp ở Cấp 1 sẽ <b>bị phá hủy hoàn toàn</b>)!</div>`;
+                          return `<div>${UI_ICONS.ARROW_DOWN} <b>Hạ Cấp / Phá Hủy Tháp:</b> Mỗi <b>${ab.interval}s</b>, bắn tia tà thuật vào tháp trong bán kính <b>${ab.radius}px</b> làm <b>tháp tụt 1 cấp độ</b> (nếu tháp ở Cấp 1 sẽ <b>bị phá hủy hoàn toàn</b>)!</div>`;
                         } else if (ab.type === 'ARMOR_SHIELD_AURA') {
-                          return `<div>🛡️ <b>Giáp Ảo Toàn Quân:</b> Mỗi <b>${ab.interval}s</b>, buff thêm <b>${ab.value} Giáp Ảo</b> (chặn sát thương Vật Lý) cho bản thân và toàn bộ quái trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>${UI_ICONS.SHIELD} <b>Giáp Ảo Toàn Quân:</b> Mỗi <b>${ab.interval}s</b>, buff thêm <b>${ab.value} Giáp Ảo</b> (chặn sát thương Vật Lý) cho bản thân và toàn bộ quái trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'MAGIC_SHIELD_AURA') {
-                          return `<div>🔮 <b>Khiên Phép Thanh Tẩy:</b> Mỗi <b>${ab.interval}s</b>, ban <b>${ab.value} Khiên Phép</b> (chặn sát thương Nguyên Tố Phép) cho bản thân và đồng minh trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>${UI_ICONS.MAGIC_SHIELD} <b>Khiên Phép Thanh Tẩy:</b> Mỗi <b>${ab.interval}s</b>, ban <b>${ab.value} Khiên Phép</b> (chặn sát thương Nguyên Tố Phép) cho bản thân và đồng minh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'HEAL_AURA') {
-                          return `<div>💚 <b>Trận Địa Trị Liệu:</b> Mỗi <b>${ab.interval}s</b>, hồi phục <b>+${ab.value} Máu</b> cho bản thân và tất cả quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>${UI_ICONS.HEAL} <b>Trận Địa Trị Liệu:</b> Mỗi <b>${ab.interval}s</b>, hồi phục <b>+${ab.value} Máu</b> cho bản thân và tất cả quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'DAMAGE_REDUCTION_AURA') {
-                          return `<div>🔰 <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round((ab.value || 0) * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>${UI_ICONS.DAMAGE_REDUCE} <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round((ab.value || 0) * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         }
                         return '';
                       })
@@ -535,7 +536,7 @@ export class CodexEnemies {
               }
               ${
                 sElem
-                  ? `<div>✨ <b>Song Thuộc Tính:</b> Mang kết hợp 2 hệ <b>${ELEMENT_NAMES[pElem]}</b> và <b>${ELEMENT_NAMES[sElem]}</b>, ma trận sát thương nhận vào sẽ tính theo phép nhân giữa 2 hệ!</div>`
+                  ? `<div>${UI_ICONS.SPARKLES} <b>Song Thuộc Tính:</b> Mang kết hợp 2 hệ <b>${ELEMENT_NAMES[pElem]}</b> và <b>${ELEMENT_NAMES[sElem]}</b>, ma trận sát thương nhận vào sẽ tính theo phép nhân giữa 2 hệ!</div>`
                   : ''
               }
             </div>
@@ -546,18 +547,18 @@ export class CodexEnemies {
 
       <!-- 3. Elemental Matchup Quick Summary -->
       <div class="sp-section sp-card">
-        <h4 class="sp-sec-title" style="color: #38bdf8;">⚖️ TỔNG QUAN TƯƠNG QUAN NGUYÊN TỐ</h4>
+        <h4 class="sp-sec-title" style="color: #38bdf8;">${UI_ICONS.SHIELD} TỔNG QUAN TƯƠNG QUAN NGUYÊN TỐ</h4>
         <div class="codex-matchup-summary">
           <div class="codex-matchup-col">
-            <span class="cmc-title" style="color: #f87171;">💥 Khắc Hệ (Điểm Yếu >100%)</span>
+            <span class="cmc-title" style="color: #f87171;">${UI_ICONS.EXPLOSION} Khắc Hệ (Điểm Yếu >100%)</span>
             <div class="cmc-tags">${weaknessesBadges}</div>
           </div>
           <div class="codex-matchup-col">
-            <span class="cmc-title" style="color: #38bdf8;">🛡️ Yếu Thế (Kháng Cự &lt;100%)</span>
+            <span class="cmc-title" style="color: #38bdf8;">${UI_ICONS.SHIELD} Yếu Thế (Kháng Cự &lt;100%)</span>
             <div class="cmc-tags">${resistancesBadges}</div>
           </div>
           <div class="codex-matchup-col">
-            <span class="cmc-title" style="color: #cbd5e1;">🚫 Miễn Nhiễm (0% Sát Thương)</span>
+            <span class="cmc-title" style="color: #cbd5e1;">${UI_ICONS.CROSS} Miễn Nhiễm (0% Sát Thương)</span>
             <div class="cmc-tags">${immunitiesBadges}</div>
           </div>
         </div>
@@ -566,7 +567,7 @@ export class CodexEnemies {
       <!-- 4. Full 15-Element Damage Intake Grid -->
       <div class="sp-section sp-card">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #facc15;">📊 BẢNG TỈ LỆ SÁT THƯƠNG NHẬN VÀO TỪ MỖI HỆ NGUYÊN TỐ (15 HỆ)</h4>
+          <h4 class="sp-sec-title" style="color: #facc15;">${UI_ICONS.MAP} BẢNG TỈ LỆ SÁT THƯƠNG NHẬN VÀO TỪ MỖI HỆ NGUYÊN TỐ (15 HỆ)</h4>
           <span class="sp-hint">Tính theo công thức thực chiến của TargetingRuleEngine</span>
         </div>
         <p class="sp-desc" style="font-size: 13px; margin-bottom: 6px;">

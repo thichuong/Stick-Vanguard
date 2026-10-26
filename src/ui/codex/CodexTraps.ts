@@ -1,5 +1,6 @@
 import { TOWER_BLUEPRINTS, TowerBlueprint } from '../../config/towers.config.js';
 import { ELEMENT_COLORS, ELEMENT_ICONS, ELEMENT_NAMES } from '../../config/elements.config.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 
 export class CodexTraps {
   public getTrapsCategoryHtml(targetSubId?: string): string {
@@ -17,35 +18,35 @@ export class CodexTraps {
       TRAP_SPIKE: {
         effectName: 'Chông Gai & Địa Chấn (Earth/Slow)',
         effectDesc: 'Phát nổ khi quái Đi Bộ dẫm phải. Gây 20 sát thương và tạo chấn động làm chậm 35% tốc độ di chuyển trong 2.5s.',
-        synergyTag: '🪨 Địa chấn • Giảm 35% Tốc độ quái đi bộ'
+        synergyTag: `${UI_ICONS.STONE} Địa chấn • Giảm 35% Tốc độ quái đi bộ`
       },
       TRAP_FIRE: {
         effectName: 'Mìn Lửa Hỏa Ngục (Fire/Burn)',
         effectDesc: 'Kích nổ diện rộng thiêu đốt toàn bộ quái vật dẫm phải, gây 25 sát thương Lửa và thiêu đốt DoT trong 3.0s (mỗi 0.5s rút máu 20% Base DMG).',
-        synergyTag: '🔥 DoT Thiêu Đốt 3s diện rộng • Bỏ qua giáp'
+        synergyTag: `${ELEMENT_ICONS.FIRE} DoT Thiêu Đốt 3s diện rộng • Bỏ qua giáp`
       },
       TRAP_FROST: {
         effectName: 'Thủy Lôi Băng Giá (Ice/Freeze)',
         effectDesc: 'Khắc tinh số 1 ngầm dưới lòng sông: Phát nổ khi Thủy Quái bơi qua, gây 15 sát thương Hàn Băng, làm chậm 45% và đóng băng quái dưới nước bất động 1.2s!',
-        synergyTag: '🌊 Độc quyền Sông Nước • Làm chậm 45% & Đóng băng 1.2s'
+        synergyTag: `${UI_ICONS.WAVE} Độc quyền Sông Nước • Làm chậm 45% & Đóng băng 1.2s`
       },
       TRAP_NET: {
         effectName: 'Lưới Điện Tê Liệt (Lightning/Shock)',
         effectDesc: 'Phóng xung điện cao thế giữ chân quái vật, gây choáng tê liệt 0.35s và nảy tia sét giật lan 35% sát thương sang quái vật lân cận.',
-        synergyTag: '⚡ Choáng 0.35s • Nảy tia sét 35% DMG sang quái bên cạnh'
+        synergyTag: `${UI_ICONS.BOLT} Choáng 0.35s • Nảy tia sét 35% DMG sang quái bên cạnh`
       }
     };
 
     const cardsHtml = traps
       .map((trap) => {
-        const icon = ELEMENT_ICONS[trap.element] || '⚙️';
+        const icon = ELEMENT_ICONS[trap.element] || UI_ICONS.GEAR;
         const color = ELEMENT_COLORS[trap.element] || '#ffffff';
         const isWaterOnly = trap.placement === 'WATER_TRAP';
         const isHighlighted = targetSubId && (trap.type === targetSubId || trap.name.includes(targetSubId));
         const effectInfo = trapEffectsMap[trap.type] || {
           effectName: 'Hiệu ứng bẫy',
           effectDesc: 'Gây sát thương lên mục tiêu kích nổ.',
-          synergyTag: '⚙️ Bẫy chiến thuật'
+          synergyTag: `${UI_ICONS.GEAR} Bẫy chiến thuật`
         };
 
         return `
@@ -55,10 +56,10 @@ export class CodexTraps {
             <div>
               <h4 class="trap-name">${trap.name}</h4>
               <span class="trap-placement-tag ${isWaterOnly ? 'water-tag' : 'path-tag'}">
-                ${isWaterOnly ? '🌊 Đặt dưới sông (Water)' : '🪨 Đặt trên đường (Ground)'}
+                ${isWaterOnly ? `${UI_ICONS.WAVE} Đặt dưới sông (Water)` : `${UI_ICONS.STONE} Đặt trên đường (Ground)`}
               </span>
             </div>
-            <span class="trap-cost">🪙 ${trap.cost}</span>
+            <span class="trap-cost">${UI_ICONS.GOLD} ${trap.cost}</span>
           </div>
           <p class="trap-desc">${trap.description}</p>
           <div class="trap-stats-row">
@@ -81,18 +82,18 @@ export class CodexTraps {
 
     return `
       <div class="sp-section sp-card">
-        <h4 class="sp-sec-title">📖 CƠ CHẾ HOẠT ĐỘNG CỦA BẪY</h4>
+        <h4 class="sp-sec-title">${UI_ICONS.BOOK} CƠ CHẾ HOẠT ĐỘNG CỦA BẪY</h4>
         <p class="sp-desc">
           Bẫy được đặt trực tiếp lên các vị trí ô đặc biệt trên đường đi (PATH_TRAP) hoặc dưới kênh nước (WATER_TRAP).
           Khác với tháp thông thường cần tầm bắn, bẫy nằm ẩn mình và tự động kích hoạt ngay khi quái vật bước chân vào bán kính kích nổ.
         </p>
         <p class="sp-tip-text">
-          💡 Bẫy tự động tái kích hoạt tối đa theo số lần trữ (Charges) và sẽ tự nạp đầy lại sau mỗi đợt quái. Bẫy Thủy Lôi là khắc tinh duy nhất dưới lòng sông!
+          ${UI_ICONS.BULB} Bẫy tự động tái kích hoạt tối đa theo số lần trữ (Charges) và sẽ tự nạp đầy lại sau mỗi đợt quái. Bẫy Thủy Lôi là khắc tinh duy nhất dưới lòng sông!
         </p>
       </div>
 
       <div class="sp-section">
-        <h4 class="sp-sec-title">⚙️ DANH SÁCH 4 LOẠI BẪY CHIẾN THUẬT</h4>
+        <h4 class="sp-sec-title">${UI_ICONS.GEAR} DANH SÁCH 4 LOẠI BẪY CHIẾN THUẬT</h4>
         <div class="traps-list-grid">${cardsHtml}</div>
       </div>
     `;

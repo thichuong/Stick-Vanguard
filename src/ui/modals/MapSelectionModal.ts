@@ -9,6 +9,7 @@ import {
   getUniqueLaneSpawns
 } from '../../config/map.config.js';
 import { ELEMENT_ICONS, ELEMENT_NAMES } from '../../config/elements.config.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 
 export class MapSelectionModal {
   private backdropEl: HTMLElement | null;
@@ -78,7 +79,7 @@ export class MapSelectionModal {
               <span class="map-card-name">${m.name}</span>
               <span class="map-card-sub">${m.subtitle}</span>
             </div>
-            <span class="current-map-waves-badge">⚔️ ${totalWaves} Đợt (Cài đặt)</span>
+            <span class="current-map-waves-badge">${UI_ICONS.SWORDS} ${totalWaves} Đợt (Cài đặt)</span>
           </div>
 
           <div class="map-preview-box">
@@ -102,13 +103,13 @@ export class MapSelectionModal {
           }
 
           <div class="map-lane-badges-container">
-            ${badges.map((b) => `<span class="map-lane-pill">🛡️ ${b}</span>`).join('')}
+            ${badges.map((b) => `<span class="map-lane-pill">${UI_ICONS.SHIELD} ${b}</span>`).join('')}
           </div>
 
           <p class="map-card-desc">${m.description}</p>
 
           <button class="action-btn select-map-action-btn ${isSelected ? 'current-btn' : ''}">
-            ${isSelected ? '✓ Đang Chơi' : '⚔️ Chọn Bản Đồ Này'}
+            ${isSelected ? `${UI_ICONS.CHECK} Đang Chơi` : `${UI_ICONS.SWORDS} Chọn Bản Đồ Này`}
           </button>
         </div>
       `;

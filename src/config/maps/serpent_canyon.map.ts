@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_SERPENT_CANYON } from './waves_extended.js';
 
 export const WAVES_SERPENT_CANYON: WaveConfig[] = [
@@ -141,7 +142,7 @@ export const MAP_SERPENT_CANYON: MapConfig = {
   laneBadges: ['1 Nhà Chính Tây Nam', 'Đảo Hướng Đông -> Tây', '1 Tuyến Bộ 3 Tầng'],
   tribe: {
     name: 'Tộc Long Huyết Thạch Nham',
-    icon: '🐉🪨',
+    icon: `${ELEMENT_ICONS.DRAGON}${ELEMENT_ICONS.EARTH}`,
     elements: ['DRAGON', 'EARTH', 'WIND'],
     description: 'Chiến binh Long Nhân Hỏa Nham, Phi Long Cuồng Phong và Giao Long Đáy Vực chực chờ phục kích.'
   }

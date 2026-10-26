@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_VOID_SINGULARITY } from './waves_extended.js';
 
 export const WAVES_VOID_SINGULARITY: WaveConfig[] = [
@@ -187,7 +188,7 @@ export const MAP_VOID_SINGULARITY: MapConfig = {
   laneBadges: ['3 Lõi Năng Lượng', 'Tam Tuyến Vòng Cắt Nhau', 'Giao Điểm Tâm Hố Đen'],
   tribe: {
     name: 'Tộc Hắc Tinh Phá Tháp',
-    icon: '🔮⚙️⚡',
+    icon: `${ELEMENT_ICONS.DARK}${ELEMENT_ICONS.STEEL}${ELEMENT_ICONS.LIGHTNING}`,
     elements: ['DARK', 'STEEL', 'GHOST', 'LIGHTNING'],
     description: 'Binh đoàn tà thuật cơ giới tối thượng do Trùm Hắc Tinh Hủy Diệt dẫn đầu, đe dọa hạ cấp và vô hiệu hóa toàn bộ tháp phòng thủ.'
   }

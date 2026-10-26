@@ -5,6 +5,7 @@ import {
 import { ELEMENT_COLORS } from '../config/elements.config.js';
 import { ElementType, StatusEffectType } from '../types/elements.types.js';
 import { drawElementSvgOnCanvas, STATUS_EFFECT_TO_ELEMENT } from '../config/elements/icons/index.js';
+import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
 import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
 
 export class StickmanRenderer {
@@ -568,15 +569,15 @@ export class StickmanRenderer {
     // Status icons & Shield badges
     let iconOffset = 0;
     if (armorShield && armorShield > 0) {
-      ctx.fillText('🛡️', x + width / 2 + 2 + iconOffset, y + 6);
+      drawUiSvgOnCanvas(ctx, 'SHIELD', x + width / 2 + 2 + iconOffset, y - 5, 12, 12);
       iconOffset += 13;
     }
     if (magicShield && magicShield > 0) {
-      ctx.fillText('🔮', x + width / 2 + 2 + iconOffset, y + 6);
+      drawUiSvgOnCanvas(ctx, 'MAGIC_SHIELD', x + width / 2 + 2 + iconOffset, y - 5, 12, 12);
       iconOffset += 13;
     }
     if (damageReductionTimer && damageReductionTimer > 0) {
-      ctx.fillText('🔰', x + width / 2 + 2 + iconOffset, y + 6);
+      drawUiSvgOnCanvas(ctx, 'DAMAGE_REDUCE', x + width / 2 + 2 + iconOffset, y - 5, 12, 12);
       iconOffset += 13;
     }
 

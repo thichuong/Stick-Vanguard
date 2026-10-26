@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_CELESTIAL_SANCTUM } from './waves_extended.js';
 
 export const WAVES_CELESTIAL_SANCTUM: WaveConfig[] = [
@@ -216,7 +217,7 @@ export const MAP_CELESTIAL_SANCTUM: MapConfig = {
   laneBadges: ['2 Nhà Chính Song Điện', 'Giao Cắt Chữ X', 'Suối Thánh Thượng - Hạ', '6 Hành Lang Không Chiến'],
   tribe: {
     name: 'Tộc Thiên Sứ Quang Phong',
-    icon: '✨🌪️🧚',
+    icon: `${ELEMENT_ICONS.LIGHT}${ELEMENT_ICONS.WIND}${ELEMENT_ICONS.FAIRY}`,
     elements: ['LIGHT', 'WIND', 'FAIRY'],
     description: 'Thánh điện trên không trung do Đại Thiên Sứ Tối Thượng cai quản, quy tụ Thánh Kỵ Sĩ, Thiên Sứ Hộ Vệ và Vu Nữ Thủy Triều.'
   }

@@ -1,6 +1,7 @@
 import { GameState } from '../../core/GameState.js';
 import { MAPS_CONFIG } from '../../config/map.config.js';
 import { SoundSystem } from '../../systems/SoundSystem.js';
+import { UI_ICONS } from '../../config/ui/icons/index.js';
 
 export interface HUDCallbacks {
   onCallWave: () => void;
@@ -30,7 +31,7 @@ export class HUDManager {
     // Sound toggle button
     const soundBtn = document.getElementById('btn-sound-toggle');
     if (soundBtn) {
-      soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+      soundBtn.innerHTML = this.state.soundEnabled ? UI_ICONS.SOUND_ON : UI_ICONS.SOUND_OFF;
       soundBtn.addEventListener('click', () => {
         this.toggleSound();
       });
@@ -47,10 +48,10 @@ export class HUDManager {
     // Speed button
     const speedBtn = document.getElementById('btn-speed');
     if (speedBtn) {
-      speedBtn.textContent = `⚡ x${this.state.gameSpeed}`;
+      speedBtn.innerHTML = `${UI_ICONS.BOLT} x${this.state.gameSpeed}`;
       speedBtn.addEventListener('click', () => {
         this.state.gameSpeed = this.state.gameSpeed === 1 ? 2 : 1;
-        speedBtn.textContent = `⚡ x${this.state.gameSpeed}`;
+        speedBtn.innerHTML = `${UI_ICONS.BOLT} x${this.state.gameSpeed}`;
         this.state.saveSettingsToStorage();
       });
     }
@@ -60,7 +61,7 @@ export class HUDManager {
     if (pauseBtn) {
       pauseBtn.addEventListener('click', () => {
         this.state.isPaused = !this.state.isPaused;
-        pauseBtn.textContent = this.state.isPaused ? '▶️ Tiếp tục' : '⏸️ Tạm dừng';
+        pauseBtn.innerHTML = this.state.isPaused ? `${UI_ICONS.PLAY} Tiếp tục` : `${UI_ICONS.PAUSE} Tạm dừng`;
       });
     }
 
@@ -88,10 +89,10 @@ export class HUDManager {
 
       const updateFullscreenLabel = () => {
         if (document.fullscreenElement) {
-          fullscreenBtn.innerHTML = '🗗';
+          fullscreenBtn.innerHTML = UI_ICONS.FULLSCREEN_EXIT;
           fullscreenBtn.title = 'Thoát toàn màn hình (F)';
         } else {
-          fullscreenBtn.innerHTML = '⛶';
+          fullscreenBtn.innerHTML = UI_ICONS.FULLSCREEN;
           fullscreenBtn.title = 'Toàn màn hình (F)';
         }
       };
@@ -105,7 +106,7 @@ export class HUDManager {
     SoundSystem.setEnabled(this.state.soundEnabled);
     const soundBtn = document.getElementById('btn-sound-toggle');
     if (soundBtn) {
-      soundBtn.textContent = this.state.soundEnabled ? '🔊' : '🔇';
+      soundBtn.innerHTML = this.state.soundEnabled ? UI_ICONS.SOUND_ON : UI_ICONS.SOUND_OFF;
     }
     this.state.saveSettingsToStorage();
     if (this.state.soundEnabled) {
@@ -136,12 +137,12 @@ export class HUDManager {
     if (waveHpBuffEl) {
       if (currentWave > 10) {
         const bonusPct = (currentWave - 10) * 10;
-        waveHpBuffEl.textContent = `❤️ +${bonusPct}% Máu`;
+        waveHpBuffEl.innerHTML = `${UI_ICONS.HEART} +${bonusPct}% Máu`;
         waveHpBuffEl.title = `Sau Wave 10, mỗi wave quái tăng 10% máu tối đa (Đợt ${currentWave}: +${bonusPct}%)`;
         waveHpBuffEl.style.display = 'inline-flex';
         waveHpBuffEl.classList.remove('hidden');
       } else {
-        waveHpBuffEl.textContent = '';
+        waveHpBuffEl.innerHTML = '';
         waveHpBuffEl.style.display = 'none';
         waveHpBuffEl.classList.add('hidden');
       }
@@ -162,22 +163,22 @@ export class HUDManager {
     if (nextWaveBtn) {
       if (this.state.isGameOver || this.state.isVictory) {
         nextWaveBtn.disabled = true;
-        nextWaveBtn.textContent = this.state.isVictory ? '🏆 Đã hoàn thành' : '💀 Trận đấu kết thúc';
+        nextWaveBtn.innerHTML = this.state.isVictory ? `${UI_ICONS.TROPHY} Đã hoàn thành` : `${UI_ICONS.SKULL} Trận đấu kết thúc`;
       } else if (isWaveRunning) {
         if (currentWave >= totalWaves) {
           nextWaveBtn.disabled = true;
-          nextWaveBtn.textContent = '⚔️ Đang diễn ra đợt cuối';
+          nextWaveBtn.innerHTML = `${UI_ICONS.SWORDS} Đang diễn ra đợt cuối`;
         } else {
           nextWaveBtn.disabled = false;
-          nextWaveBtn.textContent = '⚡ Gọi đợt kế tiếp (+ Vàng)';
+          nextWaveBtn.innerHTML = `${UI_ICONS.BOLT} Gọi đợt kế tiếp (+ Vàng)`;
         }
       } else {
         if (currentWave > totalWaves) {
           nextWaveBtn.disabled = true;
-          nextWaveBtn.textContent = '🏆 Đã hết đợt quái';
+          nextWaveBtn.innerHTML = `${UI_ICONS.TROPHY} Đã hết đợt quái`;
         } else {
           nextWaveBtn.disabled = false;
-          nextWaveBtn.textContent = currentWave === 1 ? '⚔️ Bắt đầu Đợt Quái' : `⚔️ Bắt đầu Đợt ${currentWave}`;
+          nextWaveBtn.innerHTML = currentWave === 1 ? `${UI_ICONS.SWORDS} Bắt đầu Đợt Quái` : `${UI_ICONS.SWORDS} Bắt đầu Đợt ${currentWave}`;
         }
       }
     }
@@ -198,11 +199,11 @@ export class HUDManager {
         this.messageBannerEl.classList.remove('hidden');
         this.messageBannerEl.innerHTML = `
           <div class="banner-box game-over">
-            <h2>💀 THẤT THỦ!</h2>
+            <h2>${UI_ICONS.SKULL} THẤT THỦ!</h2>
             <p>Căn cứ đã bị quái vật tràn vào tiêu diệt.</p>
             <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-              <button id="btn-banner-restart" class="action-btn" style="flex: 1;">🔄 Chơi lại</button>
-              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1;">🗺️ Đổi bản đồ</button>
+              <button id="btn-banner-restart" class="action-btn" style="flex: 1;">${UI_ICONS.RESTART} Chơi lại</button>
+              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1;">${UI_ICONS.MAP} Đổi bản đồ</button>
             </div>
           </div>
         `;
@@ -223,12 +224,12 @@ export class HUDManager {
         this.messageBannerEl.classList.remove('hidden');
         this.messageBannerEl.innerHTML = `
           <div class="banner-box victory">
-            <h2>🏆 CHIẾN THẮNG QUANG VINH!</h2>
+            <h2>${UI_ICONS.TROPHY} CHIẾN THẮNG QUANG VINH!</h2>
             <p>Bạn đã chặn đứng toàn bộ ${totalWaves} đợt xâm lăng và bảo vệ thành công căn cứ!</p>
             <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
-              <button id="btn-banner-restart" class="action-btn" style="flex: 1; min-width: 95px;">🔄 Chơi lại</button>
-              ${nextMap ? `<button id="btn-banner-next-map" class="action-btn" style="background: #10b981; color: #fff; flex: 1; min-width: 120px;">⏩ Bản đồ kế tiếp</button>` : ''}
-              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1; min-width: 95px;">🗺️ ${nextMap ? 'Chọn bản đồ' : 'Đổi bản đồ'}</button>
+              <button id="btn-banner-restart" class="action-btn" style="flex: 1; min-width: 95px;">${UI_ICONS.RESTART} Chơi lại</button>
+              ${nextMap ? `<button id="btn-banner-next-map" class="action-btn" style="background: #10b981; color: #fff; flex: 1; min-width: 120px;">${UI_ICONS.FAST_FORWARD} Bản đồ kế tiếp</button>` : ''}
+              <button id="btn-banner-change-map" class="action-btn" style="background: #3b82f6; color: #fff; flex: 1; min-width: 95px;">${UI_ICONS.MAP} ${nextMap ? 'Chọn bản đồ' : 'Đổi bản đồ'}</button>
             </div>
           </div>
         `;

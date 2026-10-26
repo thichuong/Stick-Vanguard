@@ -1,4 +1,5 @@
 import { MapConfig, WaveConfig } from '../map.config.js';
+import { ELEMENT_ICONS } from '../elements.config.js';
 import { EXTENDED_WAVES_VALLEY_ORIGIN } from './waves_extended.js';
 
 export const WAVES_VALLEY_ORIGIN: WaveConfig[] = [
@@ -148,7 +149,7 @@ export const MAP_VALLEY_ORIGIN: MapConfig = {
   laneBadges: ['1 Nhà Chính Đông Nam', '1 Tuyến Bộ Uốn S', '1 Dòng Suối'],
   tribe: {
     name: 'Tộc Mộc Tinh & Tiên Linh',
-    icon: '🌿🧚',
+    icon: `${ELEMENT_ICONS.GRASS}${ELEMENT_ICONS.FAIRY}`,
     elements: ['GRASS', 'FAIRY', 'PHYSICAL'],
     description: 'Thung lũng ngập tràn sức sống cỏ cây với Mộc Tinh Chiến Binh, Tiên Linh Hoa Gió và Rùa Rêu Suối Nguồn.'
   }

@@ -1,18 +1,21 @@
+import { UI_ICONS } from '../../config/ui/icons/index.js';
+import { ELEMENT_ICONS } from '../../config/elements.config.js';
+
 export class CodexImbue {
   public getBuildingImbueCategoryHtml(): string {
     return `
       <!-- Banner Giới Thiệu Cơ Chế Gắn Nguyên Tố -->
       <div class="sp-section sp-card" style="border-left: 5px solid #f59e0b; background: linear-gradient(90deg, #241808 0%, #121b2d 100%);">
         <div class="sp-sec-header">
-          <h4 class="sp-sec-title" style="color: #facc15; margin-bottom: 0;">🔮 CƠ CHẾ TRANG BỊ NGUYÊN TỐ (ELEMENTAL IMBUE)</h4>
+          <h4 class="sp-sec-title" style="color: #facc15; margin-bottom: 0;">${UI_ICONS.ORB} CƠ CHẾ TRANG BỊ NGUYÊN TỐ (ELEMENTAL IMBUE)</h4>
           <span class="sp-hint">Chi phí: 40 Vàng / khe (Khe 2 Phù Thủy: 50 Vàng)</span>
         </div>
         <p class="sp-desc" style="margin-bottom: 8px;">
           Trong Stick Vanguard, hệ thống trang bị nguyên tố hoạt động <b>hoàn toàn độc lập với cấp độ nâng cấp của tháp</b>. Bạn có thể yểm phép nguyên tố ngay từ Cấp 1, và khi nâng cấp tháp lên Cấp 2, 3, 4, nguyên tố đã gắn <b>vẫn được bảo toàn nguyên vẹn</b>!
         </p>
         <div class="sp-mechanic-box" style="border-left-color: #f59e0b;">
-          <p><b>✨ Sát Thương Hỗn Hợp (Hybrid Damage):</b> Tháp Cung, Pháo Cối và Nhà Lính gây 100% Sát thương Vật lý cơ bản + <b>45% Sát thương Phép Nguyên Tố cộng thêm</b>. Nếu quái miễn nhiễm Vật lý (như Khổng Lồ Đá), phần sát thương Phép vẫn gây đủ sát thương!</p>
-          <p class="sp-tip-text">💡 Bạn có thể đổi sang nguyên tố khác bất cứ lúc nào trong trận để khắc chế chính xác hệ của đợt quái sắp tràn vào!</p>
+          <p><b>${UI_ICONS.SPARKLES} Sát Thương Hỗn Hợp (Hybrid Damage):</b> Tháp Cung, Pháo Cối và Nhà Lính gây 100% Sát thương Vật lý cơ bản + <b>45% Sát thương Phép Nguyên Tố cộng thêm</b>. Nếu quái miễn nhiễm Vật lý (như Khổng Lồ Đá), phần sát thương Phép vẫn gây đủ sát thương!</p>
+          <p class="sp-tip-text">${UI_ICONS.BULB} Bạn có thể đổi sang nguyên tố khác bất cứ lúc nào trong trận để khắc chế chính xác hệ của đợt quái sắp tràn vào!</p>
         </div>
       </div>
 
@@ -21,7 +24,7 @@ export class CodexImbue {
         <!-- 1. BARRACKS / NHÀ LÍNH -->
         <div class="imbue-building-card">
           <div class="imbue-building-header">
-            <span class="imbue-building-icon">🛡️</span>
+            <span class="imbue-building-icon">${UI_ICONS.SHIELD}</span>
             <div>
               <h3>1. Trại Dân Quân (Barracks)</h3>
               <span class="sp-hint">Ban Phước Nguyên Tố Lên Cả 3 Chiến Binh</span>
@@ -34,16 +37,16 @@ export class CodexImbue {
 
           <div class="imbue-synergy-list">
             <div class="imbue-synergy-item" style="border-left-color: #fef08a">
-              <b>✨ Ánh Sáng (Light) - Bí Thuật Bất Tử:</b> Mỗi đòn đánh của lính <b>tự động hồi phục +5 HP</b> cho bản thân. Lính đánh gần trở thành bức tường thành không thể xuyên thủng!
+              <b>${ELEMENT_ICONS.LIGHT} Ánh Sáng (Light) - Bí Thuật Bất Tử:</b> Mỗi đòn đánh của lính <b>tự động hồi phục +5 HP</b> cho bản thân. Lính đánh gần trở thành bức tường thành không thể xuyên thủng!
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #06b6d4">
-              <b>❄️ Băng (Ice) - Chốt Chặn Băng Giá:</b> Đòn đánh làm chậm quái 45% và có <b>25% tỉ lệ Đóng Băng 0.6s</b>, bắt quái vật đứng im chịu trận.
+              <b>${ELEMENT_ICONS.ICE} Băng (Ice) - Chốt Chặn Băng Giá:</b> Đòn đánh làm chậm quái 45% và có <b>25% tỉ lệ Đóng Băng 0.6s</b>, bắt quái vật đứng im chịu trận.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #f59e0b">
-              <b>⚡ Sét (Lightning) - Sốc Điện Liên Hoàn:</b> Đòn đánh gây choáng 0.35s ngắt đòn quái và phóng tia sét nảy sang kẻ địch bên cạnh gây 35% DMG.
+              <b>${ELEMENT_ICONS.LIGHTNING} Sét (Lightning) - Sốc Điện Liên Hoàn:</b> Đòn đánh gây choáng 0.35s ngắt đòn quái và phóng tia sét nảy sang kẻ địch bên cạnh gây 35% DMG.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #ef4444">
-              <b>🔥 Lửa (Fire) - Hỏa Kiếm Thiêu Đốt:</b> Thiêu đốt quái nhận thêm DoT rút máu liên tục mỗi 0.5s bỏ qua giáp phòng thủ.
+              <b>${ELEMENT_ICONS.FIRE} Lửa (Fire) - Hỏa Kiếm Thiêu Đốt:</b> Thiêu đốt quái nhận thêm DoT rút máu liên tục mỗi 0.5s bỏ qua giáp phòng thủ.
             </div>
           </div>
         </div>
@@ -51,7 +54,7 @@ export class CodexImbue {
         <!-- 2. ARCHER / THÁP CUNG -->
         <div class="imbue-building-card">
           <div class="imbue-building-header">
-            <span class="imbue-building-icon">🏹</span>
+            <span class="imbue-building-icon">${UI_ICONS.BOW}</span>
             <div>
               <h3>2. Tháp Cung Thủ (Archer Tower)</h3>
               <span class="sp-hint">Bắn Tỉa Tốc Độ Cao Kích Hoạt Hiệu Ứng Nhanh</span>
@@ -64,16 +67,16 @@ export class CodexImbue {
 
           <div class="imbue-synergy-list">
             <div class="imbue-synergy-item" style="border-left-color: #06b6d4">
-              <b>❄️ Cung Băng (Frost Snipe):</b> Giữ hiệu ứng làm chậm và đóng băng liên tục lên các mục tiêu chạy nhanh hoặc thủy quái bơi tốc độ cao.
+              <b>${ELEMENT_ICONS.ICE} Cung Băng (Frost Snipe):</b> Giữ hiệu ứng làm chậm và đóng băng liên tục lên các mục tiêu chạy nhanh hoặc thủy quái bơi tốc độ cao.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #8b5cf6">
-              <b>🌑 Cung Hắc Ám (Curse Mark):</b> Gắn dấu ấn Nguyền Rủa lên quái khiến chúng nhận thêm <b>+35% sát thương từ tất cả các tháp đồng minh khác</b>!
+              <b>${ELEMENT_ICONS.DARK} Cung Hắc Ám (Curse Mark):</b> Gắn dấu ấn Nguyền Rủa lên quái khiến chúng nhận thêm <b>+35% sát thương từ tất cả các tháp đồng minh khác</b>!
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #94a3b8">
-              <b>⚔️ Cung Thép (Armor Sunder):</b> Bắn phá nát giáp sắt của Golem và quái bọc thép, tăng thêm <b>+30% sát thương nhận vào</b>.
+              <b>${ELEMENT_ICONS.STEEL} Cung Thép (Armor Sunder):</b> Bắn phá nát giáp sắt của Golem và quái bọc thép, tăng thêm <b>+30% sát thương nhận vào</b>.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #10b981">
-              <b>🌪️ Cung Gió (Wind Gale):</b> Đẩy lùi quái ngược lộ trình tiến công với tỉ lệ cao (55% quái bay / 25% quái bộ)!
+              <b>${ELEMENT_ICONS.WIND} Cung Gió (Wind Gale):</b> Đẩy lùi quái ngược lộ trình tiến công với tỉ lệ cao (55% quái bay / 25% quái bộ)!
             </div>
           </div>
         </div>
@@ -81,7 +84,7 @@ export class CodexImbue {
         <!-- 3. MAGE / THÁP PHÙ THỦY -->
         <div class="imbue-building-card" style="border-color: #a855f7;">
           <div class="imbue-building-header">
-            <span class="imbue-building-icon">🔮</span>
+            <span class="imbue-building-icon">${UI_ICONS.ORB}</span>
             <div>
               <h3>3. Tháp Phù Thủy (Mage Tower)</h3>
               <span class="sp-hint" style="color: #c084fc;">ĐẶC QUYỀN SONG NGUYÊN TỐ (2 Khe Độc Lập)</span>
@@ -96,16 +99,16 @@ export class CodexImbue {
 
           <div class="imbue-synergy-list">
             <div class="imbue-synergy-item" style="border-left-color: #a855f7">
-              <b>💥 Combo Hỏa Ngục (Lửa + Sét):</b> Vừa thiêu đốt DoT diện rộng vừa giật tia sét choáng hàng loạt quái vật tập trung.
+              <b>${UI_ICONS.EXPLOSION} Combo Hỏa Ngục (Lửa + Sét):</b> Vừa thiêu đốt DoT diện rộng vừa giật tia sét choáng hàng loạt quái vật tập trung.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #3b82f6">
-              <b>🌊 Bão Tuyết Vĩnh Cửu (Nước + Băng):</b> Làm ướt quái vật rồi đóng băng ngay lập tức với tỉ lệ cực cao, kìm hãm hoàn toàn đợt tràn quái.
+              <b>${UI_ICONS.WAVE} Bão Tuyết Vĩnh Cửu (Nước + Băng):</b> Làm ướt quái vật rồi đóng băng ngay lập tức với tỉ lệ cực cao, kìm hãm hoàn toàn đợt tràn quái.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #f97316">
-              <b>🌟 Đột Phá 4-A (Bão Tố Ma Pháp):</b> Vùng bão tố xoáy sát thương liên tục mỗi giây nhận trọn vẹn cả 2 hệ nguyên tố đã gắn.
+              <b>${UI_ICONS.STAR} Đột Phá 4-A (Bão Tố Ma Pháp):</b> Vùng bão tố xoáy sát thương liên tục mỗi giây nhận trọn vẹn cả 2 hệ nguyên tố đã gắn.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #ec4899">
-              <b>🌟 Đột Phá 4-B (Hào Quang Khởi Nguyên):</b> Tự động <b>BUFF CẢ 2 NGUYÊN TỐ NÀY</b> cho công trình đồng minh gần nhất!
+              <b>${UI_ICONS.STAR} Đột Phá 4-B (Hào Quang Khởi Nguyên):</b> Tự động <b>BUFF CẢ 2 NGUYÊN TỐ NÀY</b> cho công trình đồng minh gần nhất!
             </div>
           </div>
         </div>
@@ -113,7 +116,7 @@ export class CodexImbue {
         <!-- 4. ARTILLERY / PHÁO CỐI -->
         <div class="imbue-building-card">
           <div class="imbue-building-header">
-            <span class="imbue-building-icon">💣</span>
+            <span class="imbue-building-icon">${UI_ICONS.BOMB}</span>
             <div>
               <h3>4. Pháo Cối (Artillery)</h3>
               <span class="sp-hint">Công Phá Diện Rộng Mặt Đất & Kênh Sông</span>
@@ -126,16 +129,16 @@ export class CodexImbue {
 
           <div class="imbue-synergy-list">
             <div class="imbue-synergy-item" style="border-left-color: #ef4444">
-              <b>🔥 Pháo Lửa (Napalm Barrage):</b> Tạo biển lửa bùng nổ, thiêu đốt DoT cùng lúc cả đàn quái đi bộ tụ tập, quét sạch đội hình địch đông đúc.
+              <b>${ELEMENT_ICONS.FIRE} Pháo Lửa (Napalm Barrage):</b> Tạo biển lửa bùng nổ, thiêu đốt DoT cùng lúc cả đàn quái đi bộ tụ tập, quét sạch đội hình địch đông đúc.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #06b6d4">
-              <b>❄️ Pháo Băng (Blizzard Impact):</b> Làm chậm 45% toàn bộ binh đoàn địch trong bán kính nổ, bẻ gãy đợt tràn quái quy mô lớn.
+              <b>${ELEMENT_ICONS.ICE} Pháo Băng (Blizzard Impact):</b> Làm chậm 45% toàn bộ binh đoàn địch trong bán kính nổ, bẻ gãy đợt tràn quái quy mô lớn.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #d97706">
-              <b>🪨 Pháo Đất (Địa Chấn Cataclysm):</b> Tăng thêm <b>+20% sát thương trực tiếp lên quái Đi Bộ</b> và gây chấn động làm chậm 35% diện rộng.
+              <b>${ELEMENT_ICONS.EARTH} Pháo Đất (Địa Chấn Cataclysm):</b> Tăng thêm <b>+20% sát thương trực tiếp lên quái Đi Bộ</b> và gây chấn động làm chậm 35% diện rộng.
             </div>
             <div class="imbue-synergy-item" style="border-left-color: #f59e0b">
-              <b>⚡ Pháo Sét (EMP Cluster):</b> Gây choáng hàng loạt quái vật cùng lúc và kích hoạt các tia sét phụ nảy chéo giữa các mục tiêu.
+              <b>${ELEMENT_ICONS.LIGHTNING} Pháo Sét (EMP Cluster):</b> Gây choáng hàng loạt quái vật cùng lúc và kích hoạt các tia sét phụ nảy chéo giữa các mục tiêu.
             </div>
           </div>
         </div>
