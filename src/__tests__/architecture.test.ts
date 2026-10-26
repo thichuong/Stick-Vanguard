@@ -2076,8 +2076,8 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(resBoss1.finalDamage).toBe(300); // 300% of 100
       expect(resBoss1.label).toBe('KHẮC HỆ!');
 
-      // In-game calculation check for Boss 2 (Void Hydra Boss: DRAGON + POISON)
-      // Fairy vs Dragon = 2.0x, Fairy vs Poison = 0.4x -> Combined = 2.0 * 0.4 = 0.8x
+      // In-game calculation check for Boss 2 (Void Hydra Boss: DARK + POISON)
+      // Fairy vs Dark = 1.75x, Fairy vs Poison = 0.4x -> Combined = 1.75 * 0.4 = 0.7x
       const boss2: EnemyEntity = {
         ...boss1,
         id: 'b2',
@@ -2093,9 +2093,9 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
         boss2
       );
       expect(resBoss2.isImmune).toBe(false);
-      expect(resBoss2.multiplier).toBe(0.8);
-      expect(resBoss2.finalDamage).toBe(80); // 80% of 100
-      expect(resBoss2.label).toBeUndefined(); // 0.8 is slight resistance, no floating battle text banner
+      expect(resBoss2.multiplier).toBe(0.7);
+      expect(resBoss2.finalDamage).toBe(70); // 70% of 100
+      expect(resBoss2.label).toBeUndefined(); // 0.7 is slight resistance, no floating battle text banner
 
       // CodexEnemies verification
       const { CodexEnemies } = await import('../ui/codex/CodexEnemies.js');
@@ -2106,8 +2106,8 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(intakeBoss1.category).toBe('SUPER_WEAK');
 
       const intakeBoss2 = codex.calculateDamageIntake(boss2Bp, 'FAIRY');
-      expect(intakeBoss2.multiplier).toBe(0.8);
-      expect(intakeBoss2.percentage).toBe(80);
+      expect(intakeBoss2.multiplier).toBe(0.7);
+      expect(intakeBoss2.percentage).toBe(70);
       expect(intakeBoss2.category).toBe('RESIST');
     });
 

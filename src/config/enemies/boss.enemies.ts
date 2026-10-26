@@ -209,7 +209,7 @@ export const BOSS_ENEMIES: Record<string, EnemyBlueprint> = {
   'VOID_HYDRA_BOSS': {
     typeId: 'VOID_HYDRA_BOSS',
     name: 'Trùm Mãng Xà Hư Không',
-    description: 'Đại Trùm Mặt Đất! Hệ Rồng + Độc (DRAGON + POISON). Mãng xà 3 đầu uốn lượn, vừa triệu hồi quái và phân tách khi bị tiêu diệt, vừa liên tục hồi máu và tạo giáp ảo.',
+    description: 'Đại Trùm Mặt Đất! Hệ Hắc Ám + Độc (DARK + POISON). Mãng xà 3 đầu uốn lượn, vừa triệu hồi quái và phân tách khi bị tiêu diệt, vừa liên tục hồi máu và tạo giáp ảo.',
     hp: 3000,
     speed: 30,
     damage: 60,
@@ -218,9 +218,9 @@ export const BOSS_ENEMIES: Record<string, EnemyBlueprint> = {
     movementType: 'WALK',
     navigationMode: 'GROUND_PATH',
     elementalProfile: {
-      primaryElement: 'DRAGON',
+      primaryElement: 'DARK',
       secondaryElement: 'POISON',
-      immunities: ['POISON', 'FIRE'],
+      immunities: ['POISON', 'DARK'],
     },
     tags: ['BOSS', 'SUMMONER', 'SPLITTER', 'HEALER', 'SABOTEUR'],
     altitude: 0,
