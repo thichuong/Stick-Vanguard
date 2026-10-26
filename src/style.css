@@ -36,9 +36,35 @@ html, body {
   height: 1.35em;
 }
 
+.elem-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.elem-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.elem-icon-huge {
+  width: 180px;
+  height: 180px;
+  font-size: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+  margin-left: auto;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
 .elem-icon-huge .elem-svg-icon {
-  width: 1em;
-  height: 1em;
+  width: 160px;
+  height: 160px;
 }
 
 .le-icon .elem-svg-icon {

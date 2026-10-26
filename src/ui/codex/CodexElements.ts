@@ -522,13 +522,13 @@ export class CodexElements {
       <!-- 1. Hero Dossier Card -->
       <div class="sp-section sp-card highlighted-detail-card" style="border-left: 6px solid ${color};">
         <div class="elem-detail-header">
-          <span class="elem-icon-huge" style="color: ${color}">${icon}</span>
-          <div>
+          <div class="elem-detail-info">
             <h2 class="elem-detail-title" style="color: ${color}">Hệ ${def.nameVi} (${elem})</h2>
             <span class="elem-detail-role">${def.badge}</span>
+            <p class="elem-detail-desc">${def.nature}</p>
           </div>
+          <span class="elem-icon-huge" style="color: ${color}; background: ${color}18; border-color: ${color}40;">${icon}</span>
         </div>
-        <p class="elem-detail-desc">${def.nature}</p>
 
         <!-- Status Effect & Mechanics Highlights -->
         <div class="elem-effect-box" style="border-left-color: ${color}; margin-top: 14px;">
