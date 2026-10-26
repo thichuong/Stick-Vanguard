@@ -2026,6 +2026,166 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(dmgAwed).toBe(23);
     });
 
+    it('Monster hybrid damage and summoned unit multiplicative elemental defense mechanism', () => {
+      // 1. Verify getSoldierElements helper
+      const baseSoldier: SoldierEntity = {
+        id: 's-elem',
+        towerId: 't-1',
+        name: 'Hybrid Soldier',
+        x: 0,
+        y: 0,
+        hp: 200,
+        maxHp: 200,
+        damage: 20,
+        attackSpeed: 1,
+        attackCooldown: 0,
+        element: 'FIRE',
+        secondaryElement: 'EARTH',
+        combatMode: 'MELEE',
+        state: 'IDLE',
+        engagedEnemyId: null,
+        rallyPoint: { x: 0, y: 0 },
+        targetPos: { x: 0, y: 0 },
+        armor: 0.2,
+        magicResist: 0.1,
+        respawnTimer: 0,
+        respawnDelay: 8,
+        tier: 4,
+        buffedElements: ['FIRE', 'STEEL'], // FIRE is duplicate of base element
+        baseMaxHp: 200,
+        baseDamage: 20,
+        baseArmor: 0.2
+      };
+
+      const elements = TargetingRuleEngine.getSoldierElements(baseSoldier);
+      expect(elements).toEqual(['FIRE', 'EARTH', 'STEEL']); // Deduplicated
+
+      // Spirit soldier gets GHOST element
+      const spiritSoldier: SoldierEntity = {
+        ...baseSoldier,
+        isSpirit: true,
+        buffedElements: []
+      };
+      const spiritElements = TargetingRuleEngine.getSoldierElements(spiritSoldier);
+      expect(spiritElements).toContain('GHOST');
+
+      // 2. Multiplicative defense calculation with buffs:
+      // Soldier with GRASS + STEEL taking FIRE attack:
+      // FIRE vs GRASS = 2.0, FIRE vs STEEL = 1.75 -> Combined = 2.0 * 1.75 = 3.5 -> Clamped to 3.0
+      const grassSteelSoldier: SoldierEntity = {
+        ...baseSoldier,
+        element: 'GRASS',
+        secondaryElement: undefined,
+        buffedElements: ['STEEL'],
+        armor: 0.1,
+        magicResist: 0.2
+      };
+      const defMult = TargetingRuleEngine.calculateSoldierDefensiveMultiplier('FIRE', grassSteelSoldier);
+      expect(defMult.matchupMult).toBe(3.0); // Clamped to 3.0
+      expect(defMult.reduction).toBe(0.2); // Magic attack uses magicResist
+      expect(defMult.intakeRatio).toBe(Math.round(3.0 * 0.8 * 100) / 100); // 2.4
+
+      // Soldier with WIND + ICE taking FIRE attack (unclamped test):
+      // FIRE vs WIND = 1.3, FIRE vs ICE = 1.75 -> Combined = 1.3 * 1.75 = 2.275 -> 2.28
+      const windIceSoldier: SoldierEntity = {
+        ...baseSoldier,
+        element: 'WIND',
+        secondaryElement: 'ICE',
+        buffedElements: [],
+        armor: 0.1,
+        magicResist: 0.15
+      };
+      const defMultUnclamped = TargetingRuleEngine.calculateSoldierDefensiveMultiplier('FIRE', windIceSoldier);
+      expect(defMultUnclamped.matchupMult).toBe(2.28);
+      expect(defMultUnclamped.reduction).toBe(0.15);
+      expect(defMultUnclamped.intakeRatio).toBe(Math.round(2.28 * 0.85 * 100) / 100);
+
+      // 3. Multi-element enemy (Hybrid Damage) with secondary damage equal to primary base damage:
+      // Enemy with FIRE (primary) and EARTH (secondary), damage = 50.
+      const hybridEnemy: EnemyEntity = {
+        id: 'e-hybrid',
+        typeId: 'HYBRID_TEST',
+        name: 'Hybrid Elemental Boss',
+        x: 0,
+        y: 0,
+        hp: 500,
+        maxHp: 500,
+        speed: 40,
+        baseSpeed: 40,
+        damage: 50,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 50,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 0,
+        pathTotalLength: 500,
+        elementalProfile: {
+          primaryElement: 'FIRE',
+          secondaryElement: 'EARTH',
+          immunities: []
+        },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 24,
+        facing: 0
+      };
+
+      // Attacking Grass soldier (GRASS element, 0% armor, 10% magicResist)
+      const grassSoldier: SoldierEntity = {
+        ...baseSoldier,
+        element: 'GRASS',
+        secondaryElement: undefined,
+        buffedElements: [],
+        armor: 0,
+        magicResist: 0.1
+      };
+
+      const result = TargetingRuleEngine.calculateEnemyDamageToSoldierDetailed(hybridEnemy, grassSoldier);
+      // Primary: FIRE vs GRASS = 2.0x. 50 * 2.0 * (1 - 0.1) = 90
+      expect(result.primaryElement).toBe('FIRE');
+      expect(result.primaryDamage).toBe(90);
+
+      // Secondary: EARTH vs GRASS = 0.5x. Base is 50 (equal to primary). 50 * 0.5 * (1 - 0.1) = 22.5 -> 23
+      expect(result.secondaryElement).toBe('EARTH');
+      expect(result.secondaryDamage).toBe(23);
+
+      // Total damage = 90 + 23 = 113
+      expect(result.finalDamage).toBe(113);
+      expect(TargetingRuleEngine.calculateEnemyDamageToSoldier(hybridEnemy, grassSoldier)).toBe(113);
+
+      // 4. Verify Physical Armor vs Magic Resist separation in hybrid monster attack:
+      // Enemy with PHYSICAL (primary) and FIRE (secondary), damage = 40.
+      const physicalFireEnemy: EnemyEntity = {
+        ...hybridEnemy,
+        damage: 40,
+        elementalProfile: {
+          primaryElement: 'PHYSICAL',
+          secondaryElement: 'FIRE',
+          immunities: []
+        }
+      };
+      // Defender: PHYSICAL soldier with 30% Armor and 10% Magic Resist
+      const defender: SoldierEntity = {
+        ...baseSoldier,
+        element: 'PHYSICAL',
+        secondaryElement: undefined,
+        buffedElements: [],
+        armor: 0.3,
+        magicResist: 0.1
+      };
+
+      const splitResult = TargetingRuleEngine.calculateEnemyDamageToSoldierDetailed(physicalFireEnemy, defender);
+      // Primary PHYSICAL: 40 * 1.0 * (1 - 0.30 armor) = 28
+      expect(splitResult.primaryDamage).toBe(28);
+      // Secondary FIRE: 40 * 1.0 * (1 - 0.10 magicResist) = 36
+      expect(splitResult.secondaryDamage).toBe(36);
+      expect(splitResult.finalDamage).toBe(64);
+    });
+
     it('DARK_DRAGON_BOSS and VOID_HYDRA_BOSS damage calculated strictly via Elemental Matrix and Dual-Element principles', async () => {
       const boss1Bp = ENEMY_BLUEPRINTS['DARK_DRAGON_BOSS'];
       const boss2Bp = ENEMY_BLUEPRINTS['VOID_HYDRA_BOSS'];

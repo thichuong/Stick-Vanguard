@@ -380,74 +380,40 @@ export class SummonedUnitDetailModal {
       tacticalNote: string;
     }> = [];
 
-    const armorReduct = Math.min(0.9, Math.max(0, soldier.armor || 0));
-    const magicResistReduct = Math.min(0.9, Math.max(0, soldier.magicResist || 0.1));
-
     for (const atkElem of ALL_15_ELEMENTS) {
-      if (atkElem === 'PHYSICAL') {
-        // Physical attacks from enemies: mitigated only by soldier.armor
-        const intake = 1 - armorReduct;
-        const intakePct = Math.round(intake * 100);
-        let category: 'SUPER_WEAK' | 'WEAK' | 'NORMAL' | 'RESIST' | 'IMMUNE' = 'NORMAL';
-        let verdictLabel = 'Chuẩn';
-        if (intakePct <= 40) {
-          category = 'RESIST';
-          verdictLabel = 'Giáp Dày (Kháng Tốt)';
-        } else if (intakePct <= 75) {
-          category = 'RESIST';
-          verdictLabel = 'Giảm Đáng Kể';
-        }
-
-        defensiveRows.push({
-          attackerElem: 'PHYSICAL',
-          matchupMult: 1.0,
-          armorOrResistReduction: armorReduct,
-          actualIntakeRatio: intake,
-          category,
-          verdictLabel,
-          tacticalNote: `Giáp vật lý ${Math.round(armorReduct * 100)}% trực tiếp triệt tiêu ${Math.round(armorReduct * 100)}% sát thương vật lý của quái.`
-        });
-        continue;
-      }
-
-      // Magical attacks: calculate elemental matchup from matrix against soldier defense profile
-      const defProfile = {
-        primaryElement: soldier.element || 'PHYSICAL',
-        secondaryElement: soldier.secondaryElement || undefined,
-        immunities: []
-      };
-
-      const matchMult = TargetingRuleEngine.calculateElementalMatchup(atkElem, defProfile);
-      const afterResist = matchMult * (1 - magicResistReduct);
-      const pct = Math.round(afterResist * 100);
+      const { matchupMult, reduction, intakeRatio } =
+        TargetingRuleEngine.calculateSoldierDefensiveMultiplier(atkElem, soldier);
+      const pct = Math.round(intakeRatio * 100);
 
       let category: 'SUPER_WEAK' | 'WEAK' | 'NORMAL' | 'RESIST' | 'IMMUNE' = 'NORMAL';
       let verdictLabel = 'Chuẩn (100%)';
-      let tacticalNote = `Nhận sát thương chuẩn từ chiêu thức ${ELEMENT_NAMES[atkElem]}.`;
+      let tacticalNote = atkElem === 'PHYSICAL'
+        ? `Giáp vật lý ${Math.round(reduction * 100)}% trực tiếp triệt tiêu ${Math.round(reduction * 100)}% sát thương vật lý của quái.`
+        : `Nhận sát thương chuẩn từ chiêu thức ${ELEMENT_NAMES[atkElem]}.`;
 
-      if (matchMult === 0) {
+      if (matchupMult === 0) {
         category = 'IMMUNE';
         verdictLabel = 'Miễn Nhiễm (0%)';
         tacticalNote = 'Đơn vị hoàn toàn không chịu sát thương từ hệ này!';
-      } else if (afterResist >= 1.4) {
+      } else if (intakeRatio >= 1.4) {
         category = 'SUPER_WEAK';
-        verdictLabel = `Khắc Tinh (x${matchMult})`;
+        verdictLabel = `Khắc Tinh (x${matchupMult})`;
         tacticalNote = `Nguy hiểm! Hệ ${ELEMENT_NAMES[atkElem]} là khắc tinh của đơn vị (nhận ${pct}% sát thương).`;
-      } else if (afterResist > 1.05) {
+      } else if (intakeRatio > 1.05) {
         category = 'WEAK';
-        verdictLabel = `Điểm Yếu (x${matchMult})`;
+        verdictLabel = `Điểm Yếu (x${matchupMult})`;
         tacticalNote = `Chú ý: Quái vật hệ ${ELEMENT_NAMES[atkElem]} gây thêm sát thương lên hệ của đơn vị.`;
-      } else if (afterResist < 0.75) {
+      } else if (intakeRatio < 0.75) {
         category = 'RESIST';
-        verdictLabel = `Kháng Cự (x${matchMult})`;
-        tacticalNote = `Ưu thế phòng ngự: Giảm mạnh lượng sát thương phép nhận vào còn ${pct}%.`;
+        verdictLabel = `Kháng Cự (x${matchupMult})`;
+        tacticalNote = `Ưu thế phòng ngự: Giảm mạnh lượng sát thương nhận vào còn ${pct}%.`;
       }
 
       defensiveRows.push({
         attackerElem: atkElem,
-        matchupMult: matchMult,
-        armorOrResistReduction: magicResistReduct,
-        actualIntakeRatio: afterResist,
+        matchupMult,
+        armorOrResistReduction: reduction,
+        actualIntakeRatio: intakeRatio,
         category,
         verdictLabel,
         tacticalNote

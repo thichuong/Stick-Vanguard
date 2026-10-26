@@ -25,6 +25,16 @@ export interface DamageCalculationResult {
   secondaryDamage?: number;
 }
 
+export interface EnemyToSoldierDamageResult {
+  finalDamage: number;
+  primaryDamage: number;
+  secondaryDamage: number;
+  primaryElement: ElementType;
+  secondaryElement?: ElementType;
+  multiplier: number;
+  label?: string; // 'KHẮC HỆ!' | 'KHÁNG!'
+}
+
 export class TargetingRuleEngine {
   public static globalDamageMultiplier: number = 1.0;
 
@@ -731,19 +741,123 @@ export class TargetingRuleEngine {
   }
 
   /**
+   * Retrieves unique elements active on a summoned unit (including base, secondary, spirit, and buffs)
+   */
+  public static getSoldierElements(soldier: SoldierEntity): ElementType[] {
+    const elements: ElementType[] = [];
+    if (soldier.element) elements.push(soldier.element);
+    else elements.push('PHYSICAL');
+
+    if (soldier.secondaryElement) {
+      elements.push(soldier.secondaryElement);
+    }
+    if (soldier.isSpirit && !elements.includes('GHOST')) {
+      elements.push('GHOST');
+    }
+    if (soldier.buffedElements && soldier.buffedElements.length > 0) {
+      for (const bElem of soldier.buffedElements) {
+        if (bElem) elements.push(bElem);
+      }
+    }
+    return Array.from(new Set(elements));
+  }
+
+  /**
+   * Calculates defensive multiplier and mitigation for a soldier taking damage from an attacker element
+   */
+  public static calculateSoldierDefensiveMultiplier(
+    attackerElem: ElementType,
+    soldier: SoldierEntity
+  ): {
+    matchupMult: number;
+    reduction: number;
+    intakeRatio: number;
+  } {
+    const soldierElements = this.getSoldierElements(soldier);
+    let matchupMult = 1.0;
+
+    for (const sElem of soldierElements) {
+      const m = ELEMENTAL_MATCHUPS[attackerElem]?.[sElem] ?? 1.0;
+      matchupMult *= m;
+    }
+
+    matchupMult = Math.round(Math.min(3.0, Math.max(0.1, matchupMult)) * 100) / 100;
+
+    const reduction = attackerElem === 'PHYSICAL'
+      ? Math.min(0.9, Math.max(0, soldier.armor || 0))
+      : Math.min(0.9, Math.max(0, soldier.magicResist || 0));
+
+    const intakeRatio = Math.round(matchupMult * (1 - reduction) * 100) / 100;
+
+    return { matchupMult, reduction, intakeRatio };
+  }
+
+  /**
+   * Standardized detailed calculation for damage dealt by an Enemy to a Soldier.
+   * Supports hybrid elemental attacks, secondary element scaling equal to primary element,
+   * and multiplicative defense intake across all active soldier elements (including buffs).
+   */
+  public static calculateEnemyDamageToSoldierDetailed(
+    enemy: EnemyEntity,
+    soldier: SoldierEntity
+  ): EnemyToSoldierDamageResult {
+    const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
+    const dragonStats = ALL_ELEMENT_DEFINITIONS.DRAGON?.combatStats;
+    let baseEnemyDmg = enemy.damage;
+    if (hasDragonAwe) {
+      baseEnemyDmg *= 1 - (dragonStats?.enemyDamageReduction ?? 0.25);
+    }
+
+    const primaryElement = enemy.elementalProfile.primaryElement || 'PHYSICAL';
+    const primaryDefense = this.calculateSoldierDefensiveMultiplier(primaryElement, soldier);
+    const primaryDamage = Math.max(
+      1,
+      Math.round(baseEnemyDmg * primaryDefense.matchupMult * (1 - primaryDefense.reduction))
+    );
+
+    let secondaryDamage = 0;
+    const secondaryElement = enemy.elementalProfile.secondaryElement;
+
+    if (secondaryElement) {
+      // Secondary damage base is equal to primary damage base (baseEnemyDmg)
+      const secondaryDefense = this.calculateSoldierDefensiveMultiplier(secondaryElement, soldier);
+      secondaryDamage = Math.max(
+        1,
+        Math.round(baseEnemyDmg * secondaryDefense.matchupMult * (1 - secondaryDefense.reduction))
+      );
+    }
+
+    const finalDamage = primaryDamage + secondaryDamage;
+    const totalBaseDmg = secondaryElement ? baseEnemyDmg * 2 : baseEnemyDmg;
+    const combinedMultiplier = totalBaseDmg > 0 ? finalDamage / totalBaseDmg : 1.0;
+
+    let label: string | undefined;
+    if (combinedMultiplier >= 1.4) {
+      label = 'KHẮC HỆ!';
+    } else if (combinedMultiplier <= 0.6) {
+      label = 'KHÁNG!';
+    }
+
+    return {
+      finalDamage,
+      primaryDamage,
+      secondaryDamage,
+      primaryElement,
+      secondaryElement,
+      multiplier: combinedMultiplier,
+      label
+    };
+  }
+
+  /**
    * Standardized calculation for damage dealt by an Enemy to a Soldier
-   * Incorporates debuffs (e.g. DRAGON_AWE) and soldier armor mitigation
+   * Incorporates debuffs (e.g. DRAGON_AWE), elemental matchups, and soldier mitigation
    */
   public static calculateEnemyDamageToSoldier(
     enemy: EnemyEntity,
     soldier: SoldierEntity
   ): number {
-    const hasDragonAwe = enemy.statusEffects.some((s) => s.type === 'DRAGON_AWE');
-    const dragonStats = ALL_ELEMENT_DEFINITIONS.DRAGON?.combatStats;
-    let enemyDamage = enemy.damage;
-    if (hasDragonAwe) enemyDamage *= 1 - (dragonStats?.enemyDamageReduction ?? 0.25);
-    const rawDmg = enemyDamage * (1 - soldier.armor);
-    return Math.max(1, Math.round(rawDmg));
+    return this.calculateEnemyDamageToSoldierDetailed(enemy, soldier).finalDamage;
   }
 
   /**

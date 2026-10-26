@@ -271,8 +271,8 @@ export class CombatSystem {
               const atkMult = TargetingRuleEngine.getEnemyAttackSpeedMultiplier(currentEnemy);
               currentEnemy.attackCooldown = 1 / Math.max(0.1, currentEnemy.attackSpeed * atkMult);
 
-              const takenDmg = TargetingRuleEngine.calculateEnemyDamageToSoldier(currentEnemy, soldier);
-              soldier.hp -= takenDmg;
+              const calc = TargetingRuleEngine.calculateEnemyDamageToSoldierDetailed(currentEnemy, soldier);
+              soldier.hp -= calc.finalDamage;
 
               onCombatEvent({
                 type: 'MELEE_HIT',
@@ -280,9 +280,10 @@ export class CombatSystem {
                 targetId: soldier.id,
                 x: soldier.x,
                 y: soldier.y,
-                damage: takenDmg,
+                damage: calc.finalDamage,
                 isImmune: false,
-                element: 'PHYSICAL'
+                label: calc.label,
+                element: calc.secondaryElement || calc.primaryElement
               });
 
               if (soldier.hp <= 0) {
@@ -357,17 +358,18 @@ export class CombatSystem {
           if (enemy.attackCooldown <= 0) {
             const atkMult = TargetingRuleEngine.getEnemyAttackSpeedMultiplier(enemy);
             enemy.attackCooldown = 1 / Math.max(0.1, enemy.attackSpeed * atkMult);
-            const takenDmg = TargetingRuleEngine.calculateEnemyDamageToSoldier(enemy, soldier);
-            soldier.hp -= takenDmg;
+            const calc = TargetingRuleEngine.calculateEnemyDamageToSoldierDetailed(enemy, soldier);
+            soldier.hp -= calc.finalDamage;
             onCombatEvent({
               type: 'MELEE_HIT',
               sourceId: enemy.id,
               targetId: soldier.id,
               x: soldier.x,
               y: soldier.y,
-              damage: takenDmg,
+              damage: calc.finalDamage,
               isImmune: false,
-              element: 'PHYSICAL'
+              label: calc.label,
+              element: calc.secondaryElement || calc.primaryElement
             });
             if (soldier.hp <= 0) {
               soldier.state = 'DEAD';
