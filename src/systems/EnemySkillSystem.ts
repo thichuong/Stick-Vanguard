@@ -5,6 +5,7 @@ import { NavigationSystem } from './NavigationSystem.js';
 import { WaveSystem } from './WaveSystem.js';
 import { SoundSystem } from './SoundSystem.js';
 import { SpatialIndex } from '../core/SpatialIndex.js';
+import { WasmBridge } from '../core/WasmBridge.js';
 
 export class EnemySkillSystem {
   private static auraCandidates: EnemyEntity[] = [];
@@ -76,7 +77,12 @@ export class EnemySkillSystem {
             const pathInfo = navSystem.getPathInfo(childEnemy.navigationMode, childEnemy.laneIndex ?? 0);
             childEnemy.pathTotalLength = pathInfo.totalLength;
             childEnemy.facing = childNav.facing;
+            childEnemy.prevX = childEnemy.x;
+            childEnemy.prevY = childEnemy.y;
             state.enemies.push(childEnemy);
+            if (WasmBridge.getInstance().isAvailable()) {
+              WasmBridge.getInstance().spawnEnemy(childEnemy);
+            }
             state.addExplosionParticles(childNav.position.x, childNav.position.y, '#f97316', 5);
           }
         }
@@ -123,7 +129,12 @@ export class EnemySkillSystem {
             const pathInfo = navSystem.getPathInfo(minion.navigationMode, minion.laneIndex ?? 0);
             minion.pathTotalLength = pathInfo.totalLength;
             minion.facing = mNav.facing;
+            minion.prevX = minion.x;
+            minion.prevY = minion.y;
             allEnemies.push(minion);
+            if (WasmBridge.getInstance().isAvailable()) {
+              WasmBridge.getInstance().spawnEnemy(minion);
+            }
           }
         }
         break;

@@ -154,7 +154,10 @@ export class WasmBridge {
       enemy.size,
       enemy.altitude,
       hpRatio,
-      stateInt
+      stateInt,
+      enemy.x,
+      enemy.y,
+      enemy.facing || 0
     );
   }
 

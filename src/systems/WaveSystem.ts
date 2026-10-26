@@ -248,7 +248,7 @@ export class WaveSystem {
         this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
           ? this.currentMap.waterLanes.length
           : 1;
-      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.waterLaneIndex++ % waterLanesCount;
+      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.waterLaneIndex++) % waterLanesCount;
       const targetLane = this.currentMap.waterLanes?.[laneIndex];
       const spawnPt = targetLane?.[0];
       if (spawnPt && typeof spawnPt === 'object') {
@@ -260,7 +260,7 @@ export class WaveSystem {
         this.currentMap.airLanes && this.currentMap.airLanes.length > 0
           ? this.currentMap.airLanes.length
           : 1;
-      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.airLaneIndex++ % airLanesCount;
+      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.airLaneIndex++) % airLanesCount;
       const targetLane = this.currentMap.airLanes?.[laneIndex];
       const spawnPt = targetLane?.[0];
       if (spawnPt && typeof spawnPt === 'object') {
@@ -272,7 +272,7 @@ export class WaveSystem {
         this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
           ? this.currentMap.groundLanes.length
           : 1;
-      laneIndex = forcedLaneIndex !== undefined ? forcedLaneIndex : this.groundLaneIndex++ % groundLanesCount;
+      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.groundLaneIndex++) % groundLanesCount;
       const targetLane = this.currentMap.groundLanes?.[laneIndex];
       const spawnPt = targetLane?.[0];
       if (spawnPt && typeof spawnPt === 'object') {

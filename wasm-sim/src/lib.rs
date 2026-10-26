@@ -182,16 +182,35 @@ impl SimulationWorld {
         altitude: f32,
         hp_ratio: f32,
         state: u32,
+        init_x: f32,
+        init_y: f32,
+        facing: f32,
     ) {
+        let (x, y, face) = if init_x == 0.0 && init_y == 0.0 {
+            if let Some(path) = Self::resolve_path_lane(&self.ground_lanes, &self.water_lanes, &self.air_lanes, nav_mode, lane_index) {
+                if let Some(seg) = path.segments.first() {
+                    let dx = seg.p2_x - seg.p1_x;
+                    let dy = seg.p2_y - seg.p1_y;
+                    (seg.p1_x, seg.p1_y, dy.atan2(dx))
+                } else {
+                    (0.0, 0.0, 0.0)
+                }
+            } else {
+                (0.0, 0.0, 0.0)
+            }
+        } else {
+            (init_x, init_y, facing)
+        };
+
         let pod = EnemyPod {
             id,
-            x: 0.0,
-            y: 0.0,
-            prev_x: 0.0,
-            prev_y: 0.0,
+            x,
+            y,
+            prev_x: x,
+            prev_y: y,
             speed,
             path_distance,
-            facing: 0.0,
+            facing: face,
             hp_ratio,
             altitude,
             state,
@@ -575,6 +594,9 @@ pub fn spawn_enemy(
     altitude: f32,
     hp_ratio: f32,
     state: u32,
+    init_x: f32,
+    init_y: f32,
+    facing: f32,
 ) {
     WORLD.with(|w| {
         w.borrow_mut().spawn_enemy(
@@ -587,6 +609,9 @@ pub fn spawn_enemy(
             altitude,
             hp_ratio,
             state,
+            init_x,
+            init_y,
+            facing,
         );
     });
 }

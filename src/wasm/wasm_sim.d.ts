@@ -31,7 +31,7 @@ export function remove_enemy(id: number): boolean;
 
 export function set_path(mode: number, lane_index: number, waypoints: Float32Array): void;
 
-export function spawn_enemy(id: number, speed: number, path_distance: number, nav_mode: number, lane_index: number, size: number, altitude: number, hp_ratio: number, state: number): void;
+export function spawn_enemy(id: number, speed: number, path_distance: number, nav_mode: number, lane_index: number, size: number, altitude: number, hp_ratio: number, state: number, init_x: number, init_y: number, facing: number): void;
 
 export function step_simulation(dt: number, anim_time: number): void;
 
@@ -52,13 +52,13 @@ export interface InitOutput {
     readonly remove_enemy: (a: number) => number;
     readonly set_path: (a: number, b: number, c: number, d: number) => void;
     readonly init_world: (a: number, b: number) => void;
-    readonly spawn_enemy: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
     readonly query_radius: (a: number, b: number, c: number) => number;
     readonly clear_enemies: () => void;
     readonly clear_paths: () => void;
     readonly step_simulation: (a: number, b: number) => void;
     readonly find_best_target_in_range: (a: number, b: number, c: number, d: number) => number;
     readonly update_enemy_status: (a: number, b: number, c: number, d: number) => void;
+    readonly spawn_enemy: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_start: () => void;

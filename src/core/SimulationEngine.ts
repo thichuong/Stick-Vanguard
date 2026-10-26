@@ -97,6 +97,7 @@ export class SimulationEngine {
       (newEnemy) => {
         const pathInfo = this.navSystem.getPathInfo(newEnemy.navigationMode, newEnemy.laneIndex ?? 0);
         newEnemy.pathTotalLength = pathInfo.totalLength;
+        this.navSystem.updateEnemyTransform(newEnemy, this.totalAnimTime);
         newEnemy.prevX = newEnemy.x;
         newEnemy.prevY = newEnemy.y;
         this.state.enemies.push(newEnemy);

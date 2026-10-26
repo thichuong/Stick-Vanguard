@@ -32,10 +32,11 @@ export class StickmanRenderer {
     if (enemy.hp <= 0 || enemy.state === 'DEAD') return;
 
     const lod = this.currentLOD;
-    const x = enemy.prevX !== undefined && interpolationAlpha < 1.0
+    const hasTeleport = enemy.prevX !== undefined && enemy.prevY !== undefined && Math.hypot(enemy.x - enemy.prevX, enemy.y - enemy.prevY) > 80;
+    const x = enemy.prevX !== undefined && !hasTeleport && interpolationAlpha < 1.0
       ? enemy.prevX + (enemy.x - enemy.prevX) * interpolationAlpha
       : enemy.x;
-    const y = enemy.prevY !== undefined && interpolationAlpha < 1.0
+    const y = enemy.prevY !== undefined && !hasTeleport && interpolationAlpha < 1.0
       ? enemy.prevY + (enemy.y - enemy.prevY) * interpolationAlpha
       : enemy.y;
 

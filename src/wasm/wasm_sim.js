@@ -130,9 +130,12 @@ export function set_path(mode, lane_index, waypoints) {
  * @param {number} altitude
  * @param {number} hp_ratio
  * @param {number} state
+ * @param {number} init_x
+ * @param {number} init_y
+ * @param {number} facing
  */
-export function spawn_enemy(id, speed, path_distance, nav_mode, lane_index, size, altitude, hp_ratio, state) {
-    wasm.spawn_enemy(id, speed, path_distance, nav_mode, lane_index, size, altitude, hp_ratio, state);
+export function spawn_enemy(id, speed, path_distance, nav_mode, lane_index, size, altitude, hp_ratio, state, init_x, init_y, facing) {
+    wasm.spawn_enemy(id, speed, path_distance, nav_mode, lane_index, size, altitude, hp_ratio, state, init_x, init_y, facing);
 }
 
 /**
