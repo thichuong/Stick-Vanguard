@@ -719,4 +719,99 @@ describe('Defense System Restructure & New Summon Towers', () => {
       (globalThis as any).document = origDoc;
     }
   });
+
+  it('verifies configurable soldierRegen in towers.config for summon healing branches and displays in Codex', async () => {
+    // 1. Configurable in towers.config.ts
+    const bpBarracks4A = TOWER_BLUEPRINTS['BARRACKS_4_A'];
+    const bpDragon4A = TOWER_BLUEPRINTS['DRAGON_NEST_4_A'];
+    const bpFairy4A = TOWER_BLUEPRINTS['FAIRY_TREE_4_A'];
+
+    expect(bpBarracks4A.soldierRegen).toBeDefined();
+    expect(bpBarracks4A.soldierRegen).toBe(15);
+
+    expect(bpDragon4A.soldierRegen).toBeDefined();
+    expect(bpDragon4A.soldierRegen).toBe(15);
+
+    expect(bpFairy4A.soldierRegen).toBeDefined();
+    expect(bpFairy4A.soldierRegen).toBe(15);
+
+    // 2. CombatSystem uses soldierRegen dynamically
+    const injuredSoldier: SoldierEntity = {
+      id: 'inj_soldier',
+      towerId: 'tow_1',
+      name: 'Lính Hộ Vệ',
+      archetype: 'SOLDIER',
+      x: 100,
+      y: 100,
+      hp: 100,
+      maxHp: 480,
+      baseMaxHp: 480,
+      damage: 42,
+      baseDamage: 42,
+      attackSpeed: 1.3,
+      attackCooldown: 0.5,
+      element: 'PHYSICAL',
+      combatMode: 'MELEE',
+      state: 'IDLE',
+      engagedEnemyId: null,
+      rallyPoint: { x: 100, y: 100 },
+      targetPos: { x: 100, y: 100 },
+      armor: 0.65,
+      baseArmor: 0.65,
+      magicResist: 0.1,
+      respawnTimer: 0,
+      respawnDelay: 6,
+      tier: 4,
+      branch: 'A',
+      soldierRegen: 20 // test custom configured regen rate
+    };
+
+    CombatSystem.updateCombat([injuredSoldier], [], 1.0, () => {});
+    // HP was 100, regenerated +20 in 1 second -> 120
+    expect(injuredSoldier.hp).toBeCloseTo(120, 1);
+
+    // 3. CodexSoldiers and CodexBuildings display the exact regen rate
+    const { CodexSoldiers } = await import('../ui/codex/CodexSoldiers.js');
+    const { CodexBuildings } = await import('../ui/codex/CodexBuildings.js');
+
+    const codexSoldiers = new CodexSoldiers();
+    codexSoldiers.selectedTierKey = 'BARRACKS_4_A';
+    const soldiersHtml = codexSoldiers.getSoldiersCategoryHtml();
+    expect(soldiersHtml).toContain(`+${bpBarracks4A.soldierRegen} HP/s`);
+    expect(soldiersHtml).toContain('Hồi máu mỗi giây');
+
+    codexSoldiers.currentSubTab = 'DRAGON_NEST';
+    codexSoldiers.selectedTierKey = 'DRAGON_NEST_4_A';
+    const dragonHtml = codexSoldiers.getSoldiersCategoryHtml();
+    expect(dragonHtml).toContain(`+${bpDragon4A.soldierRegen} HP/s`);
+
+    codexSoldiers.currentSubTab = 'FAIRY_TREE';
+    codexSoldiers.selectedTierKey = 'FAIRY_TREE_4_A';
+    const fairyHtml = codexSoldiers.getSoldiersCategoryHtml();
+    expect(fairyHtml).toContain(`+${bpFairy4A.soldierRegen} HP/s`);
+
+    const codexBuildings = new CodexBuildings(() => {});
+    const buildingHtml = codexBuildings.getTowerCategoryHtml('BARRACKS', 'BARRACKS_4_A');
+    expect(buildingHtml).toContain(`+${bpBarracks4A.soldierRegen} HP/s`);
+
+    // 4. Heroic Spirit inherits soldierRegen from fallen unit
+    const state = new GameState();
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+    state.buildTowerAt(100, 100, 'HEROIC_ALTAR');
+    const altar = state.towers[0];
+    altar.resurrectChance = 1.0;
+
+    const fallenUnit: SoldierEntity = {
+      ...injuredSoldier,
+      state: 'DEAD',
+      hp: 0,
+      isSpirit: false
+    };
+
+    const spawned = state.trySpawnHeroicSpirit(fallenUnit);
+    expect(spawned).toBe(true);
+    const spirit = state.soldiers.find((s) => s.isSpirit)!;
+    expect(spirit.soldierRegen).toBe(20);
+    expect(spirit.branch).toBe('A');
+  });
 });

@@ -335,6 +335,16 @@ export class CodexBuildings {
                     : ''
                 }
                 ${
+                  selectedBp.soldierRegen
+                    ? `
+                    <div class="stat-box">
+                      <span class="s-label">Hồi máu đơn vị</span>
+                      <span class="s-val" style="color: #4ade80; font-weight: 700;">+${selectedBp.soldierRegen} HP/s ${UI_ICONS.HEART}</span>
+                    </div>
+                  `
+                    : ''
+                }
+                ${
                   selectedBp.resurrectChance
                     ? `
                     <div class="stat-box">
@@ -428,9 +438,10 @@ export class CodexBuildings {
 
   private renderSummonTraitsHtml(type: TowerType, bp: TowerBlueprint): string {
     if (type === 'BARRACKS') {
+      const barracksRegen = TOWER_BLUEPRINTS['BARRACKS_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
-          <b>${UI_ICONS.SWORDS} Lính Cận Chiến:</b> Máu dày (100 ${UI_ICONS.HEART} - 480 ${UI_ICONS.HEART}), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi phục +15 HP/s; Nhánh 4-B bùng nổ sát thương.
+          <b>${UI_ICONS.SWORDS} Lính Cận Chiến:</b> Máu dày (100 ${UI_ICONS.HEART} - 480 ${UI_ICONS.HEART}), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi phục +${barracksRegen} HP/s; Nhánh 4-B bùng nổ sát thương.
         </div>
         <div class="trait-item">
           <b>${UI_ICONS.BOW} Lính Bắn Tên:</b> Tầm bắn xa (147px - 183px), <b>tấn công được CẢ 3 ĐỊA HÌNH: Đi Bộ, Trên Không & Dưới Nước</b>.
@@ -438,9 +449,10 @@ export class CodexBuildings {
       `;
     }
     if (type === 'DRAGON_NEST') {
+      const dragonRegen = TOWER_BLUEPRINTS['DRAGON_NEST_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
-          <b>${ELEMENT_ICONS.DRAGON} 1 Hỏa Long Duy Nhất:</b> Nâng cấp không tăng số lượng mà tăng mạnh Máu (220 ➔ 850 ${UI_ICONS.HEART}) và Sát thương (30 ➔ 150 DMG).
+          <b>${ELEMENT_ICONS.DRAGON} 1 Hỏa Long Duy Nhất:</b> Nâng cấp không tăng số lượng mà tăng mạnh Máu (220 ➔ 850 ${UI_ICONS.HEART}) và Sát thương (30 ➔ 150 DMG). Nhánh 4-A (Long Tổ Cổ Đại) tự hồi phục +${dragonRegen} HP/s.
         </div>
         <div class="trait-item">
           <b>${UI_ICONS.FLY} Chốt Chặn Quái Bay:</b> Bay lượn trên không chốt chặn cả quái Bay (FLY) và Đi Bộ (WALK).
@@ -451,9 +463,10 @@ export class CodexBuildings {
       `;
     }
     if (type === 'FAIRY_TREE') {
+      const fairyRegen = TOWER_BLUEPRINTS['FAIRY_TREE_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
-          <b>${ELEMENT_ICONS.FAIRY} Bầy Tiên Tăng Theo Cấp (2 ➔ 5):</b> Cấp 1 (2 tiên), Cấp 2 (3 tiên), Cấp 3 (4 tiên), Cấp 4 (5 tiên).
+          <b>${ELEMENT_ICONS.FAIRY} Bầy Tiên Tăng Theo Cấp (2 ➔ 5):</b> Cấp 1 (2 tiên), Cấp 2 (3 tiên), Cấp 3 (4 tiên), Cấp 4 (5 tiên). Nhánh 4-A (Đại Thụ Tinh Linh) tự hồi phục +${fairyRegen} HP/s mỗi tiên.
         </div>
         <div class="trait-item">
           <b>${UI_ICONS.FLY} Chốt Chặn Quái Bay:</b> Bay lượn trên không chốt chặn quái Bay & Đi Bộ, đồng thời bắn phép tầm xa diệt quái Bơi lội (SWIM).
@@ -584,7 +597,7 @@ export class CodexBuildings {
           <td style="color: #38bdf8; font-weight: 700;">
             ${baseDamage} + <span style="color: #a855f7;">${bonusDmg}</span> = ${totalDmg}
           </td>
-          <td>${hp} ${UI_ICONS.HEART}</td>
+          <td>${hp} ${UI_ICONS.HEART}${bp.soldierRegen ? `<br><span style="font-size: 11px; color: #4ade80; font-weight: 700;">+${bp.soldierRegen} HP/s</span>` : ''}</td>
           <td>${bp.range} px</td>
           <td>${bp.fireRate}/s</td>
           <td class="table-dps-val">${totalDps} DPS</td>
@@ -821,6 +834,7 @@ export class CodexBuildings {
           <span>${UI_ICONS.GOLD} <b>${bp.cost}</b></span>
           <span>${UI_ICONS.SWORDS} <b>${bp.damage}</b></span>
           <span>${UI_ICONS.TARGET} <b>${bp.range}</b></span>
+          ${bp.soldierRegen ? `<span style="color: #4ade80;"><b>+${bp.soldierRegen} HP/s</b></span>` : ''}
         </div>
         <div class="tn-brief">${bp.description}</div>
       </div>

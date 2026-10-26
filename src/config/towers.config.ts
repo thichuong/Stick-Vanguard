@@ -39,6 +39,7 @@ export interface TowerBlueprint {
   soldierHp?: number;
   soldierArmor?: number;
   soldierRespawn?: number;
+  soldierRegen?: number; // HP regenerated per second
   canTargetAir?: boolean;
   canBlockAir?: boolean;
   canTargetSwim?: boolean;
@@ -125,6 +126,7 @@ export const TOWER_BLUEPRINTS: Record<string, TowerBlueprint> = {
     soldierHp: 480,
     soldierArmor: 0.65,
     soldierRespawn: 6,
+    soldierRegen: 15,
     color: '#94a3b8'
   },
   'BARRACKS_4_B': {
@@ -472,6 +474,7 @@ export const TOWER_BLUEPRINTS: Record<string, TowerBlueprint> = {
     soldierHp: 850,
     soldierArmor: 0.65,
     soldierRespawn: 7,
+    soldierRegen: 15,
     canTargetAir: true,
     canBlockAir: true,
     canTargetSwim: true,
@@ -588,6 +591,7 @@ export const TOWER_BLUEPRINTS: Record<string, TowerBlueprint> = {
     soldierHp: 320,
     soldierArmor: 0.35,
     soldierRespawn: 5,
+    soldierRegen: 15,
     canTargetAir: true,
     canBlockAir: true,
     canTargetSwim: true,

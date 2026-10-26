@@ -312,6 +312,7 @@ export class GameState {
             magicResist: 0.1,
             respawnTimer: 0,
             respawnDelay: bp.soldierRespawn || 8,
+            soldierRegen: bp.soldierRegen || 0,
             tier: 1,
             rangedRange: 145
           });
@@ -353,6 +354,7 @@ export class GameState {
           magicResist: 0.2,
           respawnTimer: 0,
           respawnDelay: bp.soldierRespawn || 9,
+          soldierRegen: bp.soldierRegen || 0,
           tier: 1
         });
       } else if (bp.type === 'FAIRY_TREE') {
@@ -396,6 +398,7 @@ export class GameState {
             magicResist: 0.15,
             respawnTimer: 0,
             respawnDelay: bp.soldierRespawn || 7,
+            soldierRegen: bp.soldierRegen || 0,
             tier: 1
           });
         }
@@ -555,6 +558,7 @@ export class GameState {
             dragon.damage = dragon.baseDamage;
             dragon.armor = dragon.baseArmor;
             dragon.aoeRadius = nextBp.aoeRadius || dragon.aoeRadius;
+            dragon.soldierRegen = nextBp.soldierRegen || 0;
             dragon.attackSpeed = nextBp.fireRate;
             dragon.rallyPoint = { ...rPoint };
           }
@@ -608,6 +612,7 @@ export class GameState {
           magicResist: 0.15,
           respawnTimer: 0,
           respawnDelay: nextBp.soldierRespawn || 7,
+          soldierRegen: nextBp.soldierRegen || 0,
           tier: nextTier,
           branch: branch
         });
@@ -627,6 +632,7 @@ export class GameState {
           fairy.hp = fairy.maxHp;
           fairy.damage = fairy.baseDamage;
           fairy.armor = fairy.baseArmor;
+          fairy.soldierRegen = nextBp.soldierRegen || 0;
           fairy.attackSpeed = nextBp.fireRate;
           const offsetAngle = (i / totalCount) * Math.PI * 2;
           fairy.rallyPoint = {
@@ -685,6 +691,7 @@ export class GameState {
           magicResist: 0.1,
           respawnTimer: 0,
           respawnDelay: nextBp.soldierRespawn || 7,
+          soldierRegen: nextBp.soldierRegen || 0,
           tier: nextTier,
           branch: branch,
           rangedRange: 135 + nextTier * 12
@@ -702,6 +709,7 @@ export class GameState {
           soldier.baseMaxHp = nextBp.soldierHp || soldier.baseMaxHp;
           soldier.baseDamage = nextBp.damage;
           soldier.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : soldier.baseArmor;
+          soldier.soldierRegen = nextBp.soldierRegen || 0;
           soldier.secondaryElement = tower.secondaryElement || null;
           soldier.buffedElements = tower.buffedElements ? [...tower.buffedElements] : undefined;
 
@@ -782,6 +790,7 @@ export class GameState {
                 dragon.maxHp = dragon.baseMaxHp;
                 dragon.damage = dragon.baseDamage;
                 dragon.armor = dragon.baseArmor;
+                dragon.soldierRegen = prevBp.soldierRegen || 0;
                 dragon.hp = Math.min(dragon.hp, dragon.maxHp);
               }
             }
@@ -806,6 +815,7 @@ export class GameState {
                 fairy.maxHp = fairy.baseMaxHp;
                 fairy.damage = fairy.baseDamage;
                 fairy.armor = fairy.baseArmor;
+                fairy.soldierRegen = prevBp.soldierRegen || 0;
                 fairy.hp = Math.min(fairy.hp, fairy.maxHp);
               }
             }
@@ -848,6 +858,7 @@ export class GameState {
                 soldier.baseMaxHp = prevBp.soldierHp || soldier.baseMaxHp;
                 soldier.baseDamage = prevBp.damage;
                 soldier.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : soldier.baseArmor;
+                soldier.soldierRegen = prevBp.soldierRegen || 0;
                 soldier.maxHp = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseMaxHp * 0.65)) : soldier.baseMaxHp;
                 soldier.damage = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseDamage * 0.7)) : soldier.baseDamage;
                 soldier.armor = soldier.combatMode === 'RANGED' ? Math.round(soldier.baseArmor * 0.5 * 100) / 100 : soldier.baseArmor;
@@ -1134,6 +1145,8 @@ export class GameState {
       respawnTimer: 0,
       respawnDelay: 999999, // Spirits do not respawn on timer
       tier: chosenAltar.tier,
+      branch: deadSoldier.branch,
+      soldierRegen: deadSoldier.soldierRegen,
       canBlockAir: deadSoldier.canBlockAir,
       canTargetAir: deadSoldier.canTargetAir,
       canTargetSwim: deadSoldier.canTargetSwim,

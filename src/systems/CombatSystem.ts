@@ -46,9 +46,10 @@ export class CombatSystem {
         continue;
       }
 
-      // 2. Self-healing for Guardian Citadel (Tier 4 Branch A)
-      if (soldier.branch === 'A' && soldier.tier === 4 && soldier.hp < soldier.maxHp) {
-        soldier.hp = Math.min(soldier.maxHp, soldier.hp + 15 * dt);
+      // 2. Self-healing for summoned units (e.g. Tier 4 Branch A or configured soldierRegen)
+      const regenRate = soldier.soldierRegen ?? (soldier.branch === 'A' && soldier.tier === 4 ? 15 : 0);
+      if (regenRate > 0 && soldier.hp < soldier.maxHp) {
+        soldier.hp = Math.min(soldier.maxHp, soldier.hp + regenRate * dt);
       }
 
       // Check if soldier is in RANGED mode

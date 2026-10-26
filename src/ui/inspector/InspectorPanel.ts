@@ -1063,7 +1063,7 @@ export class InspectorPanel {
             </div>
 
             <div class="suc-bottom">
-              <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%</span>
+              <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%${u.soldierRegen ? ` • <b style="color: #4ade80;">+${u.soldierRegen}/s</b>` : ''}</span>
               <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
             </div>
           </div>
@@ -1175,7 +1175,7 @@ export class InspectorPanel {
           </div>
 
           <div class="suc-bottom">
-            <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%</span>
+            <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%${u.soldierRegen ? ` • <b style="color: #4ade80;">+${u.soldierRegen}/s</b>` : ''}</span>
             <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
           </div>
         </div>

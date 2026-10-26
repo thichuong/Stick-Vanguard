@@ -305,6 +305,20 @@ export class CodexSoldiers {
                   <span class="s-val" style="color: #a855f7;">${unitRespawn}s ${UI_ICONS.TIMER}</span>
                 </div>
                 ${
+                  selectedBp.soldierRegen
+                    ? `
+                  <div class="stat-box">
+                    <span class="s-label">Hồi máu mỗi giây</span>
+                    <span class="s-val" style="color: #4ade80; font-weight: 700;">+${selectedBp.soldierRegen} HP/s ${UI_ICONS.HEART}</span>
+                  </div>
+                  <div class="stat-box">
+                    <span class="s-label">Tổng hồi máu toàn đội</span>
+                    <span class="s-val" style="color: #4ade80; font-weight: 700;">+${selectedBp.soldierRegen * maxSoldiers} HP/s ${UI_ICONS.HEART}</span>
+                  </div>
+                `
+                    : ''
+                }
+                ${
                   selectedBp.aoeRadius
                     ? `
                   <div class="stat-box">
@@ -382,9 +396,10 @@ export class CodexSoldiers {
 
   private renderUnitTraitsHtml(type: TowerType, bp: TowerBlueprint): string {
     if (type === 'BARRACKS') {
+      const barracksRegen = TOWER_BLUEPRINTS['BARRACKS_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
-          <b>${UI_ICONS.SWORDS} Lính Cận Chiến:</b> Máu dày (100 ${UI_ICONS.HEART} - 480 ${UI_ICONS.HEART}), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi máu liên tục mỗi giây (+15 HP/s); Nhánh 4-B tăng mạnh sát thương và tần suất xuất chiêu.
+          <b>${UI_ICONS.SWORDS} Lính Cận Chiến:</b> Máu dày (100 ${UI_ICONS.HEART} - 480 ${UI_ICONS.HEART}), giáp vật lý cao (10% - 65%), chốt chặn quái Đi Bộ 1v1. Nhánh 4-A tự hồi máu liên tục mỗi giây (+${barracksRegen} HP/s); Nhánh 4-B tăng mạnh sát thương và tần suất xuất chiêu.
         </div>
         <div class="trait-item">
           <b>${UI_ICONS.BOW} Lính Bắn Tên:</b> Tầm bắn xa (147px - 183px), <b>bắn được CẢ 3 ĐỊA HÌNH: Đi Bộ, Trên Không và Dưới Nước</b>. Đứng an toàn tại cờ xả mưa tên liên thanh hỗ trợ đồng đội.
@@ -395,9 +410,10 @@ export class CodexSoldiers {
       `;
     }
     if (type === 'DRAGON_NEST') {
+      const dragonRegen = TOWER_BLUEPRINTS['DRAGON_NEST_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
-          <b>${ELEMENT_ICONS.DRAGON} Cá Thể Chiến Binh Đơn Độc (1 Rồng):</b> Nâng cấp không tăng số lượng mà tăng vọt Máu (220 ➔ 850 ${UI_ICONS.HEART}), Giáp (20% ➔ 65%) và Sát thương (30 ➔ 150 DMG).
+          <b>${ELEMENT_ICONS.DRAGON} Cá Thể Chiến Binh Đơn Độc (1 Rồng):</b> Nâng cấp không tăng số lượng mà tăng vọt Máu (220 ➔ 850 ${UI_ICONS.HEART}), Giáp (20% ➔ 65%) và Sát thương (30 ➔ 150 DMG). Nhánh 4-A (Long Tổ Cổ Đại) tự động hồi máu bền bỉ (+${dragonRegen} HP/s).
         </div>
         <div class="trait-item">
           <b>${UI_ICONS.FLY} Chốt Chặn Quái Bay:</b> Rồng bay lượn trên không nên có thể chặn đứng và đấu tay đôi với cả quái Bay (FLY) lẫn quái Đi Bộ (WALK).
@@ -408,6 +424,7 @@ export class CodexSoldiers {
       `;
     }
     if (type === 'FAIRY_TREE') {
+      const fairyRegen = TOWER_BLUEPRINTS['FAIRY_TREE_4_A']?.soldierRegen || 15;
       return `
         <div class="trait-item">
           <b>${ELEMENT_ICONS.FAIRY} Bầy Tiên Tinh Linh (2 ➔ 5 Tiên):</b> Càng nâng cấp thì số lượng tiên càng đông đảo (Cấp 1: 2 tiên, Cấp 2: 3 tiên, Cấp 3: 4 tiên, Cấp 4: 5 tiên).
@@ -416,7 +433,7 @@ export class CodexSoldiers {
           <b>${UI_ICONS.FLY} Chặn Quái Bay & Đa Miền:</b> Tiên bay lượn trên không, chặn được quái Bay & quái Đi Bộ, đồng thời phóng đạn phép tầm xa diệt quái Bơi lội (SWIM).
         </div>
         <div class="trait-item">
-          <b>${UI_ICONS.STAR} Đột Phá Cấp 4:</b> Nhánh 4-A (Đại Thụ Tinh Linh) tự hồi máu và ban phước hồi máu cho đồng minh; Nhánh 4-B (Thần Mộc Huyền Quang) tốc đánh thần tốc và làm suy yếu quái vật.
+          <b>${UI_ICONS.STAR} Đột Phá Cấp 4:</b> Nhánh 4-A (Đại Thụ Tinh Linh) tự hồi máu (+${fairyRegen} HP/s mỗi tiên) và ban phước hồi máu cho đồng minh khi tấn công; Nhánh 4-B (Thần Mộc Huyền Quang) tốc đánh thần tốc và làm suy yếu quái vật.
         </div>
       `;
     }
@@ -481,12 +498,13 @@ export class CodexSoldiers {
     const totalDps = Math.round(totalDmg * bp.fireRate * maxSoldiers);
 
     let specialTrait = '';
+    const regenText = bp.soldierRegen ? ` • Tự hồi +${bp.soldierRegen} HP/s` : '';
     if (type === 'BARRACKS') {
-      specialTrait = `Hồi sinh ${bp.soldierRespawn}s • ${UI_ICONS.SWORDS} Cận Chiến & ${UI_ICONS.BOW} Bắn Tên`;
+      specialTrait = `Hồi sinh ${bp.soldierRespawn}s${regenText} • ${UI_ICONS.SWORDS} Cận Chiến & ${UI_ICONS.BOW} Bắn Tên`;
     } else if (type === 'DRAGON_NEST') {
-      specialTrait = `AoE ${bp.aoeRadius}px • Chặn Bay ${UI_ICONS.FLY} • Hồi sinh ${bp.soldierRespawn}s`;
+      specialTrait = `AoE ${bp.aoeRadius}px • Chặn Bay ${UI_ICONS.FLY}${regenText} • Hồi sinh ${bp.soldierRespawn}s`;
     } else if (type === 'FAIRY_TREE') {
-      specialTrait = `Bắn phép tầm xa • Chặn Bay ${UI_ICONS.FLY} • Hồi sinh ${bp.soldierRespawn}s`;
+      specialTrait = `Bắn phép tầm xa • Chặn Bay ${UI_ICONS.FLY}${regenText} • Hồi sinh ${bp.soldierRespawn}s`;
     }
 
     return `
@@ -495,7 +513,7 @@ export class CodexSoldiers {
         <td>${bp.name}</td>
         <td style="color: #facc15">${UI_ICONS.GOLD} ${bp.cost}</td>
         <td style="color: #38bdf8; font-weight: 700;">${maxSoldiers}</td>
-        <td>${hp} ${UI_ICONS.HEART} <span style="font-size: 11px; color: #94a3b8;">(${hp * maxSoldiers})</span></td>
+        <td>${hp} ${UI_ICONS.HEART} <span style="font-size: 11px; color: #94a3b8;">(${hp * maxSoldiers})</span>${bp.soldierRegen ? `<br><span style="font-size: 11px; color: #4ade80; font-weight: 700;">+${bp.soldierRegen} HP/s</span>` : ''}</td>
         <td>${armor}% ${UI_ICONS.SHIELD}</td>
         <td style="color: #38bdf8;">
           ${baseDamage} + <span style="color: #c084fc;">${bonusDmg}</span> = <b>${totalDmg}</b>
@@ -676,7 +694,7 @@ export class CodexSoldiers {
                 <td>3 ➔ 4 ➔ 5</td>
                 <td>Chốt chặn Đi Bộ (1v1)</td>
                 <td>Bộ (Cận chiến) / <b>Bộ, Bay, Bơi (Cung)</b></td>
-                <td>Chuyển đổi tức thì <b>Cận Chiến vs Bắn Tên</b> miễn phí</td>
+                <td>Chuyển đổi tức thì <b>Cận Chiến vs Bắn Tên</b> miễn phí • Nhánh 4-A tự hồi phục (+${TOWER_BLUEPRINTS['BARRACKS_4_A']?.soldierRegen || 15} HP/s)</td>
                 <td>Tự do gắn 1 trong 12 nguyên tố (+45% Phép)</td>
               </tr>
               <tr>
@@ -685,7 +703,7 @@ export class CodexSoldiers {
                 <td>1 Cá thể duy nhất</td>
                 <td><b>Chặn Đi Bộ & Bay ${UI_ICONS.FLY}</b></td>
                 <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
-                <td><b>Sát thương AoE nổ lan 70%</b> • Máu dày, tự hồi máu</td>
+                <td><b>Sát thương AoE nổ lan 70%</b> • Máu dày, Nhánh 4-A tự hồi phục (+${TOWER_BLUEPRINTS['DRAGON_NEST_4_A']?.soldierRegen || 15} HP/s)</td>
                 <td>Gốc hệ Rồng + Chọn thêm 1 hệ (+60% Phép)</td>
               </tr>
               <tr>
@@ -694,7 +712,7 @@ export class CodexSoldiers {
                 <td>2 ➔ 3 ➔ 4 ➔ 5</td>
                 <td><b>Chặn Đi Bộ & Bay ${UI_ICONS.FLY}</b></td>
                 <td><b>Bộ, Bay, Bơi (Đa Miền)</b></td>
-                <td>Bắn đạn phép tầm xa liên thanh • Phân tán chặn địch</td>
+                <td>Bắn đạn phép tầm xa liên thanh • Nhánh 4-A tự hồi phục (+${TOWER_BLUEPRINTS['FAIRY_TREE_4_A']?.soldierRegen || 15} HP/s)</td>
                 <td>Gốc hệ Tiên + Chọn thêm 1 hệ (+60% Phép)</td>
               </tr>
               <tr>
@@ -735,6 +753,7 @@ export class CodexSoldiers {
           <span>${UI_ICONS.GOLD} <b>${bp.cost}</b></span>
           <span>${UI_ICONS.UNITS} <b>${bp.maxSoldiers || 1}</b></span>
           <span>${UI_ICONS.HEART} <b>${bp.soldierHp || 100}</b></span>
+          ${bp.soldierRegen ? `<span style="color: #4ade80;"><b>+${bp.soldierRegen} HP/s</b></span>` : ''}
         </div>
         <div class="tn-brief">${bp.description}</div>
       </div>

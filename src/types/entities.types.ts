@@ -105,6 +105,7 @@ export interface SoldierEntity {
   magicResist: number;
   respawnTimer: number; // seconds remaining if dead
   respawnDelay: number;
+  soldierRegen?: number; // HP regenerated per second
   tier: TowerTier;
   branch?: TowerBranch;
   canTargetAir?: boolean;
