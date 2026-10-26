@@ -103,23 +103,23 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
   roadWidth: 40,
   riverWidth: 36,
   playerBases: [
-    { x: 120, y: 120, radius: 42 }, // 1: Căn Cứ Tây Bắc
-    { x: 880, y: 530, radius: 42 }  // 2: Căn Cứ Đông Nam
+    { x: 120, y: 240, radius: 42 }, // 1: Căn Cứ Tây Bắc
+    { x: 880, y: 300, radius: 42 }  // 2: Căn Cứ Đông Nam
   ],
   groundLanes: [
     // Tuyến 1: Từ Tây Nam -> Trung Tâm -> Căn Cứ Đông Nam (2)
     [
       { x: 40, y: 510 },
       { x: 260, y: 510 },
-      { x: 500, y: 325 },
-      { x: 740, y: 530 },
+      { x: 500, y: 500 },
+      { x: 740, y: 500 },
       2
     ],
     // Tuyến 2: Từ Đông Bắc -> Trung Tâm -> Căn Cứ Tây Bắc (1)
     [
       { x: 960, y: 140 },
       { x: 740, y: 140 },
-      { x: 500, y: 325 },
+      { x: 500, y: 150 },
       { x: 260, y: 120 },
       1
     ]
@@ -129,15 +129,15 @@ export const MAP_PLAGUE_MORASS: MapConfig = {
     [
       { x: 300, y: 650 },
       { x: 360, y: 460 },
-      { x: 500, y: 325 },
-      { x: 680, y: 420 },
+      { x: 500, y: 400 },
+      { x: 680, y: 400 },
       2
     ],
     // Kênh Bùn 2: Bắc -> Tâm -> Tây Bắc (1)
     [
       { x: 700, y: 0 },
       { x: 640, y: 190 },
-      { x: 500, y: 325 },
+      { x: 500, y: 280 },
       { x: 320, y: 230 },
       1
     ]
