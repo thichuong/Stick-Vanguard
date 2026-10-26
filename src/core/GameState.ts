@@ -31,6 +31,7 @@ import {
 } from '../config/elements.config.js';
 import { StorageService } from './StorageService.js';
 import { SoundSystem } from '../systems/SoundSystem.js';
+import { particlePool, floatingTextPool } from './ObjectPool.js';
 
 export class GameState {
   public gold: number = 320;
@@ -1245,34 +1246,46 @@ export class GameState {
     color: string = '#ffffff',
     size: number = 13
   ): void {
-    this.floatingTexts.push({
-      id: `text-${Date.now()}-${Math.random()}`,
-      text,
-      x,
-      y,
-      color,
-      lifeTime: 1.2,
-      maxLifeTime: 1.2,
-      size
-    });
+    // Throttle floating texts when crowded
+    if (this.floatingTexts.length >= 150) {
+      return;
+    }
+    const item = floatingTextPool.acquire();
+    item.text = text;
+    item.x = x;
+    item.y = y;
+    item.color = color;
+    item.lifeTime = 1.0;
+    item.maxLifeTime = 1.0;
+    item.size = size;
+    this.floatingTexts.push(item);
   }
 
   public addExplosionParticles(x: number, y: number, color: string, count: number = 12): void {
-    for (let i = 0; i < count; i++) {
+    // Smart throttling based on current particle density
+    let actualCount = count;
+    if (this.particles.length > 500) {
+      actualCount = Math.max(1, Math.floor(count * 0.25));
+    } else if (this.particles.length > 250) {
+      actualCount = Math.max(2, Math.floor(count * 0.5));
+    }
+
+    for (let i = 0; i < actualCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 40 + Math.random() * 80;
-      this.particles.push({
-        id: `p-${Math.random()}`,
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        color,
-        size: 2.5 + Math.random() * 2.5,
-        lifeTime: 0.6 + Math.random() * 0.4,
-        maxLifeTime: 0.8,
-        shape: 'CIRCLE'
-      });
+      const p = particlePool.acquire();
+      p.x = x;
+      p.y = y;
+      p.prevX = x;
+      p.prevY = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.color = color;
+      p.size = 2.5 + Math.random() * 2.5;
+      p.lifeTime = 0.6 + Math.random() * 0.3;
+      p.maxLifeTime = p.lifeTime;
+      p.shape = 'CIRCLE';
+      this.particles.push(p);
     }
   }
 }

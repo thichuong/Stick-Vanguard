@@ -12,6 +12,62 @@ import { GameState } from '../core/GameState.js';
 import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
 
 export class MapRenderer {
+  private static cachedMapId: string | null = null;
+  private static cachedTerrainCanvas: HTMLCanvasElement | null = null;
+
+  public static clearCache(): void {
+    this.cachedMapId = null;
+    this.cachedTerrainCanvas = null;
+  }
+
+  private static getOrCreateTerrainCache(mapConfig: MapConfig): HTMLCanvasElement | null {
+    if (typeof document === 'undefined') return null; // Test or headless environment
+    if (this.cachedTerrainCanvas && this.cachedMapId === mapConfig.id) {
+      return this.cachedTerrainCanvas;
+    }
+
+    const width = mapConfig.width || 1000;
+    const height = mapConfig.height || 650;
+    const { themeColor, roadColor } = mapConfig;
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = height;
+    const offCtx = offscreen.getContext('2d');
+    if (!offCtx) return null;
+
+    // 1. Tactical background
+    offCtx.fillStyle = themeColor || '#1e293b';
+    offCtx.fillRect(0, 0, width, height);
+
+    // Subtle tactical grid
+    offCtx.strokeStyle = '#334155';
+    offCtx.lineWidth = 0.5;
+    const gridSize = 40;
+    for (let x = 0; x < width; x += gridSize) {
+      offCtx.beginPath();
+      offCtx.moveTo(x, 0);
+      offCtx.lineTo(x, height);
+      offCtx.stroke();
+    }
+    for (let y = 0; y < height; y += gridSize) {
+      offCtx.beginPath();
+      offCtx.moveTo(0, y);
+      offCtx.lineTo(width, y);
+      offCtx.stroke();
+    }
+
+    // 2. Render Ground Roads
+    const allGroundLanes = getResolvedGroundLanes(mapConfig);
+    for (const lane of allGroundLanes) {
+      this.renderGroundRoad(offCtx, lane, mapConfig.roadWidth || 42, roadColor);
+    }
+
+    this.cachedMapId = mapConfig.id;
+    this.cachedTerrainCanvas = offscreen;
+    return offscreen;
+  }
+
   public static renderBackground(
     ctx: CanvasRenderingContext2D,
     animTime: number,
@@ -21,37 +77,24 @@ export class MapRenderer {
     const height = mapConfig.height || 650;
     const { themeColor, roadColor, riverColor } = mapConfig;
 
-    // 1. Tactical parchment background with map theme
-    ctx.fillStyle = themeColor || '#1e293b';
-    ctx.fillRect(0, 0, width, height);
+    const terrainCache = this.getOrCreateTerrainCache(mapConfig);
+    if (terrainCache) {
+      ctx.drawImage(terrainCache, 0, 0);
+    } else {
+      // Fallback for headless testing
+      ctx.fillStyle = themeColor || '#1e293b';
+      ctx.fillRect(0, 0, width, height);
 
-    // Subtle tactical grid
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 0.5;
-    const gridSize = 40;
-    for (let x = 0; x < width; x += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < height; y += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+      const allGroundLanes = getResolvedGroundLanes(mapConfig);
+      for (const lane of allGroundLanes) {
+        this.renderGroundRoad(ctx, lane, mapConfig.roadWidth || 42, roadColor);
+      }
     }
 
-    // 2. Render Rivers (Water Paths - Multi-lane aware)
+    // 2. Render Rivers (Water Paths - Multi-lane aware with animated dash)
     const allWaterLanes = getResolvedWaterLanes(mapConfig);
     for (const lane of allWaterLanes) {
       this.renderRiver(ctx, lane, animTime, mapConfig.riverWidth || 38, riverColor);
-    }
-
-    // 3. Render Ground Roads (Dirt Paths - Multi-lane aware)
-    const allGroundLanes = getResolvedGroundLanes(mapConfig);
-    for (const lane of allGroundLanes) {
-      this.renderGroundRoad(ctx, lane, mapConfig.roadWidth || 42, roadColor);
     }
 
     // 4. Render Air Corridors (Dotted warning lines - Multi-lane aware)

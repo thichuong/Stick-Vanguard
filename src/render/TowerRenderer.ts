@@ -576,31 +576,53 @@ export class TowerRenderer {
     ctx: CanvasRenderingContext2D,
     texts: FloatingText[]
   ): void {
-    for (const t of texts) {
-      ctx.save();
+    if (texts.length === 0) return;
+    ctx.save();
+    ctx.textAlign = 'center';
+    let lastColor = '';
+    let lastAlpha = -1;
+
+    for (let i = 0; i < texts.length; i++) {
+      const t = texts[i];
       const alpha = Math.max(0, t.lifeTime / t.maxLifeTime);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = t.color;
+      if (alpha !== lastAlpha) {
+        ctx.globalAlpha = alpha;
+        lastAlpha = alpha;
+      }
+      if (t.color !== lastColor) {
+        ctx.fillStyle = t.color;
+        lastColor = t.color;
+      }
       ctx.font = `bold ${t.size}px sans-serif`;
-      ctx.textAlign = 'center';
       ctx.fillText(t.text, t.x, t.y);
-      ctx.restore();
     }
+    ctx.restore();
   }
 
   public static renderParticles(
     ctx: CanvasRenderingContext2D,
     particles: Particle[]
   ): void {
-    for (const p of particles) {
-      ctx.save();
+    if (particles.length === 0) return;
+    ctx.save();
+    let lastColor = '';
+    let lastAlpha = -1;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
       const alpha = Math.max(0, p.lifeTime / p.maxLifeTime);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = p.color;
+      if (alpha !== lastAlpha) {
+        ctx.globalAlpha = alpha;
+        lastAlpha = alpha;
+      }
+      if (p.color !== lastColor) {
+        ctx.fillStyle = p.color;
+        lastColor = p.color;
+      }
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
+    ctx.restore();
   }
 }

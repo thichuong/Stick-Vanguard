@@ -1,5 +1,6 @@
 import { TowerEntity, EnemyEntity } from '../types/entities.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
+import { SpatialIndex } from '../core/SpatialIndex.js';
 
 export interface TrapTriggerResult {
   trapId: string;
@@ -13,11 +14,14 @@ export interface TrapTriggerResult {
 }
 
 export class TrapSystem {
+  private static trapCandidates: EnemyEntity[] = [];
+
   public static updateTraps(
     traps: TowerEntity[],
     enemies: EnemyEntity[],
     dt: number,
-    onTrigger: (res: TrapTriggerResult, trap: TowerEntity) => void
+    onTrigger: (res: TrapTriggerResult, trap: TowerEntity) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     for (const trap of traps) {
       // Cooldown timer
@@ -31,22 +35,25 @@ export class TrapSystem {
       }
 
       const triggerRadius = trap.triggerRadius || 35;
-      const candidates: EnemyEntity[] = [];
+      const candidates = spatialIndex
+        ? spatialIndex.queryRadius(trap.x, trap.y, triggerRadius, this.trapCandidates)
+        : enemies;
 
-      for (const enemy of enemies) {
+      let hasTriggered = false;
+      const triggerRadiusSq = triggerRadius * triggerRadius;
+      for (const enemy of candidates) {
         if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-
-        // Check distance to trap center
-        const dist = Math.hypot(enemy.x - trap.x, enemy.y - trap.y);
-        if (dist <= triggerRadius) {
-          // Check if trap is allowed to target this enemy (e.g. Earth Spike ignores Flying!)
+        const dx = enemy.x - trap.x;
+        const dy = enemy.y - trap.y;
+        if (dx * dx + dy * dy <= triggerRadiusSq) {
           if (TargetingRuleEngine.canTarget(trap.targetingFilter, enemy)) {
-            candidates.push(enemy);
+            hasTriggered = true;
+            break;
           }
         }
       }
 
-      if (candidates.length === 0) {
+      if (!hasTriggered) {
         continue;
       }
 
@@ -55,12 +62,18 @@ export class TrapSystem {
 
       const affectedEnemies: TrapTriggerResult['affectedEnemies'] = [];
       const aoeRadius = trap.aoeRadius || triggerRadius;
+      const aoeRadiusSq = aoeRadius * aoeRadius;
+
+      const aoePool = spatialIndex
+        ? spatialIndex.queryRadius(trap.x, trap.y, aoeRadius, this.trapCandidates)
+        : enemies;
 
       // Find all valid targets in AoE
-      for (const enemy of enemies) {
+      for (const enemy of aoePool) {
         if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-        const dist = Math.hypot(enemy.x - trap.x, enemy.y - trap.y);
-        if (dist <= aoeRadius && TargetingRuleEngine.canTarget(trap.targetingFilter, enemy)) {
+        const dx = enemy.x - trap.x;
+        const dy = enemy.y - trap.y;
+        if (dx * dx + dy * dy <= aoeRadiusSq && TargetingRuleEngine.canTarget(trap.targetingFilter, enemy)) {
           const calc = TargetingRuleEngine.calculateDamage(
             {
               amount: trap.damage,

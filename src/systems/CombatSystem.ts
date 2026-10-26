@@ -5,6 +5,7 @@ import {
 } from '../types/entities.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
 import { ALL_ELEMENT_DEFINITIONS } from '../config/elements.config.js';
+import { SpatialIndex } from '../core/SpatialIndex.js';
 
 export interface CombatEvent {
   type: 'MELEE_HIT' | 'RANGED_JAVELIN' | 'SOLDIER_DEATH' | 'ENEMY_DEATH';
@@ -19,18 +20,28 @@ export interface CombatEvent {
 }
 
 export class CombatSystem {
+  private static combatCandidates: EnemyEntity[] = [];
+
   public static updateCombat(
     soldiers: SoldierEntity[],
     enemies: EnemyEntity[],
     dt: number,
-    onCombatEvent: (evt: CombatEvent) => void
+    onCombatEvent: (evt: CombatEvent) => void,
+    spatialIndex?: SpatialIndex
   ): void {
-    const enemyMap = new Map<string, EnemyEntity>();
-    for (const e of enemies) {
-      if (e.hp > 0 && e.state !== 'DEAD') {
-        enemyMap.set(e.id, e);
+    let enemyMap: Map<string, EnemyEntity> | undefined;
+    if (!spatialIndex) {
+      enemyMap = new Map<string, EnemyEntity>();
+      for (const e of enemies) {
+        if (e.hp > 0 && e.state !== 'DEAD') {
+          enemyMap.set(e.id, e);
+        }
       }
     }
+
+    const getEnemy = (id: string): EnemyEntity | undefined => {
+      return spatialIndex ? spatialIndex.getEnemyById(id) : enemyMap?.get(id);
+    };
 
     for (const soldier of soldiers) {
       // 1. Respawn timer if dead
@@ -54,14 +65,14 @@ export class CombatSystem {
 
       // Check if soldier is in RANGED mode
       if (soldier.combatMode === 'RANGED') {
-        this.updateRangedSoldier(soldier, enemies, dt, onCombatEvent);
+        this.updateRangedSoldier(soldier, enemies, dt, onCombatEvent, spatialIndex);
         continue;
       }
 
       // 3. Melee mode: Check current engaged enemy validity
       let currentEnemy: EnemyEntity | undefined;
       if (soldier.engagedEnemyId) {
-        currentEnemy = enemyMap.get(soldier.engagedEnemyId);
+        currentEnemy = getEnemy(soldier.engagedEnemyId);
         if (!currentEnemy || currentEnemy.hp <= 0 || currentEnemy.state === 'DEAD') {
           soldier.engagedEnemyId = null;
           soldier.state = 'MOVING_TO_RALLY';
@@ -75,7 +86,8 @@ export class CombatSystem {
           soldier.rallyPoint,
           95, // aggro radius around rally point
           enemies,
-          soldier.canBlockAir
+          soldier.canBlockAir,
+          spatialIndex
         );
 
         if (interceptCandidate) {
@@ -90,7 +102,7 @@ export class CombatSystem {
           soldier.archetype === 'DRAGON' ||
           soldier.archetype === 'FAIRY'
         ) {
-          this.checkAerialSoldierAttack(soldier, enemies, dt, onCombatEvent);
+          this.checkAerialSoldierAttack(soldier, enemies, dt, onCombatEvent, spatialIndex);
         }
       }
 
@@ -206,10 +218,15 @@ export class CombatSystem {
                 sourceId: soldier.id
               };
 
-              for (const otherEnemy of enemies) {
+              const splashTargets = spatialIndex
+                ? spatialIndex.queryRadius(currentEnemy.x, currentEnemy.y, splashRadius, this.combatCandidates)
+                : enemies;
+
+              for (const otherEnemy of splashTargets) {
                 if (otherEnemy.id === currentEnemy.id || otherEnemy.hp <= 0 || otherEnemy.state === 'DEAD') continue;
-                const d = Math.hypot(otherEnemy.x - currentEnemy.x, otherEnemy.y - currentEnemy.y);
-                if (d <= splashRadius) {
+                const dx = otherEnemy.x - currentEnemy.x;
+                const dy = otherEnemy.y - currentEnemy.y;
+                if (dx * dx + dy * dy <= splashRadius * splashRadius) {
                   const sCalc = TargetingRuleEngine.calculateDamage(splashPayload, otherEnemy);
                   if (!sCalc.isImmune) {
                     TargetingRuleEngine.applyDamageToEnemy(
@@ -260,7 +277,7 @@ export class CombatSystem {
             // Lightning chain shock bounce to 1 nearby enemy
             if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
               const chainRatio = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainDamageRatio ?? 0.35;
-              this.triggerLightningChain(soldier.id, currentEnemy, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent);
+              this.triggerLightningChain(soldier.id, currentEnemy, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent, spatialIndex);
             }
           }
 
@@ -329,7 +346,8 @@ export class CombatSystem {
     soldier: SoldierEntity,
     enemies: EnemyEntity[],
     dt: number,
-    onCombatEvent: (evt: CombatEvent) => void
+    onCombatEvent: (evt: CombatEvent) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     // 1. Move back to rally point if moved
     const distToRally = Math.hypot(soldier.x - soldier.rallyPoint.x, soldier.y - soldier.rallyPoint.y);
@@ -349,10 +367,15 @@ export class CombatSystem {
     }
 
     // 3. Melee defense check: if an enemy walked right on top of this archer
-    for (const enemy of enemies) {
+    const meleeCandidates = spatialIndex
+      ? spatialIndex.queryRadius(soldier.x, soldier.y, 24, this.combatCandidates)
+      : enemies;
+
+    for (const enemy of meleeCandidates) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD' || enemy.movementType !== 'WALK') continue;
-      const d = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
-      if (d <= 22) {
+      const dx = enemy.x - soldier.x;
+      const dy = enemy.y - soldier.y;
+      if (dx * dx + dy * dy <= 22 * 22) {
         if (!TargetingRuleEngine.isEnemyStunnedOrFrozen(enemy)) {
           enemy.attackCooldown -= dt;
           if (enemy.attackCooldown <= 0) {
@@ -395,17 +418,21 @@ export class CombatSystem {
 
     // 4. Find best target for Ranged Soldier (Can hit WALK, SWIM, and FLY!)
     const range = soldier.rangedRange || 150;
-    let bestTarget: EnemyEntity | null = null;
-    let maxProgress = -1;
-
-    for (const enemy of enemies) {
-      if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-      const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
-      if (dist <= range && enemy.pathDistance > maxProgress) {
-        maxProgress = enemy.pathDistance;
-        bestTarget = enemy;
-      }
-    }
+    const bestTarget = spatialIndex
+      ? spatialIndex.findBestTargetInRange(soldier.x, soldier.y, range)
+      : (() => {
+          let target: EnemyEntity | null = null;
+          let maxProgress = -1;
+          for (const enemy of enemies) {
+            if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
+            const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
+            if (dist <= range && enemy.pathDistance > maxProgress) {
+              maxProgress = enemy.pathDistance;
+              target = enemy;
+            }
+          }
+          return target;
+        })();
 
     if (!bestTarget) return;
 
@@ -506,7 +533,7 @@ export class CombatSystem {
     // Lightning chain shock bounce to 1 nearby enemy
     if (secondaryElement === 'LIGHTNING' || soldier.buffedElements?.includes('LIGHTNING')) {
       const chainRatio = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainDamageRatio ?? 0.35;
-      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent);
+      this.triggerLightningChain(soldier.id, bestTarget, enemies, Math.max(1, Math.round(soldier.damage * chainRatio)), onCombatEvent, spatialIndex);
     }
   }
 
@@ -515,19 +542,25 @@ export class CombatSystem {
     originTarget: EnemyEntity,
     enemies: EnemyEntity[],
     chainDamage: number,
-    onCombatEvent: (evt: CombatEvent) => void
+    onCombatEvent: (evt: CombatEvent) => void,
+    spatialIndex?: SpatialIndex
   ): void {
-    let closestCandidate: EnemyEntity | null = null;
-    let minDist = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainRange ?? 110;
-
-    for (const other of enemies) {
-      if (other.id === originTarget.id || other.hp <= 0 || other.state === 'DEAD') continue;
-      const d = Math.hypot(other.x - originTarget.x, other.y - originTarget.y);
-      if (d <= minDist) {
-        minDist = d;
-        closestCandidate = other;
-      }
-    }
+    const chainRange = ALL_ELEMENT_DEFINITIONS.LIGHTNING?.combatStats?.chainRange ?? 110;
+    const closestCandidate = spatialIndex
+      ? spatialIndex.findClosestInRange(originTarget.x, originTarget.y, chainRange, (other) => other.id !== originTarget.id)
+      : (() => {
+          let closest: EnemyEntity | null = null;
+          let minDist = chainRange;
+          for (const other of enemies) {
+            if (other.id === originTarget.id || other.hp <= 0 || other.state === 'DEAD') continue;
+            const d = Math.hypot(other.x - originTarget.x, other.y - originTarget.y);
+            if (d <= minDist) {
+              minDist = d;
+              closest = other;
+            }
+          }
+          return closest;
+        })();
 
     if (closestCandidate) {
       const calc = TargetingRuleEngine.calculateDamage(
@@ -566,20 +599,28 @@ export class CombatSystem {
     rallyPoint: Vector2D,
     radius: number,
     enemies: EnemyEntity[],
-    canBlockAir?: boolean
+    canBlockAir?: boolean,
+    spatialIndex?: SpatialIndex
   ): EnemyEntity | null {
+    const isCandidateValid = (enemy: EnemyEntity) => {
+      if (enemy.hp <= 0 || enemy.state === 'DEAD') return false;
+      if (enemy.movementType !== 'WALK') {
+        if (!canBlockAir || enemy.movementType !== 'FLY') return false;
+      }
+      if (enemy.tags && enemy.tags.includes('UNBLOCKABLE')) return false;
+      if (enemy.engagedBySoldierId) return false;
+      return true;
+    };
+
+    if (spatialIndex) {
+      return spatialIndex.findClosestInRange(rallyPoint.x, rallyPoint.y, radius, isCandidateValid);
+    }
+
     let closest: EnemyEntity | null = null;
     let maxDist = radius;
 
     for (const enemy of enemies) {
-      if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-      // Melee soldiers without canBlockAir can ONLY engage WALK units
-      // Units with canBlockAir can engage both WALK and FLY units!
-      if (enemy.movementType !== 'WALK') {
-        if (!canBlockAir || enemy.movementType !== 'FLY') continue;
-      }
-      if (enemy.tags && enemy.tags.includes('UNBLOCKABLE')) continue;
-      if (enemy.engagedBySoldierId) continue; // already blocked
+      if (!isCandidateValid(enemy)) continue;
 
       const dist = Math.hypot(enemy.x - rallyPoint.x, enemy.y - rallyPoint.y);
       if (dist < maxDist) {
@@ -595,7 +636,8 @@ export class CombatSystem {
     soldier: SoldierEntity,
     enemies: EnemyEntity[],
     dt: number,
-    onCombatEvent: (evt: CombatEvent) => void
+    onCombatEvent: (evt: CombatEvent) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     if (soldier.attackCooldown > 0) {
       soldier.attackCooldown -= dt;
@@ -611,21 +653,24 @@ export class CombatSystem {
     const allowedMovement: string[] = canHitAll ? ['WALK', 'FLY', 'SWIM'] : ['FLY'];
 
     const range = soldier.rangedRange || 130;
-    let bestTarget: EnemyEntity | null = null;
-    let maxProgress = -1;
+    const filterFn = (enemy: EnemyEntity) => allowedMovement.includes(enemy.movementType);
 
-    for (const enemy of enemies) {
-      if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-      if (!allowedMovement.includes(enemy.movementType)) continue;
-
-      const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
-      if (dist <= range) {
-        if (enemy.pathDistance > maxProgress) {
-          maxProgress = enemy.pathDistance;
-          bestTarget = enemy;
-        }
-      }
-    }
+    const bestTarget = spatialIndex
+      ? spatialIndex.findBestTargetInRange(soldier.x, soldier.y, range, filterFn)
+      : (() => {
+          let target: EnemyEntity | null = null;
+          let maxProgress = -1;
+          for (const enemy of enemies) {
+            if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
+            if (!filterFn(enemy)) continue;
+            const dist = Math.hypot(enemy.x - soldier.x, enemy.y - soldier.y);
+            if (dist <= range && enemy.pathDistance > maxProgress) {
+              maxProgress = enemy.pathDistance;
+              target = enemy;
+            }
+          }
+          return target;
+        })();
 
     if (!bestTarget) {
       if (soldier.state === 'ATTACKING') {

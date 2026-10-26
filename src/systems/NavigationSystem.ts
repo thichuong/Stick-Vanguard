@@ -126,6 +126,102 @@ export class NavigationSystem {
   }
 
   /**
+   * Helper to quickly find segment index via binary search
+   */
+  private findSegmentIndex(segments: PathInfo['segments'], distance: number): number {
+    let low = 0;
+    let high = segments.length - 1;
+
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      const seg = segments[mid];
+      const prevCum = seg.cumulativeLength - seg.length;
+
+      if (distance < prevCum) {
+        high = mid - 1;
+      } else if (distance > seg.cumulativeLength) {
+        low = mid + 1;
+      } else {
+        return mid;
+      }
+    }
+    return Math.max(0, Math.min(segments.length - 1, low));
+  }
+
+  /**
+   * Updates enemy.x, enemy.y, enemy.facing in-place without creating intermediate objects.
+   * Returns true if enemy has completed the path.
+   */
+  public updateEnemyTransform(
+    enemy: {
+      navigationMode: NavigationMode;
+      laneIndex?: number;
+      pathDistance: number;
+      x: number;
+      y: number;
+      facing: number;
+    },
+    animTime: number = 0
+  ): boolean {
+    const path = this.getPathInfo(enemy.navigationMode, enemy.laneIndex ?? 0);
+    if (!path || path.segments.length === 0) {
+      enemy.x = 0;
+      enemy.y = 0;
+      enemy.facing = 0;
+      return true;
+    }
+
+    const distance = enemy.pathDistance;
+    if (distance >= path.totalLength) {
+      const lastPt = path.segments[path.segments.length - 1].p2;
+      enemy.x = lastPt.x;
+      enemy.y = lastPt.y;
+      enemy.facing = 0;
+      return true;
+    }
+
+    if (distance <= 0) {
+      const firstPt = path.segments[0].p1;
+      enemy.x = firstPt.x;
+      enemy.y = firstPt.y;
+      const dx = path.segments[0].p2.x - firstPt.x;
+      const dy = path.segments[0].p2.y - firstPt.y;
+      enemy.facing = Math.atan2(dy, dx);
+      return false;
+    }
+
+    const segIdx = this.findSegmentIndex(path.segments, distance);
+    const seg = path.segments[segIdx];
+    const prevCum = seg.cumulativeLength - seg.length;
+    const segDist = distance - prevCum;
+    const t = seg.length > 0 ? segDist / seg.length : 0;
+
+    let x = seg.p1.x + (seg.p2.x - seg.p1.x) * t;
+    let y = seg.p1.y + (seg.p2.y - seg.p1.y) * t;
+
+    const dx = seg.p2.x - seg.p1.x;
+    const dy = seg.p2.y - seg.p1.y;
+    const facing = Math.atan2(dy, dx);
+
+    const mode = enemy.navigationMode;
+    const laneIndex = enemy.laneIndex ?? 0;
+    if (mode === 'AIR_DIRECT') {
+      const perpX = -Math.sin(facing);
+      const perpY = Math.cos(facing);
+      const wobble = Math.sin(animTime * 3 + distance * 0.05 + laneIndex) * 8;
+      x += perpX * wobble;
+      y += perpY * wobble;
+    } else if (mode === 'WATER_PATH') {
+      y += Math.sin(animTime * 4 + x * 0.04 + laneIndex) * 3;
+    }
+
+    enemy.x = x;
+    enemy.y = y;
+    enemy.facing = facing;
+    return false;
+  }
+
+  /**
    * Returns { position, facingAngle, isFinished } given current path distance and lane
    */
   public getPointAlongPath(
@@ -152,36 +248,29 @@ export class NavigationSystem {
       return { position: { ...firstPt }, facing: Math.atan2(dy, dx), isFinished: false };
     }
 
-    // Find segment containing this distance
-    let prevCumulative = 0;
-    for (const seg of path.segments) {
-      if (distance <= seg.cumulativeLength) {
-        const segDist = distance - prevCumulative;
-        const t = seg.length > 0 ? segDist / seg.length : 0;
-        let x = seg.p1.x + (seg.p2.x - seg.p1.x) * t;
-        let y = seg.p1.y + (seg.p2.y - seg.p1.y) * t;
+    const segIdx = this.findSegmentIndex(path.segments, distance);
+    const seg = path.segments[segIdx];
+    const prevCum = seg.cumulativeLength - seg.length;
+    const segDist = distance - prevCum;
+    const t = seg.length > 0 ? segDist / seg.length : 0;
+    let x = seg.p1.x + (seg.p2.x - seg.p1.x) * t;
+    let y = seg.p1.y + (seg.p2.y - seg.p1.y) * t;
 
-        const dx = seg.p2.x - seg.p1.x;
-        const dy = seg.p2.y - seg.p1.y;
-        let facing = Math.atan2(dy, dx);
+    const dx = seg.p2.x - seg.p1.x;
+    const dy = seg.p2.y - seg.p1.y;
+    let facing = Math.atan2(dy, dx);
 
-        // Add gentle wobble for flying or swimming units
-        if (mode === 'AIR_DIRECT') {
-          const perpX = -Math.sin(facing);
-          const perpY = Math.cos(facing);
-          const wobble = Math.sin(animTime * 3 + distance * 0.05 + laneIndex) * 8;
-          x += perpX * wobble;
-          y += perpY * wobble;
-        } else if (mode === 'WATER_PATH') {
-          y += Math.sin(animTime * 4 + x * 0.04 + laneIndex) * 3;
-        }
-
-        return { position: { x, y }, facing, isFinished: false };
-      }
-      prevCumulative = seg.cumulativeLength;
+    // Add gentle wobble for flying or swimming units
+    if (mode === 'AIR_DIRECT') {
+      const perpX = -Math.sin(facing);
+      const perpY = Math.cos(facing);
+      const wobble = Math.sin(animTime * 3 + distance * 0.05 + laneIndex) * 8;
+      x += perpX * wobble;
+      y += perpY * wobble;
+    } else if (mode === 'WATER_PATH') {
+      y += Math.sin(animTime * 4 + x * 0.04 + laneIndex) * 3;
     }
 
-    const lastPt = path.segments[path.segments.length - 1].p2;
-    return { position: { ...lastPt }, facing: 0, isFinished: true };
+    return { position: { x, y }, facing, isFinished: false };
   }
 }

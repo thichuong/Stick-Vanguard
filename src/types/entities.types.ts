@@ -89,6 +89,8 @@ export interface SoldierEntity {
   name: string;
   x: number;
   y: number;
+  prevX?: number;
+  prevY?: number;
   hp: number;
   maxHp: number;
   damage: number;
@@ -131,6 +133,8 @@ export interface EnemyEntity {
   name: string;
   x: number;
   y: number;
+  prevX?: number;
+  prevY?: number;
   hp: number;
   maxHp: number;
   speed: number;
@@ -213,6 +217,8 @@ export interface ProjectileEntity {
   sourceTowerId: string;
   x: number;
   y: number;
+  prevX?: number;
+  prevY?: number;
   startX: number;
   startY: number;
   targetX: number;
@@ -260,6 +266,8 @@ export interface Particle {
   id: string;
   x: number;
   y: number;
+  prevX?: number;
+  prevY?: number;
   vx: number;
   vy: number;
   color: string;

@@ -5,6 +5,7 @@ import { UI_ICONS } from '../../config/ui/icons/index.js';
 
 export class ArsenalBar {
   private placementHintEl: HTMLElement | null;
+  private lastArsenalKey: string = '';
 
   constructor(
     private state: GameState,
@@ -40,6 +41,12 @@ export class ArsenalBar {
   }
 
   public updateArsenalVisuals(): void {
+    const key = `${this.state.gold}_${this.state.activePlacementType}_${this.state.selectedBuildPoint?.validFor}_${this.state.selectedBuildPoint?.x}_${this.state.selectedBuildPoint?.y}`;
+    if (key === this.lastArsenalKey) {
+      return;
+    }
+    this.lastArsenalKey = key;
+
     const hotbarBtns = document.querySelectorAll('.hotbar-btn');
     hotbarBtns.forEach((btn) => {
       const type = btn.getAttribute('data-type') as TowerType;

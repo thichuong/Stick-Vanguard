@@ -4,8 +4,11 @@ import { TargetingRuleEngine } from './TargetingRuleEngine.js';
 import { NavigationSystem } from './NavigationSystem.js';
 import { WaveSystem } from './WaveSystem.js';
 import { SoundSystem } from './SoundSystem.js';
+import { SpatialIndex } from '../core/SpatialIndex.js';
 
 export class EnemySkillSystem {
+  private static auraCandidates: EnemyEntity[] = [];
+
   public static update(
     enemies: EnemyEntity[],
     towers: TowerEntity[],
@@ -13,7 +16,8 @@ export class EnemySkillSystem {
     dt: number,
     navSystem?: NavigationSystem,
     waveSystem?: WaveSystem,
-    totalAnimTime?: number
+    totalAnimTime?: number,
+    spatialIndex?: SpatialIndex
   ): void {
     for (const enemy of enemies) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
@@ -31,7 +35,7 @@ export class EnemySkillSystem {
 
         if (enemy.abilityTimers[i] <= 0) {
           enemy.abilityTimers[i] = interval;
-          this.executeAbility(enemy, ability, enemies, towers, state, navSystem, waveSystem, totalAnimTime);
+          this.executeAbility(enemy, ability, enemies, towers, state, navSystem, waveSystem, totalAnimTime, spatialIndex);
         }
       }
     }
@@ -88,7 +92,8 @@ export class EnemySkillSystem {
     state: GameState,
     navSystem?: NavigationSystem,
     waveSystem?: WaveSystem,
-    totalAnimTime: number = 0
+    totalAnimTime: number = 0,
+    spatialIndex?: SpatialIndex
   ): void {
     switch (ability.type) {
       case 'SUMMON': {
@@ -172,11 +177,15 @@ export class EnemySkillSystem {
       case 'ARMOR_SHIELD_AURA': {
         const radius = ability.radius || 110;
         const shieldVal = ability.value || 80;
+        const candidates = spatialIndex
+          ? spatialIndex.queryRadius(sourceEnemy.x, sourceEnemy.y, radius, this.auraCandidates)
+          : allEnemies;
 
-        for (const e of allEnemies) {
+        for (const e of candidates) {
           if (e.hp <= 0 || e.state === 'DEAD') continue;
-          const dist = Math.hypot(e.x - sourceEnemy.x, e.y - sourceEnemy.y);
-          if (dist <= radius) {
+          const dx = e.x - sourceEnemy.x;
+          const dy = e.y - sourceEnemy.y;
+          if (dx * dx + dy * dy <= radius * radius) {
             e.armorShield = Math.min((e.armorShield || 0) + shieldVal, shieldVal * 2.5);
             e.maxArmorShield = Math.max(e.maxArmorShield || 0, e.armorShield);
             state.addFloatingText('🛡️ +Giáp Ảo!', e.x, e.y - 18, '#e2e8f0', 12);
@@ -189,11 +198,15 @@ export class EnemySkillSystem {
       case 'MAGIC_SHIELD_AURA': {
         const radius = ability.radius || 120;
         const shieldVal = ability.value || 90;
+        const candidates = spatialIndex
+          ? spatialIndex.queryRadius(sourceEnemy.x, sourceEnemy.y, radius, this.auraCandidates)
+          : allEnemies;
 
-        for (const e of allEnemies) {
+        for (const e of candidates) {
           if (e.hp <= 0 || e.state === 'DEAD') continue;
-          const dist = Math.hypot(e.x - sourceEnemy.x, e.y - sourceEnemy.y);
-          if (dist <= radius) {
+          const dx = e.x - sourceEnemy.x;
+          const dy = e.y - sourceEnemy.y;
+          if (dx * dx + dy * dy <= radius * radius) {
             e.magicShield = Math.min((e.magicShield || 0) + shieldVal, shieldVal * 2.5);
             e.maxMagicShield = Math.max(e.maxMagicShield || 0, e.magicShield);
             state.addFloatingText('🔮 +Khiên Phép!', e.x, e.y - 18, '#c084fc', 12);
@@ -206,11 +219,15 @@ export class EnemySkillSystem {
       case 'HEAL_AURA': {
         const radius = ability.radius || 120;
         const healAmt = ability.value || 80;
+        const candidates = spatialIndex
+          ? spatialIndex.queryRadius(sourceEnemy.x, sourceEnemy.y, radius, this.auraCandidates)
+          : allEnemies;
 
-        for (const e of allEnemies) {
+        for (const e of candidates) {
           if (e.hp <= 0 || e.state === 'DEAD') continue;
-          const dist = Math.hypot(e.x - sourceEnemy.x, e.y - sourceEnemy.y);
-          if (dist <= radius && e.hp < e.maxHp) {
+          const dx = e.x - sourceEnemy.x;
+          const dy = e.y - sourceEnemy.y;
+          if (dx * dx + dy * dy <= radius * radius && e.hp < e.maxHp) {
             const actualHeal = Math.min(healAmt, e.maxHp - e.hp);
             e.hp += actualHeal;
             state.addFloatingText(`+${actualHeal} ❤️`, e.x, e.y - 16, '#22c55e', 13);
@@ -224,11 +241,15 @@ export class EnemySkillSystem {
         const radius = ability.radius || 110;
         const ratio = Math.min(0.6, ability.value || 0.25);
         const duration = ability.duration || 4.0;
+        const candidates = spatialIndex
+          ? spatialIndex.queryRadius(sourceEnemy.x, sourceEnemy.y, radius, this.auraCandidates)
+          : allEnemies;
 
-        for (const e of allEnemies) {
+        for (const e of candidates) {
           if (e.hp <= 0 || e.state === 'DEAD') continue;
-          const dist = Math.hypot(e.x - sourceEnemy.x, e.y - sourceEnemy.y);
-          if (dist <= radius) {
+          const dx = e.x - sourceEnemy.x;
+          const dy = e.y - sourceEnemy.y;
+          if (dx * dx + dy * dy <= radius * radius) {
             e.damageReductionRatio = Math.max(e.damageReductionRatio || 0, ratio);
             e.damageReductionTimer = Math.max(e.damageReductionTimer || 0, duration);
             state.addFloatingText('🛡️ GIẢM SÁT THƯƠNG!', e.x, e.y - 20, '#38bdf8', 12);

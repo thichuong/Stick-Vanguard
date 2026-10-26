@@ -11,16 +11,19 @@ import {
   MAGE_SECONDARY_DMG_RATIO,
   ELEMENT_COLORS
 } from '../config/elements.config.js';
+import { SpatialIndex } from '../core/SpatialIndex.js';
 
 export class TowerSystem {
   private static projectileCounter = 0;
+  private static auraCandidates: EnemyEntity[] = [];
 
   public static updateTowers(
     towers: TowerEntity[],
     enemies: EnemyEntity[],
     dt: number,
     onSpawnProjectile: (proj: ProjectileEntity) => void,
-    onAuraHit?: (params: { enemy: EnemyEntity; damage: number; color: string }) => void
+    onAuraHit?: (params: { enemy: EnemyEntity; damage: number; color: string }) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     for (const tower of towers) {
       if (tower.disabledTimer && tower.disabledTimer > 0) {
@@ -59,10 +62,15 @@ export class TowerSystem {
             sourceId: tower.id
           };
 
-          for (const enemy of enemies) {
+          const candidateEnemies = spatialIndex
+            ? spatialIndex.queryRadius(tower.x, tower.y, tower.range, this.auraCandidates)
+            : enemies;
+
+          for (const enemy of candidateEnemies) {
             if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
-            const dist = Math.hypot(enemy.x - tower.x, enemy.y - tower.y);
-            if (dist <= tower.range && TargetingRuleEngine.canTarget(tower.targetingFilter, enemy)) {
+            const dx = enemy.x - tower.x;
+            const dy = enemy.y - tower.y;
+            if (dx * dx + dy * dy <= tower.range * tower.range && TargetingRuleEngine.canTarget(tower.targetingFilter, enemy)) {
               const calc = TargetingRuleEngine.calculateDamage(payload, enemy);
               if (!calc.isImmune) {
                 TargetingRuleEngine.applyDamageToEnemy(
@@ -95,7 +103,9 @@ export class TowerSystem {
       }
 
       // Find best target in range
-      const target = this.findTarget(tower, enemies);
+      const target = spatialIndex
+        ? spatialIndex.findBestTargetInRange(tower.x, tower.y, tower.range, (e) => TargetingRuleEngine.canTarget(tower.targetingFilter, e))
+        : this.findTarget(tower, enemies);
       if (!target) {
         continue;
       }

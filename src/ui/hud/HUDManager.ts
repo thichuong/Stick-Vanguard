@@ -15,6 +15,7 @@ export class HUDManager {
   private hudMapNameEl: HTMLElement | null;
   private hudMapWavesEl: HTMLElement | null;
   private bannerState: 'NONE' | 'GAME_OVER' | 'VICTORY' = 'NONE';
+  private lastHudStateKey: string = '';
 
   constructor(
     private state: GameState,
@@ -115,6 +116,12 @@ export class HUDManager {
   }
 
   public updateHUD(currentWave: number, totalWaves: number, isWaveRunning: boolean): void {
+    const key = `${this.state.gold}_${this.state.lives}_${this.state.maxLives}_${currentWave}_${totalWaves}_${isWaveRunning}_${this.state.isGameOver}_${this.state.isVictory}_${this.state.currentMapId}`;
+    if (key === this.lastHudStateKey) {
+      return;
+    }
+    this.lastHudStateKey = key;
+
     const goldEl = document.getElementById('hud-gold');
     const livesEl = document.getElementById('hud-lives');
     const waveEl = document.getElementById('hud-wave');

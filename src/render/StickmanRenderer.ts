@@ -7,32 +7,54 @@ import { ElementType, StatusEffectType } from '../types/elements.types.js';
 import { drawElementSvgOnCanvas, STATUS_EFFECT_TO_ELEMENT } from '../config/elements/icons/index.js';
 import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
 import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
+import { UnitSpriteCache } from './UnitSpriteCache.js';
+
+export type LODLevel = 'FULL' | 'MEDIUM' | 'HIGH_CROWD';
 
 export class StickmanRenderer {
+  public static currentLOD: LODLevel = 'FULL';
+
+  public static getLODLevel(totalUnits: number): LODLevel {
+    if (totalUnits >= 220) return 'HIGH_CROWD';
+    if (totalUnits >= 80) return 'MEDIUM';
+    return 'FULL';
+  }
+
   /**
    * Renders a procedural enemy stickman
    */
   public static renderEnemy(
     ctx: CanvasRenderingContext2D,
     enemy: EnemyEntity,
-    animTime: number
+    animTime: number,
+    interpolationAlpha = 1.0
   ): void {
     if (enemy.hp <= 0 || enemy.state === 'DEAD') return;
 
-    const { x, y, size, altitude, elementalProfile } = enemy;
+    const lod = this.currentLOD;
+    const x = enemy.prevX !== undefined && interpolationAlpha < 1.0
+      ? enemy.prevX + (enemy.x - enemy.prevX) * interpolationAlpha
+      : enemy.x;
+    const y = enemy.prevY !== undefined && interpolationAlpha < 1.0
+      ? enemy.prevY + (enemy.y - enemy.prevY) * interpolationAlpha
+      : enemy.y;
+
+    const { size, altitude, elementalProfile } = enemy;
     const drawY = y - altitude;
 
     ctx.save();
 
     // 1. Shadow (especially visible for flying enemies)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath();
-    const shadowScale = Math.max(0.4, 1 - altitude / 60);
-    ctx.ellipse(x, y + 4, (size * 0.7) * shadowScale, (size * 0.35) * shadowScale, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (lod !== 'HIGH_CROWD' || altitude > 5) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      const shadowScale = Math.max(0.4, 1 - altitude / 60);
+      ctx.ellipse(x, y + 4, (size * 0.7) * shadowScale, (size * 0.35) * shadowScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 2. Water ripples for Swimming Enemy
-    if (enemy.movementType === 'SWIM') {
+    if (enemy.movementType === 'SWIM' && lod === 'FULL') {
       ctx.save();
       ctx.strokeStyle = 'rgba(125, 211, 252, 0.6)';
       ctx.lineWidth = 1.5;
@@ -52,58 +74,74 @@ export class StickmanRenderer {
     const elemColor = ELEMENT_COLORS[elementalProfile.primaryElement] || '#ffffff';
     const secColor = elementalProfile.secondaryElement ? ELEMENT_COLORS[elementalProfile.secondaryElement] : elemColor;
 
-    // Aura for dual-element or summoner enemies
-    if (elementalProfile.secondaryElement || enemy.tags.includes('SUMMONER')) {
-      ctx.save();
-      ctx.strokeStyle = `${secColor}50`;
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.arc(x, drawY - size * 0.2, size * 0.9 + Math.sin(animTime * 6) * 2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    if (lod === 'FULL') {
+      // Aura for dual-element or summoner enemies
+      if (elementalProfile.secondaryElement || enemy.tags.includes('SUMMONER')) {
+        ctx.save();
+        ctx.strokeStyle = `${secColor}50`;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(x, drawY - size * 0.2, size * 0.9 + Math.sin(animTime * 6) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Shield Aura (Armor Shield or Magic Shield or Damage Reduction)
+      if ((enemy.armorShield && enemy.armorShield > 0) || (enemy.magicShield && enemy.magicShield > 0)) {
+        ctx.save();
+        const shieldColor = enemy.magicShield && enemy.magicShield > 0 ? '#c084fc' : '#e2e8f0';
+        ctx.strokeStyle = shieldColor;
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        ctx.arc(x, drawY - size * 0.2, size * 0.95 + Math.sin(animTime * 5) * 2.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, drawY - size * 0.2, size * 1.1 + Math.sin(animTime * 4) * 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
-    // Shield Aura (Armor Shield or Magic Shield or Damage Reduction)
-    if ((enemy.armorShield && enemy.armorShield > 0) || (enemy.magicShield && enemy.magicShield > 0)) {
-      ctx.save();
-      const shieldColor = enemy.magicShield && enemy.magicShield > 0 ? '#c084fc' : '#e2e8f0';
-      ctx.strokeStyle = shieldColor;
-      ctx.lineWidth = 2.0;
-      ctx.setLineDash([5, 3]);
-      ctx.beginPath();
-      ctx.arc(x, drawY - size * 0.2, size * 0.95 + Math.sin(animTime * 5) * 2.5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    // 5. Render Creature Body via UnitSpriteCache or Direct Rigging
+    const baked = UnitSpriteCache.drawCachedEnemyBody(ctx, enemy, x, drawY, animTime, elemColor, secColor);
+    if (!baked) {
+      // Fallback or Boss direct vector rendering
+      const mockPosEnemy = x !== enemy.x || y !== enemy.y ? { ...enemy, x, y } : enemy;
+      EnemyArchetypeRenderer.renderEnemyBody(ctx, mockPosEnemy, animTime, elemColor, secColor);
     }
 
-    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(x, drawY - size * 0.2, size * 1.1 + Math.sin(animTime * 4) * 1.5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    // 6. Health bar & Elemental icons with Smart LOD
+    const isBossOrElite = enemy.tags.includes('BOSS') || enemy.tags.includes('ELITE');
+    const hasLostHp = enemy.hp < enemy.maxHp;
+    const hasShield = (enemy.armorShield && enemy.armorShield > 0) || (enemy.magicShield && enemy.magicShield > 0);
+    const hasStatus = enemy.statusEffects && enemy.statusEffects.length > 0;
+    const shouldDrawHp = lod === 'FULL' || isBossOrElite || hasLostHp || hasShield || hasStatus;
+
+    if (shouldDrawHp) {
+      const headY = drawY - size * 0.75;
+      this.renderHealthBar(
+        ctx,
+        x,
+        headY - 12,
+        enemy.hp,
+        enemy.maxHp,
+        elementalProfile.primaryElement,
+        enemy.statusEffects,
+        elementalProfile.secondaryElement,
+        enemy.armorShield,
+        enemy.magicShield,
+        enemy.damageReductionTimer,
+        lod
+      );
     }
-
-    // 5. Render Creature Body via Stick Archetype Rigging (Dragon, Serpent, Bat, Spider, etc.)
-    EnemyArchetypeRenderer.renderEnemyBody(ctx, enemy, animTime, elemColor, secColor);
-
-    // 6. Health bar & Elemental icons
-    const headY = drawY - size * 0.75;
-    this.renderHealthBar(
-      ctx,
-      x,
-      headY - 12,
-      enemy.hp,
-      enemy.maxHp,
-      elementalProfile.primaryElement,
-      enemy.statusEffects,
-      elementalProfile.secondaryElement,
-      enemy.armorShield,
-      enemy.magicShield,
-      enemy.damageReductionTimer
-    );
 
     ctx.restore();
   }
@@ -532,7 +570,8 @@ export class StickmanRenderer {
     secondaryElement?: string,
     armorShield?: number,
     magicShield?: number,
-    damageReductionTimer?: number
+    damageReductionTimer?: number,
+    lod: LODLevel = 'FULL'
   ): void {
     const width = 28;
     const height = 4;
@@ -554,6 +593,11 @@ export class StickmanRenderer {
       const shieldWidth = width * shieldRatio;
       ctx.fillStyle = (magicShield || 0) > 0 ? '#c084fc' : '#e2e8f0';
       ctx.fillRect(x - width / 2, y - 2, shieldWidth, 2);
+    }
+
+    if (lod === 'HIGH_CROWD') {
+      ctx.restore();
+      return;
     }
 
     // Element indicator pip (Crisp SVG icon)
@@ -582,7 +626,9 @@ export class StickmanRenderer {
     }
 
     if (statusEffects.length > 0) {
-      for (const eff of statusEffects) {
+      const maxIcons = lod === 'MEDIUM' ? 1 : statusEffects.length;
+      for (let i = 0; i < maxIcons && i < statusEffects.length; i++) {
+        const eff = statusEffects[i];
         const effElem = STATUS_EFFECT_TO_ELEMENT[eff.type as StatusEffectType];
         if (effElem) {
           drawElementSvgOnCanvas(ctx, effElem, x + width / 2 + 2 + iconOffset, y - 5, 12);

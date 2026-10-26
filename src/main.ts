@@ -1,19 +1,13 @@
 import { GameState } from './core/GameState.js';
 import { NavigationSystem } from './systems/NavigationSystem.js';
 import { WaveSystem } from './systems/WaveSystem.js';
-import { TowerSystem } from './systems/TowerSystem.js';
-import { CombatSystem, CombatEvent } from './systems/CombatSystem.js';
-import { TrapSystem } from './systems/TrapSystem.js';
-import { ProjectileSystem } from './systems/ProjectileSystem.js';
+import { SimulationEngine } from './core/SimulationEngine.js';
 import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
-import { EnemySkillSystem } from './systems/EnemySkillSystem.js';
 import { MapRenderer } from './render/MapRenderer.js';
 import { StickmanRenderer } from './render/StickmanRenderer.js';
 import { TowerRenderer } from './render/TowerRenderer.js';
 import { UIManager } from './ui/UIManager.js';
 import { MAPS_CONFIG } from './config/map.config.js';
-import { ELEMENT_COLORS } from './config/elements.config.js';
-import { ElementType } from './types/elements.types.js';
 import { SoundSystem } from './systems/SoundSystem.js';
 
 class GameApp {
@@ -22,9 +16,9 @@ class GameApp {
   private state: GameState;
   private navSystem: NavigationSystem;
   private waveSystem: WaveSystem;
+  private simEngine: SimulationEngine;
   private uiManager: UIManager;
   private lastTime: number = 0;
-  private totalAnimTime: number = 0;
 
   constructor() {
     this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -35,6 +29,7 @@ class GameApp {
 
     this.navSystem = new NavigationSystem(this.state.currentMap);
     this.waveSystem = new WaveSystem(this.state.currentMap, this.state.customTotalWaves);
+    this.simEngine = new SimulationEngine(this.state, this.navSystem, this.waveSystem);
 
     this.uiManager = new UIManager(
       this.state,
@@ -69,6 +64,9 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
+    this.simEngine.onMapChanged();
+    MapRenderer.clearCache();
+
     this.uiManager.updateHotbarVisuals();
     this.state.addFloatingText(`Bản đồ: ${found.name}`, 500, 100, '#38bdf8', 18);
   }
@@ -150,6 +148,8 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
+    this.simEngine.onMapChanged();
+    MapRenderer.clearCache();
   }
 
   private bindCanvasEvents(): void {
@@ -289,14 +289,9 @@ class GameApp {
     const rawDt = (currentTime - this.lastTime) / 1000;
     this.lastTime = currentTime;
 
-    const dt = Math.min(rawDt, 0.1) * (this.state.isPaused ? 0 : this.state.gameSpeed);
-    this.totalAnimTime += dt;
+    this.simEngine.update(rawDt);
 
-    if (!this.state.isPaused && !this.state.isGameOver && !this.state.isVictory) {
-      this.update(dt);
-    }
-
-    this.render();
+    this.render(this.simEngine.getInterpolationAlpha());
 
     this.uiManager.updateHUD(
       this.waveSystem.currentWaveIndex + 1,
@@ -307,281 +302,52 @@ class GameApp {
     requestAnimationFrame((t) => this.loop(t));
   }
 
-  private update(dt: number): void {
-    // Sync settings to engine
-    this.waveSystem.setTotalWaves(this.state.customTotalWaves);
-    TargetingRuleEngine.globalDamageMultiplier = this.state.damageMultiplier;
-
-    // 1. Update Wave Spawning
-    this.waveSystem.update(
-      dt,
-      (newEnemy) => {
-        const pathInfo = this.navSystem.getPathInfo(newEnemy.navigationMode, newEnemy.laneIndex ?? 0);
-        newEnemy.pathTotalLength = pathInfo.totalLength;
-        this.state.enemies.push(newEnemy);
-      },
-      (reward) => {
-        const scaledReward = Math.max(1, Math.round(reward * this.state.goldMultiplier));
-        this.state.gold += scaledReward;
-        this.state.addFloatingText(`+${scaledReward} 🪙 Hoàn thành Đợt!`, 500, 100, '#22c55e', 18);
-        SoundSystem.playWaveComplete();
-        if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
-          this.state.isVictory = true;
-          SoundSystem.playVictory();
-        }
-      },
-      this.state.enemies.length
-    );
-
-    // 2. Update Enemies along Path
-    EnemySkillSystem.update(
-      this.state.enemies,
-      this.state.towers,
-      this.state,
-      dt,
-      this.navSystem,
-      this.waveSystem,
-      this.totalAnimTime
-    );
-    const basePos = this.state.currentMap.playerBases[0] || { x: 500, y: 325 };
-    for (let i = this.state.enemies.length - 1; i >= 0; i--) {
-      const enemy = this.state.enemies[i];
-
-      TargetingRuleEngine.updateStatusEffects(enemy, dt, (dmg, elem) => {
-        TargetingRuleEngine.applyDamageToEnemy(enemy, dmg, elem);
-        this.state.addFloatingText(`-${dmg}`, enemy.x, enemy.y - 12, ELEMENT_COLORS[elem], 13);
-        if (enemy.hp <= 0) enemy.state = 'DEAD';
-      });
-
-      // Enemy Death Handling (Gold Multiplier & Death-Spawn / Split)
-      if (enemy.hp <= 0 || enemy.state === 'DEAD') {
-        const tier = enemy.tags.includes('BOSS') ? 'BOSS' : enemy.tags.includes('ELITE') ? 'ELITE' : 'NORMAL';
-        SoundSystem.playEnemyDeath(tier);
-
-        const scaledGold = enemy.rewardGold > 0 ? Math.max(1, Math.round(enemy.rewardGold * this.state.goldMultiplier)) : 0;
-        this.state.gold += scaledGold;
-        if (scaledGold > 0) {
-          this.state.addFloatingText(`+${scaledGold} 🪙`, enemy.x, enemy.y - 10, '#facc15', 14);
-        }
-        this.state.addExplosionParticles(enemy.x, enemy.y, ELEMENT_COLORS[enemy.elementalProfile.primaryElement], 8);
-
-        // Check Death-Spawn / Split Mechanic via EnemySkillSystem
-        EnemySkillSystem.handleDeath(enemy, this.state, this.navSystem, this.waveSystem, this.totalAnimTime);
-
-        this.state.enemies.splice(i, 1);
-        continue;
-      }
-
-      if (enemy.state === 'ENGAGED' || enemy.state === 'ATTACKING') {
-        continue;
-      }
-
-      enemy.pathDistance += enemy.speed * dt;
-      const nav = this.navSystem.getPointAlongPath(
-        enemy.navigationMode,
-        enemy.pathDistance,
-        this.totalAnimTime,
-        enemy.laneIndex ?? 0
-      );
-
-      enemy.x = nav.position.x;
-      enemy.y = nav.position.y;
-      enemy.facing = nav.facing;
-
-      if (nav.isFinished) {
-        const isBoss = enemy.tags.includes('BOSS');
-        const damageToBase = isBoss ? 5 : 1;
-        this.state.lives -= damageToBase;
-        SoundSystem.playBaseDamaged(isBoss);
-        const hitX = enemy.x || basePos.x;
-        const hitY = enemy.y || basePos.y;
-        this.state.addFloatingText(`-${damageToBase} ❤️`, hitX, hitY - 20, '#ef4444', 16);
-        this.state.addExplosionParticles(hitX, hitY, '#ef4444', 15);
-        this.state.enemies.splice(i, 1);
-
-        if (this.state.lives <= 0) {
-          this.state.lives = 0;
-          this.state.isGameOver = true;
-          SoundSystem.playGameOver();
-        }
-      }
-    }
-
-    // 3. Update Traps on path and water
-    const activeTraps = this.state.towers.filter((t) => t.placement !== 'ROADSIDE');
-    TrapSystem.updateTraps(activeTraps, this.state.enemies, dt, (res, trap) => {
-      SoundSystem.playTrapTrigger(trap.type as any);
-      this.state.addExplosionParticles(res.triggeredAt.x, res.triggeredAt.y, ELEMENT_COLORS[trap.element], 14);
-      for (const hit of res.affectedEnemies) {
-        const en = this.state.enemies.find((e) => e.id === hit.enemyId);
-        if (en) {
-          if (hit.isImmune) {
-            this.state.addFloatingText('MIỄN NHIỄM!', en.x, en.y - 14, '#94a3b8', 13);
-          } else {
-            this.state.addFloatingText(
-              `${hit.label ? hit.label + ' ' : ''}-${hit.damage}`,
-              en.x,
-              en.y - 14,
-              ELEMENT_COLORS[trap.element],
-              13
-            );
-          }
-        }
-      }
-    });
-
-    // 4. Update Soldiers and Combat
-    CombatSystem.updateCombat(this.state.soldiers, this.state.enemies, dt, (evt: CombatEvent) => {
-      if (evt.type === 'MELEE_HIT' || evt.type === 'RANGED_JAVELIN') {
-        const color = ELEMENT_COLORS[evt.element as ElementType] || '#ffffff';
-        if (evt.type === 'RANGED_JAVELIN') {
-          SoundSystem.playShoot('JAVELIN');
-        }
-        SoundSystem.playHit({
-          isImmune: evt.isImmune,
-          isReactionOrWeakness: !!evt.label && !evt.isImmune,
-          element: evt.element,
-          isMelee: evt.type === 'MELEE_HIT'
-        });
-
-        if (evt.isImmune) {
-          this.state.addFloatingText('MIỄN NHIỄM!', evt.x, evt.y - 12, '#94a3b8', 13);
-        } else {
-          this.state.addFloatingText(`${evt.label ? evt.label + ' ' : ''}-${evt.damage}`, evt.x, evt.y - 12, color, 13);
-        }
-        this.state.addExplosionParticles(evt.x, evt.y, color, 4);
-      } else if (evt.type === 'SOLDIER_DEATH') {
-        SoundSystem.playSoldierDeath();
-        const deadSoldier = this.state.soldiers.find((s) => s.id === evt.targetId);
-        if (deadSoldier) {
-          if (!deadSoldier.isSpirit) {
-            this.state.trySpawnHeroicSpirit(deadSoldier);
-          } else {
-            // Remove spirit from soldiers list and from altar's active spirits
-            const sIdx = this.state.soldiers.findIndex((s) => s.id === deadSoldier.id);
-            if (sIdx !== -1) {
-              this.state.soldiers.splice(sIdx, 1);
-            }
-            const altar = this.state.towers.find((t) => t.id === deadSoldier.towerId);
-            if (altar && altar.soldierIds) {
-              const idIdx = altar.soldierIds.indexOf(deadSoldier.id);
-              if (idIdx !== -1) {
-                altar.soldierIds.splice(idIdx, 1);
-              }
-            }
-          }
-        }
-      }
-    });
-
-    // 5. Update Towers
-    TowerSystem.updateTowers(
-      this.state.towers,
-      this.state.enemies,
-      dt,
-      (proj) => {
-        const sourceTower = this.state.towers.find((t) => t.id === proj.sourceTowerId);
-        const shootType = sourceTower?.type === 'ARTILLERY'
-          ? 'ARTILLERY'
-          : sourceTower?.type === 'MAGE'
-          ? 'MAGE'
-          : 'ARCHER';
-        SoundSystem.playShoot(shootType);
-        this.state.projectiles.push(proj);
-      },
-      (hit) => {
-        SoundSystem.playHit({ element: 'MAGE' });
-        this.state.addFloatingText(`-${hit.damage}`, hit.enemy.x, hit.enemy.y - 14, hit.color, 13);
-        this.state.addExplosionParticles(hit.enemy.x, hit.enemy.y, hit.color, 4);
-      }
-    );
-
-    // 6. Update Projectiles
-    ProjectileSystem.updateProjectiles(
-      this.state.projectiles,
-      this.state.enemies,
-      dt,
-      (params) => {
-        SoundSystem.playHit({
-          isImmune: params.isImmune,
-          isReactionOrWeakness: !!params.label && !params.isImmune
-        });
-        if (params.isImmune) {
-          this.state.addFloatingText('MIỄN NHIỄM!', params.x, params.y - 14, '#94a3b8', 13);
-        } else {
-          this.state.addFloatingText(
-            `${params.label ? params.label + ' ' : ''}-${params.damage}`,
-            params.x,
-            params.y - 14,
-            params.color,
-            13
-          );
-        }
-        this.state.addExplosionParticles(params.x, params.y, params.color, 6);
-      },
-      (x, y, color) => {
-        SoundSystem.playExplosion('SMALL');
-        this.state.addExplosionParticles(x, y, color, 16);
-      }
-    );
-
-    // 7. Update Particles
-    for (let i = this.state.particles.length - 1; i >= 0; i--) {
-      const p = this.state.particles[i];
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.lifeTime -= dt;
-      if (p.lifeTime <= 0) this.state.particles.splice(i, 1);
-    }
-
-    // 8. Update Floating Texts
-    for (let i = this.state.floatingTexts.length - 1; i >= 0; i--) {
-      const t = this.state.floatingTexts[i];
-      t.y -= 22 * dt;
-      t.lifeTime -= dt;
-      if (t.lifeTime <= 0) this.state.floatingTexts.splice(i, 1);
-    }
-  }
-
-  private render(): void {
+  private render(alpha: number = 1.0): void {
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 1. Map & Road & River of current active map
-    MapRenderer.renderBackground(ctx, this.totalAnimTime, this.state.currentMap);
+    const animTime = this.simEngine.getTotalAnimTime();
+
+    // 1. Map & Road & River of current active map (uses cached static terrain)
+    MapRenderer.renderBackground(ctx, animTime, this.state.currentMap);
 
     // 2. Traps and Towers
-    TowerRenderer.renderTowers(ctx, this.state.towers, this.state.selectedTowerId, this.totalAnimTime);
+    TowerRenderer.renderTowers(ctx, this.state.towers, this.state.selectedTowerId, animTime);
 
-    // 3. Ground/Water Enemies
+    // 3. Update Smart LOD based on total live units on battlefield
+    StickmanRenderer.currentLOD = StickmanRenderer.getLODLevel(
+      this.state.enemies.length + this.state.soldiers.length
+    );
+
+    // 4. Ground/Water Enemies
     for (const enemy of this.state.enemies) {
       if (enemy.movementType !== 'FLY') {
-        StickmanRenderer.renderEnemy(ctx, enemy, this.totalAnimTime);
+        StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
       }
     }
 
-    // 4. Soldiers
+    // 5. Soldiers
     for (const soldier of this.state.soldiers) {
-      StickmanRenderer.renderSoldier(ctx, soldier, this.totalAnimTime);
+      StickmanRenderer.renderSoldier(ctx, soldier, animTime);
     }
 
-    // 5. Flying Enemies
+    // 6. Flying Enemies
     for (const enemy of this.state.enemies) {
       if (enemy.movementType === 'FLY') {
-        StickmanRenderer.renderEnemy(ctx, enemy, this.totalAnimTime);
+        StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
       }
     }
 
-    // 6. Free Placement Cursor Feedback & Range Preview
-    MapRenderer.renderPlacementFeedback(ctx, this.state, this.totalAnimTime);
+    // 7. Free Placement Cursor Feedback & Range Preview
+    MapRenderer.renderPlacementFeedback(ctx, this.state, animTime);
 
-    // 7. Projectiles
+    // 8. Projectiles
     TowerRenderer.renderProjectiles(ctx, this.state.projectiles);
 
-    // 8. Particles & Explosions
+    // 9. Particles & Explosions
     TowerRenderer.renderParticles(ctx, this.state.particles);
 
-    // 9. Floating Texts
+    // 10. Floating Texts
     TowerRenderer.renderFloatingTexts(ctx, this.state.floatingTexts);
   }
 }

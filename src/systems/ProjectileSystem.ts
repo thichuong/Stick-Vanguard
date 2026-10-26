@@ -4,8 +4,12 @@ import {
 } from '../types/entities.types.js';
 import { TargetingRuleEngine } from './TargetingRuleEngine.js';
 import { ELEMENT_COLORS } from '../config/elements.config.js';
+import { SpatialIndex } from '../core/SpatialIndex.js';
+import { swapRemove } from '../core/ObjectPool.js';
 
 export class ProjectileSystem {
+  private static aoeCandidates: EnemyEntity[] = [];
+
   public static updateProjectiles(
     projectiles: ProjectileEntity[],
     enemies: EnemyEntity[],
@@ -19,21 +23,31 @@ export class ProjectileSystem {
       x: number;
       y: number;
     }) => void,
-    onExplosion: (x: number, y: number, color: string, aoeRadius: number) => void
+    onExplosion: (x: number, y: number, color: string, aoeRadius: number) => void,
+    spatialIndex?: SpatialIndex
   ): void {
-    const enemyMap = new Map<string, EnemyEntity>();
-    for (const e of enemies) {
-      if (e.hp > 0 && e.state !== 'DEAD') {
-        enemyMap.set(e.id, e);
+    let enemyMap: Map<string, EnemyEntity> | undefined;
+    if (!spatialIndex) {
+      enemyMap = new Map<string, EnemyEntity>();
+      for (const e of enemies) {
+        if (e.hp > 0 && e.state !== 'DEAD') {
+          enemyMap.set(e.id, e);
+        }
       }
     }
 
+    const getEnemy = (id: string): EnemyEntity | undefined => {
+      return spatialIndex ? spatialIndex.getEnemyById(id) : enemyMap?.get(id);
+    };
+
     for (let i = projectiles.length - 1; i >= 0; i--) {
       const p = projectiles[i];
+      p.prevX = p.x;
+      p.prevY = p.y;
 
       // If tracking an enemy, update target coordinates
       if (p.targetEnemyId) {
-        const target = enemyMap.get(p.targetEnemyId);
+        const target = getEnemy(p.targetEnemyId);
         if (target) {
           p.targetX = target.x;
           p.targetY = target.y - (target.altitude || 0); // aim at altitude if flying
@@ -56,29 +70,30 @@ export class ProjectileSystem {
 
         if (p.progress >= 1.0) {
           // Impact!
-          this.handleAoEImpact(p, enemies, onHit, onExplosion);
-          projectiles.splice(i, 1);
+          this.handleAoEImpact(p, enemies, onHit, onExplosion, spatialIndex);
+          swapRemove(projectiles, i);
         }
       } else {
         // Straight / homing flight
         const dx = p.targetX - p.x;
         const dy = p.targetY - p.y;
-        const dist = Math.hypot(dx, dy);
+        const distSq = dx * dx + dy * dy;
         const step = p.speed * dt;
 
-        if (dist <= step || dist < 12) {
+        if (distSq <= step * step || distSq < 144) {
           // Reached target
           p.x = p.targetX;
           p.y = p.targetY;
 
           if (p.aoeRadius > 0) {
-            this.handleAoEImpact(p, enemies, onHit, onExplosion);
+            this.handleAoEImpact(p, enemies, onHit, onExplosion, spatialIndex);
           } else {
-            this.handleSingleImpact(p, enemies, onHit);
+            this.handleSingleImpact(p, enemies, onHit, spatialIndex);
           }
 
-          projectiles.splice(i, 1);
+          swapRemove(projectiles, i);
         } else {
+          const dist = Math.sqrt(distSq);
           p.x += (dx / dist) * step;
           p.y += (dy / dist) * step;
         }
@@ -89,24 +104,31 @@ export class ProjectileSystem {
   private static handleSingleImpact(
     p: ProjectileEntity,
     enemies: EnemyEntity[],
-    onHit: (params: any) => void
+    onHit: (params: any) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     let target: EnemyEntity | undefined;
     if (p.targetEnemyId) {
-      target = enemies.find((e) => e.id === p.targetEnemyId);
+      target = spatialIndex ? spatialIndex.getEnemyById(p.targetEnemyId) : enemies.find((e) => e.id === p.targetEnemyId);
     }
 
     if (!target) {
       // Find closest enemy to impact point
-      let minDist = 24;
-      for (const e of enemies) {
-        if (e.hp <= 0 || e.state === 'DEAD') continue;
-        const d = Math.hypot(e.x - p.x, e.y - p.y);
-        if (d < minDist) {
-          minDist = d;
-          target = e;
-        }
-      }
+      target = spatialIndex
+        ? spatialIndex.findClosestInRange(p.x, p.y, 24) || undefined
+        : (() => {
+            let t: EnemyEntity | undefined;
+            let minDist = 24;
+            for (const e of enemies) {
+              if (e.hp <= 0 || e.state === 'DEAD') continue;
+              const d = Math.hypot(e.x - p.x, e.y - p.y);
+              if (d < minDist) {
+                minDist = d;
+                t = e;
+              }
+            }
+            return t;
+          })();
     }
 
     if (target && target.hp > 0 && target.state !== 'DEAD') {
@@ -149,12 +171,17 @@ export class ProjectileSystem {
         let prevTarget = target;
         const hitSet = new Set<string>([target.id]);
 
-        for (const nextEnemy of enemies) {
+        const chainCandidates = spatialIndex
+          ? spatialIndex.queryRadius(prevTarget.x, prevTarget.y, 130, this.aoeCandidates)
+          : enemies;
+
+        for (const nextEnemy of chainCandidates) {
           if (remainingBounces <= 0) break;
           if (nextEnemy.hp <= 0 || nextEnemy.state === 'DEAD' || hitSet.has(nextEnemy.id)) continue;
 
-          const dist = Math.hypot(nextEnemy.x - prevTarget.x, nextEnemy.y - prevTarget.y);
-          if (dist <= 130) {
+          const dx = nextEnemy.x - prevTarget.x;
+          const dy = nextEnemy.y - prevTarget.y;
+          if (dx * dx + dy * dy <= 130 * 130) {
             hitSet.add(nextEnemy.id);
             remainingBounces--;
 
@@ -203,14 +230,20 @@ export class ProjectileSystem {
     p: ProjectileEntity,
     enemies: EnemyEntity[],
     onHit: (params: any) => void,
-    onExplosion: (x: number, y: number, color: string, aoeRadius: number) => void
+    onExplosion: (x: number, y: number, color: string, aoeRadius: number) => void,
+    spatialIndex?: SpatialIndex
   ): void {
     const color = p.damagePayload.secondaryElement
       ? ELEMENT_COLORS[p.damagePayload.secondaryElement]
       : ELEMENT_COLORS[p.damagePayload.element];
     onExplosion(p.targetX, p.targetY, color, p.aoeRadius);
 
-    for (const enemy of enemies) {
+    const aoeTargets = spatialIndex
+      ? spatialIndex.queryRadius(p.targetX, p.targetY, p.aoeRadius, this.aoeCandidates)
+      : enemies;
+    const aoeRadiusSq = p.aoeRadius * p.aoeRadius;
+
+    for (const enemy of aoeTargets) {
       if (enemy.hp <= 0 || enemy.state === 'DEAD') continue;
 
       // Parabolic artillery explosions are on ground, so they don't hit FLY enemies!
@@ -218,8 +251,11 @@ export class ProjectileSystem {
         continue;
       }
 
-      const dist = Math.hypot(enemy.x - p.targetX, enemy.y - p.targetY);
-      if (dist <= p.aoeRadius) {
+      const dx = enemy.x - p.targetX;
+      const dy = enemy.y - p.targetY;
+      const dSq = dx * dx + dy * dy;
+      if (dSq <= aoeRadiusSq) {
+        const dist = Math.sqrt(dSq);
         const falloff = Math.max(0.4, 1 - (dist / p.aoeRadius) * 0.6);
         const bonusElements = p.damagePayload.bonusElements
           ? p.damagePayload.bonusElements.map((b) => ({
