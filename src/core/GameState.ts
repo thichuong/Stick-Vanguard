@@ -1157,6 +1157,9 @@ export class GameState {
 
     this.soldiers.push(spiritUnit);
 
+    // Ensure new spirit receives buffs if altar is currently buffed by Mage 4_B
+    this.recalculateTowerBuffs();
+
     this.addFloatingText('👻 ANH LINH HỒI SINH!', deadSoldier.x, deadSoldier.y - 20, '#818cf8', 16);
     this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#818cf8', 15);
     SoundSystem.playEnemySkill('SUMMON');

@@ -3,6 +3,7 @@ import { TowerType } from '../types/entities.types.js';
 import { SideDetailPanel } from './SideDetailPanel.js';
 import { SettingsModal } from './modals/SettingsModal.js';
 import { MapSelectionModal } from './modals/MapSelectionModal.js';
+import { SummonedUnitDetailModal } from './modals/SummonedUnitDetailModal.js';
 import { HUDManager } from './hud/HUDManager.js';
 import { ArsenalBar } from './hud/ArsenalBar.js';
 import { InspectorPanel } from './inspector/InspectorPanel.js';
@@ -11,6 +12,7 @@ export class UIManager {
   private sidePanel: SideDetailPanel;
   private settingsModal: SettingsModal;
   private mapModal: MapSelectionModal;
+  private unitModal: SummonedUnitDetailModal;
   private hudManager: HUDManager;
   private arsenalBar: ArsenalBar;
   private inspector: InspectorPanel;
@@ -28,6 +30,7 @@ export class UIManager {
       (mapId) => this.onSelectMap(mapId),
       () => this.hudManager.clearBanner()
     );
+    this.unitModal = new SummonedUnitDetailModal(this.state);
     this.hudManager = new HUDManager(this.state, {
       onCallWave: () => this.onCallWave(),
       onRestart: () => this.onRestart(),
@@ -43,7 +46,10 @@ export class UIManager {
       () => {
         this.arsenalBar.updateArsenalVisuals();
       },
-      () => this.openMapModal()
+      () => this.openMapModal(),
+      (soldierId, towerId) => {
+        this.openUnitModal(soldierId, towerId);
+      }
     );
 
     this.bindKeyboard();
@@ -71,6 +77,26 @@ export class UIManager {
     this.mapModal.close();
   }
 
+  public openUnitModal(soldierId: string, towerId?: string): void {
+    this.unitModal.open(soldierId, towerId);
+  }
+
+  public closeUnitModal(): void {
+    this.unitModal.close();
+  }
+
+  public isUnitModalOpen(): boolean {
+    return this.unitModal.isOpen();
+  }
+
+  public selectSoldier(soldierId: string): void {
+    this.inspector.selectSoldier(soldierId);
+  }
+
+  public clearSelectedSoldier(): boolean {
+    return this.inspector.clearSelectedSoldier();
+  }
+
   public updateArsenalVisuals(): void {
     this.arsenalBar.updateArsenalVisuals();
   }
@@ -83,6 +109,9 @@ export class UIManager {
     this.hudManager.updateHUD(currentWave, totalWaves, isWaveRunning);
     this.arsenalBar.updateArsenalVisuals();
     this.inspector.render(currentWave, totalWaves, isWaveRunning);
+    if (this.unitModal.isOpen()) {
+      this.unitModal.updateLive();
+    }
   }
 
   private bindStageInfoTrigger(): void {
@@ -140,6 +169,14 @@ export class UIManager {
         const settingsModalBackdrop = document.getElementById('settings-modal-backdrop');
         if (settingsModalBackdrop && !settingsModalBackdrop.classList.contains('hidden')) {
           this.closeSettingsModal();
+          return;
+        }
+        if (this.unitModal.isOpen()) {
+          this.closeUnitModal();
+          return;
+        }
+        // If viewing summoned unit detail, ESC returns back to tower view
+        if (this.inspector.clearSelectedSoldier()) {
           return;
         }
         this.state.hoveredBuildTowerType = null;

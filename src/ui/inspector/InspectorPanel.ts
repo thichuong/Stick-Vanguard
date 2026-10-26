@@ -3,17 +3,29 @@ import { TOWER_BLUEPRINTS } from '../../config/towers.config.js';
 import {
   ELEMENT_ICONS,
   ELEMENT_NAMES,
+  ELEMENT_COLORS,
+  ALL_15_ELEMENTS,
+  ELEMENTAL_MATCHUPS,
   SELECTABLE_ELEMENTS,
   ELEMENT_IMBUE_COST,
   MAGE_SECOND_ELEMENT_COST
 } from '../../config/elements.config.js';
 import { UI_ICONS } from '../../config/ui/icons/index.js';
-import { TowerEntity, TowerType } from '../../types/entities.types.js';
-import { MagicalElementType } from '../../types/elements.types.js';
+import { TowerEntity, TowerType, SoldierEntity } from '../../types/entities.types.js';
+import { MagicalElementType, ElementType } from '../../types/elements.types.js';
 import { SideDetailPanel } from '../SideDetailPanel.js';
 import { MapSelectionModal } from '../modals/MapSelectionModal.js';
 import { WaveSystem } from '../../systems/WaveSystem.js';
 import { ENEMY_BLUEPRINTS } from '../../config/enemies.config.js';
+import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
+
+export interface DamageSourceBreakdown {
+  label: string;
+  sourceDesc: string;
+  element: ElementType;
+  ratioText: string;
+  damage: number;
+}
 
 export class InspectorPanel {
   private inspectorContentEl: HTMLElement;
@@ -26,17 +38,52 @@ export class InspectorPanel {
   private isWaveRunning: boolean = false;
   private currentTab: 'CHOOSE_TOWER' | 'STAGE_INFO' = 'CHOOSE_TOWER';
   private onOpenMapModal?: () => void;
+  private onOpenUnitModal?: (soldierId: string, towerId?: string) => void;
+  private selectedSoldierId: string | null = null;
+  private unitMatchupFilter: 'ALL' | 'EFFECTIVE' | 'RESISTED' = 'ALL';
 
   constructor(
     private state: GameState,
     private sidePanel: SideDetailPanel,
     private onArsenalVisualsUpdate: () => void,
-    onOpenMapModal?: () => void
+    onOpenMapModal?: () => void,
+    onOpenUnitModal?: (soldierId: string, towerId?: string) => void
   ) {
     this.inspectorContentEl = document.getElementById('inspector-content')!;
     this.inspectorTitleEl = document.getElementById('inspector-main-title');
     this.menuOverlayEl = document.getElementById('menu-overlay')!;
     this.onOpenMapModal = onOpenMapModal;
+    this.onOpenUnitModal = onOpenUnitModal;
+
+    // Delegated click and pointerdown listener for summoned unit cards
+    const handleUnitCardSelect = (e: Event) => {
+      const card = (e.target as HTMLElement).closest('.summoned-unit-card[data-soldier-id]') as HTMLElement | null;
+      if (card) {
+        const soldierId = card.getAttribute('data-soldier-id');
+        if (soldierId) {
+          if (this.onOpenUnitModal) {
+            this.onOpenUnitModal(soldierId, this.state.selectedTowerId || undefined);
+          } else {
+            this.selectSoldier(soldierId);
+          }
+        }
+      }
+    };
+    this.inspectorContentEl.addEventListener('click', handleUnitCardSelect);
+    this.inspectorContentEl.addEventListener('pointerdown', (e) => {
+      // Allow instant response on pointerdown as well
+      const card = (e.target as HTMLElement).closest('.summoned-unit-card[data-soldier-id]') as HTMLElement | null;
+      if (card) {
+        const soldierId = card.getAttribute('data-soldier-id');
+        if (soldierId) {
+          if (this.onOpenUnitModal) {
+            this.onOpenUnitModal(soldierId, this.state.selectedTowerId || undefined);
+          } else {
+            this.selectSoldier(soldierId);
+          }
+        }
+      }
+    });
 
     const btnChooseTower = document.getElementById('btn-choose-tower');
     if (btnChooseTower) {
@@ -58,7 +105,24 @@ export class InspectorPanel {
     this.render();
   }
 
+  public selectSoldier(soldierId: string): void {
+    this.selectedSoldierId = soldierId;
+    this.lastRenderKey = '';
+    this.render();
+  }
+
+  public clearSelectedSoldier(): boolean {
+    if (this.selectedSoldierId) {
+      this.selectedSoldierId = null;
+      this.lastRenderKey = '';
+      this.render();
+      return true;
+    }
+    return false;
+  }
+
   public openChooseTower(): void {
+    this.selectedSoldierId = null;
     this.currentTab = 'CHOOSE_TOWER';
     this.state.selectedTowerId = null;
     this.state.selectedBuildPoint = null;
@@ -69,6 +133,7 @@ export class InspectorPanel {
   }
 
   public openStageInfo(): void {
+    this.selectedSoldierId = null;
     this.currentTab = 'STAGE_INFO';
     this.state.selectedTowerId = null;
     this.state.selectedBuildPoint = null;
@@ -89,6 +154,17 @@ export class InspectorPanel {
 
     const tower = this.state.getSelectedTower();
     const buildPt = this.state.selectedBuildPoint;
+
+    // Verify selectedSoldierId validity
+    let selectedSoldier: SoldierEntity | null = null;
+    if (this.selectedSoldierId) {
+      if (tower) {
+        selectedSoldier = this.state.soldiers.find((s) => s.id === this.selectedSoldierId && s.towerId === tower.id) || null;
+      }
+      if (!selectedSoldier) {
+        this.selectedSoldierId = null;
+      }
+    }
 
     const btnChooseTower = document.getElementById('btn-choose-tower');
     const btnStageInfo = document.getElementById('btn-stage-info');
@@ -148,9 +224,11 @@ export class InspectorPanel {
         .join('');
     }
 
-    const currentKey = `${this.currentTab}_${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
+    const currentKey = `${this.currentTab}_${this.state.currentMapId}_${this.currentWave}_${this.totalWaves}_${this.isWaveRunning}_${this.state.selectedTowerId}_${this.selectedSoldierId}_${this.unitMatchupFilter}_${tower?.tier}_${tower?.element}_${tower?.secondaryElement}_${tower?.buffedElements?.join('-')}_${tower?.soldierMode}_${Math.ceil(tower?.disabledTimer || 0)}_${this.state.isSettingRallyPoint}_${this.state.activePlacementType}_${buildPt?.x}_${buildPt?.y}_${goldAffordKey}_${this.confirmingSellTowerId}`;
     if (currentKey === this.lastRenderKey) {
-      if (tower && (tower.type === 'BARRACKS' || tower.type === 'DRAGON_NEST' || tower.type === 'FAIRY_TREE' || tower.type === 'HEROIC_ALTAR')) {
+      if (selectedSoldier) {
+        this.updateLiveSelectedSoldier(selectedSoldier);
+      } else if (tower && (tower.type === 'BARRACKS' || tower.type === 'DRAGON_NEST' || tower.type === 'FAIRY_TREE' || tower.type === 'HEROIC_ALTAR')) {
         this.updateLiveSummonedUnits(tower);
       }
       return;
@@ -176,6 +254,15 @@ export class InspectorPanel {
 
     // CASE 1: Built tower or trap selected
     if (tower) {
+      // Check if a specific summoned unit is currently selected
+      if (selectedSoldier) {
+        if (this.inspectorTitleEl) {
+          this.inspectorTitleEl.innerHTML = `${UI_ICONS.SWORDS} CHI TIẾT ĐƠN VỊ TRIỆU HỒI`;
+        }
+        this.renderSelectedSoldierDetail(tower, selectedSoldier, inspectorSection, prevScrollTop);
+        return;
+      }
+
       if (this.inspectorTitleEl) {
         this.inspectorTitleEl.innerHTML = `${UI_ICONS.CASTLE} CHI TIẾT CÔNG TRÌNH & NÂNG CẤP`;
       }
@@ -978,6 +1065,74 @@ export class InspectorPanel {
   }
 
   /**
+   * Helper to render HTML for a single summoned unit card
+   */
+  public renderSingleSummonedUnitCardHtml(u: SoldierEntity, idx: number): string {
+    const isDead = u.state === 'DEAD' || u.hp <= 0;
+    const curHp = Math.max(0, Math.ceil(u.hp));
+    const maxHp = u.maxHp || 100;
+    const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
+    const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
+
+    let icon = UI_ICONS.SWORD;
+    if (u.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
+    else if (u.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
+    else if (u.isSpirit) icon = ELEMENT_ICONS.GHOST;
+    else if (u.combatMode === 'RANGED') icon = UI_ICONS.BOW;
+
+    let nameDisplay = u.name;
+    if (u.combatMode === 'RANGED' && !u.archetype) {
+      nameDisplay = `Xạ Thủ ${idx + 1}`;
+    }
+
+    let stateLabel = '';
+    let stateClass = '';
+    if (isDead) {
+      stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
+      stateClass = 'state-dead';
+    } else if (u.state === 'ATTACKING') {
+      stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
+      stateClass = 'state-fighting';
+    } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
+      stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
+      stateClass = 'state-moving';
+    } else {
+      stateLabel = `${UI_ICONS.SHIELD} Chốt chặn`;
+      stateClass = 'state-guarding';
+    }
+
+    const armorPct = Math.round((u.armor || 0) * 100);
+    const elemIcon = ELEMENT_ICONS[u.element] || '';
+    const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
+
+    return `
+      <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}" data-soldier-id="${u.id}" title="Nhấp để xem chi tiết chỉ số & bảng sát thương">
+        <div class="suc-top">
+          <div class="suc-name-box">
+            <span class="suc-icon">${icon}</span>
+            <span class="suc-name">${nameDisplay}</span>
+            <span class="suc-elems">${elemIcon}${secIcon}</span>
+          </div>
+          <div class="suc-hp-text">
+            <span class="suc-view-detail-hint">🔍 Chi tiết</span>
+            <span class="suc-hp-val">${curHp}/${maxHp}</span>
+            <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
+          </div>
+        </div>
+
+        <div class="suc-hp-track">
+          <div class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
+        </div>
+
+        <div class="suc-bottom">
+          <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%${u.soldierRegen ? ` • <b style="color: #4ade80;">+${u.soldierRegen}/s</b>` : ''}</span>
+          <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Render real-time list of summoned units for selected summon tower
    */
   public renderSummonedUnitsSectionHtml(tower: TowerEntity): string {
@@ -1004,71 +1159,7 @@ export class InspectorPanel {
         `;
       }
     } else {
-      unitsListHtml = units.map((u, idx) => {
-        const isDead = u.state === 'DEAD' || u.hp <= 0;
-        const curHp = Math.max(0, Math.ceil(u.hp));
-        const maxHp = u.maxHp || 100;
-        const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
-        const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
-
-        // Unit icon & title
-        let icon = UI_ICONS.SWORD;
-        if (u.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
-        else if (u.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
-        else if (u.isSpirit) icon = ELEMENT_ICONS.GHOST;
-        else if (u.combatMode === 'RANGED') icon = UI_ICONS.BOW;
-
-        let nameDisplay = u.name;
-        if (u.combatMode === 'RANGED' && !u.archetype) {
-          nameDisplay = `Xạ Thủ ${idx + 1}`;
-        }
-
-        let stateLabel = '';
-        let stateClass = '';
-        if (isDead) {
-          stateLabel = `⏳ Hồi sinh: ${u.respawnTimer.toFixed(1)}s`;
-          stateClass = 'state-dead';
-        } else if (u.state === 'ATTACKING') {
-          stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
-          stateClass = 'state-fighting';
-        } else if (u.state === 'MOVING_TO_ENGAGE' || u.state === 'MOVING_TO_RALLY') {
-          stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
-          stateClass = 'state-moving';
-        } else {
-          stateLabel = `${UI_ICONS.SHIELD} Chốt chặn`;
-          stateClass = 'state-guarding';
-        }
-
-        const armorPct = Math.round((u.armor || 0) * 100);
-        const elemIcon = ELEMENT_ICONS[u.element] || '';
-        const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
-
-        return `
-          <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}">
-            <div class="suc-top">
-              <div class="suc-name-box">
-                <span class="suc-icon">${icon}</span>
-                <span class="suc-name">${nameDisplay}</span>
-                <span class="suc-elems">${elemIcon}${secIcon}</span>
-              </div>
-              <div class="suc-hp-text">
-                <span class="suc-hp-val">${curHp}/${maxHp}</span>
-                <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
-              </div>
-            </div>
-
-            <!-- Health Bar -->
-            <div class="suc-hp-track">
-              <div class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
-            </div>
-
-            <div class="suc-bottom">
-              <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%${u.soldierRegen ? ` • <b style="color: #4ade80;">+${u.soldierRegen}/s</b>` : ''}</span>
-              <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
+      unitsListHtml = units.map((u, idx) => this.renderSingleSummonedUnitCardHtml(u, idx)).join('');
     }
 
     return `
@@ -1088,7 +1179,7 @@ export class InspectorPanel {
   }
 
   /**
-   * Smoothly update live summoned units list without re-rendering the whole inspector panel
+   * Smoothly update live summoned units list without destroying DOM cards on every tick
    */
   public updateLiveSummonedUnits(tower: TowerEntity): void {
     const container = document.getElementById('inspector-summoned-units-container');
@@ -1118,22 +1209,42 @@ export class InspectorPanel {
       return;
     }
 
-    container.innerHTML = units.map((u, idx) => {
+    // Check if cards need structural rebuild (new soldier spawned / died permanently)
+    const existingCards = container.querySelectorAll('.summoned-unit-card[data-soldier-id]');
+    const existingIds = Array.from(existingCards).map((c) => c.getAttribute('data-soldier-id'));
+    const unitIds = units.map((u) => u.id);
+
+    const needsRebuild =
+      existingCards.length !== units.length ||
+      existingIds.some((id, idx) => id !== unitIds[idx]);
+
+    if (needsRebuild) {
+      container.innerHTML = units.map((u, idx) => this.renderSingleSummonedUnitCardHtml(u, idx)).join('');
+      return;
+    }
+
+    // Perform non-destructive in-place DOM updates (preserves mousedown/mouseup and click events!)
+    units.forEach((u, idx) => {
+      const card = existingCards[idx] as HTMLElement;
+      if (!card) return;
+
       const isDead = u.state === 'DEAD' || u.hp <= 0;
       const curHp = Math.max(0, Math.ceil(u.hp));
       const maxHp = u.maxHp || 100;
       const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
       const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
 
-      let icon = UI_ICONS.SWORD;
-      if (u.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
-      else if (u.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
-      else if (u.isSpirit) icon = ELEMENT_ICONS.GHOST;
-      else if (u.combatMode === 'RANGED') icon = UI_ICONS.BOW;
+      card.classList.toggle('unit-is-dead', isDead);
 
-      let nameDisplay = u.name;
-      if (u.combatMode === 'RANGED' && !u.archetype) {
-        nameDisplay = `Xạ Thủ ${idx + 1}`;
+      const hpValEl = card.querySelector('.suc-hp-val');
+      if (hpValEl && hpValEl.textContent !== `${curHp}/${maxHp}`) {
+        hpValEl.textContent = `${curHp}/${maxHp}`;
+      }
+
+      const hpFillEl = card.querySelector('.suc-hp-fill') as HTMLElement | null;
+      if (hpFillEl) {
+        hpFillEl.style.width = `${pct}%`;
+        hpFillEl.className = `suc-hp-fill ${hpBarClass}`;
       }
 
       let stateLabel = '';
@@ -1152,35 +1263,488 @@ export class InspectorPanel {
         stateClass = 'state-guarding';
       }
 
-      const armorPct = Math.round((u.armor || 0) * 100);
-      const elemIcon = ELEMENT_ICONS[u.element] || '';
-      const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
+      const stateTagEl = card.querySelector('.suc-state-tag');
+      if (stateTagEl && stateTagEl.innerHTML !== stateLabel) {
+        stateTagEl.innerHTML = stateLabel;
+        stateTagEl.className = `suc-state-tag ${stateClass}`;
+      }
+    });
+  }
 
+  /**
+   * Calculates the elemental damage sources for a summoned unit
+   */
+  public getSoldierDamageSources(soldier: SoldierEntity, tower: TowerEntity): DamageSourceBreakdown[] {
+    const sources: DamageSourceBreakdown[] = [];
+    const globalMult = TargetingRuleEngine.globalDamageMultiplier ?? 1.0;
+
+    // 1. Primary Base Element
+    const primaryElem = soldier.element || 'PHYSICAL';
+    const primaryDmg = Math.max(1, Math.round(soldier.damage * globalMult));
+    let primaryDesc = 'Công kích cơ bản';
+    if (soldier.archetype === 'DRAGON') primaryDesc = 'Bản thể Hỏa Long';
+    else if (soldier.archetype === 'FAIRY') primaryDesc = 'Bản thể Tinh Linh Tiên';
+    else if (soldier.combatMode === 'RANGED') primaryDesc = 'Mưa tên Xạ Thủ';
+    else primaryDesc = 'Đòn đánh Chiến Binh';
+
+    sources.push({
+      label: 'Bản Thể (Gốc)',
+      sourceDesc: primaryDesc,
+      element: primaryElem,
+      ratioText: '100% Base',
+      damage: primaryDmg
+    });
+
+    // 2. Secondary Element (Imbued at tower or inherited)
+    if (soldier.secondaryElement) {
+      const isDragonOrFairy = soldier.archetype === 'DRAGON' || soldier.archetype === 'FAIRY';
+      const secRatio = isDragonOrFairy ? 0.6 : 0.45;
+      const secDmg = Math.max(1, Math.round(soldier.damage * secRatio * globalMult));
+      sources.push({
+        label: 'Khảm Thuộc Tính',
+        sourceDesc: `Gắn tại ${tower.name}`,
+        element: soldier.secondaryElement,
+        ratioText: `+${Math.round(secRatio * 100)}% Base`,
+        damage: secDmg
+      });
+    }
+
+    // 3. Aura Buffs from Mage 4_B Towers
+    if (soldier.buffedElements && soldier.buffedElements.length > 0) {
+      const buffSourceTower = tower.buffSourceId ? this.state.towers.find((t) => t.id === tower.buffSourceId) : null;
+      const buffSourceName = buffSourceTower ? buffSourceTower.name : 'Tháp Phù Thủy 4-B';
+      for (let i = 0; i < soldier.buffedElements.length; i++) {
+        const bElem = soldier.buffedElements[i];
+        const bDmg = Math.max(1, Math.round(soldier.damage * 0.45 * globalMult));
+        sources.push({
+          label: `Hào Quang Phù Thủy (Khe ${i + 1})`,
+          sourceDesc: `Nhận từ ${buffSourceName}`,
+          element: bElem,
+          ratioText: '+45% Base',
+          damage: bDmg
+        });
+      }
+    }
+
+    // 4. Heroic Spirit (Ghost Element)
+    if (soldier.isSpirit) {
+      const ghostRatio = soldier.spiritGhostRatio ?? 0.5;
+      const ghostDmg = Math.max(1, Math.round(soldier.damage * ghostRatio * globalMult));
+      sources.push({
+        label: 'Chiêu Hồn Anh Linh',
+        sourceDesc: 'Huyết thống Tế Đàn Anh Linh',
+        element: 'GHOST',
+        ratioText: `+${Math.round(ghostRatio * 100)}% Base`,
+        damage: ghostDmg
+      });
+    }
+
+    return sources;
+  }
+
+  /**
+   * Renders full detailed view for a selected summoned unit in the right panel
+   */
+  public renderSelectedSoldierDetail(
+    tower: TowerEntity,
+    soldier: SoldierEntity,
+    inspectorSection: HTMLElement | null,
+    prevScrollTop: number
+  ): void {
+    const units = this.state.soldiers.filter((s) => s.towerId === tower.id);
+    const isDead = soldier.state === 'DEAD' || soldier.hp <= 0;
+    const curHp = Math.max(0, Math.ceil(soldier.hp));
+    const maxHp = soldier.maxHp || 100;
+    const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
+    const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
+
+    // Unit icon
+    let icon = UI_ICONS.SWORD;
+    if (soldier.archetype === 'DRAGON') icon = ELEMENT_ICONS.DRAGON;
+    else if (soldier.archetype === 'FAIRY') icon = ELEMENT_ICONS.FAIRY;
+    else if (soldier.isSpirit) icon = ELEMENT_ICONS.GHOST;
+    else if (soldier.combatMode === 'RANGED') icon = UI_ICONS.BOW;
+
+    // State text
+    let stateLabel = '';
+    let stateClass = '';
+    if (isDead) {
+      stateLabel = `⏳ Đang hồi sinh (${soldier.respawnTimer.toFixed(1)}s)`;
+      stateClass = 'state-dead';
+    } else if (soldier.state === 'ATTACKING') {
+      stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
+      stateClass = 'state-fighting';
+    } else if (soldier.state === 'MOVING_TO_ENGAGE' || soldier.state === 'MOVING_TO_RALLY') {
+      stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
+      stateClass = 'state-moving';
+    } else {
+      stateLabel = `${UI_ICONS.SHIELD} Chốt chặn canh gác`;
+      stateClass = 'state-guarding';
+    }
+
+    // Quick Unit Switcher Tabs
+    const unitTabsHtml = units.map((u, idx) => {
+      const isSelected = u.id === soldier.id;
+      let tabIcon = UI_ICONS.SWORD;
+      if (u.archetype === 'DRAGON') tabIcon = ELEMENT_ICONS.DRAGON;
+      else if (u.archetype === 'FAIRY') tabIcon = ELEMENT_ICONS.FAIRY;
+      else if (u.isSpirit) tabIcon = ELEMENT_ICONS.GHOST;
+      else if (u.combatMode === 'RANGED') tabIcon = UI_ICONS.BOW;
+
+      let label = u.name;
+      if (u.combatMode === 'RANGED' && !u.archetype) {
+        label = `Xạ Thủ ${idx + 1}`;
+      } else if (u.archetype === 'SOLDIER') {
+        label = `Lính ${idx + 1}`;
+      }
+
+      const uDead = u.state === 'DEAD' || u.hp <= 0;
       return `
-        <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}">
-          <div class="suc-top">
-            <div class="suc-name-box">
-              <span class="suc-icon">${icon}</span>
-              <span class="suc-name">${nameDisplay}</span>
-              <span class="suc-elems">${elemIcon}${secIcon}</span>
-            </div>
-            <div class="suc-hp-text">
-              <span class="suc-hp-val">${curHp}/${maxHp}</span>
-              <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
-            </div>
-          </div>
-
-          <div class="suc-hp-track">
-            <div class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
-          </div>
-
-          <div class="suc-bottom">
-            <span class="suc-stat">${UI_ICONS.SWORDS} ${u.damage} DMG • ${UI_ICONS.SHIELD} ${armorPct}%${u.soldierRegen ? ` • <b style="color: #4ade80;">+${u.soldierRegen}/s</b>` : ''}</span>
-            <span class="suc-state-tag ${stateClass}">${stateLabel}</span>
-          </div>
-        </div>
+        <button class="unit-quick-tab-btn ${isSelected ? 'active' : ''} ${uDead ? 'unit-tab-dead' : ''}" data-switch-soldier="${u.id}">
+          <span>${tabIcon}</span>
+          <span>${label}</span>
+        </button>
       `;
     }).join('');
+
+    // Damage sources breakdown
+    const sources = this.getSoldierDamageSources(soldier, tower);
+    const totalRawDmgPerHit = sources.reduce((acc, s) => acc + s.damage, 0);
+    const totalDps = Math.round(totalRawDmgPerHit * soldier.attackSpeed);
+
+    const sourcesRowsHtml = sources.map((s) => {
+      const eIcon = ELEMENT_ICONS[s.element] || UI_ICONS.SPARKLES;
+      const eName = ELEMENT_NAMES[s.element] || s.element;
+      const eColor = ELEMENT_COLORS[s.element] || '#ffffff';
+      const dps = Math.round(s.damage * soldier.attackSpeed);
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: #f1f5f9;">${s.label}</div>
+            <div style="font-size: 10px; color: #64748b;">${s.sourceDesc}</div>
+          </td>
+          <td>
+            <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: ${eColor};">
+              ${eIcon} ${eName}
+            </span>
+          </td>
+          <td style="color: #94a3b8; font-size: 11px;">${s.ratioText}</td>
+          <td style="color: #38bdf8; font-weight: 800; font-size: 12px;">${s.damage}</td>
+          <td style="color: #cbd5e1; font-size: 11px;">${dps}/s</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Healing perks (Light / Grass)
+    let healPerkHtml = '';
+    const allUnitElements = [soldier.element, soldier.secondaryElement, ...(soldier.buffedElements || [])].filter(Boolean) as ElementType[];
+    if (allUnitElements.includes('LIGHT')) {
+      healPerkHtml += `<div class="unit-perk-pill light-perk">${ELEMENT_ICONS.LIGHT} Ban Phước Quang: Hồi +5 HP mỗi đòn đánh</div>`;
+    }
+    if (allUnitElements.includes('GRASS')) {
+      healPerkHtml += `<div class="unit-perk-pill grass-perk">${ELEMENT_ICONS.GRASS} Hút Hồn Mộc: Hồi +3 HP & trói chân (Root)</div>`;
+    }
+
+    // Matchup table across all 15 elements
+    const matchupRows: Array<{
+      target: ElementType;
+      totalDmg: number;
+      effectiveRatio: number;
+      formulaText: string;
+      category: 'SUPER' | 'EFFECTIVE' | 'NORMAL' | 'RESISTED' | 'IMMUNE';
+    }> = [];
+
+    for (const targetElem of ALL_15_ELEMENTS) {
+      let totalActualDmg = 0;
+      const parts: string[] = [];
+
+      for (const src of sources) {
+        const mult = ELEMENTAL_MATCHUPS[src.element]?.[targetElem] ?? 1.0;
+        const actualPart = mult === 0 ? 0 : Math.max(1, Math.round(src.damage * mult));
+        totalActualDmg += actualPart;
+
+        const iconOnly = ELEMENT_ICONS[src.element] || '';
+        const multText = mult === 0 ? '0%' : `x${mult}`;
+        parts.push(`${iconOnly}${actualPart}(${multText})`);
+      }
+
+      const ratio = totalRawDmgPerHit > 0 ? totalActualDmg / totalRawDmgPerHit : 1.0;
+      let category: 'SUPER' | 'EFFECTIVE' | 'NORMAL' | 'RESISTED' | 'IMMUNE' = 'NORMAL';
+      if (totalActualDmg === 0) category = 'IMMUNE';
+      else if (ratio >= 1.5) category = 'SUPER';
+      else if (ratio > 1.05) category = 'EFFECTIVE';
+      else if (ratio < 0.95) category = 'RESISTED';
+
+      matchupRows.push({
+        target: targetElem,
+        totalDmg: totalActualDmg,
+        effectiveRatio: ratio,
+        formulaText: parts.join(' + '),
+        category
+      });
+    }
+
+    // Filter matchup rows
+    const filteredMatchups = matchupRows.filter((r) => {
+      if (this.unitMatchupFilter === 'EFFECTIVE') return r.effectiveRatio > 1.05;
+      if (this.unitMatchupFilter === 'RESISTED') return r.effectiveRatio < 0.95;
+      return true;
+    });
+
+    const matchupRowsHtml = filteredMatchups.map((m) => {
+      const tIcon = ELEMENT_ICONS[m.target] || UI_ICONS.SPARKLES;
+      const tName = ELEMENT_NAMES[m.target] || m.target;
+      const tColor = ELEMENT_COLORS[m.target] || '#ffffff';
+      const pctVal = Math.round(m.effectiveRatio * 100);
+      const dps = Math.round(m.totalDmg * soldier.attackSpeed);
+
+      let badgeHtml = '';
+      if (m.category === 'SUPER' || m.category === 'EFFECTIVE') {
+        badgeHtml = `<span class="match-eff-badge eff-high">+${pctVal - 100}% (${pctVal}%)</span>`;
+      } else if (m.category === 'RESISTED') {
+        badgeHtml = `<span class="match-eff-badge eff-low">${pctVal}%</span>`;
+      } else if (m.category === 'IMMUNE') {
+        badgeHtml = `<span class="match-eff-badge eff-immune">0% Miễn nhiễm</span>`;
+      } else {
+        badgeHtml = `<span class="match-eff-badge eff-normal">100%</span>`;
+      }
+
+      return `
+        <tr>
+          <td>
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: ${tColor};">
+              ${tIcon} ${tName}
+            </span>
+          </td>
+          <td>${badgeHtml}</td>
+          <td style="font-size: 10px; color: #94a3b8; font-family: monospace;">${m.formulaText}</td>
+          <td style="font-weight: 800; color: #facc15; font-size: 12px;">${m.totalDmg}</td>
+          <td style="font-size: 11px; color: #cbd5e1;">${dps}/s</td>
+        </tr>
+      `;
+    }).join('');
+
+    const armorPct = Math.round((soldier.armor || 0) * 100);
+    const magicResistPct = Math.round((soldier.magicResist || 0) * 100);
+    const rangeText = soldier.combatMode === 'RANGED' ? `${soldier.rangedRange || 145}px (Tầm xa)` : '24px (Cận chiến)';
+    const blockText = soldier.canBlockAir ? 'Chặn Đi Bộ & Quái Bay' : 'Chặn Đi Bộ (1v1)';
+    const targetText = soldier.archetype === 'DRAGON' || soldier.archetype === 'FAIRY' || soldier.combatMode === 'RANGED'
+      ? 'Bộ, Bay & Bơi (Đa Miền)'
+      : 'Chỉ Đơn Vị Đi Bộ';
+
+    this.inspectorContentEl.innerHTML = `
+      <!-- Back button & Quick switcher -->
+      <div class="unit-detail-nav-row">
+        <button id="btn-back-to-tower" class="unit-back-btn">
+          ${UI_ICONS.ARROW_RIGHT} ← Quay lại ${tower.name}
+        </button>
+        <span class="unit-tab-count">${units.length} Đơn vị</span>
+      </div>
+
+      <div class="unit-quick-tabs-bar">
+        ${unitTabsHtml}
+      </div>
+
+      <!-- Unit Profile Card -->
+      <div class="insp-card unit-profile-card">
+        <div class="suc-top" style="margin-bottom: 6px;">
+          <div class="suc-name-box">
+            <span class="suc-icon" style="font-size: 18px;">${icon}</span>
+            <div>
+              <span class="suc-name" style="font-size: 14px; font-weight: 800;">${soldier.name}</span>
+              <span class="unit-sub-badge">${soldier.isSpirit ? 'Anh Linh' : soldier.combatMode === 'RANGED' ? 'Xạ Thủ' : 'Chiến Binh'} (Cấp ${soldier.tier || 1})</span>
+            </div>
+          </div>
+          <div class="suc-hp-text">
+            <span id="live-unit-hp-val" class="suc-hp-val" style="font-size: 13px;">${curHp}/${maxHp}</span>
+            <span class="suc-hp-heart">${UI_ICONS.HEART}</span>
+          </div>
+        </div>
+
+        <div class="suc-hp-track" style="height: 7px; margin-bottom: 8px;">
+          <div id="live-unit-hp-fill" class="suc-hp-fill ${hpBarClass}" style="width: ${pct}%;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span id="live-unit-state-tag" class="suc-state-tag ${stateClass}" style="font-size: 10.5px; padding: 2px 8px;">${stateLabel}</span>
+          <span style="font-size: 11px; color: #94a3b8;">${UI_ICONS.TIMER} Tái sinh: <b>${soldier.isSpirit ? 'Không tái nạp' : `${soldier.respawnDelay}s`}</b></span>
+        </div>
+
+        ${healPerkHtml}
+
+        <!-- Unit Stats Grid -->
+        <div class="insp-stats-grid" style="margin-top: 8px;">
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Máu Tối Đa</span>
+            <span class="isi-val">${maxHp} HP</span>
+          </div>
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Tự Hồi Máu</span>
+            <span class="isi-val" style="color: ${soldier.soldierRegen ? '#4ade80' : '#94a3b8'};">${soldier.soldierRegen ? `+${soldier.soldierRegen}/s` : '0/s'}</span>
+          </div>
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Giáp Vật Lý</span>
+            <span class="isi-val">${armorPct}%</span>
+          </div>
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Kháng Phép</span>
+            <span class="isi-val">${magicResistPct}%</span>
+          </div>
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Tốc Độ Đánh</span>
+            <span class="isi-val">${soldier.attackSpeed}/s (${(1 / soldier.attackSpeed).toFixed(2)}s)</span>
+          </div>
+          <div class="insp-stat-item">
+            <span class="isi-lbl">Tầm Đánh/Bắn</span>
+            <span class="isi-val">${rangeText}</span>
+          </div>
+        </div>
+
+        <div class="unit-capability-box" style="margin-top: 8px; font-size: 11px; color: #cbd5e1; line-height: 1.5; background: #090e1a; padding: 6px 10px; border-radius: 6px; border: 1px solid #1e293b;">
+          <div>${UI_ICONS.SHIELD} <b>Địa hình Chặn:</b> <span style="color: #fbbf24;">${blockText}</span></div>
+          <div>${UI_ICONS.TARGET} <b>Địa hình Đánh:</b> <span style="color: #38bdf8;">${targetText}</span></div>
+          ${soldier.aoeRadius ? `<div>${UI_ICONS.EXPLOSION} <b>Nổ Lan AoE:</b> <span style="color: #f97316;">Bán kính ${soldier.aoeRadius}px (Gây 70% sát thương lên quái lân cận)</span></div>` : ''}
+        </div>
+      </div>
+
+      <!-- Damage Sources Breakdown -->
+      <div class="insp-card" style="margin-top: 10px;">
+        <div class="insp-header" style="margin-bottom: 6px;">
+          <span class="insp-title" style="font-size: 12px; color: #38bdf8;">${UI_ICONS.SWORDS} PHÂN RÃ SÁT THƯƠNG ĐA NGUỒN</span>
+          <span style="font-size: 11px; font-weight: 800; color: #facc15;">Tổng: ${totalRawDmgPerHit} DMG (${totalDps} DPS)</span>
+        </div>
+        <p style="font-size: 10.5px; color: #94a3b8; margin: 0 0 8px 0;">
+          Đơn vị tung ra đồng thời tất cả các luồng sát thương sau trong mỗi đòn đánh:
+        </p>
+        <div class="table-responsive">
+          <table class="unit-dmg-table">
+            <thead>
+              <tr>
+                <th>Nguồn Buff</th>
+                <th>Hệ</th>
+                <th>Tỉ Lệ</th>
+                <th>DMG</th>
+                <th>DPS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sourcesRowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Elemental Matchup Calculator Table -->
+      <div class="insp-card" style="margin-top: 10px; margin-bottom: 12px;">
+        <div class="insp-header" style="margin-bottom: 6px;">
+          <span class="insp-title" style="font-size: 12px; color: #a78bfa;">${UI_ICONS.CHART} BẢNG TÍNH KHẮC THUỘC TÍNH (15 HỆ)</span>
+        </div>
+        <p style="font-size: 10.5px; color: #94a3b8; margin: 0 0 8px 0;">
+          Sát thương thực tế khi đơn vị tấn công vào quái vật mang từng hệ nguyên tố:
+        </p>
+
+        <!-- Filter tabs -->
+        <div class="matchup-filter-row">
+          <button class="match-filter-btn ${this.unitMatchupFilter === 'ALL' ? 'active' : ''}" data-filter="ALL">Tất Cả (15)</button>
+          <button class="match-filter-btn ${this.unitMatchupFilter === 'EFFECTIVE' ? 'active' : ''}" data-filter="EFFECTIVE">Ưu Thế (>100%)</button>
+          <button class="match-filter-btn ${this.unitMatchupFilter === 'RESISTED' ? 'active' : ''}" data-filter="RESISTED">Bị Kháng (<100%)</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="unit-match-table">
+            <thead>
+              <tr>
+                <th>Hệ Quái</th>
+                <th>Hiệu Quả</th>
+                <th>Chi Tiết Từng Nguồn</th>
+                <th>Thực Nhận</th>
+                <th>DPS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${matchupRowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Event: Back to tower button
+    document.getElementById('btn-back-to-tower')?.addEventListener('click', () => {
+      this.clearSelectedSoldier();
+    });
+
+    // Event: Switch soldier tabs
+    this.inspectorContentEl.querySelectorAll('[data-switch-soldier]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const sid = (e.currentTarget as HTMLElement).getAttribute('data-switch-soldier');
+        if (sid) {
+          this.selectSoldier(sid);
+        }
+      });
+    });
+
+    // Event: Matchup filter tabs
+    this.inspectorContentEl.querySelectorAll('[data-filter]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const filter = (e.currentTarget as HTMLElement).getAttribute('data-filter') as 'ALL' | 'EFFECTIVE' | 'RESISTED';
+        if (filter) {
+          this.unitMatchupFilter = filter;
+          this.lastRenderKey = '';
+          this.render();
+        }
+      });
+    });
+
+    if (inspectorSection && prevScrollTop > 0) {
+      inspectorSection.scrollTop = prevScrollTop;
+    }
+  }
+
+  /**
+   * Smoothly updates live HP, bar, and status of selected soldier without full re-render
+   */
+  public updateLiveSelectedSoldier(soldier: SoldierEntity): void {
+    const isDead = soldier.state === 'DEAD' || soldier.hp <= 0;
+    const curHp = Math.max(0, Math.ceil(soldier.hp));
+    const maxHp = soldier.maxHp || 100;
+    const pct = isDead ? 0 : Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
+    const hpBarClass = pct > 50 ? 'hp-high' : pct > 25 ? 'hp-med' : 'hp-low';
+
+    const hpValEl = document.getElementById('live-unit-hp-val');
+    if (hpValEl) {
+      hpValEl.textContent = `${curHp}/${maxHp}`;
+    }
+
+    const hpFillEl = document.getElementById('live-unit-hp-fill');
+    if (hpFillEl) {
+      hpFillEl.style.width = `${pct}%`;
+      hpFillEl.className = `suc-hp-fill ${hpBarClass}`;
+    }
+
+    const stateEl = document.getElementById('live-unit-state-tag');
+    if (stateEl) {
+      let stateLabel = '';
+      let stateClass = '';
+      if (isDead) {
+        stateLabel = `⏳ Đang hồi sinh (${soldier.respawnTimer.toFixed(1)}s)`;
+        stateClass = 'state-dead';
+      } else if (soldier.state === 'ATTACKING') {
+        stateLabel = `${UI_ICONS.SWORDS} Đang giao chiến`;
+        stateClass = 'state-fighting';
+      } else if (soldier.state === 'MOVING_TO_ENGAGE' || soldier.state === 'MOVING_TO_RALLY') {
+        stateLabel = `${UI_ICONS.WALK} Đang di chuyển`;
+        stateClass = 'state-moving';
+      } else {
+        stateLabel = `${UI_ICONS.SHIELD} Chốt chặn canh gác`;
+        stateClass = 'state-guarding';
+      }
+      if (stateEl.innerHTML !== stateLabel) {
+        stateEl.innerHTML = stateLabel;
+      }
+      stateEl.className = `suc-state-tag ${stateClass}`;
+    }
   }
 }
+
 

@@ -12,6 +12,7 @@ import { TowerSystem } from '../systems/TowerSystem.js';
 import { SoldierEntity, EnemyEntity, TowerEntity } from '../types/entities.types.js';
 import { ArsenalBar } from '../ui/hud/ArsenalBar.js';
 import { InspectorPanel } from '../ui/inspector/InspectorPanel.js';
+import { SummonedUnitDetailModal } from '../ui/modals/SummonedUnitDetailModal.js';
 
 describe('Defense System Restructure & New Summon Towers', () => {
   it('correctly classifies towers into 3 categories', () => {
@@ -813,5 +814,156 @@ describe('Defense System Restructure & New Summon Towers', () => {
     const spirit = state.soldiers.find((s) => s.isSpirit)!;
     expect(spirit.soldierRegen).toBe(20);
     expect(spirit.branch).toBe('A');
+  });
+
+  it('verifies summoned unit detail view, damage breakdown, and multi-source elemental matchups', () => {
+    const state = new GameState();
+    state.gold = 5000;
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+
+    // 1. Build Dragon Nest and imbue Ice as secondary
+    state.buildTowerAt(100, 100, 'DRAGON_NEST');
+    const dragonTower = state.towers.find((t) => t.type === 'DRAGON_NEST')!;
+    state.setTowerElement(dragonTower.id, 'ICE');
+
+    const dragon = state.soldiers.find((s) => s.towerId === dragonTower.id)!;
+    expect(dragon).toBeDefined();
+    expect(dragon.element).toBe('DRAGON');
+    expect(dragon.secondaryElement).toBe('ICE');
+
+    // 2. Mock Mage 4_B buffing Dragon Nest with Fire and Lightning
+    dragonTower.buffSourceId = 'mage-4b-mock';
+    dragonTower.buffedElements = ['FIRE', 'LIGHTNING'];
+    dragon.buffedElements = ['FIRE', 'LIGHTNING'];
+
+    const mockSidePanel = { open: () => {}, toggle: () => {} };
+    const mockEl = {
+      addEventListener: () => {},
+      querySelectorAll: () => [],
+      classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false },
+      innerHTML: '',
+      scrollTop: 0
+    } as any;
+    const origDoc = (globalThis as any).document;
+    (globalThis as any).document = {
+      getElementById: () => mockEl,
+      querySelectorAll: () => []
+    };
+
+    try {
+      const inspector = new InspectorPanel(state, mockSidePanel as any, () => {});
+
+      // Verify getSoldierDamageSources decomposes all 4 components
+      const sources = inspector.getSoldierDamageSources(dragon, dragonTower);
+      expect(sources.length).toBe(4);
+      expect(sources[0].label).toContain('Bản Thể');
+      expect(sources[0].element).toBe('DRAGON');
+      expect(sources[0].damage).toBe(dragon.damage);
+
+      expect(sources[1].label).toContain('Khảm Thuộc Tính');
+      expect(sources[1].element).toBe('ICE');
+      expect(sources[1].damage).toBe(Math.round(dragon.damage * 0.6));
+
+      expect(sources[2].label).toContain('Hào Quang Phù Thủy (Khe 1)');
+      expect(sources[2].element).toBe('FIRE');
+      expect(sources[2].damage).toBe(Math.round(dragon.damage * 0.45));
+
+      expect(sources[3].label).toContain('Hào Quang Phù Thủy (Khe 2)');
+      expect(sources[3].element).toBe('LIGHTNING');
+      expect(sources[3].damage).toBe(Math.round(dragon.damage * 0.45));
+
+      // Test selecting soldier
+      inspector.selectSoldier(dragon.id);
+      expect((inspector as any).selectedSoldierId).toBe(dragon.id);
+
+      // Test clearing soldier
+      const cleared = inspector.clearSelectedSoldier();
+      expect(cleared).toBe(true);
+      expect((inspector as any).selectedSoldierId).toBeNull();
+
+      // Second clear should return false since already null
+      expect(inspector.clearSelectedSoldier()).toBe(false);
+    } finally {
+      (globalThis as any).document = origDoc;
+    }
+  });
+
+  it('verifies SummonedUnitDetailModal renders multi-source damage, offensive table, and defensive intake table', () => {
+    const state = new GameState();
+    state.gold = 5000;
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+
+    // Build Barracks and set up soldier
+    state.buildTowerAt(100, 100, 'BARRACKS');
+    const barracks = state.towers.find((t) => t.type === 'BARRACKS')!;
+    const soldier = state.soldiers.find((s) => s.towerId === barracks.id)!;
+    expect(soldier).toBeDefined();
+
+    soldier.armor = 0.35; // 35% physical armor
+    soldier.magicResist = 0.20; // 20% magic resist
+    soldier.secondaryElement = 'ICE';
+
+    const mockBackdrop = {
+      classList: {
+        classes: new Set(['hidden']),
+        add(c: string) { this.classes.add(c); },
+        remove(c: string) { this.classes.delete(c); },
+        contains(c: string) { return this.classes.has(c); },
+        toggle(c: string) { if (this.contains(c)) this.remove(c); else this.add(c); }
+      },
+      addEventListener: () => {}
+    };
+
+    const mockContent = {
+      innerHTML: '',
+      querySelectorAll: () => []
+    };
+
+    const mockDoc = {
+      getElementById: (id: string) => {
+        if (id === 'unit-detail-modal-backdrop') return mockBackdrop;
+        if (id === 'unit-modal-body') return mockContent;
+        if (id === 'unit-modal-title' || id === 'unit-modal-icon' || id === 'unit-modal-badge') {
+          return { textContent: '', innerHTML: '' };
+        }
+        return {
+          addEventListener: () => {},
+          classList: { add: () => {}, remove: () => {}, contains: () => false, toggle: () => {} }
+        };
+      },
+      querySelectorAll: () => []
+    };
+
+    const origDoc = (globalThis as any).document;
+    (globalThis as any).document = mockDoc;
+
+    try {
+      const modal = new SummonedUnitDetailModal(state);
+      expect(modal.isOpen()).toBe(false);
+
+      modal.open(soldier.id, barracks.id);
+      expect(modal.isOpen()).toBe(true);
+      expect(modal.currentSoldierId).toBe(soldier.id);
+
+      // Verify HTML contains the 3 tables requested:
+      // 1. Multi-source damage breakdown
+      expect(mockContent.innerHTML).toContain('BẢNG PHÂN RÃ SÁT THƯƠNG GÂY RA ĐA NGUỒN');
+      // 2. 15-element offensive table
+      expect(mockContent.innerHTML).toContain('SÁT THƯƠNG GÂY RA (15 HỆ MỤC TIÊU)');
+      // 3. 15-element defensive intake table
+      expect(mockContent.innerHTML).toContain('BẢNG TÍNH SÁT THƯƠNG NHẬN VÀO (15 HỆ)');
+      expect(mockContent.innerHTML).toContain('Hệ Quái Tấn Công');
+      expect(mockContent.innerHTML).toContain('Tương Khắc');
+      expect(mockContent.innerHTML).toContain('Giảm Trừ');
+      expect(mockContent.innerHTML).toContain('Thực Nhận');
+      expect(mockContent.innerHTML).toContain('Đánh Giá & Chú Ý');
+
+      // Test close
+      modal.close();
+      expect(modal.isOpen()).toBe(false);
+      expect(modal.currentSoldierId).toBeNull();
+    } finally {
+      (globalThis as any).document = origDoc;
+    }
   });
 });

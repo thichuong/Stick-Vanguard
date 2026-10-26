@@ -216,12 +216,31 @@ class GameApp {
           this.state.selectedSlotId = null;
           this.state.selectedBuildPoint = null;
           this.state.activePlacementType = null;
+          this.uiManager.clearSelectedSoldier();
           clickedTower = true;
           break;
         }
       }
 
       if (clickedTower) return;
+
+      // 3b. Check if clicked on an active summoned soldier
+      let clickedSoldier = false;
+      for (const soldier of this.state.soldiers) {
+        if (soldier.state === 'DEAD') continue;
+        const dist = Math.hypot(clickX - soldier.x, clickY - soldier.y);
+        if (dist <= 22) {
+          this.state.selectedTowerId = soldier.towerId;
+          this.state.selectedSlotId = null;
+          this.state.selectedBuildPoint = null;
+          this.state.activePlacementType = null;
+          this.uiManager.openUnitModal(soldier.id, soldier.towerId);
+          clickedSoldier = true;
+          break;
+        }
+      }
+
+      if (clickedSoldier) return;
 
       // 4. Clicked on an empty spot on the map: evaluate terrain & set selectedBuildPoint
       const valTrap = this.state.validatePlacement(clickX, clickY, 'TRAP_GENERIC');
