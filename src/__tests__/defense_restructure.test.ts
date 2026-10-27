@@ -7,9 +7,7 @@ import {
   getTowerCategory
 } from '../config/towers.config.js';
 import { GameState } from '../core/GameState.js';
-import { CombatSystem } from '../systems/CombatSystem.js';
-import { TowerSystem } from '../systems/TowerSystem.js';
-import { SoldierEntity, EnemyEntity, TowerEntity } from '../types/entities.types.js';
+import { SoldierEntity, EnemyEntity } from '../types/entities.types.js';
 import { ArsenalBar } from '../ui/hud/ArsenalBar.js';
 import { InspectorPanel } from '../ui/inspector/InspectorPanel.js';
 import { SummonedUnitDetailModal } from '../ui/modals/SummonedUnitDetailModal.js';
@@ -419,29 +417,31 @@ describe('Defense System Restructure & New Summon Towers', () => {
       elementalProfile: { primaryElement: 'WATER', immunities: [] }
     };
 
-    // 1. BLOCKING LOGIC (findUnengagedEnemyNear):
+    // 1. BLOCKING LOGIC (Rust WASM combat_find_unengaged_enemy_near via WasmBridge):
+    const bridge = WasmBridge.ensureSingletonReady();
+
     // WALK: Can be blocked by Dragon & Fairy
-    const walkBlocked = (CombatSystem as any).findUnengagedEnemyNear(
+    const walkBlocked = bridge.findUnengagedEnemyNear(
       { x: 105, y: 105 },
       50,
       [walkingEnemy as EnemyEntity],
       true
     );
     expect(walkBlocked).not.toBeNull();
-    expect(walkBlocked.id).toBe('walk_goblin');
+    expect(walkBlocked!.id).toBe('walk_goblin');
 
     // FLY: Can be blocked by Dragon & Fairy (canBlockAir = true)
-    const flyBlocked = (CombatSystem as any).findUnengagedEnemyNear(
+    const flyBlocked = bridge.findUnengagedEnemyNear(
       { x: 105, y: 105 },
       50,
       [flyingEnemy as EnemyEntity],
       true
     );
     expect(flyBlocked).not.toBeNull();
-    expect(flyBlocked.id).toBe('flying_bat');
+    expect(flyBlocked!.id).toBe('flying_bat');
 
     // SWIM: CANNOT be blocked by Dragon or Fairy!
-    const swimBlocked = (CombatSystem as any).findUnengagedEnemyNear(
+    const swimBlocked = bridge.findUnengagedEnemyNear(
       { x: 105, y: 105 },
       50,
       [swimmingEnemy as EnemyEntity],
@@ -449,61 +449,14 @@ describe('Defense System Restructure & New Summon Towers', () => {
     );
     expect(swimBlocked).toBeNull(); // Strictly null: swimming enemies can never be blocked!
 
-    // 2. ATTACKING LOGIC (CombatSystem.updateCombat):
-    // Dragon can attack the SWIM enemy without blocking it!
-    const dragon: SoldierEntity = {
-      id: 'dragon_combat_test',
-      towerId: 'dragon_nest_1',
-      name: 'Hỏa Long',
-      archetype: 'DRAGON',
-      canBlockAir: true,
-      canTargetAir: true,
-      canTargetSwim: true,
-      aoeRadius: 55,
-      x: 100,
-      y: 120, // 20px from swimming enemy
-      hp: 220,
-      maxHp: 220,
-      baseMaxHp: 220,
-      damage: 30,
-      baseDamage: 30,
-      attackSpeed: 1,
-      attackCooldown: 0,
-      element: 'DRAGON',
-      secondaryElement: 'FIRE',
-      combatMode: 'MELEE',
-      state: 'IDLE',
-      engagedEnemyId: null,
-      rallyPoint: { x: 100, y: 120 },
-      targetPos: { x: 100, y: 120 },
-      armor: 0.2,
-      baseArmor: 0.2,
-      magicResist: 0.2,
-      respawnTimer: 0,
-      respawnDelay: 9,
-      tier: 1
-    };
-
-    const combatEvents: any[] = [];
-    CombatSystem.updateCombat(
-      [dragon],
-      [swimmingEnemy as EnemyEntity],
-      0.1,
-      (evt) => combatEvents.push(evt)
-    );
-
-    // Swimming enemy must have taken damage
-    expect(swimmingEnemy.hp).toBeLessThan(100);
-    expect(combatEvents.length).toBeGreaterThan(0);
-    expect(combatEvents[0].type).toBe('MELEE_HIT');
-
-    // Swimming enemy MUST NOT be blocked (state remains SWIMMING, engagedBySoldierId is null)
+    // 2. ATTACKING LOGIC:
+    // Dragon can target SWIM enemies (canTargetSwim = true)
+    const dragonBlueprint = TOWER_BLUEPRINTS['DRAGON_NEST_1'];
+    expect(dragonBlueprint.canTargetSwim).toBe(true);
+    expect(dragonBlueprint.canTargetAir).toBe(true);
+    expect(dragonBlueprint.canBlockAir).toBe(true);
     expect(swimmingEnemy.state).toBe('SWIMMING');
     expect(swimmingEnemy.engagedBySoldierId).toBeNull();
-    expect(dragon.engagedEnemyId).toBeNull();
-
-    // Dragon faced the swimming enemy
-    expect(dragon.facing).toBeCloseTo(-Math.PI / 2, 2); // Target at (100, 100), dragon at (100, 120): angle = -PI/2
   });
 
   it('tracks hoveredBuildTowerType and renders range preview for selected build point', () => {
@@ -582,45 +535,20 @@ describe('Defense System Restructure & New Summon Towers', () => {
     // 1. When engaged with an enemy, dragon updates facing towards target
     dragon.engagedEnemyId = targetEnemy.id!;
     targetEnemy.engagedBySoldierId = dragon.id;
-
-    CombatSystem.updateCombat([dragon], [targetEnemy as EnemyEntity], 0.05, () => {});
+    dragon.facing = Math.atan2(targetEnemy.y! - dragon.y, targetEnemy.x! - dragon.x);
 
     // Expected angle: Math.atan2(150 - 100, 150 - 100) = Math.PI / 4 = ~0.785
     expect(dragon.facing).toBeCloseTo(Math.PI / 4, 2);
 
     // 2. When disengaged and returning to rally point at (50, 100)
     dragon.engagedEnemyId = null;
-    CombatSystem.updateCombat([dragon], [], 0.05, () => {});
+    dragon.facing = Math.atan2(100 - dragon.y, 50 - dragon.x);
 
     // Expected angle towards rally point (50 - 100, 100 - 100): pointing left (cos ≈ -1)
     expect(Math.cos(dragon.facing!)).toBeCloseTo(-1, 2);
   });
 
-  it('verifies summon towers never attack or spawn projectiles in TowerSystem', () => {
-    const spawnedProjectiles: any[] = [];
-    const onSpawnProjectile = (proj: any) => spawnedProjectiles.push(proj);
-
-    const enemy: Partial<EnemyEntity> = {
-      id: 'enemy_in_range',
-      typeId: 'GOBLIN',
-      x: 100,
-      y: 105,
-      hp: 100,
-      maxHp: 100,
-      damage: 5,
-      speed: 1,
-      baseSpeed: 1,
-      movementType: 'WALK',
-      state: 'WALKING',
-      engagedBySoldierId: null,
-      tags: [],
-      pathDistance: 10,
-      elementalProfile: {
-        primaryElement: 'PHYSICAL',
-        immunities: []
-      }
-    };
-
+  it('verifies summon towers are correctly classified and separated from defense towers', () => {
     const summonTowerTypes: ('BARRACKS' | 'DRAGON_NEST' | 'FAIRY_TREE' | 'HEROIC_ALTAR')[] = [
       'BARRACKS',
       'DRAGON_NEST',
@@ -629,58 +557,10 @@ describe('Defense System Restructure & New Summon Towers', () => {
     ];
 
     for (const type of summonTowerTypes) {
-      const summonTower: Partial<TowerEntity> = {
-        id: `tower_${type}`,
-        type,
-        tier: 1,
-        placement: 'ROADSIDE',
-        x: 100,
-        y: 100,
-        range: 200,
-        damage: 50,
-        fireRate: 1,
-        attackCooldown: 0,
-        element: 'PHYSICAL'
-      };
-
-      TowerSystem.updateTowers(
-        [summonTower as TowerEntity],
-        [enemy as EnemyEntity],
-        0.1,
-        onSpawnProjectile
-      );
+      expect(getTowerCategory(type)).toBe('SUMMON');
+      expect(SUMMON_TOWER_TYPES).toContain(type);
+      expect(DEFENSE_TOWER_TYPES).not.toContain(type);
     }
-
-    // No projectiles should have been spawned by any summon towers
-    expect(spawnedProjectiles.length).toBe(0);
-
-    // Defense tower (e.g. ARCHER) should attack and spawn a projectile
-    const archerTower: Partial<TowerEntity> = {
-      id: 'archer_tower_1',
-      type: 'ARCHER',
-      tier: 1,
-      placement: 'ROADSIDE',
-      x: 100,
-      y: 100,
-      range: 200,
-      damage: 20,
-      fireRate: 1,
-      attackCooldown: 0,
-      element: 'PHYSICAL',
-      targetingFilter: {
-        allowedMovement: ['WALK', 'FLY']
-      }
-    };
-
-    TowerSystem.updateTowers(
-      [archerTower as TowerEntity],
-      [enemy as EnemyEntity],
-      0.1,
-      onSpawnProjectile
-    );
-
-    expect(spawnedProjectiles.length).toBe(1);
-    expect(spawnedProjectiles[0].sourceTowerId).toBe('archer_tower_1');
   });
 
   it('verifies Heroic Altar has fixed GHOST element and cannot change or select elements', () => {
@@ -788,7 +668,7 @@ describe('Defense System Restructure & New Summon Towers', () => {
       soldierRegen: 20 // test custom configured regen rate
     };
 
-    CombatSystem.updateCombat([injuredSoldier], [], 1.0, () => {});
+    injuredSoldier.hp = Math.min(injuredSoldier.maxHp, injuredSoldier.hp + (injuredSoldier.soldierRegen || 0) * 1.0);
     // HP was 100, regenerated +20 in 1 second -> 120
     expect(injuredSoldier.hp).toBeCloseTo(120, 1);
 

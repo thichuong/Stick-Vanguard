@@ -303,6 +303,28 @@ export class WasmBridge {
     }
   }
 
+  public findUnengagedEnemyNear(
+    center: { x: number; y: number },
+    radius: number,
+    enemies: EnemyEntity[],
+    canBlockAir: boolean = false
+  ): EnemyEntity | null {
+    if (!this.isReady) return null;
+    const json = wasmOps.combat_find_unengaged_enemy_near(
+      JSON.stringify(enemies),
+      center.x,
+      center.y,
+      radius,
+      canBlockAir
+    );
+    if (!json) return null;
+    try {
+      return JSON.parse(json) as EnemyEntity;
+    } catch {
+      return null;
+    }
+  }
+
   public setSelectedTower(towerId: string | null, isSettingRally: boolean = false): void {
     if (!this.isReady) return;
     wasmOps.engine_set_selected_tower(towerId || undefined, isSettingRally);
