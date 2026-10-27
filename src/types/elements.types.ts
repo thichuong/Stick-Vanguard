@@ -47,6 +47,8 @@ export interface StatusEffect {
   tickTimer?: number;
 }
 
+export type StatusEffectPayload = Omit<StatusEffect, 'tickTimer'>;
+
 export interface ElementalProfile {
   primaryElement: ElementType;
   secondaryElement?: ElementType;

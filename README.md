@@ -26,7 +26,7 @@ Người chơi sẽ xây dựng, nâng cấp tháp phòng thủ, điều động
 - **Zero-Copy Direct Memory View**: Canvas Renderer đọc trực tiếp mảng toạ độ hiển thị qua `Float32Array` mà không tốn chi phí sao chép dữ liệu ($0\text{ms}$).
 - **Lưới Băm Không Gian (Spatial Hash Grid) Nội tại**: Tìm mục tiêu xa nhất trên đường đi và tính sát thương lan diện rộng với độ phức tạp $O(1)$.
 - **Smart LOD & Atlas Baking**: Tự động chuyển đổi giữa các cấp độ hiển thị (FULL, MEDIUM, HIGH_CROWD) dựa trên mật độ đơn vị, duy trì ổn định 60 FPS ngay cả khi có hàng ngàn quái vật trên màn hình.
-- **Graceful Fallback**: Tự động chuyển tiếp mượt mà sang lõi TypeScript `SimulationEngine` khi chạy trong môi trường không nạp được WASM.
+- **Pure Rust WebAssembly & WebGL2 Engine**: Vận hành toàn bộ vòng lặp mô phỏng, tính toán nguyên tố, quy tắc chiến đấu và kết xuất GPU Atlas bằng Rust + WebGL2. Canvas 2D chỉ phục vụ lớp phủ HUD overlay mỏng.
 
 ### 4. Cẩm Nang Toàn Thư (Codex) & Quản Trị Trận Đấu
 - Cẩm nang tích hợp trực tiếp trong game cho phép tra cứu chi tiết chỉ số tháp, lính, quái vật, cơ chế CC và bảng phản ứng nguyên tố.

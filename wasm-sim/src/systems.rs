@@ -1274,7 +1274,7 @@ impl CombatSystem {
         }
     }
 
-    fn find_unengaged_enemy_near(
+    pub fn find_unengaged_enemy_near(
         enemies: &[EnemyEntity],
         spatial: &SpatialGrid,
         rally_point: Vector2D,

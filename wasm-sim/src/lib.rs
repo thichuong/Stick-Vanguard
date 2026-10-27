@@ -1698,6 +1698,113 @@ pub fn rules_apply_knockback(enemy_json: &str, base_distance: f32) -> String {
 }
 
 #[wasm_bindgen]
+pub fn rules_apply_damage_reduction(enemy_json: &str, ratio: f32, duration: f32) -> String {
+    if let Ok(mut enemy) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        TargetingRuleEngine::apply_damage_reduction(&mut enemy, ratio, duration);
+        serde_json::to_string(&enemy).unwrap_or_default()
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_reaction_bonus_effects(
+    enemy_json: &str,
+    element_str: &str,
+    base_damage: f32,
+) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let elem: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(element_str.to_string()));
+    if let (Ok(mut e), Ok(el)) = (enemy, elem) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            TargetingRuleEngine::apply_reaction_bonus_effects(&ctx.registry, &mut e, el, base_damage);
+            serde_json::to_string(&e).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_sync_effective_damage_reduction(enemy_json: &str) -> String {
+    if let Ok(mut enemy) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        TargetingRuleEngine::sync_effective_damage_reduction(&mut enemy);
+        serde_json::to_string(&enemy).unwrap_or_default()
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_get_effective_damage_reduction_ratio(enemy_json: &str) -> f32 {
+    if let Ok(enemy) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        TargetingRuleEngine::get_effective_damage_reduction_ratio(&enemy)
+    } else {
+        0.0
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_is_enemy_stunned_or_frozen(enemy_json: &str) -> bool {
+    if let Ok(enemy) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        TargetingRuleEngine::is_enemy_stunned_or_frozen(&enemy)
+    } else {
+        false
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_get_enemy_attack_speed_multiplier(enemy_json: &str) -> f32 {
+    if let Ok(enemy) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            TargetingRuleEngine::get_enemy_attack_speed_multiplier(&ctx.registry, &enemy)
+        })
+    } else {
+        1.0
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_get_soldier_elements(soldier_json: &str) -> String {
+    if let Ok(soldier) = serde_json::from_str::<SoldierEntity>(soldier_json) {
+        let elements = TargetingRuleEngine::get_soldier_elements(&soldier);
+        serde_json::to_string(&elements).unwrap_or_default()
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn combat_find_unengaged_enemy_near(
+    enemies_json: &str,
+    x: f32,
+    y: f32,
+    radius: f32,
+    can_block_air: bool,
+) -> String {
+    if let Ok(enemies) = serde_json::from_str::<Vec<EnemyEntity>>(enemies_json) {
+        let mut grid = SpatialGrid::new(1000.0, 650.0);
+        grid.rebuild(&enemies);
+        if let Some(idx) = crate::systems::CombatSystem::find_unengaged_enemy_near(
+            &enemies,
+            &grid,
+            crate::types::Vector2D { x, y },
+            radius,
+            can_block_air,
+        ) {
+            serde_json::to_string(&enemies[idx]).unwrap_or_default()
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
 pub fn wave_generate_config(map_json: &str, wave_index: usize) -> String {
     if let Ok(map) = serde_json::from_str::<MapConfig>(map_json) {
         CTX.with(|c| {

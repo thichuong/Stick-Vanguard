@@ -165,6 +165,29 @@ export function clear_paths() {
 }
 
 /**
+ * @param {string} enemies_json
+ * @param {number} x
+ * @param {number} y
+ * @param {number} radius
+ * @param {boolean} can_block_air
+ * @returns {string}
+ */
+export function combat_find_unengaged_enemy_near(enemies_json, x, y, radius, can_block_air) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(enemies_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.combat_find_unengaged_enemy_near(ptr0, len0, x, y, radius, can_block_air);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
  * @param {string} slot_id
  * @param {string} tower_type_str
  * @returns {string}
@@ -801,6 +824,27 @@ export function rules_apply_all_payload_effects(enemy_json, payload_json) {
 
 /**
  * @param {string} enemy_json
+ * @param {number} ratio
+ * @param {number} duration
+ * @returns {string}
+ */
+export function rules_apply_damage_reduction(enemy_json, ratio, duration) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.rules_apply_damage_reduction(ptr0, len0, ratio, duration);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {string} enemy_json
  * @param {string} calc_json
  * @param {string} elem_str
  * @param {string | null} [sec_elem_str]
@@ -867,6 +911,29 @@ export function rules_apply_knockback(enemy_json, base_distance) {
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {string} enemy_json
+ * @param {string} element_str
+ * @param {number} base_damage
+ * @returns {string}
+ */
+export function rules_apply_reaction_bonus_effects(enemy_json, element_str, base_damage) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(element_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.rules_apply_reaction_bonus_effects(ptr0, len0, ptr1, len1, base_damage);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
 }
 
@@ -998,6 +1065,77 @@ export function rules_get_crowd_control_modifiers(enemy_json) {
         const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.rules_get_crowd_control_modifiers(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {string} enemy_json
+ * @returns {number}
+ */
+export function rules_get_effective_damage_reduction_ratio(enemy_json) {
+    const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.rules_get_effective_damage_reduction_ratio(ptr0, len0);
+    return ret;
+}
+
+/**
+ * @param {string} enemy_json
+ * @returns {number}
+ */
+export function rules_get_enemy_attack_speed_multiplier(enemy_json) {
+    const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.rules_get_enemy_attack_speed_multiplier(ptr0, len0);
+    return ret;
+}
+
+/**
+ * @param {string} soldier_json
+ * @returns {string}
+ */
+export function rules_get_soldier_elements(soldier_json) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(soldier_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.rules_get_soldier_elements(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {string} enemy_json
+ * @returns {boolean}
+ */
+export function rules_is_enemy_stunned_or_frozen(enemy_json) {
+    const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.rules_is_enemy_stunned_or_frozen(ptr0, len0);
+    return ret !== 0;
+}
+
+/**
+ * @param {string} enemy_json
+ * @returns {string}
+ */
+export function rules_sync_effective_damage_reduction(enemy_json) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(enemy_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.rules_sync_effective_damage_reduction(ptr0, len0);
         deferred2_0 = ret[0];
         deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);

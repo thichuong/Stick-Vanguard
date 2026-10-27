@@ -86,25 +86,30 @@ export class WasmBridge {
     // Attempt synchronous initialization in Node/Vitest if available
     try {
       const proc = (globalThis as any).process;
+      let fsMod: any = null;
+      let pathMod: any = null;
       if (proc && typeof proc.getBuiltinModule === 'function') {
-        const fsMod = proc.getBuiltinModule('fs');
-        const pathMod = proc.getBuiltinModule('path');
-        if (fsMod && pathMod) {
-          const wasmPath = pathMod.resolve(proc.cwd(), 'src/wasm/wasm_sim_bg.wasm');
-          if (fsMod.existsSync(wasmPath)) {
-            const bytes = fsMod.readFileSync(wasmPath);
-            const out = wasmOps.initSync({ module: bytes });
-            WasmBridge.wasmLoadedGlobally = true;
-            WasmBridge.globalMemory = out.memory;
-            inst.memory = out.memory;
-            inst.isReady = true;
-            wasmOps.init_world(1000, 650);
-            inst.syncGameConfigToRust();
-          }
+        fsMod = proc.getBuiltinModule('fs');
+        pathMod = proc.getBuiltinModule('path');
+      } else if (typeof (globalThis as any).require === 'function') {
+        fsMod = (globalThis as any).require('fs');
+        pathMod = (globalThis as any).require('path');
+      }
+      if (fsMod && pathMod) {
+        const wasmPath = pathMod.resolve(proc.cwd(), 'src/wasm/wasm_sim_bg.wasm');
+        if (fsMod.existsSync(wasmPath)) {
+          const bytes = fsMod.readFileSync(wasmPath);
+          const out = wasmOps.initSync({ module: bytes });
+          WasmBridge.wasmLoadedGlobally = true;
+          WasmBridge.globalMemory = out.memory;
+          inst.memory = out.memory;
+          inst.isReady = true;
+          wasmOps.init_world(1000, 650);
+          inst.syncGameConfigToRust();
         }
       }
     } catch {
-      // Fallback to async init in browser
+      // Async init in browser
     }
 
     return inst;

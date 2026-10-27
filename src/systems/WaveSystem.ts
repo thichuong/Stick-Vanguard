@@ -1,6 +1,5 @@
 import { EnemyEntity } from '../types/entities.types.js';
-import { WaveConfig, MAP_CONFIG, MapConfig, getTraversableLaneCount } from '../config/map.config.js';
-import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
+import { WaveConfig, MAP_CONFIG, MapConfig } from '../config/map.config.js';
 import { WasmBridge } from '../core/WasmBridge.js';
 
 interface ActiveSpawner {
@@ -18,10 +17,6 @@ export class WaveSystem {
   public customTotalWaves: number = 15;
   private currentMap: MapConfig;
   private activeSpawners: ActiveSpawner[] = [];
-  private enemyCounter = 0;
-  private groundLaneIndex = 0;
-  private waterLaneIndex = 0;
-  private airLaneIndex = 0;
 
   constructor(mapConfig: MapConfig = MAP_CONFIG, totalWaves: number = 15) {
     this.currentMap = mapConfig;
@@ -34,9 +29,6 @@ export class WaveSystem {
     this.isWaveInProgress = false;
     this.waveTime = 0;
     this.activeSpawners = [];
-    this.groundLaneIndex = 0;
-    this.waterLaneIndex = 0;
-    this.airLaneIndex = 0;
   }
 
   public setTotalWaves(waves: number): void {
@@ -66,100 +58,14 @@ export class WaveSystem {
    *     * Số lính waves boss ngang số lính waves lính (danh sách lính nhân n lần, không cộng thêm lính wave 10).
    *     * Boss xuất hiện trên tất cả lane có thể đi được (số lượng Boss = traversableLanes * n).
    */
+  /**
+   * Procedural / Dynamic wave generation scaling with custom wave counts
+   * 100% delegated to Rust WebAssembly Core (`wasm-sim/src/wave.rs`).
+   */
   public generateWaveConfig(waveIdx: number, _totalWaves?: number): WaveConfig {
     const bridge = WasmBridge.ensureSingletonReady();
-    if (bridge.isAvailable() && this.currentMap) {
-      const json = bridge.getOps().wave_generate_config(JSON.stringify(this.currentMap), waveIdx);
-      if (json) {
-        try {
-          return JSON.parse(json) as WaveConfig;
-        } catch {
-          // Fallback to TS if JSON parse fails
-        }
-      }
-    }
-
-    const waveNum = waveIdx + 1;
-    const mapWaves = this.currentMap?.waves || [];
-
-    // --- Waves 1 - 10: Tạo đúng theo bản đồ đã mô tả ---
-    if (waveNum <= 10 && mapWaves[waveIdx]) {
-      const baseWave = mapWaves[waveIdx];
-      return {
-        waveNumber: waveNum,
-        name: baseWave.name,
-        rewardGold: baseWave.rewardGold,
-        enemies: baseWave.enemies.map((e) => ({ ...e }))
-      };
-    }
-
-    // --- Waves > 10: Dựa trên extendedWaves riêng của bản đồ (hoặc fallback wave 9) ---
-    const n = Math.floor(waveNum / 10);
-    const extendedList = this.currentMap?.extendedWaves && this.currentMap.extendedWaves.length > 0
-      ? this.currentMap.extendedWaves
-      : [mapWaves[8] || mapWaves[mapWaves.length - 1]];
-
-    // Luân phiên 2 waves extend riêng
-    const extWaveTemplate = extendedList[(waveNum - 11) % extendedList.length] || extendedList[0];
-    const wave10 = mapWaves[9] || mapWaves[mapWaves.length - 1];
-
-    // Tìm boss blueprints từ Wave 10 của map (hoặc boss mặc định)
-    const bossEntriesInWave10 = (wave10?.enemies || []).filter((e) => {
-      const bp = ENEMY_BLUEPRINTS[e.typeId];
-      return bp && bp.tags.includes('BOSS');
-    });
-
-    if (waveNum % 5 === 0) {
-      // WAVES BOSS:
-      // 1. Số lính waves boss ngang số lính waves lính (lấy từ template wave lính mở rộng, lọc bỏ boss)
-      const minionEnemies = (extWaveTemplate?.enemies || [])
-        .filter((e) => {
-          const bp = ENEMY_BLUEPRINTS[e.typeId];
-          return !bp || !bp.tags.includes('BOSS');
-        })
-        .map((entry) => ({
-          ...entry,
-          count: entry.count * n
-        }));
-
-      // 2. Boss xuất hiện trên tất cả lane có thể đi được
-      const bossEnemies: { typeId: string; count: number; interval: number; delay: number }[] = [];
-      const bossesToSpawn = bossEntriesInWave10.length > 0 ? bossEntriesInWave10 : [{ typeId: 'ANCIENT_TREANT_BOSS', count: 1, interval: 1.0, delay: 0 }];
-
-      for (const bEntry of bossesToSpawn) {
-        const bp = ENEMY_BLUEPRINTS[bEntry.typeId];
-        const navMode = bp ? bp.navigationMode : 'GROUND_PATH';
-        const traversableLanes = getTraversableLaneCount(this.currentMap, navMode);
-        // Boss xuất hiện trên tất cả lane: mỗi lane 1 boss x n bậc
-        bossEnemies.push({
-          typeId: bEntry.typeId,
-          count: Math.max(1, traversableLanes * n),
-          interval: bEntry.interval || 1.0,
-          delay: Math.max(0, (bEntry.delay ?? 6))
-        });
-      }
-
-      const baseReward = (extWaveTemplate?.rewardGold || 220) + (wave10?.rewardGold || 300);
-      return {
-        waveNumber: waveNum,
-        name: `Đợt ${waveNum}: Đại Trận Chiến Trùm Toàn Tuyến (x${n})`,
-        rewardGold: baseReward * n,
-        enemies: [...minionEnemies, ...bossEnemies]
-      };
-    }
-
-    // WAVES LÍNH: Số quái lấy từ extendedWave riêng của map, nhân n lần
-    const enemies = (extWaveTemplate?.enemies || []).map((entry) => ({
-      ...entry,
-      count: entry.count * n
-    }));
-
-    return {
-      waveNumber: waveNum,
-      name: `${extWaveTemplate?.name || `Đợt ${waveNum}`} (x${n})`,
-      rewardGold: (extWaveTemplate?.rewardGold || 200) * n,
-      enemies
-    };
+    const json = bridge.getOps().wave_generate_config(JSON.stringify(this.currentMap), waveIdx);
+    return JSON.parse(json) as WaveConfig;
   }
 
   public startWave(waveNum?: number): boolean {
@@ -244,105 +150,15 @@ export class WaveSystem {
   }
 
   private createEnemy(typeId: string, forcedLaneIndex?: number): EnemyEntity | null {
-    const bp = ENEMY_BLUEPRINTS[typeId];
-    if (!bp) return null;
-
-    this.enemyCounter++;
-
-    const hpMultiplier = this.getWaveHpMultiplier();
-    const finalHp = Math.max(1, Math.round(bp.hp * hpMultiplier));
-
-    let laneIndex = 0;
-    let startX = 40;
-    let startY = 160;
-
-    if (bp.navigationMode === 'WATER_PATH') {
-      const waterLanesCount =
-        this.currentMap.waterLanes && this.currentMap.waterLanes.length > 0
-          ? this.currentMap.waterLanes.length
-          : 1;
-      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.waterLaneIndex++) % waterLanesCount;
-      const targetLane = this.currentMap.waterLanes?.[laneIndex];
-      const spawnPt = targetLane?.[0];
-      if (spawnPt && typeof spawnPt === 'object') {
-        startX = spawnPt.x;
-        startY = spawnPt.y;
-      }
-    } else if (bp.navigationMode === 'AIR_DIRECT' || bp.navigationMode === 'AIR_WAYPOINTS') {
-      const airLanesCount =
-        this.currentMap.airLanes && this.currentMap.airLanes.length > 0
-          ? this.currentMap.airLanes.length
-          : 1;
-      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.airLaneIndex++) % airLanesCount;
-      const targetLane = this.currentMap.airLanes?.[laneIndex];
-      const spawnPt = targetLane?.[0];
-      if (spawnPt && typeof spawnPt === 'object') {
-        startX = spawnPt.x;
-        startY = spawnPt.y;
-      }
-    } else {
-      const groundLanesCount =
-        this.currentMap.groundLanes && this.currentMap.groundLanes.length > 0
-          ? this.currentMap.groundLanes.length
-          : 1;
-      laneIndex = (forcedLaneIndex !== undefined ? forcedLaneIndex : this.groundLaneIndex++) % groundLanesCount;
-      const targetLane = this.currentMap.groundLanes?.[laneIndex];
-      const spawnPt = targetLane?.[0];
-      if (spawnPt && typeof spawnPt === 'object') {
-        startX = spawnPt.x;
-        startY = spawnPt.y;
-      }
-    }
-
-    return {
-      id: `enemy-${this.enemyCounter}`,
-      typeId: bp.typeId,
-      name: bp.name,
-      x: startX,
-      y: startY,
-      hp: finalHp,
-      maxHp: finalHp,
-      speed: bp.speed,
-      baseSpeed: bp.speed,
-      damage: bp.damage,
-      attackSpeed: bp.attackSpeed,
-      attackCooldown: 1.0,
-      rewardGold: bp.rewardGold,
-      movementType: bp.movementType,
-      navigationMode: bp.navigationMode,
-      pathDistance: 0,
-      pathTotalLength: 1000,
-      laneIndex,
-      elementalProfile: {
-        primaryElement: bp.elementalProfile.primaryElement,
-        secondaryElement: bp.elementalProfile.secondaryElement,
-        immunities: [...bp.elementalProfile.immunities],
-        damageMultipliers: bp.elementalProfile.damageMultipliers
-          ? { ...bp.elementalProfile.damageMultipliers }
-          : undefined
-      },
-      state: bp.movementType === 'FLY' ? 'FLYING' : bp.movementType === 'SWIM' ? 'SWIMMING' : 'WALKING',
-      engagedBySoldierId: null,
-      statusEffects: [],
-      tags: [...bp.tags],
-      altitude: bp.altitude,
-      size: bp.size,
-      facing: 0,
-      ccResistance: bp.ccResistance
-        ? {
-            hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
-            softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
-          }
-        : undefined,
-      abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
-      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval ?? 0) : undefined,
-      armorShield: 0,
-      maxArmorShield: 0,
-      magicShield: 0,
-      maxMagicShield: 0,
-      damageReductionRatio: 0,
-      damageReductionTimer: 0
-    };
+    const bridge = WasmBridge.ensureSingletonReady();
+    const json = bridge.getOps().wave_create_enemy(
+      JSON.stringify(this.currentMap),
+      typeId,
+      this.currentWaveIndex,
+      forcedLaneIndex
+    );
+    if (!json) return null;
+    return JSON.parse(json) as EnemyEntity;
   }
 
   /**
@@ -355,61 +171,11 @@ export class WaveSystem {
     y: number,
     laneIndex: number = 0
   ): EnemyEntity | null {
-    const bp = ENEMY_BLUEPRINTS[typeId];
-    if (!bp) return null;
-
-    this.enemyCounter++;
-    const hpMultiplier = this.getWaveHpMultiplier();
-    const finalHp = Math.max(1, Math.round(bp.hp * hpMultiplier));
-
-    return {
-      id: `enemy-${this.enemyCounter}`,
-      typeId: bp.typeId,
-      name: bp.name,
-      x,
-      y,
-      hp: finalHp,
-      maxHp: finalHp,
-      speed: bp.speed,
-      baseSpeed: bp.speed,
-      damage: bp.damage,
-      attackSpeed: bp.attackSpeed,
-      attackCooldown: 1.0,
-      rewardGold: bp.rewardGold,
-      movementType: bp.movementType,
-      navigationMode: bp.navigationMode,
-      pathDistance,
-      pathTotalLength: 1000,
-      laneIndex,
-      elementalProfile: {
-        primaryElement: bp.elementalProfile.primaryElement,
-        secondaryElement: bp.elementalProfile.secondaryElement,
-        immunities: [...bp.elementalProfile.immunities],
-        damageMultipliers: bp.elementalProfile.damageMultipliers
-          ? { ...bp.elementalProfile.damageMultipliers }
-          : undefined
-      },
-      state: bp.movementType === 'FLY' ? 'FLYING' : bp.movementType === 'SWIM' ? 'SWIMMING' : 'WALKING',
-      engagedBySoldierId: null,
-      statusEffects: [],
-      tags: [...bp.tags],
-      altitude: bp.altitude,
-      size: bp.size,
-      facing: 0,
-      ccResistance: bp.ccResistance
-        ? {
-            hardCC: bp.ccResistance.hardCC ? { ...bp.ccResistance.hardCC } : undefined,
-            softCC: bp.ccResistance.softCC ? { ...bp.ccResistance.softCC } : undefined
-          }
-        : undefined,
-      abilities: bp.abilities ? bp.abilities.map((a) => ({ ...a })) : undefined,
-      abilityTimers: bp.abilities ? bp.abilities.map((a) => a.interval ?? 0) : undefined,
-      armorShield: 0,
-      maxArmorShield: 0,
-      magicShield: 0,
-      maxMagicShield: 0,
-      damageReductionRatio: 0,
-      damageReductionTimer: 0
-    };
+    const enemy = this.createEnemy(typeId, laneIndex);
+    if (!enemy) return null;
+    enemy.pathDistance = pathDistance;
+    enemy.x = x;
+    enemy.y = y;
+    return enemy;
   }
 }

@@ -45,17 +45,17 @@ src/
 ├── core/
 │   ├── WasmBridge.ts      # Cầu nối khởi tạo WASM (hỗ trợ cả initSync trong Node/Vitest), đồng bộ config, WebGL2 & Flat Memory
 │   ├── GameState.ts       # Quản lý trạng thái đồng bộ với UI & thao tác tháp
-│   ├── SimulationEngine.ts# Điều phối vòng lặp Fixed 60Hz & fallback
+│   ├── SimulationEngine.ts# Điều phối vòng lặp Fixed 60Hz ủy quyền Rust WASM
 │   ├── SpatialIndex.ts    # Truy vấn không gian qua WasmBridge
 │   ├── ObjectPool.ts      # Generic ObjectPool
 │   └── StorageService.ts  # localStorage (cài đặt trận)
 ├── systems/               # Các lớp vỏ gọi xuống Rust WASM (SoundSystem, TargetingRuleEngine, WaveSystem…)
 ├── render/
 │   ├── UnitSpriteCache.ts       # Nướng GPU Texture Atlas (quái + icon) nạp vào Rust WebGL2 Renderer
-│   ├── EnemyArchetypeRenderer.ts# Hình dạng quái theo archetype (dùng để bake GPU Atlas & vẽ preview Cẩm nang)
-│   ├── MapRenderer.ts           # Vẽ feedback đặt tháp trên overlay 2D & fallback
-│   ├── TowerRenderer.ts         # Vẽ chữ nổi (FloatingTexts) trên overlay 2D & fallback
-│   └── StickmanRenderer.ts      # Vẽ preview quái trong Cẩm nang (#codex-enemy-canvas) & fallback
+│   ├── EnemyArchetypeRenderer.ts# Hình dạng quái theo archetype (dùng để bake GPU Atlas)
+│   ├── MapRenderer.ts           # Vẽ feedback đặt tháp trên overlay 2D (#game-hud-overlay)
+│   ├── TowerRenderer.ts         # Vẽ chữ nổi (FloatingTexts) trên overlay 2D (#game-hud-overlay)
+│   └── StickmanRenderer.ts      # Vẽ preview quái trong Cẩm nang (#codex-enemy-canvas)
 ├── ui/                    # Giao diện HTML/DOM (UIManager, HUDManager, ArsenalBar, InspectorPanel, Codex*, Modals)
 └── __tests__/             # Vitest (10 files, 146 tests)
 ```

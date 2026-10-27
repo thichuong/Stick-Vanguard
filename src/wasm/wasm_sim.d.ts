@@ -55,6 +55,8 @@ export function clear_enemies(): void;
 
 export function clear_paths(): void;
 
+export function combat_find_unengaged_enemy_near(enemies_json: string, x: number, y: number, radius: number, can_block_air: boolean): string;
+
 export function engine_build_tower(slot_id: string, tower_type_str: string): string;
 
 export function engine_build_tower_at(x: number, y: number, tower_type_str: string): string;
@@ -145,11 +147,15 @@ export function render_webgl_frame(): void;
 
 export function rules_apply_all_payload_effects(enemy_json: string, payload_json: string): string;
 
+export function rules_apply_damage_reduction(enemy_json: string, ratio: number, duration: number): string;
+
 export function rules_apply_damage_to_enemy(enemy_json: string, calc_json: string, elem_str: string, sec_elem_str?: string | null): string;
 
 export function rules_apply_elemental_hit_effects(enemy_json: string, element_str: string, base_damage: number): string;
 
 export function rules_apply_knockback(enemy_json: string, base_distance: number): string;
+
+export function rules_apply_reaction_bonus_effects(enemy_json: string, element_str: string, base_damage: number): string;
 
 export function rules_apply_status_effect(enemy_json: string, payload_json: string): string;
 
@@ -164,6 +170,16 @@ export function rules_calculate_soldier_defensive_multiplier(attacker_str: strin
 export function rules_can_target(filter_json: string, enemy_json: string): boolean;
 
 export function rules_get_crowd_control_modifiers(enemy_json: string): string;
+
+export function rules_get_effective_damage_reduction_ratio(enemy_json: string): number;
+
+export function rules_get_enemy_attack_speed_multiplier(enemy_json: string): number;
+
+export function rules_get_soldier_elements(soldier_json: string): string;
+
+export function rules_is_enemy_stunned_or_frozen(enemy_json: string): boolean;
+
+export function rules_sync_effective_damage_reduction(enemy_json: string): string;
 
 export function rules_update_status_effects(enemy_json: string, dt: number, global_dmg_mult: number): string;
 
@@ -206,6 +222,7 @@ export interface InitOutput {
     readonly audio_play_ui_click: () => void;
     readonly audio_play_wave_start: () => void;
     readonly audio_set_enabled: (a: number) => void;
+    readonly combat_find_unengaged_enemy_near: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly engine_build_tower: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_build_tower_at: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_call_wave_early: () => [number, number];
@@ -246,9 +263,11 @@ export interface InitOutput {
     readonly render_codex_soldier_webgl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
     readonly render_custom_state_webgl: (a: number, b: number, c: number, d: number) => number;
     readonly rules_apply_all_payload_effects: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly rules_apply_damage_reduction: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rules_apply_damage_to_enemy: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly rules_apply_elemental_hit_effects: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly rules_apply_knockback: (a: number, b: number, c: number) => [number, number];
+    readonly rules_apply_reaction_bonus_effects: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly rules_apply_status_effect: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rules_calculate_damage: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly rules_calculate_elemental_matchup: (a: number, b: number, c: number, d: number) => number;
@@ -256,6 +275,11 @@ export interface InitOutput {
     readonly rules_calculate_soldier_defensive_multiplier: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rules_can_target: (a: number, b: number, c: number, d: number) => number;
     readonly rules_get_crowd_control_modifiers: (a: number, b: number) => [number, number];
+    readonly rules_get_effective_damage_reduction_ratio: (a: number, b: number) => number;
+    readonly rules_get_enemy_attack_speed_multiplier: (a: number, b: number) => number;
+    readonly rules_get_soldier_elements: (a: number, b: number) => [number, number];
+    readonly rules_is_enemy_stunned_or_frozen: (a: number, b: number) => number;
+    readonly rules_sync_effective_damage_reduction: (a: number, b: number) => [number, number];
     readonly rules_update_status_effects: (a: number, b: number, c: number, d: number) => [number, number];
     readonly set_path: (a: number, b: number, c: number, d: number) => void;
     readonly upload_codex_webgl_atlas: (a: any, b: number, c: number) => number;

@@ -1,11 +1,7 @@
 import { GameState } from './core/GameState.js';
-import { NavigationSystem } from './systems/NavigationSystem.js';
-import { WaveSystem } from './systems/WaveSystem.js';
-import { SimulationEngine } from './core/SimulationEngine.js';
 import { WasmBridge } from './core/WasmBridge.js';
 import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
 import { MapRenderer } from './render/MapRenderer.js';
-import { StickmanRenderer } from './render/StickmanRenderer.js';
 import { TowerRenderer } from './render/TowerRenderer.js';
 import { UnitSpriteCache } from './render/UnitSpriteCache.js';
 import { UIManager } from './ui/UIManager.js';
@@ -15,55 +11,58 @@ import { SoundSystem } from './systems/SoundSystem.js';
 class GameApp {
   private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
   private overlayCanvas: HTMLCanvasElement | null = null;
   private overlayCtx: CanvasRenderingContext2D | null = null;
   private webglReady: boolean = false;
 
-  private state: GameState;
-  private navSystem: NavigationSystem;
-  private waveSystem: WaveSystem;
-  private simEngine: SimulationEngine;
-  private uiManager: UIManager;
+  private state!: GameState;
+  private uiManager!: UIManager;
   private lastTime: number = 0;
 
   constructor() {
     this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 
-    // Try WebGL2 context first for Rust WASM GPU renderer
+    // WebGL2 context is required for the Rust WASM GPU renderer
     try {
       this.gl = this.canvas.getContext('webgl2', { alpha: false, antialias: true }) as WebGL2RenderingContext | null;
     } catch {
       this.gl = null;
     }
 
-    if (this.gl) {
+    if (!this.gl) {
+      console.error('[Stick Vanguard] WebGL2 is not supported on this browser/environment.');
       const wrapper = document.getElementById('canvas-wrapper');
       if (wrapper) {
-        const overlay = document.createElement('canvas');
-        overlay.id = 'game-hud-overlay';
-        overlay.width = this.canvas.width;
-        overlay.height = this.canvas.height;
-        overlay.style.position = 'absolute';
-        overlay.style.inset = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.pointerEvents = 'none';
-        wrapper.insertBefore(overlay, this.canvas.nextSibling);
-        this.overlayCanvas = overlay;
-        this.overlayCtx = overlay.getContext('2d');
+        wrapper.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#090d16;color:#f87171;font-family:sans-serif;text-align:center;padding:24px;">
+            <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+            <h2 style="font-size:20px;margin-bottom:8px;color:#f1f5f9;">Trình duyệt không hỗ trợ WebGL2</h2>
+            <p style="font-size:14px;color:#94a3b8;max-width:450px;line-height:1.5;">Stick Vanguard yêu cầu phần cứng đồ họa WebGL2 và WebAssembly để chạy toàn bộ lõi mô phỏng chiến trường Rust. Vui lòng kích hoạt tăng tốc phần cứng trong cài đặt trình duyệt.</p>
+          </div>
+        `;
       }
-    } else {
-      this.ctx = this.canvas.getContext('2d');
+      return;
+    }
+
+    const wrapper = document.getElementById('canvas-wrapper');
+    if (wrapper) {
+      const overlay = document.createElement('canvas');
+      overlay.id = 'game-hud-overlay';
+      overlay.width = this.canvas.width;
+      overlay.height = this.canvas.height;
+      overlay.style.position = 'absolute';
+      overlay.style.inset = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.pointerEvents = 'none';
+      wrapper.insertBefore(overlay, this.canvas.nextSibling);
+      this.overlayCanvas = overlay;
+      this.overlayCtx = overlay.getContext('2d');
     }
 
     this.state = new GameState();
     this.state.loadSettingsFromStorage();
     TargetingRuleEngine.globalDamageMultiplier = this.state.damageMultiplier;
-
-    this.navSystem = new NavigationSystem(this.state.currentMap);
-    this.waveSystem = new WaveSystem(this.state.currentMap, this.state.customTotalWaves);
-    this.simEngine = new SimulationEngine(this.state, this.navSystem, this.waveSystem);
 
     this.uiManager = new UIManager(
       this.state,
@@ -78,7 +77,6 @@ class GameApp {
     const bridge = WasmBridge.getInstance();
     bridge.init().then((active) => {
       if (active) {
-        this.simEngine.onMapChanged();
         bridge.setMap(this.state.currentMapId);
         bridge.setGameSettings(
           this.state.customTotalWaves,
@@ -118,9 +116,6 @@ class GameApp {
 
     this.state.saveSettingsToStorage();
 
-    this.navSystem.setMap(this.state.currentMap);
-    this.waveSystem.setMap(this.state.currentMap);
-    this.waveSystem.setTotalWaves(keepWaves);
     const bridge = WasmBridge.getInstance();
     bridge.clearAll();
     if (bridge.isAvailable()) {
@@ -129,7 +124,6 @@ class GameApp {
       bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
       bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
     }
-    this.simEngine.onMapChanged();
     MapRenderer.clearCache();
 
     this.uiManager.updateHotbarVisuals();
@@ -173,35 +167,11 @@ class GameApp {
     SoundSystem.playWaveStart();
 
     const bridge = WasmBridge.getInstance();
-    if (this.gl && this.webglReady && bridge.isAvailable()) {
+    if (bridge.isAvailable()) {
       const res = bridge.callWaveEarly();
       if (res && res.bonusGold) {
         this.state.gold += res.bonusGold;
       }
-      return;
-    }
-
-    if (this.waveSystem.isWaveInProgress) {
-      if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
-        return;
-      }
-      const baseBonus = 25;
-      const bonus = Math.max(1, Math.round(baseBonus * this.state.goldMultiplier));
-      this.state.gold += bonus;
-      this.state.addFloatingText(`+${bonus} 🪙 Gọi đợt sớm!`, 500, 80, '#facc15', 15);
-      this.waveSystem.currentWaveIndex++;
-      this.waveSystem.startWave();
-    } else {
-      if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves()) {
-        return;
-      }
-      this.waveSystem.startWave();
-    }
-
-    const currentWave = this.waveSystem.currentWaveIndex + 1;
-    if (currentWave > 10) {
-      const bonusPct = (currentWave - 10) * 10;
-      this.state.addFloatingText(`⚠️ Đợt ${currentWave}: Quái tăng +${bonusPct}% Máu!`, 480, 50, '#ef4444', 18);
     }
   }
 
@@ -218,9 +188,6 @@ class GameApp {
     this.state.gameSpeed = keepSpeed;
     TargetingRuleEngine.globalDamageMultiplier = keepDmgMult;
 
-    this.navSystem.setMap(this.state.currentMap);
-    this.waveSystem.setMap(this.state.currentMap);
-    this.waveSystem.setTotalWaves(keepWaves);
     const bridge = WasmBridge.getInstance();
     bridge.clearAll();
     if (bridge.isAvailable()) {
@@ -229,7 +196,6 @@ class GameApp {
       bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
       bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
     }
-    this.simEngine.onMapChanged();
     MapRenderer.clearCache();
   }
 
@@ -373,7 +339,7 @@ class GameApp {
 
     const bridge = WasmBridge.getInstance();
 
-    // Primary High-Performance Path: Pure Rust Simulation Engine & WebGL2 Hardware Render
+    // Pure Rust WebAssembly Engine & WebGL2 Hardware Render
     if (this.gl && this.webglReady && bridge.isAvailable()) {
       bridge.setGameSettings(
         this.state.customTotalWaves,
@@ -405,6 +371,7 @@ class GameApp {
           }
         }
 
+        // Overlay canvas: UI HUD feedback (range rings) & floating combat texts
         if (this.overlayCtx && this.overlayCanvas) {
           this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
           MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, step.animTime);
@@ -416,61 +383,10 @@ class GameApp {
           step.totalWaves,
           step.isWaveInProgress
         );
-
-        requestAnimationFrame((t) => this.loop(t));
-        return;
       }
     }
-
-    // Fallback Path: 2D Canvas & TS Simulation Engine (when WebGL2 or WASM is unavailable)
-    this.simEngine.update(rawDt);
-
-    this.render(this.simEngine.getInterpolationAlpha());
-
-    this.uiManager.updateHUD(
-      this.waveSystem.currentWaveIndex + 1,
-      this.waveSystem.getTotalWaves(),
-      this.waveSystem.isWaveInProgress
-    );
 
     requestAnimationFrame((t) => this.loop(t));
-  }
-
-  private render(alpha: number = 1.0): void {
-    const animTime = this.simEngine.getTotalAnimTime();
-    // Fallback Path: 2D Canvas Context (when WebGL2 or WASM is unavailable)
-    const ctx = this.ctx || this.overlayCtx;
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    MapRenderer.renderBackground(ctx, animTime, this.state.currentMap);
-    TowerRenderer.renderTowers(ctx, this.state.towers, this.state.selectedTowerId, animTime);
-
-    StickmanRenderer.currentLOD = StickmanRenderer.getLODLevel(
-      this.state.enemies.length + this.state.soldiers.length
-    );
-
-    for (const enemy of this.state.enemies) {
-      if (enemy.movementType !== 'FLY') {
-        StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
-      }
-    }
-
-    for (const soldier of this.state.soldiers) {
-      StickmanRenderer.renderSoldier(ctx, soldier, animTime);
-    }
-
-    for (const enemy of this.state.enemies) {
-      if (enemy.movementType === 'FLY') {
-        StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
-      }
-    }
-
-    MapRenderer.renderPlacementFeedback(ctx, this.state, animTime);
-    TowerRenderer.renderProjectiles(ctx, this.state.projectiles);
-    TowerRenderer.renderParticles(ctx, this.state.particles);
-    TowerRenderer.renderFloatingTexts(ctx, this.state.floatingTexts);
   }
 }
 

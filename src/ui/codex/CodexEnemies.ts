@@ -716,24 +716,9 @@ export class CodexEnemies {
 
       const animTime = (timestamp - this.enemyAnimStartTime) / 1000;
 
-      // Primary Path: Rust WASM WebGL2 Hardware Accelerated Preview
+      // Rust WASM WebGL2 Hardware Accelerated Preview
       if (gl && bridge.isAvailable()) {
         bridge.renderCodexEnemy(bp.typeId, animTime, canvas.width, canvas.height);
-        this.enemyAnimFrameId = raf(loop);
-        return;
-      }
-
-      // Graceful 2D Fallback (when WebGL2 or WASM is unavailable)
-      const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const cx = canvas.width / 2;
-        const cy = canvas.height * 0.72;
-        const elemColor = ELEMENT_COLORS[bp.elementalProfile.primaryElement] || '#60a5fa';
-        ctx.fillStyle = elemColor;
-        ctx.beginPath();
-        ctx.arc(cx, cy - 20, bp.size, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       this.enemyAnimFrameId = raf(loop);

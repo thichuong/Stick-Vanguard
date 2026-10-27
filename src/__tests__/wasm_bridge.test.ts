@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { WasmBridge } from '../core/WasmBridge.js';
 import { EnemyEntity } from '../types/entities.types.js';
 
-describe('WasmBridge Core & Fallback Architecture', () => {
+describe('WasmBridge Core Architecture', () => {
   it('should maintain singleton instance and ID mapping', () => {
     const bridge = WasmBridge.getInstance();
     expect(bridge).toBeDefined();
@@ -25,7 +25,7 @@ describe('WasmBridge Core & Fallback Architecture', () => {
     expect(bridge.getStrId(id2)).toBeUndefined();
   });
 
-  it('should handle fallback gracefully when wasm is uninitialized', () => {
+  it('should handle uninitialized state safely before wasm binary is loaded', () => {
     const bridge = new WasmBridge();
     expect(bridge.isAvailable()).toBe(false);
     expect(bridge.getRenderView()).toBeNull();

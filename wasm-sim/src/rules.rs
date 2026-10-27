@@ -1092,13 +1092,13 @@ impl TargetingRuleEngine {
         soldier: &SoldierEntity,
     ) -> (f32, f32, f32) {
         let soldier_elements = Self::get_soldier_elements(soldier);
-        let mut matchup_mult = 1.0;
+        let mut matchup_mult_f64 = 1.0f64;
 
         for s_elem in soldier_elements {
-            matchup_mult *= registry.get_matchup(attacker_elem, s_elem);
+            matchup_mult_f64 *= registry.get_matchup(attacker_elem, s_elem) as f64;
         }
 
-        matchup_mult = (matchup_mult.clamp(0.1, 3.0) * 100.0).round() / 100.0;
+        let matchup_mult = (((matchup_mult_f64.clamp(0.1, 3.0) * 100.0 + 1e-4).round()) / 100.0) as f32;
 
         let reduction = if attacker_elem == ElementType::PHYSICAL {
             soldier.armor.clamp(0.0, 0.9)
