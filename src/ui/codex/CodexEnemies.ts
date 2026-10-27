@@ -8,8 +8,7 @@ import {
 import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
 import { WasmBridge } from '../../core/WasmBridge.js';
-import { UnitSpriteCache } from '../../render/UnitSpriteCache.js';
-import { EnemyArchetypeRenderer } from '../../render/EnemyArchetypeRenderer.js';
+import { getArchetypeInfo } from '../../config/enemies/archetypes.config.js';
 import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
 import { ALL_15_ELEMENTS } from './CodexTypes.js';
 
@@ -110,7 +109,7 @@ export class CodexEnemies {
         const pIcon = ELEMENT_ICONS[pElem] || UI_ICONS.SWORDS;
         const sIcon = sElem ? ELEMENT_ICONS[sElem] : '';
         const moveIcon = bp.movementType === 'FLY' ? UI_ICONS.FLY : bp.movementType === 'SWIM' ? UI_ICONS.SWIM : UI_ICONS.WALK;
-        const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
+        const archInfo = getArchetypeInfo({ typeId: bp.typeId });
         const isCurrent = bp.typeId === selectedBp.typeId;
 
         let badges = '';
@@ -332,7 +331,7 @@ export class CodexEnemies {
     const sName = sElem ? ` + ${ELEMENT_NAMES[sElem]}` : '';
 
     const moveText = bp.movementType === 'FLY' ? `${UI_ICONS.FLY} Đường Bay (Air)` : bp.movementType === 'SWIM' ? `${UI_ICONS.SWIM} Kênh Sông (Water)` : `${UI_ICONS.WALK} Đường Bộ (Ground)`;
-    const archInfo = EnemyArchetypeRenderer.getArchetypeInfo({ typeId: bp.typeId });
+    const archInfo = getArchetypeInfo({ typeId: bp.typeId });
 
     // Badges
     let abilityBadges = '';
@@ -700,7 +699,6 @@ export class CodexEnemies {
 
     if (gl && bridge.isAvailable()) {
       bridge.initCodexWebGlRenderer(gl);
-      UnitSpriteCache.uploadCodexAtlas(bridge);
     }
 
     this.enemyAnimStartTime = performance.now();

@@ -6,7 +6,6 @@ import { GameState } from '../core/GameState.js';
 import { NavigationSystem } from '../systems/NavigationSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
 import { StickmanRenderer } from '../render/StickmanRenderer.js';
-import { UnitSpriteCache } from '../render/UnitSpriteCache.js';
 import { EnemyEntity } from '../types/entities.types.js';
 
 describe('Performance Optimization Suite', () => {
@@ -134,7 +133,7 @@ describe('Performance Optimization Suite', () => {
     });
   });
 
-  describe('Smart LOD and Sprite Quantization', () => {
+  describe('Smart LOD Battlefield Density Thresholds', () => {
     it('should assign correct LOD levels based on battlefield density thresholds', () => {
       expect(StickmanRenderer.getLODLevel(20)).toBe('FULL');
       expect(StickmanRenderer.getLODLevel(79)).toBe('FULL');
@@ -142,17 +141,6 @@ describe('Performance Optimization Suite', () => {
       expect(StickmanRenderer.getLODLevel(219)).toBe('MEDIUM');
       expect(StickmanRenderer.getLODLevel(220)).toBe('HIGH_CROWD');
       expect(StickmanRenderer.getLODLevel(1000)).toBe('HIGH_CROWD');
-    });
-
-    it('UnitSpriteCache should correctly quantize animation phases and angles', () => {
-      expect(UnitSpriteCache.quantizeAnimPhase(0.0)).toBe(0);
-      expect(UnitSpriteCache.quantizeAnimPhase(0.5)).toBe(6);
-      expect(UnitSpriteCache.quantizeAnimPhase(0.99)).toBe(11);
-
-      // Angle quantization
-      expect(UnitSpriteCache.quantizeAngle(0)).toBe(0);
-      expect(UnitSpriteCache.quantizeAngle(Math.PI)).toBe(8);
-      expect(UnitSpriteCache.quantizeAngle(Math.PI * 2)).toBe(0);
     });
   });
 

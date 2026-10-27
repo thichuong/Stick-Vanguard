@@ -3,7 +3,6 @@ import { WasmBridge } from './core/WasmBridge.js';
 import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
 import { MapRenderer } from './render/MapRenderer.js';
 import { TowerRenderer } from './render/TowerRenderer.js';
-import { UnitSpriteCache } from './render/UnitSpriteCache.js';
 import { UIManager } from './ui/UIManager.js';
 import { MAPS_CONFIG } from './config/map.config.js';
 import { SoundSystem } from './systems/SoundSystem.js';
@@ -92,9 +91,6 @@ class GameApp {
         bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
         if (this.gl) {
           this.webglReady = bridge.initWebGlRenderer(this.gl);
-          if (this.webglReady) {
-            UnitSpriteCache.bakeAndUploadWebGlAtlas(bridge);
-          }
         }
       }
     });

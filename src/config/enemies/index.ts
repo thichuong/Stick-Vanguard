@@ -7,6 +7,7 @@ import { FLYING_ENEMIES } from './flying.enemies.js';
 import { AQUATIC_ENEMIES } from './aquatic.enemies.js';
 
 export * from './types.js';
+export * from './archetypes.config.js';
 export * from './cc.config.js';
 export * from './boss.enemies.js';
 export * from './elite.enemies.js';

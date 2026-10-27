@@ -9,7 +9,6 @@ import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
 import { TowerType } from '../../types/entities.types.js';
 import { WasmBridge } from '../../core/WasmBridge.js';
-import { UnitSpriteCache } from '../../render/UnitSpriteCache.js';
 
 export class CodexBuildings {
   public selectedTierKey: string = 'BARRACKS_1';
@@ -580,7 +579,6 @@ export class CodexBuildings {
 
     if (gl && bridge.isAvailable()) {
       bridge.initCodexWebGlRenderer(gl);
-      UnitSpriteCache.uploadCodexAtlas(bridge);
     }
 
     this.soldierAnimStartTime = performance.now();

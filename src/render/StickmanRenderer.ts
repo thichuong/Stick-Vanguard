@@ -6,7 +6,6 @@ import { ELEMENT_COLORS } from '../config/elements.config.js';
 import { ElementType, StatusEffectType } from '../types/elements.types.js';
 import { drawElementSvgOnCanvas, STATUS_EFFECT_TO_ELEMENT } from '../config/elements/icons/index.js';
 import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
-import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
 
 export type LODLevel = 'FULL' | 'MEDIUM' | 'HIGH_CROWD';
 
@@ -110,9 +109,16 @@ export class StickmanRenderer {
       }
     }
 
-    // 5. Render Creature Body via Direct Rigging (2D Fallback)
-    const mockPosEnemy = x !== enemy.x || y !== enemy.y ? { ...enemy, x, y } : enemy;
-    EnemyArchetypeRenderer.renderEnemyBody(ctx, mockPosEnemy, animTime, elemColor, secColor);
+    // 5. Basic Stickman Body (Legacy 2D mock helper)
+    ctx.save();
+    ctx.strokeStyle = elemColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, drawY - size * 0.5, size * 0.3, 0, Math.PI * 2);
+    ctx.moveTo(x, drawY - size * 0.2);
+    ctx.lineTo(x, drawY + size * 0.3);
+    ctx.stroke();
+    ctx.restore();
 
     // 6. Health bar & Elemental icons with Smart LOD
     const isBossOrElite = enemy.tags.includes('BOSS') || enemy.tags.includes('ELITE');

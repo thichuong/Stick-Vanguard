@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
-import { EnemyArchetypeRenderer, EnemyVisualArchetype } from '../render/EnemyArchetypeRenderer.js';
+import {
+  getArchetype,
+  getArchetypeInfo,
+  EnemyVisualArchetype
+} from '../config/enemies/archetypes.config.js';
 import { StickmanRenderer } from '../render/StickmanRenderer.js';
 import { EnemyEntity } from '../types/entities.types.js';
 
-describe('EnemyArchetypeRenderer - Stick Creature Archetypes', () => {
+describe('Enemy Archetypes - Config Mapping & Visual Profiles', () => {
   it('should map every enemy blueprint to a valid stick creature archetype', () => {
     const validArchetypes: EnemyVisualArchetype[] = [
       'HUMANOID',
@@ -61,7 +65,7 @@ describe('EnemyArchetypeRenderer - Stick Creature Archetypes', () => {
         facing: 0
       } as EnemyEntity;
 
-      const archetype = EnemyArchetypeRenderer.getArchetype(mockEnemy);
+      const archetype = getArchetype(mockEnemy);
       expect(validArchetypes).toContain(archetype);
       archetypeCounts[archetype]++;
     }
@@ -79,97 +83,19 @@ describe('EnemyArchetypeRenderer - Stick Creature Archetypes', () => {
     expect(archetypeCounts.HUMANOID).toBeGreaterThanOrEqual(5); // Runners, Warriors, Warlocks, Imps, Treants, etc.
   });
 
-  it('should render all 30 enemy types without throwing canvas context exceptions', () => {
-    // Lightweight mock canvas 2D context
-    const mockCtx = {
-      save: () => {},
-      restore: () => {},
-      translate: () => {},
-      scale: () => {},
-      rotate: () => {},
-      beginPath: () => {},
-      closePath: () => {},
-      moveTo: () => {},
-      lineTo: () => {},
-      quadraticCurveTo: () => {},
-      bezierCurveTo: () => {},
-      arc: () => {},
-      ellipse: () => {},
-      strokeRect: () => {},
-      stroke: () => {},
-      fill: () => {},
-      strokeStyle: '#ffffff',
-      fillStyle: '#ffffff',
-      lineWidth: 1,
-      lineCap: 'round',
-      lineJoin: 'round'
-    } as unknown as CanvasRenderingContext2D;
-
-    for (const [typeId, bp] of Object.entries(ENEMY_BLUEPRINTS)) {
-      const mockEnemy = {
-        id: `mock_${typeId}`,
-        typeId,
-        name: bp.name,
-        x: 100,
-        y: 100,
-        hp: bp.hp,
-        maxHp: bp.hp,
-        speed: bp.speed,
-        baseSpeed: bp.speed,
-        damage: bp.damage,
-        attackSpeed: bp.attackSpeed,
-        attackCooldown: 0,
-        rewardGold: bp.rewardGold,
-        movementType: bp.movementType,
-        navigationMode: bp.navigationMode,
-        pathDistance: 0,
-        pathTotalLength: 500,
-        elementalProfile: bp.elementalProfile,
-        state: 'ATTACKING',
-        engagedBySoldierId: null,
-        statusEffects: [],
-        tags: bp.tags,
-        altitude: bp.altitude,
-        size: bp.size,
-        facing: Math.PI / 4 // 45 deg facing right
-      } as EnemyEntity;
-
-      expect(() => {
-        EnemyArchetypeRenderer.renderEnemyBody(
-          mockCtx,
-          mockEnemy,
-          1.5,
-          '#ef4444',
-          '#3b82f6'
-        );
-      }).not.toThrow();
-
-      // Facing left
-      mockEnemy.facing = -Math.PI * 0.75;
-      expect(() => {
-        EnemyArchetypeRenderer.renderEnemyBody(
-          mockCtx,
-          mockEnemy,
-          2.0,
-          '#ef4444',
-          '#3b82f6'
-        );
-      }).not.toThrow();
-    }
-  });
-
   it('should provide archetype metadata and icons for all 30 enemies', () => {
     for (const [typeId] of Object.entries(ENEMY_BLUEPRINTS)) {
-      const info = EnemyArchetypeRenderer.getArchetypeInfo({ typeId });
+      const info = getArchetypeInfo({ typeId });
       expect(info.name).toBeDefined();
       expect(info.icon).toBeDefined();
       expect(info.description).toBeDefined();
       expect(info.name.length).toBeGreaterThan(0);
       expect(info.icon.length).toBeGreaterThan(0);
+      expect(info.description.length).toBeGreaterThan(0);
     }
   });
 
-  it('should render through StickmanRenderer.renderEnemy matching Codex usage for all 30 enemies', () => {
+  it('should render through StickmanRenderer.renderEnemy matching legacy mock usage for all 30 enemies', () => {
     const mockCtx = {
       save: () => {},
       restore: () => {},
@@ -202,7 +128,7 @@ describe('EnemyArchetypeRenderer - Stick Creature Archetypes', () => {
       const isFlying = bp.movementType === 'FLY';
       const isSwimmer = bp.movementType === 'SWIM';
 
-      // Recreate exact Codex mock object
+      // Recreate exact mock object
       const codexMockEnemy = {
         id: 'preview',
         typeId: bp.typeId,
@@ -244,4 +170,3 @@ describe('EnemyArchetypeRenderer - Stick Creature Archetypes', () => {
     }
   });
 });
-

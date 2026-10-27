@@ -1,4 +1,4 @@
-import { ARCHETYPE_SVG_ICONS } from '../../config/ui/icons/index.js';
+import { ARCHETYPE_SVG_ICONS } from '../ui/icons/index.js';
 
 export type EnemyVisualArchetype =
   | 'HUMANOID'

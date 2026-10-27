@@ -35,7 +35,7 @@ Tài liệu chi tiết (chỉ đọc khi cần):
 | Yêu cầu | Mở trước | Sau đó |
 |---|---|---|
 | **Lõi tính toán WASM / Rust Engine** (State, Systems, Rules, Waves, Audio, WebGL2) | `wasm-sim/src/lib.rs`, `wasm-sim/src/systems.rs`, `wasm-sim/src/state.rs` | `wasm-sim/Cargo.toml`, build bằng `npm run build:wasm` |
-| **Render Chiến trường WebGL2 & GPU Atlas** | `wasm-sim/src/webgl/`, `src/render/UnitSpriteCache.ts`, `src/render/archetypes/` | `src/main.ts#loop`, overlay 2D `src/render/*Renderer.ts` |
+| **Render Chiến trường WebGL2 Thuần Rust** | `wasm-sim/src/webgl/` (`entities.rs`, `scene.rs`, `primitives.rs`) | `src/main.ts#loop`, overlay 2D `#game-hud-overlay` |
 | **Âm thanh WebAudio trong Rust** | `wasm-sim/src/audio.rs` | `src/systems/SoundSystem.ts` (vỏ gọi `WasmBridge`) |
 | **Cầu nối WASM & Config Sync** (Zero-Copy Float32Array, ID Map, `load_game_config`) | `src/core/WasmBridge.ts` | `src/wasm/wasm_sim.js`, `src/core/SimulationEngine.ts` |
 | **Vòng lặp mô phỏng & Fixed Tick** (60Hz loop, sub-stepping, nội suy) | `wasm-sim/src/systems.rs`, `src/core/SimulationEngine.ts` | `src/core/ObjectPool.ts`, `src/core/SpatialIndex.ts` |

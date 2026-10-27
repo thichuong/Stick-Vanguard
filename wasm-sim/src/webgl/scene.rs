@@ -132,15 +132,12 @@ impl WebGl2Renderer {
                 [0.937, 0.267, 0.267, 0.4],
             );
             self.draw_circle(gs.x, gs.y, 18.0, 20, parse_hex_color("#ef4444", 1.0));
-            let _ = self.draw_atlas_quad(
-                "UI_SKULL",
-                gs.x,
-                gs.y,
-                18.0,
-                18.0,
-                false,
-                [1.0, 1.0, 1.0, 1.0],
-            );
+            // Procedural Skull Icon
+            self.draw_circle(gs.x, gs.y - 2.0, 7.5, 14, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_rect(gs.x - 3.5, gs.y + 3.0, 7.0, 4.0, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_circle(gs.x - 2.5, gs.y - 1.5, 2.0, 10, [0.15, 0.15, 0.2, 1.0]);
+            self.draw_circle(gs.x + 2.5, gs.y - 1.5, 2.0, 10, [0.15, 0.15, 0.2, 1.0]);
+            self.draw_line(gs.x, gs.y + 1.0, gs.x, gs.y + 3.5, 1.2, [0.15, 0.15, 0.2, 1.0]);
         }
 
         for (idx, ws) in crate::config::MapConfig::get_unique_lane_spawns(&map.water_lanes)
@@ -150,15 +147,14 @@ impl WebGl2Renderer {
             let pulse = (anim_time * 3.5 + idx as f32).sin() * 2.5;
             self.draw_ring(ws.x, ws.y, 21.0 + pulse, 2.0, 20, [0.22, 0.74, 0.97, 0.45]);
             self.draw_circle(ws.x, ws.y, 17.0, 20, parse_hex_color("#0284c7", 1.0));
-            let _ = self.draw_atlas_quad(
-                "UI_SWIM",
-                ws.x,
-                ws.y,
-                18.0,
-                18.0,
-                false,
-                [1.0, 1.0, 1.0, 1.0],
-            );
+            // Procedural Water Waves Icon
+            let wave_col = [1.0, 1.0, 1.0, 0.95];
+            self.draw_line(ws.x - 7.0, ws.y - 3.0, ws.x - 2.0, ws.y - 5.0, 2.0, wave_col);
+            self.draw_line(ws.x - 2.0, ws.y - 5.0, ws.x + 3.0, ws.y - 2.0, 2.0, wave_col);
+            self.draw_line(ws.x + 3.0, ws.y - 2.0, ws.x + 7.0, ws.y - 4.0, 2.0, wave_col);
+            self.draw_line(ws.x - 7.0, ws.y + 3.0, ws.x - 2.0, ws.y + 1.0, 2.0, wave_col);
+            self.draw_line(ws.x - 2.0, ws.y + 1.0, ws.x + 3.0, ws.y + 4.0, 2.0, wave_col);
+            self.draw_line(ws.x + 3.0, ws.y + 4.0, ws.x + 7.0, ws.y + 2.0, 2.0, wave_col);
         }
 
         for (idx, base) in map.get_map_bases().iter().enumerate() {
@@ -181,15 +177,14 @@ impl WebGl2Renderer {
                 parse_hex_color("#60a5fa", 1.0),
             );
             self.draw_circle(base.x, base.y, 16.0, 20, parse_hex_color("#3b82f6", 1.0));
-            let _ = self.draw_atlas_quad(
-                "UI_CASTLE",
-                base.x,
-                base.y,
-                22.0,
-                22.0,
-                false,
-                [1.0, 1.0, 1.0, 1.0],
-            );
+            // Procedural Castle Keep Icon
+            let castle_col = [1.0, 1.0, 1.0, 0.95];
+            self.draw_rect(base.x - 8.0, base.y - 2.0, 16.0, 10.0, castle_col);
+            self.draw_rect(base.x - 8.0, base.y - 7.0, 4.0, 5.0, castle_col);
+            self.draw_rect(base.x - 2.0, base.y - 7.0, 4.0, 5.0, castle_col);
+            self.draw_rect(base.x + 4.0, base.y - 7.0, 4.0, 5.0, castle_col);
+            self.draw_rect(base.x - 2.5, base.y + 2.0, 5.0, 6.0, [0.12, 0.23, 0.54, 1.0]);
+            self.draw_circle(base.x, base.y + 2.0, 2.5, 10, [0.12, 0.23, 0.54, 1.0]);
         }
 
         // 6. Placement Preview Cursor
