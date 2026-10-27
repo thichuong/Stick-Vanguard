@@ -212,7 +212,8 @@ impl RustSoundSystem {
                     } else {
                         0.0
                     };
-                    gain.gain().set_value_at_time(initial_vol, ctx.current_time());
+                    gain.gain()
+                        .set_value_at_time(initial_vol, ctx.current_time());
                     gain.connect(&ctx.destination());
 
                     let rate = ctx.sample_rate();
@@ -253,7 +254,8 @@ impl RustSoundSystem {
                 } else {
                     0.0
                 };
-                gain.gain().set_value_at_time(target_vol, ctx.current_time());
+                gain.gain()
+                    .set_value_at_time(target_vol, ctx.current_time());
             }
         }
         self.record("SET_ENABLED", Some(enabled.to_string()));
@@ -269,7 +271,8 @@ impl RustSoundSystem {
                 } else {
                     0.0
                 };
-                gain.gain().set_value_at_time(target_vol, ctx.current_time());
+                gain.gain()
+                    .set_value_at_time(target_vol, ctx.current_time());
             }
         }
         self.record("SET_VOLUME", Some(format!("{:.2}", self.sound_volume)));
@@ -690,4 +693,3 @@ impl RustSoundSystem {
         self.play_tone_ramp("sine", 800.0, 400.0, 0.15, 0.04, 0.0);
     }
 }
-

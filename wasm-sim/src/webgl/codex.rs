@@ -29,9 +29,17 @@ impl WebGl2Renderer {
         let is_boss = bp.tags.iter().any(|t| t == "BOSS");
         let is_flying = bp.movement_type == MovementType::FLY;
         let is_swimmer = bp.movement_type == MovementType::SWIM;
-        let cy = if is_boss { height * 0.74 } else { height * 0.70 };
+        let cy = if is_boss {
+            height * 0.74
+        } else {
+            height * 0.70
+        };
         let alt = if is_flying {
-            if is_boss { 26.0 } else { 22.0 }
+            if is_boss {
+                26.0
+            } else {
+                22.0
+            }
         } else {
             0.0
         };
@@ -104,7 +112,7 @@ impl WebGl2Renderer {
         let cy = height * 0.68;
 
         let parts: Vec<&str> = soldier_type.split('|').collect();
-        let key_part = parts.get(0).copied().unwrap_or(soldier_type);
+        let key_part = parts.first().copied().unwrap_or(soldier_type);
         let elem_part = parts.get(1).copied();
 
         let mut tier: u8 = 1;
@@ -187,4 +195,3 @@ impl WebGl2Renderer {
         true
     }
 }
-

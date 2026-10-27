@@ -141,9 +141,7 @@ impl SpatialGrid {
     where
         F: Fn(&EnemyEntity) -> bool,
     {
-        let Some((col_min, col_max, row_min, row_max)) = self.get_cell_bounds(x, y, range) else {
-            return None;
-        };
+        let (col_min, col_max, row_min, row_max) = self.get_cell_bounds(x, y, range)?;
 
         let range_sq = range * range;
         let mut best_idx: Option<usize> = None;
@@ -160,11 +158,12 @@ impl SpatialGrid {
                             }
                             let dx = e.x - x;
                             let dy = e.y - y;
-                            if dx * dx + dy * dy <= range_sq && filter(e) {
-                                if e.path_distance > max_progress {
-                                    max_progress = e.path_distance;
-                                    best_idx = Some(idx);
-                                }
+                            if dx * dx + dy * dy <= range_sq
+                                && filter(e)
+                                && e.path_distance > max_progress
+                            {
+                                max_progress = e.path_distance;
+                                best_idx = Some(idx);
                             }
                         }
                     }
@@ -186,9 +185,7 @@ impl SpatialGrid {
     where
         F: Fn(&EnemyEntity) -> bool,
     {
-        let Some((col_min, col_max, row_min, row_max)) = self.get_cell_bounds(x, y, range) else {
-            return None;
-        };
+        let (col_min, col_max, row_min, row_max) = self.get_cell_bounds(x, y, range)?;
 
         let mut min_dist_sq = range * range;
         let mut closest_idx: Option<usize> = None;
@@ -218,4 +215,3 @@ impl SpatialGrid {
         closest_idx
     }
 }
-

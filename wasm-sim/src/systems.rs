@@ -7,8 +7,8 @@ use crate::state::RustGameState;
 use crate::types::{
     BonusElementEntry, DamagePayload, ElementType, EnemyAbilityConfig, EnemyAbilityType,
     EnemyEntity, EnemyState, MovementType, PlacementType, ProjectileEntity, SoldierCombatMode,
-    SoldierState, StatusEffectPayload, StatusEffectType, SummonUnitArchetype,
-    TowerBranch, TowerType, Vector2D,
+    SoldierState, StatusEffectPayload, StatusEffectType, SummonUnitArchetype, TowerBranch,
+    TowerType, Vector2D,
 };
 use crate::wave::WaveSystem;
 use std::collections::HashSet;
@@ -16,6 +16,8 @@ use std::collections::HashSet;
 pub struct EnemySkillSystem;
 
 impl EnemySkillSystem {
+    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         registry: &GameConfigRegistry,
         state: &mut RustGameState,
@@ -43,12 +45,15 @@ impl EnemySkillSystem {
                 continue;
             };
             if state.enemies[e_idx].ability_timers.is_none() {
-                state.enemies[e_idx].ability_timers =
-                    Some(abilities.iter().map(|a| a.interval.unwrap_or(6.0)).collect());
+                state.enemies[e_idx].ability_timers = Some(
+                    abilities
+                        .iter()
+                        .map(|a| a.interval.unwrap_or(6.0))
+                        .collect(),
+                );
             }
 
-            for a_idx in 0..abilities.len() {
-                let ability = &abilities[a_idx];
+            for (a_idx, ability) in abilities.iter().enumerate() {
                 if ability.ability_type == EnemyAbilityType::DeathSpawn {
                     continue;
                 }
@@ -84,6 +89,7 @@ impl EnemySkillSystem {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn handle_death(
         registry: &GameConfigRegistry,
         state: &mut RustGameState,
@@ -105,13 +111,7 @@ impl EnemySkillSystem {
                 };
                 let count = ability.count.unwrap_or(1);
                 audio.play_enemy_skill("SPLIT");
-                state.add_floating_text(
-                    "💥 Phân tách!",
-                    enemy.x,
-                    enemy.y - 24.0,
-                    "#f97316",
-                    15.0,
-                );
+                state.add_floating_text("💥 Phân tách!", enemy.x, enemy.y - 24.0, "#f97316", 15.0);
 
                 let lane_idx = enemy.lane_index.unwrap_or(0);
                 for s in 0..count {
@@ -132,8 +132,7 @@ impl EnemySkillSystem {
                         child_pos.y,
                         lane_idx,
                     ) {
-                        if let Some(path_info) =
-                            nav.get_path_info(child.navigation_mode, lane_idx)
+                        if let Some(path_info) = nav.get_path_info(child.navigation_mode, lane_idx)
                         {
                             child.path_total_length = path_info.total_length;
                         }
@@ -141,13 +140,7 @@ impl EnemySkillSystem {
                         child.prev_x = Some(child.x);
                         child.prev_y = Some(child.y);
                         state.enemies.push(child);
-                        state.add_explosion_particles(
-                            rng,
-                            child_pos.x,
-                            child_pos.y,
-                            "#f97316",
-                            5,
-                        );
+                        state.add_explosion_particles(rng, child_pos.x, child_pos.y, "#f97316", 5);
                     }
                 }
             }
@@ -181,13 +174,7 @@ impl EnemySkillSystem {
                     "#a855f7",
                     15.0,
                 );
-                state.add_explosion_particles(
-                    rng,
-                    source_enemy.x,
-                    source_enemy.y,
-                    "#a855f7",
-                    10,
-                );
+                state.add_explosion_particles(rng, source_enemy.x, source_enemy.y, "#a855f7", 10);
 
                 let lane_idx = source_enemy.lane_index.unwrap_or(0);
                 for s in 0..count {
@@ -207,8 +194,7 @@ impl EnemySkillSystem {
                         m_pos.y,
                         lane_idx,
                     ) {
-                        if let Some(path_info) =
-                            nav.get_path_info(minion.navigation_mode, lane_idx)
+                        if let Some(path_info) = nav.get_path_info(minion.navigation_mode, lane_idx)
                         {
                             minion.path_total_length = path_info.total_length;
                         }
@@ -382,13 +368,7 @@ impl EnemySkillSystem {
                         ratio,
                         duration,
                     );
-                    state.add_floating_text(
-                        "🛡️ GIẢM SÁT THƯƠNG!",
-                        ex,
-                        ey - 20.0,
-                        "#38bdf8",
-                        12.0,
-                    );
+                    state.add_floating_text("🛡️ GIẢM SÁT THƯƠNG!", ex, ey - 20.0, "#38bdf8", 12.0);
                 }
             }
             EnemyAbilityType::DeathSpawn => {}
@@ -567,8 +547,8 @@ impl CombatSystem {
                 }
             });
             if regen > 0.0 && state.soldiers[s_idx].hp < state.soldiers[s_idx].max_hp {
-                state.soldiers[s_idx].hp = (state.soldiers[s_idx].hp + regen * dt)
-                    .min(state.soldiers[s_idx].max_hp);
+                state.soldiers[s_idx].hp =
+                    (state.soldiers[s_idx].hp + regen * dt).min(state.soldiers[s_idx].max_hp);
             }
 
             // Ranged mode
@@ -591,9 +571,10 @@ impl CombatSystem {
             // 3. Melee mode: Check engaged enemy validity
             let mut current_enemy_idx: Option<usize> = None;
             if let Some(ref eng_id) = state.soldiers[s_idx].engaged_enemy_id {
-                current_enemy_idx = state.enemies.iter().position(|e| {
-                    &e.id == eng_id && e.hp > 0.0 && e.state != EnemyState::DEAD
-                });
+                current_enemy_idx = state
+                    .enemies
+                    .iter()
+                    .position(|e| &e.id == eng_id && e.hp > 0.0 && e.state != EnemyState::DEAD);
                 if current_enemy_idx.is_none() {
                     state.soldiers[s_idx].engaged_enemy_id = None;
                     state.soldiers[s_idx].state = SoldierState::MovingToRally;
@@ -604,9 +585,13 @@ impl CombatSystem {
             if current_enemy_idx.is_none() {
                 let rp = state.soldiers[s_idx].rally_point;
                 let can_block_air = state.soldiers[s_idx].can_block_air.unwrap_or(false);
-                if let Some(found_idx) =
-                    Self::find_unengaged_enemy_near(&state.enemies, spatial, rp, 95.0, can_block_air)
-                {
+                if let Some(found_idx) = Self::find_unengaged_enemy_near(
+                    &state.enemies,
+                    spatial,
+                    rp,
+                    95.0,
+                    can_block_air,
+                ) {
                     let eid = state.enemies[found_idx].id.clone();
                     let sid = state.soldiers[s_idx].id.clone();
                     state.soldiers[s_idx].engaged_enemy_id = Some(eid);
@@ -687,8 +672,8 @@ impl CombatSystem {
                                 registry,
                                 &state.enemies[e_idx],
                             );
-                            state.enemies[e_idx].attack_cooldown = 1.0
-                                / (state.enemies[e_idx].attack_speed * atk_mult).max(0.1);
+                            state.enemies[e_idx].attack_cooldown =
+                                1.0 / (state.enemies[e_idx].attack_speed * atk_mult).max(0.1);
 
                             let calc =
                                 TargetingRuleEngine::calculate_enemy_damage_to_soldier_detailed(
@@ -838,8 +823,7 @@ impl CombatSystem {
         let range = state.soldiers[s_idx].ranged_range.unwrap_or(150.0);
         let best_idx = spatial.find_best_target_index(&state.enemies, sx, sy, range, |_| true)?;
 
-        state.soldiers[s_idx].attack_cooldown =
-            1.0 / state.soldiers[s_idx].attack_speed.max(0.1);
+        state.soldiers[s_idx].attack_cooldown = 1.0 / state.soldiers[s_idx].attack_speed.max(0.1);
         state.soldiers[s_idx].state = SoldierState::ATTACKING;
 
         audio.play_shoot("JAVELIN");
@@ -912,8 +896,7 @@ impl CombatSystem {
             return;
         }
 
-        state.soldiers[s_idx].attack_cooldown =
-            1.0 / state.soldiers[s_idx].attack_speed.max(0.2);
+        state.soldiers[s_idx].attack_cooldown = 1.0 / state.soldiers[s_idx].attack_speed.max(0.2);
 
         if !can_hit_all {
             let javelin_dmg = state.soldiers[s_idx].damage * 0.9;
@@ -950,8 +933,14 @@ impl CombatSystem {
                 );
             }
             audio.play_shoot("JAVELIN");
-            audio.play_hit(calc.is_immune, calc.label.is_some() && !calc.is_immune, false);
-            let color = registry.get_element_color(ElementType::LIGHTNING).to_string();
+            audio.play_hit(
+                calc.is_immune,
+                calc.label.is_some() && !calc.is_immune,
+                false,
+            );
+            let color = registry
+                .get_element_color(ElementType::LIGHTNING)
+                .to_string();
             let draw_y = ty - state.enemies[target_idx].altitude;
             if calc.is_immune {
                 state.add_floating_text("MIỄN NHIỄM!", tx, draw_y - 12.0, "#94a3b8", 13.0);
@@ -1117,7 +1106,11 @@ impl CombatSystem {
         let tx = state.enemies[target_idx].x;
         let ty = state.enemies[target_idx].y;
         let draw_y = ty - state.enemies[target_idx].altitude;
-        audio.play_hit(calc.is_immune, calc.label.is_some() && !calc.is_immune, is_melee);
+        audio.play_hit(
+            calc.is_immune,
+            calc.label.is_some() && !calc.is_immune,
+            is_melee,
+        );
 
         if calc.is_immune {
             state.add_floating_text("MIỄN NHIỄM!", tx, draw_y - 12.0, "#94a3b8", 13.0);
@@ -1217,13 +1210,11 @@ impl CombatSystem {
             let chain_dmg = (s_dmg * chain_ratio).round().max(1.0);
             let target_id = state.enemies[target_idx].id.clone();
 
-            if let Some(c_idx) = spatial.find_closest_index(
-                &state.enemies,
-                tx,
-                ty,
-                chain_range,
-                |other| other.id != target_id,
-            ) {
+            if let Some(c_idx) =
+                spatial.find_closest_index(&state.enemies, tx, ty, chain_range, |other| {
+                    other.id != target_id
+                })
+            {
                 let c_payload = DamagePayload {
                     amount: chain_dmg,
                     element: ElementType::LIGHTNING,
@@ -1285,10 +1276,10 @@ impl CombatSystem {
             if enemy.hp <= 0.0 || enemy.state == EnemyState::DEAD {
                 return false;
             }
-            if enemy.movement_type != MovementType::WALK {
-                if !can_block_air || enemy.movement_type != MovementType::FLY {
-                    return false;
-                }
+            if enemy.movement_type != MovementType::WALK
+                && (!can_block_air || enemy.movement_type != MovementType::FLY)
+            {
+                return false;
             }
             if enemy.tags.iter().any(|t| t == "UNBLOCKABLE") {
                 return false;
@@ -1455,7 +1446,12 @@ impl TowerSystem {
                     let sec_amt = tower
                         .secondary_element
                         .map(|_| (tower.damage * MAGE_SECONDARY_DMG_RATIO).round().max(1.0));
-                    (tower.element, tower.damage, tower.secondary_element, sec_amt)
+                    (
+                        tower.element,
+                        tower.damage,
+                        tower.secondary_element,
+                        sec_amt,
+                    )
                 } else {
                     let sec_amt = tower
                         .secondary_element
@@ -1706,7 +1702,11 @@ impl ProjectileSystem {
 
         let tx = state.enemies[e_idx].x;
         let ty = state.enemies[e_idx].y - state.enemies[e_idx].altitude;
-        audio.play_hit(calc.is_immune, calc.label.is_some() && !calc.is_immune, false);
+        audio.play_hit(
+            calc.is_immune,
+            calc.label.is_some() && !calc.is_immune,
+            false,
+        );
 
         if calc.is_immune {
             state.add_floating_text("MIỄN NHIỄM!", tx, ty - 14.0, "#94a3b8", 13.0);
@@ -1887,7 +1887,11 @@ impl ProjectileSystem {
 
                 let ex = state.enemies[e_idx].x;
                 let ey = state.enemies[e_idx].y - state.enemies[e_idx].altitude;
-                audio.play_hit(calc.is_immune, calc.label.is_some() && !calc.is_immune, false);
+                audio.play_hit(
+                    calc.is_immune,
+                    calc.label.is_some() && !calc.is_immune,
+                    false,
+                );
                 if calc.is_immune {
                     state.add_floating_text("MIỄN NHIỄM!", ex, ey - 14.0, "#94a3b8", 13.0);
                 } else {
@@ -1936,6 +1940,7 @@ impl RustSimulationEngine {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         &mut self,
         registry: &GameConfigRegistry,
@@ -1947,8 +1952,12 @@ impl RustSimulationEngine {
         rng: &mut SimpleRng,
         raw_dt: f32,
     ) {
-        let effective_dt =
-            raw_dt.min(0.1) * if state.is_paused { 0.0 } else { state.game_speed };
+        let effective_dt = raw_dt.min(0.1)
+            * if state.is_paused {
+                0.0
+            } else {
+                state.game_speed
+            };
         self.total_anim_time += effective_dt;
         audio.advance_clock(effective_dt);
 
@@ -2123,6 +2132,7 @@ impl RustSimulationEngine {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn update_enemies(
         &mut self,
         registry: &GameConfigRegistry,

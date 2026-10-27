@@ -854,12 +854,13 @@ impl RustGameState {
                 } else {
                     0.5
                 };
-                tower.spirit_ghost_ratio = Some(next_bp.spirit_ghost_ratio.unwrap_or(default_ratio));
+                tower.spirit_ghost_ratio =
+                    Some(next_bp.spirit_ghost_ratio.unwrap_or(default_ratio));
                 tower.aoe_radius = next_bp.aoe_radius;
                 let sids = tower.soldier_ids.clone().unwrap_or_default();
                 let mult = tower.spirit_stat_multiplier.unwrap_or(1.0);
                 for sid in sids {
-                    if let Some(spirit) = self.soldiers.iter_mut().find(|s| &s.id == &sid) {
+                    if let Some(spirit) = self.soldiers.iter_mut().find(|s| s.id == sid) {
                         if spirit.state != SoldierState::DEAD {
                             spirit.tier = next_tier;
                             spirit.branch = branch;
@@ -982,15 +983,17 @@ impl RustGameState {
             _ => {}
         }
 
-        if t_type == TowerType::MAGE && next_tier == 4 && branch == Some(TowerBranch::B) {
-            if self.towers[t_idx].secondary_element.is_none() {
-                self.towers[t_idx].secondary_element =
-                    if self.towers[t_idx].element == ElementType::LIGHTNING {
-                        Some(ElementType::FIRE)
-                    } else {
-                        Some(ElementType::LIGHTNING)
-                    };
-            }
+        if t_type == TowerType::MAGE
+            && next_tier == 4
+            && branch == Some(TowerBranch::B)
+            && self.towers[t_idx].secondary_element.is_none()
+        {
+            self.towers[t_idx].secondary_element =
+                if self.towers[t_idx].element == ElementType::LIGHTNING {
+                    Some(ElementType::FIRE)
+                } else {
+                    Some(ElementType::LIGHTNING)
+                };
         }
 
         self.recalculate_tower_buffs();
@@ -1303,8 +1306,9 @@ impl RustGameState {
 
                 soldier.hp = (soldier.max_hp * hp_ratio).round().max(1.0);
                 soldier.engaged_enemy_id = None;
-                soldier.facing =
-                    Some((soldier.rally_point.y - soldier.y).atan2(soldier.rally_point.x - soldier.x));
+                soldier.facing = Some(
+                    (soldier.rally_point.y - soldier.y).atan2(soldier.rally_point.x - soldier.x),
+                );
                 soldier.state = SoldierState::MovingToRally;
             }
         }
@@ -1372,7 +1376,13 @@ impl RustGameState {
         .sqrt();
         if dist > self.towers[t_idx].range {
             audio.play_error();
-            self.add_floating_text("Ngoài phạm vi điều động!", target_x, target_y, "#ef4444", 13.0);
+            self.add_floating_text(
+                "Ngoài phạm vi điều động!",
+                target_x,
+                target_y,
+                "#ef4444",
+                13.0,
+            );
             return false;
         }
 

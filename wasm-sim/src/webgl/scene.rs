@@ -123,9 +123,24 @@ impl WebGl2Renderer {
             .enumerate()
         {
             let pulse = (anim_time * 4.0 + idx as f32).sin() * 2.0;
-            self.draw_ring(gs.x, gs.y, 22.0 + pulse, 2.0, 20, [0.937, 0.267, 0.267, 0.4]);
+            self.draw_ring(
+                gs.x,
+                gs.y,
+                22.0 + pulse,
+                2.0,
+                20,
+                [0.937, 0.267, 0.267, 0.4],
+            );
             self.draw_circle(gs.x, gs.y, 18.0, 20, parse_hex_color("#ef4444", 1.0));
-            let _ = self.draw_atlas_quad("UI_SKULL", gs.x, gs.y, 18.0, 18.0, false, [1.0, 1.0, 1.0, 1.0]);
+            let _ = self.draw_atlas_quad(
+                "UI_SKULL",
+                gs.x,
+                gs.y,
+                18.0,
+                18.0,
+                false,
+                [1.0, 1.0, 1.0, 1.0],
+            );
         }
 
         for (idx, ws) in crate::config::MapConfig::get_unique_lane_spawns(&map.water_lanes)
@@ -135,7 +150,15 @@ impl WebGl2Renderer {
             let pulse = (anim_time * 3.5 + idx as f32).sin() * 2.5;
             self.draw_ring(ws.x, ws.y, 21.0 + pulse, 2.0, 20, [0.22, 0.74, 0.97, 0.45]);
             self.draw_circle(ws.x, ws.y, 17.0, 20, parse_hex_color("#0284c7", 1.0));
-            let _ = self.draw_atlas_quad("UI_SWIM", ws.x, ws.y, 18.0, 18.0, false, [1.0, 1.0, 1.0, 1.0]);
+            let _ = self.draw_atlas_quad(
+                "UI_SWIM",
+                ws.x,
+                ws.y,
+                18.0,
+                18.0,
+                false,
+                [1.0, 1.0, 1.0, 1.0],
+            );
         }
 
         for (idx, base) in map.get_map_bases().iter().enumerate() {
@@ -149,7 +172,14 @@ impl WebGl2Renderer {
                 [0.23, 0.51, 0.96, 0.35],
             );
             self.draw_circle(base.x, base.y, 28.0, 24, parse_hex_color("#1e3a8a", 1.0));
-            self.draw_ring(base.x, base.y, 28.0, 3.0, 24, parse_hex_color("#60a5fa", 1.0));
+            self.draw_ring(
+                base.x,
+                base.y,
+                28.0,
+                3.0,
+                24,
+                parse_hex_color("#60a5fa", 1.0),
+            );
             self.draw_circle(base.x, base.y, 16.0, 20, parse_hex_color("#3b82f6", 1.0));
             let _ = self.draw_atlas_quad(
                 "UI_CASTLE",
@@ -180,7 +210,13 @@ impl WebGl2Renderer {
                         [0.937, 0.267, 0.267, 0.45]
                     };
                     if bp.range > 0.0 {
-                        self.draw_circle(mx, my, bp.range, 36, [preview_col[0], preview_col[1], preview_col[2], 0.08]);
+                        self.draw_circle(
+                            mx,
+                            my,
+                            bp.range,
+                            36,
+                            [preview_col[0], preview_col[1], preview_col[2], 0.08],
+                        );
                         self.draw_ring(mx, my, bp.range, 1.5, 36, preview_col);
                     }
                     self.draw_circle(mx, my, 18.0, 20, preview_col);
@@ -210,7 +246,14 @@ impl WebGl2Renderer {
 
             if is_selected {
                 self.draw_circle(tower.x, tower.y, tower.range, 36, [1.0, 1.0, 1.0, 0.05]);
-                self.draw_ring(tower.x, tower.y, tower.range, 1.5, 36, [1.0, 1.0, 1.0, 0.38]);
+                self.draw_ring(
+                    tower.x,
+                    tower.y,
+                    tower.range,
+                    1.5,
+                    36,
+                    [1.0, 1.0, 1.0, 0.38],
+                );
 
                 if tower.tower_type.is_summon() && !state.is_setting_rally_point {
                     if let Some(rp) = tower.rally_point {
@@ -275,14 +318,8 @@ impl WebGl2Renderer {
 
         // 10. Projectiles
         for p in &state.projectiles {
-            let px = p
-                .prev_x
-                .map(|px| px + (p.x - px) * alpha)
-                .unwrap_or(p.x);
-            let py = p
-                .prev_y
-                .map(|py| py + (p.y - py) * alpha)
-                .unwrap_or(p.y);
+            let px = p.prev_x.map(|px| px + (p.x - px) * alpha).unwrap_or(p.x);
+            let py = p.prev_y.map(|py| py + (p.y - py) * alpha).unwrap_or(p.y);
             let disp_elem = p
                 .damage_payload
                 .secondary_element
@@ -295,18 +332,11 @@ impl WebGl2Renderer {
 
         // 11. Particles
         for pt in &state.particles {
-            let px = pt
-                .prev_x
-                .map(|px| px + (pt.x - px) * alpha)
-                .unwrap_or(pt.x);
-            let py = pt
-                .prev_y
-                .map(|py| py + (pt.y - py) * alpha)
-                .unwrap_or(pt.y);
+            let px = pt.prev_x.map(|px| px + (pt.x - px) * alpha).unwrap_or(pt.x);
+            let py = pt.prev_y.map(|py| py + (pt.y - py) * alpha).unwrap_or(pt.y);
             let ratio = (pt.life_time / pt.max_life_time.max(0.01)).clamp(0.0, 1.0);
             let c = parse_hex_color(&pt.color, ratio);
             self.draw_circle(px, py, pt.size * ratio.max(0.4), 8, c);
         }
     }
 }
-

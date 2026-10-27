@@ -55,12 +55,7 @@ extern "C" {
     pub fn bind_buffer(this: &JsWebGl2Context, target: u32, buffer: Option<&JsWebGlBuffer>);
 
     #[wasm_bindgen(method, js_name = bufferData)]
-    pub fn buffer_data_f32(
-        this: &JsWebGl2Context,
-        target: u32,
-        data: &[f32],
-        usage: u32,
-    );
+    pub fn buffer_data_f32(this: &JsWebGl2Context, target: u32, data: &[f32], usage: u32);
 
     #[wasm_bindgen(method, js_name = createVertexArray)]
     pub fn create_vertex_array(this: &JsWebGl2Context) -> Option<JsWebGlVao>;
@@ -98,11 +93,7 @@ extern "C" {
     );
 
     #[wasm_bindgen(method, js_name = uniform1i)]
-    pub fn uniform1i(
-        this: &JsWebGl2Context,
-        location: Option<&JsWebGlUniformLocation>,
-        v: i32,
-    );
+    pub fn uniform1i(this: &JsWebGl2Context, location: Option<&JsWebGlUniformLocation>, v: i32);
 
     #[wasm_bindgen(method, js_name = drawArrays)]
     pub fn draw_arrays(this: &JsWebGl2Context, mode: u32, first: i32, count: i32);
@@ -201,4 +192,3 @@ void main() {
     outColor = texColor * v_tint;
 }
 "#;
-

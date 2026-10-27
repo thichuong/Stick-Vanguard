@@ -4,8 +4,7 @@ use super::primitives::parse_hex_color;
 use super::WebGl2Renderer;
 use crate::config::GameConfigRegistry;
 use crate::types::{
-    MovementType, SoldierCombatMode, SoldierState, SummonUnitArchetype,
-    TowerBranch, TowerType,
+    MovementType, SoldierCombatMode, SoldierState, SummonUnitArchetype, TowerBranch, TowerType,
 };
 use std::f32::consts::PI;
 
@@ -25,15 +24,33 @@ pub enum EnemyArchetype {
 
 pub fn get_enemy_archetype(type_id: &str) -> EnemyArchetype {
     match type_id {
-        "DARK_DRAGON_BOSS" | "WYVERN_RAIDER" | "DRAKE_WARRIOR" | "RIVER_DRAKE" => EnemyArchetype::Dragon,
+        "DARK_DRAGON_BOSS" | "WYVERN_RAIDER" | "DRAKE_WARRIOR" | "RIVER_DRAKE" => {
+            EnemyArchetype::Dragon
+        }
         "AQUA_SERPENT" | "SPARK_EEL" | "VOID_HYDRA_BOSS" => EnemyArchetype::Serpent,
-        "WINGED_GARGOYLE" | "TOXIC_BAT" | "FAIRY_SPRITE" | "SERAPH_VALKYRIE" | "EMP_DRONE" | "ARCHANGEL_MONARCH_BOSS" | "CELESTIAL_FAIRY" => EnemyArchetype::AvianBat,
+        "WINGED_GARGOYLE"
+        | "TOXIC_BAT"
+        | "FAIRY_SPRITE"
+        | "SERAPH_VALKYRIE"
+        | "EMP_DRONE"
+        | "ARCHANGEL_MONARCH_BOSS"
+        | "CELESTIAL_FAIRY" => EnemyArchetype::AvianBat,
         "VENOM_ARACHNID" => EnemyArchetype::Arachnid,
         "MOSS_TURTLE" | "PLAGUE_LEVIATHAN" | "ABYSSAL_CRAB" => EnemyArchetype::TurtleBeast,
         "MAGMA_SLIME" | "EMBER_BLOB" | "ICE_SHARDLING" => EnemyArchetype::SlimeCrystal,
-        "ROCK_GOLEM" | "FROST_CRYSTAL_GOLEM" | "IRON_COLOSSUS" | "CHRONO_DESTROYER_BOSS" | "ANCIENT_TREANT_BOSS" | "IRON_OVERLORD_BOSS" | "INFERNO_MONARCH_BOSS" | "GLACIAL_TITAN_BOSS" => EnemyArchetype::Colossus,
-        "SHADOW_WRAITH" | "PHANTOM_REAPER" | "SPECTRAL_BANSHEE" | "HEX_DEGRADER" | "SOUL_EMPEROR_BOSS" => EnemyArchetype::WraithReaper,
-        "STORM_CALLER_SIREN" | "TIDAL_PRIESTESS" | "TEMPEST_LEVIATHAN_BOSS" => EnemyArchetype::Siren,
+        "ROCK_GOLEM"
+        | "FROST_CRYSTAL_GOLEM"
+        | "IRON_COLOSSUS"
+        | "CHRONO_DESTROYER_BOSS"
+        | "ANCIENT_TREANT_BOSS"
+        | "IRON_OVERLORD_BOSS"
+        | "INFERNO_MONARCH_BOSS"
+        | "GLACIAL_TITAN_BOSS" => EnemyArchetype::Colossus,
+        "SHADOW_WRAITH" | "PHANTOM_REAPER" | "SPECTRAL_BANSHEE" | "HEX_DEGRADER"
+        | "SOUL_EMPEROR_BOSS" => EnemyArchetype::WraithReaper,
+        "STORM_CALLER_SIREN" | "TIDAL_PRIESTESS" | "TEMPEST_LEVIATHAN_BOSS" => {
+            EnemyArchetype::Siren
+        }
         _ => EnemyArchetype::Humanoid,
     }
 }
@@ -72,14 +89,7 @@ impl WebGl2Renderer {
         if let Some(ref buffed) = tower.buffed_elements {
             if let Some(&b0) = buffed.first() {
                 let bc = parse_hex_color(registry.get_element_color(b0), 0.85);
-                self.draw_ring(
-                    x,
-                    y,
-                    22.5 + (anim_time * 4.0).sin() * 1.5,
-                    1.8,
-                    20,
-                    bc,
-                );
+                self.draw_ring(x, y, 22.5 + (anim_time * 4.0).sin() * 1.5, 1.8, 20, bc);
             }
         }
 
@@ -91,13 +101,7 @@ impl WebGl2Renderer {
                     parse_hex_color("#94a3b8", 1.0)
                 };
                 self.draw_rect(x - 12.0, y - 10.0, 24.0, 18.0, c);
-                self.draw_rect(
-                    x - 4.0,
-                    y - 1.0,
-                    8.0,
-                    9.0,
-                    parse_hex_color("#1e293b", 1.0),
-                );
+                self.draw_rect(x - 4.0, y - 1.0, 8.0, 9.0, parse_hex_color("#1e293b", 1.0));
                 self.draw_line(
                     x + 6.0,
                     y - 10.0,
@@ -156,13 +160,7 @@ impl WebGl2Renderer {
                 self.draw_circle(x, y - 4.0, 7.0, 14, parse_hex_color("#f97316", 1.0));
             }
             TowerType::FairyTree => {
-                self.draw_rect(
-                    x - 4.0,
-                    y - 6.0,
-                    8.0,
-                    14.0,
-                    parse_hex_color("#78350f", 1.0),
-                );
+                self.draw_rect(x - 4.0, y - 6.0, 8.0, 14.0, parse_hex_color("#78350f", 1.0));
                 self.draw_circle(x, y - 12.0, 12.0, 16, parse_hex_color("#f472b6", 0.9));
             }
             TowerType::HeroicAltar => {
@@ -209,14 +207,7 @@ impl WebGl2Renderer {
         let y = trap.y;
         let elem_c = parse_hex_color(registry.get_element_color(trap.element), 0.85);
         self.draw_circle(x, y, 13.0, 14, parse_hex_color("#1e293b", 0.85));
-        self.draw_ring(
-            x,
-            y,
-            13.0,
-            if is_selected { 2.5 } else { 1.8 },
-            14,
-            elem_c,
-        );
+        self.draw_ring(x, y, 13.0, if is_selected { 2.5 } else { 1.8 }, 14, elem_c);
         if trap.attack_cooldown <= 0.0 {
             self.draw_circle(x, y, 5.5, 10, elem_c);
         }
@@ -266,13 +257,13 @@ impl WebGl2Renderer {
         let arch = s.archetype.unwrap_or(SummonUnitArchetype::SOLDIER);
         match arch {
             SummonUnitArchetype::DRAGON => {
-                self.render_dragon_unit(registry, s, x, y, anim_time, elem_col, sec_col, is_spirit);
+                self.render_dragon_unit(s, x, y, anim_time, elem_col, sec_col, is_spirit);
             }
             SummonUnitArchetype::FAIRY => {
-                self.render_fairy_unit(registry, s, x, y, anim_time, elem_col, sec_col, is_spirit);
+                self.render_fairy_unit(s, x, y, anim_time, elem_col, sec_col, is_spirit);
             }
             SummonUnitArchetype::SOLDIER => {
-                self.render_stickman_soldier_unit(registry, s, x, y, anim_time, elem_col, sec_col, is_spirit);
+                self.render_stickman_soldier_unit(s, x, y, anim_time, elem_col, sec_col, is_spirit);
             }
         }
 
@@ -285,9 +276,9 @@ impl WebGl2Renderer {
         self.draw_rect(bx, by, bw * hp_ratio, 3.5, [0.13, 0.77, 0.37, 0.95]);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_dragon_unit(
         &mut self,
-        _registry: &GameConfigRegistry,
         s: &crate::types::SoldierEntity,
         x: f32,
         base_y: f32,
@@ -315,7 +306,8 @@ impl WebGl2Renderer {
         }
 
         // Flight & Tail flap animation
-        let is_moving = s.state == SoldierState::MovingToEngage || s.state == SoldierState::MovingToRally;
+        let is_moving =
+            s.state == SoldierState::MovingToEngage || s.state == SoldierState::MovingToRally;
         let flap_speed = if is_moving { 14.0 } else { 8.0 };
         let flap = (anim_time * flap_speed).sin() * 8.0;
         let tail_wiggle = (anim_time * (if is_moving { 10.0 } else { 6.0 })).sin() * 5.0;
@@ -341,8 +333,24 @@ impl WebGl2Renderer {
             let (rw1_a, rw1_b) = rot(-8.0, -15.0 - rear_flap);
             let (rw2_a, rw2_b) = rot(-8.0, 15.0 + rear_flap);
             let (rw_c, rw_d) = rot(-6.0, 0.0);
-            self.draw_triangle(rw_c, rw_d, rw1_a, rw1_b, rw_c - cos_a * 4.0, rw_d - sin_a * 4.0, halo_col);
-            self.draw_triangle(rw_c, rw_d, rw2_a, rw2_b, rw_c - cos_a * 4.0, rw_d - sin_a * 4.0, halo_col);
+            self.draw_triangle(
+                rw_c,
+                rw_d,
+                rw1_a,
+                rw1_b,
+                rw_c - cos_a * 4.0,
+                rw_d - sin_a * 4.0,
+                halo_col,
+            );
+            self.draw_triangle(
+                rw_c,
+                rw_d,
+                rw2_a,
+                rw2_b,
+                rw_c - cos_a * 4.0,
+                rw_d - sin_a * 4.0,
+                halo_col,
+            );
         }
 
         // Tier 4B: Infernal Dread Dragon (Spine flames & magma spikes)
@@ -354,23 +362,35 @@ impl WebGl2Renderer {
                 let (f_base1_x, f_base1_y) = rot(off_x - 2.0, 0.0);
                 let (f_base2_x, f_base2_y) = rot(off_x + 2.0, 0.0);
                 let (f_tip_x, f_tip_y) = rot(off_x, -flame_h);
-                self.draw_triangle(f_base1_x, f_base1_y, f_tip_x, f_tip_y, f_base2_x, f_base2_y, flame_col);
+                self.draw_triangle(
+                    f_base1_x, f_base1_y, f_tip_x, f_tip_y, f_base2_x, f_base2_y, flame_col,
+                );
             }
         }
 
         // Left Wing (-Y in local coordinates)
-        let wing_span = if tier >= 3 { 22.0 } else if tier == 2 { 17.0 } else { 13.0 };
+        let wing_span = if tier >= 3 {
+            22.0
+        } else if tier == 2 {
+            17.0
+        } else {
+            13.0
+        };
         let (w_root1_x, w_root1_y) = rot(-2.0, -3.0);
         let (w_tip1_x, w_tip1_y) = rot(2.0, -wing_span - flap);
         let (w_back1_x, w_back1_y) = rot(-10.0, -12.0);
-        self.draw_triangle(w_root1_x, w_root1_y, w_tip1_x, w_tip1_y, w_back1_x, w_back1_y, sec_col);
+        self.draw_triangle(
+            w_root1_x, w_root1_y, w_tip1_x, w_tip1_y, w_back1_x, w_back1_y, sec_col,
+        );
         self.draw_line(w_root1_x, w_root1_y, w_tip1_x, w_tip1_y, 2.2, elem_col);
 
         // Right Wing (+Y in local coordinates)
         let (w_root2_x, w_root2_y) = rot(-2.0, 3.0);
         let (w_tip2_x, w_tip2_y) = rot(2.0, wing_span + flap);
         let (w_back2_x, w_back2_y) = rot(-10.0, 12.0);
-        self.draw_triangle(w_root2_x, w_root2_y, w_tip2_x, w_tip2_y, w_back2_x, w_back2_y, sec_col);
+        self.draw_triangle(
+            w_root2_x, w_root2_y, w_tip2_x, w_tip2_y, w_back2_x, w_back2_y, sec_col,
+        );
         self.draw_line(w_root2_x, w_root2_y, w_tip2_x, w_tip2_y, 2.2, elem_col);
 
         // Torso / Body (Aerodynamic Ellipse)
@@ -407,9 +427,9 @@ impl WebGl2Renderer {
         self.draw_circle(eye2_x, eye2_y, 1.3, 6, eye_col);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_fairy_unit(
         &mut self,
-        _registry: &GameConfigRegistry,
         s: &crate::types::SoldierEntity,
         x: f32,
         base_y: f32,
@@ -455,13 +475,45 @@ impl WebGl2Renderer {
         let wing_h = if tier >= 3 { 10.0 } else { 7.0 };
 
         // Upper Left Wing
-        self.draw_triangle(x - 2.0, y - 2.0, x - wing_w, y - wing_h + flutter, x - 4.0, y - 8.0, sec_col);
+        self.draw_triangle(
+            x - 2.0,
+            y - 2.0,
+            x - wing_w,
+            y - wing_h + flutter,
+            x - 4.0,
+            y - 8.0,
+            sec_col,
+        );
         // Upper Right Wing
-        self.draw_triangle(x + 2.0, y - 2.0, x + wing_w, y - wing_h + flutter, x + 4.0, y - 8.0, sec_col);
+        self.draw_triangle(
+            x + 2.0,
+            y - 2.0,
+            x + wing_w,
+            y - wing_h + flutter,
+            x + 4.0,
+            y - 8.0,
+            sec_col,
+        );
         // Lower Left Wing
-        self.draw_triangle(x - 2.0, y, x - wing_w * 0.7, y + wing_h * 0.7 - flutter * 0.5, x - 2.0, y + 5.0, elem_col);
+        self.draw_triangle(
+            x - 2.0,
+            y,
+            x - wing_w * 0.7,
+            y + wing_h * 0.7 - flutter * 0.5,
+            x - 2.0,
+            y + 5.0,
+            elem_col,
+        );
         // Lower Right Wing
-        self.draw_triangle(x + 2.0, y, x + wing_w * 0.7, y + wing_h * 0.7 - flutter * 0.5, x + 2.0, y + 5.0, elem_col);
+        self.draw_triangle(
+            x + 2.0,
+            y,
+            x + wing_w * 0.7,
+            y + wing_h * 0.7 - flutter * 0.5,
+            x + 2.0,
+            y + 5.0,
+            elem_col,
+        );
 
         // Core Glowing Body
         let body_r = if tier >= 3 { 5.5 } else { 4.5 };
@@ -475,8 +527,20 @@ impl WebGl2Renderer {
 
         // Tier 3+ Crown / Tiara
         if tier >= 3 {
-            let crown_col = if branch == Some(TowerBranch::A) { [0.99, 0.94, 0.54, 1.0] } else { sec_col };
-            self.draw_triangle(x - 3.0, y - body_r, x, y - body_r - 4.0, x + 3.0, y - body_r, crown_col);
+            let crown_col = if branch == Some(TowerBranch::A) {
+                [0.99, 0.94, 0.54, 1.0]
+            } else {
+                sec_col
+            };
+            self.draw_triangle(
+                x - 3.0,
+                y - body_r,
+                x,
+                y - body_r - 4.0,
+                x + 3.0,
+                y - body_r,
+                crown_col,
+            );
         }
 
         // Orbiting Stardust motes for Tier 2+
@@ -487,9 +551,9 @@ impl WebGl2Renderer {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_stickman_soldier_unit(
         &mut self,
-        _registry: &GameConfigRegistry,
         s: &crate::types::SoldierEntity,
         x: f32,
         y: f32,
@@ -503,10 +567,19 @@ impl WebGl2Renderer {
         let facing = s.facing.unwrap_or(0.0);
         let dir = if facing.abs() > PI * 0.5 { -1.0 } else { 1.0 };
 
-        let is_moving = s.state == SoldierState::MovingToEngage || s.state == SoldierState::MovingToRally;
+        let is_moving =
+            s.state == SoldierState::MovingToEngage || s.state == SoldierState::MovingToRally;
         let is_attacking = s.state == SoldierState::ATTACKING;
-        let walk = if is_moving { (anim_time * 10.0).sin() * 5.0 } else { 0.0 };
-        let swing = if is_attacking { (anim_time * 14.0).sin() * 8.0 } else { 0.0 };
+        let walk = if is_moving {
+            (anim_time * 10.0).sin() * 5.0
+        } else {
+            0.0
+        };
+        let swing = if is_attacking {
+            (anim_time * 14.0).sin() * 8.0
+        } else {
+            0.0
+        };
 
         // 1. Runic Summoning Ring for Heroic Spirit
         if is_spirit {
@@ -536,7 +609,15 @@ impl WebGl2Renderer {
             let halo_col = [0.99, 0.94, 0.54, 0.9];
             self.draw_ellipse(x, y - 23.0, 6.5, 2.5, 12, halo_col);
             let wing_aura = [0.99, 0.94, 0.54, 0.45];
-            self.draw_triangle(x, y - 10.0, x - dir * 9.0, y - 16.0, x - dir * 6.0, y - 6.0, wing_aura);
+            self.draw_triangle(
+                x,
+                y - 10.0,
+                x - dir * 9.0,
+                y - 16.0,
+                x - dir * 6.0,
+                y - 6.0,
+                wing_aura,
+            );
         }
 
         // 4. Stickman Skeleton
@@ -553,20 +634,61 @@ impl WebGl2Renderer {
         self.draw_circle(x, head_y, head_r, 12, body_color);
 
         // Spine
-        self.draw_line(x, head_y + head_r, x, y - 2.0, if tier >= 3 { 2.8 } else { 2.2 }, body_color);
+        self.draw_line(
+            x,
+            head_y + head_r,
+            x,
+            y - 2.0,
+            if tier >= 3 { 2.8 } else { 2.2 },
+            body_color,
+        );
 
         // Helmet Crest / Spartan Plume
         if tier == 4 && branch == Some(TowerBranch::B) {
-            self.draw_triangle(x - dir * 3.0, head_y - head_r, x, head_y - head_r - 6.0, x + dir * 3.0, head_y - head_r, [0.92, 0.18, 0.18, 1.0]);
+            self.draw_triangle(
+                x - dir * 3.0,
+                head_y - head_r,
+                x,
+                head_y - head_r - 6.0,
+                x + dir * 3.0,
+                head_y - head_r,
+                [0.92, 0.18, 0.18, 1.0],
+            );
         } else if tier >= 3 {
-            let plume_col = if branch == Some(TowerBranch::A) { [0.23, 0.51, 0.96, 1.0] } else { sec_col };
-            self.draw_triangle(x - dir * 2.5, head_y - head_r, x, head_y - head_r - 5.0, x + dir * 2.5, head_y - head_r, plume_col);
+            let plume_col = if branch == Some(TowerBranch::A) {
+                [0.23, 0.51, 0.96, 1.0]
+            } else {
+                sec_col
+            };
+            self.draw_triangle(
+                x - dir * 2.5,
+                head_y - head_r,
+                x,
+                head_y - head_r - 5.0,
+                x + dir * 2.5,
+                head_y - head_r,
+                plume_col,
+            );
         }
 
         // Legs with Walk Cycle
         let leg_thick = if tier >= 3 { 2.4 } else { 2.0 };
-        self.draw_line(x, y - 2.0, x + dir * 4.0 + walk, y + 6.0, leg_thick, body_color);
-        self.draw_line(x, y - 2.0, x - dir * 4.0 - walk, y + 6.0, leg_thick, body_color);
+        self.draw_line(
+            x,
+            y - 2.0,
+            x + dir * 4.0 + walk,
+            y + 6.0,
+            leg_thick,
+            body_color,
+        );
+        self.draw_line(
+            x,
+            y - 2.0,
+            x - dir * 4.0 - walk,
+            y + 6.0,
+            leg_thick,
+            body_color,
+        );
 
         // Arms & Weapons
         let is_ranged = s.combat_mode == SoldierCombatMode::RANGED;
@@ -576,22 +698,70 @@ impl WebGl2Renderer {
             self.draw_line(bow_x, y - 12.0, bow_x, y - 1.0, 2.2, bow_col);
             let arrow_end_x = x + dir * 8.0 + dir * swing;
             self.draw_line(bow_x, y - 6.5, arrow_end_x, y - 6.5, 1.8, elem_col);
-            self.draw_triangle(arrow_end_x, y - 8.5, arrow_end_x + dir * 3.5, y - 6.5, arrow_end_x, y - 4.5, elem_col);
+            self.draw_triangle(
+                arrow_end_x,
+                y - 8.5,
+                arrow_end_x + dir * 3.5,
+                y - 6.5,
+                arrow_end_x,
+                y - 4.5,
+                elem_col,
+            );
         } else {
             // Melee Offhand Shield (Tier 2+)
             if tier >= 2 {
                 let shield_x = x - dir * 6.5;
                 let shield_y = y - 6.0;
                 if tier == 4 && branch == Some(TowerBranch::A) {
-                    self.draw_rect(shield_x - 3.5, shield_y - 5.0, 7.0, 10.0, [0.99, 0.94, 0.54, 0.95]);
-                    self.draw_line(shield_x, shield_y - 4.0, shield_x, shield_y + 4.0, 1.8, [1.0, 1.0, 1.0, 1.0]);
-                    self.draw_line(shield_x - 2.5, shield_y, shield_x + 2.5, shield_y, 1.8, [1.0, 1.0, 1.0, 1.0]);
+                    self.draw_rect(
+                        shield_x - 3.5,
+                        shield_y - 5.0,
+                        7.0,
+                        10.0,
+                        [0.99, 0.94, 0.54, 0.95],
+                    );
+                    self.draw_line(
+                        shield_x,
+                        shield_y - 4.0,
+                        shield_x,
+                        shield_y + 4.0,
+                        1.8,
+                        [1.0, 1.0, 1.0, 1.0],
+                    );
+                    self.draw_line(
+                        shield_x - 2.5,
+                        shield_y,
+                        shield_x + 2.5,
+                        shield_y,
+                        1.8,
+                        [1.0, 1.0, 1.0, 1.0],
+                    );
                 } else if tier == 4 && branch == Some(TowerBranch::B) {
                     self.draw_circle(shield_x, shield_y, 5.0, 12, [0.78, 0.45, 0.18, 1.0]);
-                    self.draw_line(shield_x - 2.0, shield_y + 2.0, shield_x, shield_y - 3.0, 1.5, [0.95, 0.85, 0.3, 1.0]);
-                    self.draw_line(shield_x, shield_y - 3.0, shield_x + 2.0, shield_y + 2.0, 1.5, [0.95, 0.85, 0.3, 1.0]);
+                    self.draw_line(
+                        shield_x - 2.0,
+                        shield_y + 2.0,
+                        shield_x,
+                        shield_y - 3.0,
+                        1.5,
+                        [0.95, 0.85, 0.3, 1.0],
+                    );
+                    self.draw_line(
+                        shield_x,
+                        shield_y - 3.0,
+                        shield_x + 2.0,
+                        shield_y + 2.0,
+                        1.5,
+                        [0.95, 0.85, 0.3, 1.0],
+                    );
                 } else if tier == 3 {
-                    self.draw_rect(shield_x - 3.0, shield_y - 5.0, 6.0, 9.0, [0.38, 0.44, 0.52, 1.0]);
+                    self.draw_rect(
+                        shield_x - 3.0,
+                        shield_y - 5.0,
+                        6.0,
+                        9.0,
+                        [0.38, 0.44, 0.52, 1.0],
+                    );
                     self.draw_ring(shield_x, shield_y, 3.5, 1.2, 8, sec_col);
                 } else {
                     self.draw_circle(shield_x, shield_y, 4.0, 10, [0.45, 0.5, 0.58, 1.0]);
@@ -604,14 +774,49 @@ impl WebGl2Renderer {
             if tier == 4 && branch == Some(TowerBranch::B) {
                 let tip_x = x + dir * 16.0 + dir * swing;
                 let tip_y = y - 16.0 - swing;
-                self.draw_line(hand_x - dir * 4.0, hand_y + 4.0, tip_x, tip_y, 2.5, [0.65, 0.5, 0.35, 1.0]);
-                self.draw_triangle(tip_x - dir * 2.0, tip_y + 2.0, tip_x + dir * 5.0, tip_y - 3.0, tip_x + dir * 2.0, tip_y + 4.0, elem_col);
+                self.draw_line(
+                    hand_x - dir * 4.0,
+                    hand_y + 4.0,
+                    tip_x,
+                    tip_y,
+                    2.5,
+                    [0.65, 0.5, 0.35, 1.0],
+                );
+                self.draw_triangle(
+                    tip_x - dir * 2.0,
+                    tip_y + 2.0,
+                    tip_x + dir * 5.0,
+                    tip_y - 3.0,
+                    tip_x + dir * 2.0,
+                    tip_y + 4.0,
+                    elem_col,
+                );
             } else {
-                let blade_len = if tier >= 3 { 13.0 } else if tier == 2 { 10.0 } else { 7.0 };
+                let blade_len = if tier >= 3 {
+                    13.0
+                } else if tier == 2 {
+                    10.0
+                } else {
+                    7.0
+                };
                 let tip_x = x + dir * (blade_len + 1.0) + dir * swing;
                 let tip_y = y - blade_len - swing;
-                self.draw_line(hand_x, hand_y, tip_x, tip_y, if tier >= 3 { 2.6 } else { 2.0 }, elem_col);
-                self.draw_line(hand_x - 1.5, hand_y - 1.5, hand_x + 1.5, hand_y + 1.5, 2.0, sec_col);
+                self.draw_line(
+                    hand_x,
+                    hand_y,
+                    tip_x,
+                    tip_y,
+                    if tier >= 3 { 2.6 } else { 2.0 },
+                    elem_col,
+                );
+                self.draw_line(
+                    hand_x - 1.5,
+                    hand_y - 1.5,
+                    hand_x + 1.5,
+                    hand_y + 1.5,
+                    2.0,
+                    sec_col,
+                );
             }
         }
     }
@@ -738,15 +943,7 @@ impl WebGl2Renderer {
 
         if !drew_atlas {
             self.render_enemy_procedural_archetype(
-                enemy,
-                x,
-                draw_y,
-                size,
-                dir,
-                anim_time,
-                elem_col,
-                sec_col,
-                is_boss,
+                enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
             );
         }
 
@@ -754,9 +951,33 @@ impl WebGl2Renderer {
         if is_boss {
             let crown_y = draw_y - size * 0.95;
             let crown_col = [0.99, 0.88, 0.25, 0.95];
-            self.draw_triangle(x - 8.0, crown_y, x - 5.0, crown_y - 6.0, x - 2.0, crown_y, crown_col);
-            self.draw_triangle(x - 3.0, crown_y, x, crown_y - 9.0, x + 3.0, crown_y, crown_col);
-            self.draw_triangle(x + 2.0, crown_y, x + 5.0, crown_y - 6.0, x + 8.0, crown_y, crown_col);
+            self.draw_triangle(
+                x - 8.0,
+                crown_y,
+                x - 5.0,
+                crown_y - 6.0,
+                x - 2.0,
+                crown_y,
+                crown_col,
+            );
+            self.draw_triangle(
+                x - 3.0,
+                crown_y,
+                x,
+                crown_y - 9.0,
+                x + 3.0,
+                crown_y,
+                crown_col,
+            );
+            self.draw_triangle(
+                x + 2.0,
+                crown_y,
+                x + 5.0,
+                crown_y - 6.0,
+                x + 8.0,
+                crown_y,
+                crown_col,
+            );
         }
 
         // 8. Health Bar & Shields
@@ -800,6 +1021,7 @@ impl WebGl2Renderer {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_enemy_procedural_archetype(
         &mut self,
         enemy: &crate::types::EnemyEntity,
@@ -817,19 +1039,61 @@ impl WebGl2Renderer {
             EnemyArchetype::Dragon => {
                 let flap = (anim_time * 10.0).sin() * 7.0;
                 let body_y = draw_y - size * 0.2;
-                self.draw_triangle(x, body_y, x - dir * size * 1.4, body_y - size * 1.1 + flap, x - dir * size * 0.8, body_y + size * 0.3, sec_col);
-                self.draw_triangle(x, body_y, x + dir * size * 1.4, body_y - size * 1.1 + flap, x + dir * size * 0.8, body_y + size * 0.3, sec_col);
+                self.draw_triangle(
+                    x,
+                    body_y,
+                    x - dir * size * 1.4,
+                    body_y - size * 1.1 + flap,
+                    x - dir * size * 0.8,
+                    body_y + size * 0.3,
+                    sec_col,
+                );
+                self.draw_triangle(
+                    x,
+                    body_y,
+                    x + dir * size * 1.4,
+                    body_y - size * 1.1 + flap,
+                    x + dir * size * 0.8,
+                    body_y + size * 0.3,
+                    sec_col,
+                );
                 self.draw_ellipse(x, body_y, size * 0.6, size * 0.45, 14, elem_col);
                 let head_x = x + dir * size * 0.65;
                 let head_y = body_y - size * 0.3;
                 self.draw_circle(head_x, head_y, size * 0.35, 12, elem_col);
-                self.draw_line(head_x, head_y - size * 0.2, head_x - dir * size * 0.4, head_y - size * 0.7, 2.5, sec_col);
+                self.draw_line(
+                    head_x,
+                    head_y - size * 0.2,
+                    head_x - dir * size * 0.4,
+                    head_y - size * 0.7,
+                    2.5,
+                    sec_col,
+                );
                 let tail_w = (anim_time * 8.0).sin() * size * 0.3;
-                self.draw_line(x - dir * size * 0.5, body_y, x - dir * size * 1.2, body_y + tail_w, 2.5, elem_col);
-                self.draw_triangle(x - dir * size * 1.2, body_y + tail_w - 4.0, x - dir * size * 1.5, body_y + tail_w, x - dir * size * 1.2, body_y + tail_w + 4.0, sec_col);
+                self.draw_line(
+                    x - dir * size * 0.5,
+                    body_y,
+                    x - dir * size * 1.2,
+                    body_y + tail_w,
+                    2.5,
+                    elem_col,
+                );
+                self.draw_triangle(
+                    x - dir * size * 1.2,
+                    body_y + tail_w - 4.0,
+                    x - dir * size * 1.5,
+                    body_y + tail_w,
+                    x - dir * size * 1.2,
+                    body_y + tail_w + 4.0,
+                    sec_col,
+                );
             }
             EnemyArchetype::Serpent => {
-                let num_segs = if enemy.type_id == "VOID_HYDRA_BOSS" { 9 } else { 7 };
+                let num_segs = if enemy.type_id == "VOID_HYDRA_BOSS" {
+                    9
+                } else {
+                    7
+                };
                 let is_hydra = enemy.type_id == "VOID_HYDRA_BOSS";
                 for i in (0..num_segs).rev() {
                     let t = (i as f32) / (num_segs as f32);
@@ -848,20 +1112,56 @@ impl WebGl2Renderer {
                     self.draw_circle(head_x, head_y + size * 0.4, size * 0.3, 10, elem_col);
                 } else {
                     self.draw_circle(head_x, head_y, size * 0.38, 12, elem_col);
-                    self.draw_line(head_x + dir * size * 0.35, head_y, head_x + dir * size * 0.65, head_y, 1.5, [0.95, 0.2, 0.2, 1.0]);
+                    self.draw_line(
+                        head_x + dir * size * 0.35,
+                        head_y,
+                        head_x + dir * size * 0.65,
+                        head_y,
+                        1.5,
+                        [0.95, 0.2, 0.2, 1.0],
+                    );
                 }
             }
             EnemyArchetype::AvianBat => {
                 let flap = (anim_time * 12.0).sin() * size * 0.5;
                 let body_y = draw_y - size * 0.3;
-                self.draw_triangle(x, body_y, x - dir * size * 1.3, body_y - size * 0.8 + flap, x - dir * size * 0.4, body_y + size * 0.3, sec_col);
-                self.draw_triangle(x, body_y, x + dir * size * 1.3, body_y - size * 0.8 + flap, x + dir * size * 0.4, body_y + size * 0.3, sec_col);
+                self.draw_triangle(
+                    x,
+                    body_y,
+                    x - dir * size * 1.3,
+                    body_y - size * 0.8 + flap,
+                    x - dir * size * 0.4,
+                    body_y + size * 0.3,
+                    sec_col,
+                );
+                self.draw_triangle(
+                    x,
+                    body_y,
+                    x + dir * size * 1.3,
+                    body_y - size * 0.8 + flap,
+                    x + dir * size * 0.4,
+                    body_y + size * 0.3,
+                    sec_col,
+                );
                 self.draw_circle(x, body_y, size * 0.4, 12, elem_col);
-                self.draw_circle(x + dir * size * 0.2, body_y - size * 0.1, 2.0, 6, [1.0, 0.9, 0.2, 1.0]);
+                self.draw_circle(
+                    x + dir * size * 0.2,
+                    body_y - size * 0.1,
+                    2.0,
+                    6,
+                    [1.0, 0.9, 0.2, 1.0],
+                );
             }
             EnemyArchetype::Arachnid => {
                 let body_y = draw_y - size * 0.1;
-                self.draw_ellipse(x - dir * size * 0.4, body_y - size * 0.2, size * 0.5, size * 0.4, 12, elem_col);
+                self.draw_ellipse(
+                    x - dir * size * 0.4,
+                    body_y - size * 0.2,
+                    size * 0.5,
+                    size * 0.4,
+                    12,
+                    elem_col,
+                );
                 self.draw_circle(x + dir * size * 0.2, body_y, size * 0.3, 10, sec_col);
                 for leg_i in 0..3 {
                     let gait = (anim_time * 12.0 + (leg_i as f32) * 1.8).sin() * size * 0.25;
@@ -869,21 +1169,62 @@ impl WebGl2Renderer {
                     let knee_l_x = base_x - size * 0.6;
                     let knee_l_y = body_y - size * 0.4 + gait;
                     self.draw_line(base_x, body_y, knee_l_x, knee_l_y, 1.8, elem_col);
-                    self.draw_line(knee_l_x, knee_l_y, knee_l_x - size * 0.3, body_y + size * 0.4, 1.8, elem_col);
+                    self.draw_line(
+                        knee_l_x,
+                        knee_l_y,
+                        knee_l_x - size * 0.3,
+                        body_y + size * 0.4,
+                        1.8,
+                        elem_col,
+                    );
                     let knee_r_x = base_x + size * 0.6;
                     let knee_r_y = body_y - size * 0.4 - gait;
                     self.draw_line(base_x, body_y, knee_r_x, knee_r_y, 1.8, elem_col);
-                    self.draw_line(knee_r_x, knee_r_y, knee_r_x + size * 0.3, body_y + size * 0.4, 1.8, elem_col);
+                    self.draw_line(
+                        knee_r_x,
+                        knee_r_y,
+                        knee_r_x + size * 0.3,
+                        body_y + size * 0.4,
+                        1.8,
+                        elem_col,
+                    );
                 }
             }
             EnemyArchetype::TurtleBeast => {
                 let body_y = draw_y;
-                self.draw_ellipse(x, body_y - size * 0.2, size * 0.65, size * 0.45, 14, elem_col);
+                self.draw_ellipse(
+                    x,
+                    body_y - size * 0.2,
+                    size * 0.65,
+                    size * 0.45,
+                    14,
+                    elem_col,
+                );
                 self.draw_ring(x, body_y - size * 0.2, size * 0.65, 2.2, 14, sec_col);
                 let walk = (anim_time * 8.0).sin() * size * 0.2;
-                self.draw_line(x - size * 0.4, body_y + size * 0.1, x - size * 0.5 - walk, body_y + size * 0.4, 3.0, elem_col);
-                self.draw_line(x + size * 0.4, body_y + size * 0.1, x + size * 0.5 + walk, body_y + size * 0.4, 3.0, elem_col);
-                self.draw_circle(x + dir * size * 0.6, body_y - size * 0.15, size * 0.25, 10, elem_col);
+                self.draw_line(
+                    x - size * 0.4,
+                    body_y + size * 0.1,
+                    x - size * 0.5 - walk,
+                    body_y + size * 0.4,
+                    3.0,
+                    elem_col,
+                );
+                self.draw_line(
+                    x + size * 0.4,
+                    body_y + size * 0.1,
+                    x + size * 0.5 + walk,
+                    body_y + size * 0.4,
+                    3.0,
+                    elem_col,
+                );
+                self.draw_circle(
+                    x + dir * size * 0.6,
+                    body_y - size * 0.15,
+                    size * 0.25,
+                    10,
+                    elem_col,
+                );
             }
             EnemyArchetype::SlimeCrystal => {
                 let squish = (anim_time * 6.0).sin() * 0.18;
@@ -892,51 +1233,190 @@ impl WebGl2Renderer {
                 let body_y = draw_y + size * 0.1;
                 self.draw_ellipse(x, body_y, body_rx, body_ry, 16, elem_col);
                 let shard_y = body_y - size * 0.1 + (anim_time * 4.0).sin() * 3.0;
-                self.draw_triangle(x, shard_y - size * 0.3, x - size * 0.2, shard_y, x + size * 0.2, shard_y, sec_col);
-                self.draw_triangle(x, shard_y + size * 0.3, x - size * 0.2, shard_y, x + size * 0.2, shard_y, sec_col);
+                self.draw_triangle(
+                    x,
+                    shard_y - size * 0.3,
+                    x - size * 0.2,
+                    shard_y,
+                    x + size * 0.2,
+                    shard_y,
+                    sec_col,
+                );
+                self.draw_triangle(
+                    x,
+                    shard_y + size * 0.3,
+                    x - size * 0.2,
+                    shard_y,
+                    x + size * 0.2,
+                    shard_y,
+                    sec_col,
+                );
             }
             EnemyArchetype::Colossus => {
                 let stride = (anim_time * 6.0).sin() * size * 0.2;
                 let body_y = draw_y - size * 0.2;
-                self.draw_rect(x - size * 0.5, body_y - size * 0.4, size * 1.0, size * 0.7, elem_col);
-                self.draw_circle(x - size * 0.55, body_y - size * 0.35, size * 0.28, 10, sec_col);
-                self.draw_circle(x + size * 0.55, body_y - size * 0.35, size * 0.28, 10, sec_col);
+                self.draw_rect(
+                    x - size * 0.5,
+                    body_y - size * 0.4,
+                    size * 1.0,
+                    size * 0.7,
+                    elem_col,
+                );
+                self.draw_circle(
+                    x - size * 0.55,
+                    body_y - size * 0.35,
+                    size * 0.28,
+                    10,
+                    sec_col,
+                );
+                self.draw_circle(
+                    x + size * 0.55,
+                    body_y - size * 0.35,
+                    size * 0.28,
+                    10,
+                    sec_col,
+                );
                 self.draw_circle(x, body_y - size * 0.1, size * 0.22, 12, sec_col);
                 self.draw_circle(x, body_y - size * 0.1, size * 0.1, 8, [1.0, 1.0, 1.0, 0.95]);
-                self.draw_rect(x - size * 0.4, body_y + size * 0.3, size * 0.3, size * 0.4 + stride, elem_col);
-                self.draw_rect(x + size * 0.1, body_y + size * 0.3, size * 0.3, size * 0.4 - stride, elem_col);
+                self.draw_rect(
+                    x - size * 0.4,
+                    body_y + size * 0.3,
+                    size * 0.3,
+                    size * 0.4 + stride,
+                    elem_col,
+                );
+                self.draw_rect(
+                    x + size * 0.1,
+                    body_y + size * 0.3,
+                    size * 0.3,
+                    size * 0.4 - stride,
+                    elem_col,
+                );
                 self.draw_circle(x, body_y - size * 0.6, size * 0.28, 10, elem_col);
             }
             EnemyArchetype::WraithReaper => {
                 let float_y = draw_y - size * 0.3 + (anim_time * 4.0).sin() * 4.0;
                 let wave = (anim_time * 7.0).sin() * size * 0.2;
-                self.draw_triangle(x - size * 0.4, float_y, x, float_y - size * 0.6, x + size * 0.4, float_y, elem_col);
-                self.draw_triangle(x - size * 0.35, float_y, x - dir * wave, float_y + size * 0.8, x + size * 0.35, float_y, elem_col);
-                self.draw_circle(x + dir * size * 0.1, float_y - size * 0.3, size * 0.25, 10, [0.08, 0.08, 0.12, 0.95]);
-                self.draw_circle(x + dir * size * 0.15, float_y - size * 0.32, 2.0, 6, sec_col);
+                self.draw_triangle(
+                    x - size * 0.4,
+                    float_y,
+                    x,
+                    float_y - size * 0.6,
+                    x + size * 0.4,
+                    float_y,
+                    elem_col,
+                );
+                self.draw_triangle(
+                    x - size * 0.35,
+                    float_y,
+                    x - dir * wave,
+                    float_y + size * 0.8,
+                    x + size * 0.35,
+                    float_y,
+                    elem_col,
+                );
+                self.draw_circle(
+                    x + dir * size * 0.1,
+                    float_y - size * 0.3,
+                    size * 0.25,
+                    10,
+                    [0.08, 0.08, 0.12, 0.95],
+                );
+                self.draw_circle(
+                    x + dir * size * 0.15,
+                    float_y - size * 0.32,
+                    2.0,
+                    6,
+                    sec_col,
+                );
                 let scythe_x = x + dir * size * 0.6;
                 let scythe_y = float_y - size * 0.5;
-                self.draw_line(scythe_x - dir * size * 0.3, float_y + size * 0.6, scythe_x, scythe_y, 2.2, [0.3, 0.25, 0.2, 1.0]);
-                self.draw_triangle(scythe_x, scythe_y, scythe_x + dir * size * 0.7, scythe_y - size * 0.3, scythe_x + dir * size * 0.4, scythe_y + size * 0.2, sec_col);
+                self.draw_line(
+                    scythe_x - dir * size * 0.3,
+                    float_y + size * 0.6,
+                    scythe_x,
+                    scythe_y,
+                    2.2,
+                    [0.3, 0.25, 0.2, 1.0],
+                );
+                self.draw_triangle(
+                    scythe_x,
+                    scythe_y,
+                    scythe_x + dir * size * 0.7,
+                    scythe_y - size * 0.3,
+                    scythe_x + dir * size * 0.4,
+                    scythe_y + size * 0.2,
+                    sec_col,
+                );
             }
             EnemyArchetype::Siren => {
                 let body_y = draw_y - size * 0.3;
                 let tail_wave = (anim_time * 8.0).sin() * size * 0.3;
                 self.draw_circle(x, body_y - size * 0.3, size * 0.3, 10, elem_col);
-                self.draw_line(x, body_y - size * 0.1, x, body_y + size * 0.2, 2.5, elem_col);
-                self.draw_line(x, body_y + size * 0.2, x - dir * tail_wave, body_y + size * 0.6, 3.2, sec_col);
-                self.draw_triangle(x - dir * tail_wave, body_y + size * 0.6, x - dir * tail_wave - dir * size * 0.3, body_y + size * 0.9, x - dir * tail_wave + dir * size * 0.3, body_y + size * 0.9, sec_col);
+                self.draw_line(
+                    x,
+                    body_y - size * 0.1,
+                    x,
+                    body_y + size * 0.2,
+                    2.5,
+                    elem_col,
+                );
+                self.draw_line(
+                    x,
+                    body_y + size * 0.2,
+                    x - dir * tail_wave,
+                    body_y + size * 0.6,
+                    3.2,
+                    sec_col,
+                );
+                self.draw_triangle(
+                    x - dir * tail_wave,
+                    body_y + size * 0.6,
+                    x - dir * tail_wave - dir * size * 0.3,
+                    body_y + size * 0.9,
+                    x - dir * tail_wave + dir * size * 0.3,
+                    body_y + size * 0.9,
+                    sec_col,
+                );
             }
             EnemyArchetype::Humanoid => {
                 let stride = (anim_time * 10.0).sin() * size * 0.25;
                 let body_y = draw_y - size * 0.1;
                 let head_y = body_y - size * 0.55;
                 self.draw_circle(x, head_y, size * 0.35, 12, elem_col);
-                self.draw_line(x, head_y + size * 0.2, x, body_y + size * 0.15, (size * 0.18).max(2.2), elem_col);
-                self.draw_line(x, body_y + size * 0.15, x - dir * stride, body_y + size * 0.5, 2.2, elem_col);
-                self.draw_line(x, body_y + size * 0.15, x + dir * stride, body_y + size * 0.5, 2.2, elem_col);
+                self.draw_line(
+                    x,
+                    head_y + size * 0.2,
+                    x,
+                    body_y + size * 0.15,
+                    (size * 0.18).max(2.2),
+                    elem_col,
+                );
+                self.draw_line(
+                    x,
+                    body_y + size * 0.15,
+                    x - dir * stride,
+                    body_y + size * 0.5,
+                    2.2,
+                    elem_col,
+                );
+                self.draw_line(
+                    x,
+                    body_y + size * 0.15,
+                    x + dir * stride,
+                    body_y + size * 0.5,
+                    2.2,
+                    elem_col,
+                );
                 let swing = (anim_time * 12.0).sin() * size * 0.3;
-                self.draw_line(x + dir * size * 0.2, body_y - size * 0.1, x + dir * size * 0.7 + dir * swing, body_y - size * 0.5 - swing, 2.2, sec_col);
+                self.draw_line(
+                    x + dir * size * 0.2,
+                    body_y - size * 0.1,
+                    x + dir * size * 0.7 + dir * swing,
+                    body_y - size * 0.5 - swing,
+                    2.2,
+                    sec_col,
+                );
             }
         }
     }

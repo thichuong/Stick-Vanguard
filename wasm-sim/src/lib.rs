@@ -1,15 +1,15 @@
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
-pub mod types;
+pub mod audio;
 pub mod config;
 pub mod navigation;
-pub mod spatial;
 pub mod rules;
-pub mod wave;
-pub mod audio;
+pub mod spatial;
 pub mod state;
 pub mod systems;
+pub mod types;
+pub mod wave;
 pub mod webgl;
 
 use crate::audio::RustSoundSystem;
@@ -126,7 +126,7 @@ pub struct EnemyPod {
     pub facing: f32,
     pub hp_ratio: f32,
     pub altitude: f32,
-    pub state: u32,    // 0=Walking, 1=Flying, 2=Swimming, 3=Engaged, 4=Attacking, 5=Dead
+    pub state: u32, // 0=Walking, 1=Flying, 2=Swimming, 3=Engaged, 4=Attacking, 5=Dead
     pub size: f32,
     pub nav_mode: u32, // 0=Ground, 1=Water, 2=AirDirect, 3=AirWaypoints
     pub lane_index: u32,
@@ -388,17 +388,15 @@ impl SimulationWorld {
                         if e.nav_mode == 2 {
                             let perp_x = -facing.sin();
                             let perp_y = facing.cos();
-                            let wobble = (anim_time * 3.0
-                                + e.path_distance * 0.05
-                                + (e.lane_index as f32))
-                                .sin()
-                                * 8.0;
+                            let wobble =
+                                (anim_time * 3.0 + e.path_distance * 0.05 + (e.lane_index as f32))
+                                    .sin()
+                                    * 8.0;
                             cur_x += perp_x * wobble;
                             cur_y += perp_y * wobble;
                         } else if e.nav_mode == 1 {
-                            cur_y +=
-                                (anim_time * 4.0 + cur_x * 0.04 + (e.lane_index as f32)).sin()
-                                    * 3.0;
+                            cur_y += (anim_time * 4.0 + cur_x * 0.04 + (e.lane_index as f32)).sin()
+                                * 3.0;
                         }
 
                         e.x = cur_x;
@@ -880,21 +878,45 @@ pub fn upload_codex_webgl_atlas(image: JsValue, manifest_json: &str) -> bool {
 }
 
 #[wasm_bindgen]
-pub fn render_codex_enemy_webgl(enemy_type_id: &str, anim_time: f32, width: f32, height: f32) -> bool {
+pub fn render_codex_enemy_webgl(
+    enemy_type_id: &str,
+    anim_time: f32,
+    width: f32,
+    height: f32,
+) -> bool {
     CTX.with(|c| {
         let ctx = c.borrow();
         CODEX_RENDERER.with(|r| {
-            r.borrow_mut().render_codex_enemy_preview(&ctx.registry, enemy_type_id, anim_time, width, height)
+            r.borrow_mut().render_codex_enemy_preview(
+                &ctx.registry,
+                enemy_type_id,
+                anim_time,
+                width,
+                height,
+            )
         })
     })
 }
 
 #[wasm_bindgen]
-pub fn render_codex_soldier_webgl(soldier_type: &str, stance: &str, anim_time: f32, width: f32, height: f32) -> bool {
+pub fn render_codex_soldier_webgl(
+    soldier_type: &str,
+    stance: &str,
+    anim_time: f32,
+    width: f32,
+    height: f32,
+) -> bool {
     CTX.with(|c| {
         let ctx = c.borrow();
         CODEX_RENDERER.with(|r| {
-            r.borrow_mut().render_codex_soldier_preview(&ctx.registry, soldier_type, stance, anim_time, width, height)
+            r.borrow_mut().render_codex_soldier_preview(
+                &ctx.registry,
+                soldier_type,
+                stance,
+                anim_time,
+                width,
+                height,
+            )
         })
     })
 }
@@ -993,11 +1015,15 @@ pub fn engine_sync_towers_and_soldiers(
             // Retain living soldiers whose towers still exist (e.g. if a summon tower was sold)
             let valid_tower_ids: std::collections::HashSet<String> =
                 ctx.state.towers.iter().map(|t| t.id.clone()).collect();
-            ctx.state.soldiers.retain(|s| valid_tower_ids.contains(&s.tower_id));
+            ctx.state
+                .soldiers
+                .retain(|s| valid_tower_ids.contains(&s.tower_id));
 
             for incoming in soldiers {
-                if let Some(existing) = ctx.state.soldiers.iter_mut().find(|s| s.id == incoming.id) {
-                    let tier_changed = existing.tier != incoming.tier || existing.branch != incoming.branch;
+                if let Some(existing) = ctx.state.soldiers.iter_mut().find(|s| s.id == incoming.id)
+                {
+                    let tier_changed =
+                        existing.tier != incoming.tier || existing.branch != incoming.branch;
 
                     existing.tier = incoming.tier;
                     existing.branch = incoming.branch;
@@ -1069,13 +1095,23 @@ pub fn engine_call_wave_early() -> String {
                     "#facc15",
                     15.0,
                 );
-                let EngineContext { ref registry, ref state, ref mut wave, .. } = *ctx;
+                let EngineContext {
+                    ref registry,
+                    ref state,
+                    ref mut wave,
+                    ..
+                } = *ctx;
                 wave.call_wave_early(registry, &state.current_map);
             }
         } else {
             if ctx.wave.current_wave_index < ctx.wave.custom_total_waves {
                 let wave_num = ctx.wave.current_wave_index + 1;
-                let EngineContext { ref registry, ref state, ref mut wave, .. } = *ctx;
+                let EngineContext {
+                    ref registry,
+                    ref state,
+                    ref mut wave,
+                    ..
+                } = *ctx;
                 wave.start_wave(registry, &state.current_map, Some(wave_num));
             }
         }
@@ -1090,7 +1126,13 @@ pub fn engine_call_wave_early() -> String {
 }
 
 #[wasm_bindgen]
-pub fn engine_set_game_settings(custom_waves: usize, gold_mult: f32, dmg_mult: f32, speed: f32, paused: bool) {
+pub fn engine_set_game_settings(
+    custom_waves: usize,
+    gold_mult: f32,
+    dmg_mult: f32,
+    speed: f32,
+    paused: bool,
+) {
     CTX.with(|c| {
         let mut ctx = c.borrow_mut();
         ctx.state.custom_total_waves = custom_waves;
@@ -1701,7 +1743,12 @@ pub fn rules_apply_reaction_bonus_effects(
     if let (Ok(mut e), Ok(el)) = (enemy, elem) {
         CTX.with(|c| {
             let ctx = c.borrow();
-            TargetingRuleEngine::apply_reaction_bonus_effects(&ctx.registry, &mut e, el, base_damage);
+            TargetingRuleEngine::apply_reaction_bonus_effects(
+                &ctx.registry,
+                &mut e,
+                el,
+                base_damage,
+            );
             serde_json::to_string(&e).unwrap_or_default()
         })
     } else {
@@ -1818,7 +1865,8 @@ pub fn wave_create_enemy(
                 ref mut wave,
                 ..
             } = *ctx;
-            let enemy = wave.create_enemy(registry, &map, type_id, forced_lane_index, Some(wave_index));
+            let enemy =
+                wave.create_enemy(registry, &map, type_id, forced_lane_index, Some(wave_index));
             wave.current_wave_index = prev_wave;
             if let Some(e) = enemy {
                 serde_json::to_string(&e).unwrap_or_default()
@@ -2092,7 +2140,14 @@ mod tests {
             "HEROIC_ALTAR|GHOST",
         ];
         for k in soldier_keys {
-            let ok = ctx.renderer.render_codex_soldier_preview(&ctx.registry, k, "MELEE", 1.0, 240.0, 180.0);
+            let ok = ctx.renderer.render_codex_soldier_preview(
+                &ctx.registry,
+                k,
+                "MELEE",
+                1.0,
+                240.0,
+                180.0,
+            );
             assert!(ok);
             assert!(!ctx.renderer.color_vertices.is_empty());
         }
@@ -2110,22 +2165,46 @@ mod tests {
 
         // Test soldier HP refill upon upgrade
         let initial_soldier_json = r#"[{"id":"test-s1","towerId":"t1","name":"Lính 1","x":100.0,"y":100.0,"hp":30.0,"maxHp":100.0,"baseMaxHp":100.0,"damage":15.0,"baseDamage":15.0,"attackSpeed":1.0,"attackCooldown":0.0,"element":"PHYSICAL","state":"IDLE","rallyPoint":{"x":100.0,"y":100.0},"targetPos":{"x":100.0,"y":100.0},"armor":0.1,"baseArmor":0.1,"magicResist":0.1,"respawnTimer":0.0,"respawnDelay":7.0,"tier":1}]"#;
-        engine_sync_towers_and_soldiers(r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":1,"damage":15.0,"range":150.0,"fireRate":1.0,"totalInvested":100,"element":"PHYSICAL"}]"#, initial_soldier_json, None, None);
+        engine_sync_towers_and_soldiers(
+            r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":1,"damage":15.0,"range":150.0,"fireRate":1.0,"totalInvested":100,"element":"PHYSICAL"}]"#,
+            initial_soldier_json,
+            None,
+            None,
+        );
 
         // Check it was added with 30 HP
         CTX.with(|c| {
-            let s = c.borrow().state.soldiers.iter().find(|s| s.id == "test-s1").unwrap().clone();
+            let s = c
+                .borrow()
+                .state
+                .soldiers
+                .iter()
+                .find(|s| s.id == "test-s1")
+                .unwrap()
+                .clone();
             assert_eq!(s.hp, 30.0);
             assert_eq!(s.max_hp, 100.0);
         });
 
         // Upgrade tower to tier 2 with full max_hp (180)
         let upgraded_soldier_json = r#"[{"id":"test-s1","towerId":"t1","name":"Lính 1","x":100.0,"y":100.0,"hp":180.0,"maxHp":180.0,"baseMaxHp":180.0,"damage":25.0,"baseDamage":25.0,"attackSpeed":1.0,"attackCooldown":0.0,"element":"PHYSICAL","state":"IDLE","rallyPoint":{"x":100.0,"y":100.0},"targetPos":{"x":100.0,"y":100.0},"armor":0.15,"baseArmor":0.15,"magicResist":0.1,"respawnTimer":0.0,"respawnDelay":7.0,"tier":2}]"#;
-        engine_sync_towers_and_soldiers(r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":2,"damage":25.0,"range":160.0,"fireRate":1.0,"totalInvested":220,"element":"PHYSICAL"}]"#, upgraded_soldier_json, None, None);
+        engine_sync_towers_and_soldiers(
+            r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":2,"damage":25.0,"range":160.0,"fireRate":1.0,"totalInvested":220,"element":"PHYSICAL"}]"#,
+            upgraded_soldier_json,
+            None,
+            None,
+        );
 
         // Verify that existing soldier's HP is refilled to 180 (100% maxHp)
         CTX.with(|c| {
-            let s = c.borrow().state.soldiers.iter().find(|s| s.id == "test-s1").unwrap().clone();
+            let s = c
+                .borrow()
+                .state
+                .soldiers
+                .iter()
+                .find(|s| s.id == "test-s1")
+                .unwrap()
+                .clone();
             assert_eq!(s.hp, 180.0);
             assert_eq!(s.max_hp, 180.0);
             assert_eq!(s.tier, 2);
@@ -2134,17 +2213,19 @@ mod tests {
         // Setup mock map waves so waves 1-5 have enemy entries
         CTX.with(|c| {
             let mut ctx = c.borrow_mut();
-            ctx.state.current_map.waves = (1..=10).map(|w| crate::config::WaveConfig {
-                wave_number: w,
-                name: format!("Đợt {}", w),
-                reward_gold: (50 + w * 10) as u32,
-                enemies: vec![crate::config::WaveEnemyEntry {
-                    type_id: "STICK_RUNNER".to_string(),
-                    count: 5,
-                    interval: 1.0,
-                    delay: 0.0,
-                }],
-            }).collect();
+            ctx.state.current_map.waves = (1..=10)
+                .map(|w| crate::config::WaveConfig {
+                    wave_number: w,
+                    name: format!("Đợt {}", w),
+                    reward_gold: (50 + w * 10) as u32,
+                    enemies: vec![crate::config::WaveEnemyEntry {
+                        type_id: "STICK_RUNNER".to_string(),
+                        count: 5,
+                        interval: 1.0,
+                        delay: 0.0,
+                    }],
+                })
+                .collect();
         });
 
         let call_res = engine_call_wave_early();

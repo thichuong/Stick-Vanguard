@@ -1,22 +1,18 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum MovementType {
+    #[default]
     WALK,
     FLY,
     SWIM,
 }
 
-impl Default for MovementType {
-    fn default() -> Self {
-        MovementType::WALK
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum NavigationMode {
     #[serde(rename = "GROUND_PATH")]
+    #[default]
     GroundPath,
     #[serde(rename = "WATER_PATH")]
     WaterPath,
@@ -26,14 +22,9 @@ pub enum NavigationMode {
     AirWaypoints,
 }
 
-impl Default for NavigationMode {
-    fn default() -> Self {
-        NavigationMode::GroundPath
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ElementType {
+    #[default]
     PHYSICAL,
     FIRE,
     WATER,
@@ -49,12 +40,6 @@ pub enum ElementType {
     GHOST,
     DRAGON,
     FAIRY,
-}
-
-impl Default for ElementType {
-    fn default() -> Self {
-        ElementType::PHYSICAL
-    }
 }
 
 impl ElementType {
@@ -190,19 +175,14 @@ pub struct Vector2D {
     pub y: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum PlacementType {
+    #[default]
     ROADSIDE,
     #[serde(rename = "PATH_TRAP")]
     PathTrap,
     #[serde(rename = "WATER_TRAP")]
     WaterTrap,
-}
-
-impl Default for PlacementType {
-    fn default() -> Self {
-        PlacementType::ROADSIDE
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -219,9 +199,10 @@ pub enum SummonUnitArchetype {
     FAIRY,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum TowerType {
     BARRACKS,
+    #[default]
     ARCHER,
     MAGE,
     ARTILLERY,
@@ -239,12 +220,6 @@ pub enum TowerType {
     TrapFrost,
     #[serde(rename = "TRAP_NET")]
     TrapNet,
-}
-
-impl Default for TowerType {
-    fn default() -> Self {
-        TowerType::ARCHER
-    }
 }
 
 impl TowerType {
@@ -304,20 +279,16 @@ impl TowerBranch {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum SoldierCombatMode {
+    #[default]
     MELEE,
     RANGED,
 }
 
-impl Default for SoldierCombatMode {
-    fn default() -> Self {
-        SoldierCombatMode::MELEE
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum SoldierState {
+    #[default]
     IDLE,
     #[serde(rename = "MOVING_TO_RALLY")]
     MovingToRally,
@@ -327,26 +298,15 @@ pub enum SoldierState {
     DEAD,
 }
 
-impl Default for SoldierState {
-    fn default() -> Self {
-        SoldierState::IDLE
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum EnemyState {
+    #[default]
     WALKING,
     FLYING,
     SWIMMING,
     ENGAGED,
     ATTACKING,
     DEAD,
-}
-
-impl Default for EnemyState {
-    fn default() -> Self {
-        EnemyState::WALKING
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -646,17 +606,12 @@ pub struct FloatingText {
     pub size: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ParticleShape {
+    #[default]
     CIRCLE,
     LINE,
     SPARK,
-}
-
-impl Default for ParticleShape {
-    fn default() -> Self {
-        ParticleShape::CIRCLE
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

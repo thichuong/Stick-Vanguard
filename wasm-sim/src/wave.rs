@@ -130,7 +130,7 @@ impl WaveSystem {
             })
             .unwrap_or_default();
 
-        if wave_num % 5 == 0 {
+        if wave_num.is_multiple_of(5) {
             // BOSS WAVE
             let minion_enemies: Vec<WaveEnemyEntry> = ext_wave_template
                 .map(|w| {
@@ -269,11 +269,7 @@ impl WaveSystem {
         true
     }
 
-    pub fn call_wave_early(
-        &mut self,
-        registry: &GameConfigRegistry,
-        map: &MapConfig,
-    ) -> bool {
+    pub fn call_wave_early(&mut self, registry: &GameConfigRegistry, map: &MapConfig) -> bool {
         if !self.is_wave_in_progress || self.current_wave_index + 1 >= self.get_total_waves() {
             return false;
         }

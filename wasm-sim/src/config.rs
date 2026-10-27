@@ -1,7 +1,7 @@
 use crate::types::{
     CustomCCResistance, ElementType, ElementalProfile, EnemyAbilityConfig, MovementType,
-    NavigationMode, PlacementType, SummonUnitArchetype, TargetingFilter, TowerBranch,
-    TowerCategory, TowerType, Vector2D, StatusEffectType,
+    NavigationMode, PlacementType, StatusEffectType, SummonUnitArchetype, TargetingFilter,
+    TowerBranch, TowerCategory, TowerType, Vector2D,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -326,7 +326,7 @@ impl MapConfig {
                 let b = bases[base_idx];
                 points.push(Vector2D { x: b.x, y: b.y });
             }
-        } else if !bases.is_empty() && lane.len() >= 1 {
+        } else if !bases.is_empty() && !lane.is_empty() {
             // If last element was not BaseNumber, check if we already pushed all points
         }
 
@@ -399,7 +399,13 @@ pub fn get_distance_to_segment(
     let proj_y = y1 + t * dy;
     let dist = ((px - proj_x).powi(2) + (py - proj_y).powi(2)).sqrt();
 
-    (dist, Vector2D { x: proj_x, y: proj_y })
+    (
+        dist,
+        Vector2D {
+            x: proj_x,
+            y: proj_y,
+        },
+    )
 }
 
 pub fn get_distance_to_polyline(px: f32, py: f32, waypoints: &[Vector2D]) -> (f32, Vector2D) {
@@ -541,4 +547,3 @@ impl GameConfigRegistry {
             .unwrap_or_else(|| TierCCConfig::default_for_tier(tier))
     }
 }
-

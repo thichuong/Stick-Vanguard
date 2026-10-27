@@ -1303,7 +1303,7 @@ function __wbg_get_imports() {
         __wbg_blendFunc_11dc14f92ba10687: function(arg0, arg1, arg2) {
             arg0.blendFunc(arg1 >>> 0, arg2 >>> 0);
         },
-        __wbg_bufferData_c1c13ef795e9c24c: function(arg0, arg1, arg2, arg3, arg4) {
+        __wbg_bufferData_1256745d89e9fb20: function(arg0, arg1, arg2, arg3, arg4) {
             arg0.bufferData(arg1 >>> 0, getArrayF32FromWasm0(arg2, arg3), arg4 >>> 0);
         },
         __wbg_clearColor_b5eb97f09aff8fbe: function(arg0, arg1, arg2, arg3, arg4) {
@@ -1465,7 +1465,7 @@ function __wbg_get_imports() {
         __wbg_texParameteri_f12e8af97047541f: function(arg0, arg1, arg2, arg3) {
             arg0.texParameteri(arg1 >>> 0, arg2 >>> 0, arg3);
         },
-        __wbg_uniform1i_40a5ab74523d7461: function(arg0, arg1, arg2) {
+        __wbg_uniform1i_cf9f87ea2cc7db1f: function(arg0, arg1, arg2) {
             arg0.uniform1i(arg1, arg2);
         },
         __wbg_uniform2f_1792bfd97500e58d: function(arg0, arg1, arg2, arg3) {

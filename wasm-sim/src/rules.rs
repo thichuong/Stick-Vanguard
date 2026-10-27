@@ -155,12 +155,11 @@ impl TargetingRuleEngine {
                     .status_effects
                     .iter()
                     .any(|s| s.effect_type == reaction.required_status)
+                && reaction.damage_multiplier > best_reaction_mult
             {
-                if reaction.damage_multiplier > best_reaction_mult {
-                    best_reaction_mult = reaction.damage_multiplier;
-                    best_reaction_req = Some(reaction.required_status);
-                    reaction_label = Some(reaction.label.clone());
-                }
+                best_reaction_mult = reaction.damage_multiplier;
+                best_reaction_req = Some(reaction.required_status);
+                reaction_label = Some(reaction.label.clone());
             }
         }
 
@@ -492,10 +491,7 @@ impl TargetingRuleEngine {
 
         if calc.secondary_damage > 0.0 {
             absorb_component(calc.primary_damage, element);
-            absorb_component(
-                calc.secondary_damage,
-                secondary_element.unwrap_or(element),
-            );
+            absorb_component(calc.secondary_damage, secondary_element.unwrap_or(element));
         } else {
             absorb_component(calc.final_damage, element);
         }
@@ -532,7 +528,13 @@ impl TargetingRuleEngine {
         payload: &DamagePayload,
     ) {
         if payload.element != ElementType::PHYSICAL {
-            Self::apply_elemental_hit_effects(registry, rng, enemy, payload.element, payload.amount);
+            Self::apply_elemental_hit_effects(
+                registry,
+                rng,
+                enemy,
+                payload.element,
+                payload.amount,
+            );
         }
         if let (Some(sec_elem), Some(sec_amt)) =
             (payload.secondary_element, payload.secondary_amount)
@@ -1098,7 +1100,8 @@ impl TargetingRuleEngine {
             matchup_mult_f64 *= registry.get_matchup(attacker_elem, s_elem) as f64;
         }
 
-        let matchup_mult = (((matchup_mult_f64.clamp(0.1, 3.0) * 100.0 + 1e-4).round()) / 100.0) as f32;
+        let matchup_mult =
+            (((matchup_mult_f64.clamp(0.1, 3.0) * 100.0 + 1e-4).round()) / 100.0) as f32;
 
         let reduction = if attacker_elem == ElementType::PHYSICAL {
             soldier.armor.clamp(0.0, 0.9)
@@ -1246,15 +1249,18 @@ impl TargetingRuleEngine {
                 StatusEffectType::POISON => {
                     enemy.status_effects[i].tick_timer += dt;
                     let poison_stats = registry.element_combat_stats.get(&ElementType::POISON);
-                    let tick_int = poison_stats.and_then(|s| s.dot_tick_interval).unwrap_or(0.5);
+                    let tick_int = poison_stats
+                        .and_then(|s| s.dot_tick_interval)
+                        .unwrap_or(0.5);
                     if enemy.status_effects[i].tick_timer >= tick_int {
                         enemy.status_effects[i].tick_timer = 0.0;
                         let stacks = eff_val.max(1.0);
                         let dmg_per_stack =
                             poison_stats.and_then(|s| s.damage_per_stack).unwrap_or(4.0);
                         let min_dmg = poison_stats.and_then(|s| s.dot_min_damage).unwrap_or(3.0);
-                        let poison_dmg =
-                            (stacks * dmg_per_stack * global_dmg_mult).round().max(min_dmg);
+                        let poison_dmg = (stacks * dmg_per_stack * global_dmg_mult)
+                            .round()
+                            .max(min_dmg);
                         on_dot_damage(poison_dmg, ElementType::POISON);
                     }
                 }
@@ -1308,10 +1314,8 @@ impl TargetingRuleEngine {
 
         if enemy.damage_reduction_buffs.is_none() {
             let mut list = Vec::new();
-            if let (Some(r), Some(t)) = (
-                enemy.damage_reduction_ratio,
-                enemy.damage_reduction_timer,
-            ) {
+            if let (Some(r), Some(t)) = (enemy.damage_reduction_ratio, enemy.damage_reduction_timer)
+            {
                 if r > 0.0 && t > 0.0 {
                     list.push(DamageReductionBuff {
                         ratio: r,
@@ -1383,10 +1387,7 @@ impl TargetingRuleEngine {
             }
         }
 
-        if let (Some(r), Some(t)) = (
-            enemy.damage_reduction_ratio,
-            enemy.damage_reduction_timer,
-        ) {
+        if let (Some(r), Some(t)) = (enemy.damage_reduction_ratio, enemy.damage_reduction_timer) {
             if t > 0.0 && r > 0.0 {
                 return r;
             }
@@ -1395,4 +1396,3 @@ impl TargetingRuleEngine {
         0.0
     }
 }
-

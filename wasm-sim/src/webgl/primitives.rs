@@ -56,7 +56,17 @@ impl WebGl2Renderer {
             .extend_from_slice(&[x, y, c[0], c[1], c[2], c[3]]);
     }
 
-    pub fn draw_triangle(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, c: [f32; 4]) {
+    #[allow(clippy::too_many_arguments)]
+    pub fn draw_triangle(
+        &mut self,
+        x1: f32,
+        y1: f32,
+        x2: f32,
+        y2: f32,
+        x3: f32,
+        y3: f32,
+        c: [f32; 4],
+    ) {
         self.push_vertex(x1, y1, c);
         self.push_vertex(x2, y2, c);
         self.push_vertex(x3, y3, c);
@@ -92,6 +102,7 @@ impl WebGl2Renderer {
         self.push_vertex(x2 + nx, y2 + ny, c);
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_dashed_line(
         &mut self,
         x1: f32,
@@ -207,6 +218,7 @@ impl WebGl2Renderer {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_atlas_quad(
         &mut self,
         key: &str,
@@ -249,4 +261,3 @@ impl WebGl2Renderer {
         true
     }
 }
-
