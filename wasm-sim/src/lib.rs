@@ -1773,4 +1773,28 @@ mod tests {
             .build_scene(&ctx.registry, &ctx.state, 0.5, 1.0);
         assert!(!ctx.renderer.color_vertices.is_empty());
     }
+
+    #[test]
+    fn test_webgl_redesigned_summon_and_enemy_renders() {
+        let mut ctx = EngineContext::new();
+        let soldier_keys = [
+            "BARRACKS_1|PHYSICAL",
+            "BARRACKS_2|EARTH",
+            "BARRACKS_3|STEEL",
+            "BARRACKS_4_A|LIGHT",
+            "BARRACKS_4_B|FIRE",
+            "DRAGON_NEST_1|FIRE",
+            "DRAGON_NEST_4_A|LIGHT",
+            "DRAGON_NEST_4_B|DARK",
+            "FAIRY_TREE_1|WIND",
+            "FAIRY_TREE_4_A|LIGHT",
+            "FAIRY_TREE_4_B|POISON",
+            "HEROIC_ALTAR|GHOST",
+        ];
+        for k in soldier_keys {
+            let ok = ctx.renderer.render_codex_soldier_preview(&ctx.registry, k, "MELEE", 1.0, 240.0, 180.0);
+            assert!(ok);
+            assert!(!ctx.renderer.color_vertices.is_empty());
+        }
+    }
 }

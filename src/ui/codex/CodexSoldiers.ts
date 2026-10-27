@@ -836,6 +836,7 @@ export class CodexSoldiers {
 
   public startSoldierAnimation(type: SummonCodexSubTab, stance: 'MELEE' | 'RANGED'): void {
     this.stopSoldierAnimation();
+    this.currentSubTab = type;
 
     const canvas = document.getElementById('codex-soldier-canvas') as HTMLCanvasElement;
     if (!canvas) return;
@@ -857,7 +858,8 @@ export class CodexSoldiers {
       const animTime = (timestamp - this.soldierAnimStartTime) / 1000;
 
       if (gl && bridge.isAvailable()) {
-        bridge.renderCodexSoldier(type, stance, animTime, canvas.width, canvas.height);
+        const fullType = `${this.selectedTierKey}|${this.previewElement}`;
+        bridge.renderCodexSoldier(fullType, stance, animTime, canvas.width, canvas.height);
         this.soldierAnimFrameId = raf(loop);
         return;
       }

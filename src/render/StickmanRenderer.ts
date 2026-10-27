@@ -7,7 +7,6 @@ import { ElementType, StatusEffectType } from '../types/elements.types.js';
 import { drawElementSvgOnCanvas, STATUS_EFFECT_TO_ELEMENT } from '../config/elements/icons/index.js';
 import { drawUiSvgOnCanvas } from '../config/ui/icons/index.js';
 import { EnemyArchetypeRenderer } from './EnemyArchetypeRenderer.js';
-import { UnitSpriteCache } from './UnitSpriteCache.js';
 
 export type LODLevel = 'FULL' | 'MEDIUM' | 'HIGH_CROWD';
 
@@ -111,13 +110,9 @@ export class StickmanRenderer {
       }
     }
 
-    // 5. Render Creature Body via UnitSpriteCache or Direct Rigging
-    const baked = UnitSpriteCache.drawCachedEnemyBody(ctx, enemy, x, drawY, animTime, elemColor, secColor);
-    if (!baked) {
-      // Fallback or Boss direct vector rendering
-      const mockPosEnemy = x !== enemy.x || y !== enemy.y ? { ...enemy, x, y } : enemy;
-      EnemyArchetypeRenderer.renderEnemyBody(ctx, mockPosEnemy, animTime, elemColor, secColor);
-    }
+    // 5. Render Creature Body via Direct Rigging (2D Fallback)
+    const mockPosEnemy = x !== enemy.x || y !== enemy.y ? { ...enemy, x, y } : enemy;
+    EnemyArchetypeRenderer.renderEnemyBody(ctx, mockPosEnemy, animTime, elemColor, secColor);
 
     // 6. Health bar & Elemental icons with Smart LOD
     const isBossOrElite = enemy.tags.includes('BOSS') || enemy.tags.includes('ELITE');

@@ -4,15 +4,6 @@ import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
 import { ELEMENT_COLORS } from '../config/elements.config.js';
 import { WasmBridge } from '../core/WasmBridge.js';
 
-export interface SpriteKeyParams {
-  typeId: string;
-  state: string;
-  facing: number;
-  animTime: number;
-  elemColor: string;
-  secColor: string;
-}
-
 export interface AtlasUvRect {
   u0: number;
   v0: number;
@@ -21,17 +12,23 @@ export interface AtlasUvRect {
 }
 
 export class UnitSpriteCache {
-  private static cache: Map<string, HTMLCanvasElement> = new Map();
-  private static readonly MAX_ENTRIES = 600;
-  private static readonly TILE_SIZE = 84;
-  private static readonly HALF_TILE = 42;
   private static atlasUploaded = false;
   private static codexAtlasUploaded = false;
   private static cachedAtlasCanvas: HTMLCanvasElement | null = null;
   private static cachedManifestJson: string = '';
 
   public static clear(): void {
-    this.cache.clear();
+    // No-op after migration to GPU WebGL2 Atlas
+  }
+
+  public static quantizeAnimPhase(animTime: number, steps = 12): number {
+    return Math.floor((animTime % 1.0) * steps);
+  }
+
+  public static quantizeAngle(angle: number, steps = 16): number {
+    const twoPi = Math.PI * 2;
+    const normalized = ((angle % twoPi) + twoPi) % twoPi;
+    return Math.round((normalized / twoPi) * steps) % steps;
   }
 
   /**
@@ -166,83 +163,5 @@ export class UnitSpriteCache {
       );
     }
     return this.codexAtlasUploaded;
-  }
-
-  public static quantizeAnimPhase(animTime: number, steps = 12): number {
-    return Math.floor((animTime % 1.0) * steps);
-  }
-
-  public static quantizeAngle(angle: number, steps = 16): number {
-    const twoPi = Math.PI * 2;
-    const normalized = ((angle % twoPi) + twoPi) % twoPi;
-    return Math.round((normalized / twoPi) * steps) % steps;
-  }
-
-  public static drawCachedEnemyBody(
-    ctx: CanvasRenderingContext2D,
-    enemy: EnemyEntity,
-    drawX: number,
-    drawY: number,
-    animTime: number,
-    elemColor: string,
-    secColor: string
-  ): boolean {
-    if (typeof document === 'undefined') return false;
-
-    const archetype = EnemyArchetypeRenderer.getArchetype(enemy);
-    if (enemy.tags.includes('BOSS') || enemy.size > 26) {
-      return false;
-    }
-
-    const typeId = enemy.typeId || 'GENERIC';
-    const state = enemy.state || 'WALKING';
-    const animPhase = this.quantizeAnimPhase(animTime, 12);
-    const angleStep = archetype === 'DRAGON' || archetype === 'SERPENT'
-      ? this.quantizeAngle(enemy.facing, 16)
-      : enemy.facing < -Math.PI / 2 || enemy.facing > Math.PI / 2 ? 1 : 0;
-
-    const cacheKey = `${typeId}_${state}_${animPhase}_${angleStep}_${elemColor}_${secColor}`;
-
-    let cachedCanvas = this.cache.get(cacheKey);
-    if (!cachedCanvas) {
-      if (this.cache.size >= this.MAX_ENTRIES) {
-        const iter = this.cache.keys();
-        for (let i = 0; i < 150; i++) {
-          const next = iter.next();
-          if (next.done) break;
-          this.cache.delete(next.value);
-        }
-      }
-
-      cachedCanvas = document.createElement('canvas');
-      cachedCanvas.width = this.TILE_SIZE;
-      cachedCanvas.height = this.TILE_SIZE;
-      const tileCtx = cachedCanvas.getContext('2d');
-      if (!tileCtx) return false;
-
-      const mockEnemyForBake: EnemyEntity = {
-        ...enemy,
-        x: this.HALF_TILE,
-        y: this.HALF_TILE + (enemy.altitude || 0),
-        altitude: enemy.altitude || 0
-      };
-
-      EnemyArchetypeRenderer.renderEnemyBody(
-        tileCtx,
-        mockEnemyForBake,
-        animTime,
-        elemColor,
-        secColor
-      );
-
-      this.cache.set(cacheKey, cachedCanvas);
-    }
-
-    ctx.drawImage(
-      cachedCanvas,
-      drawX - this.HALF_TILE,
-      drawY - this.HALF_TILE
-    );
-    return true;
   }
 }
