@@ -51,11 +51,9 @@ src/
 ├── core/
 │   ├── WasmBridge.ts      # Cầu nối khởi tạo WASM (hỗ trợ cả initSync trong Node/Vitest), đồng bộ config, WebGL2 & Flat Memory
 │   ├── GameState.ts       # Quản lý trạng thái đồng bộ với UI & thao tác tháp
-│   ├── SimulationEngine.ts# Điều phối vòng lặp Fixed 60Hz ủy quyền Rust WASM
-│   ├── SpatialIndex.ts    # Truy vấn không gian qua WasmBridge
-│   ├── ObjectPool.ts      # Generic ObjectPool
+│   ├── ObjectPool.ts      # Generic ObjectPool cho particle và chữ nổi HUD
 │   └── StorageService.ts  # localStorage (cài đặt trận)
-├── systems/               # Các lớp vỏ gọi xuống Rust WASM (SoundSystem, TargetingRuleEngine, WaveSystem…)
+├── systems/               # Các lớp vỏ mỏng gọi xuống Rust WASM (SoundSystem, TargetingRuleEngine, WaveSystem, NavigationSystem)
 ├── render/
 │   ├── UnitSpriteCache.ts       # Nướng GPU Texture Atlas (quái + icon) nạp vào Rust WebGL2 Renderer
 │   ├── EnemyArchetypeRenderer.ts# Facade nhận diện & điều hướng render archetype

@@ -51,7 +51,7 @@
 ### Thêm / sửa quái vật
 1. Thêm entry vào file phù hợp `config/enemies/{ground|flying|aquatic|elite|boss|minion}.enemies.ts`
    (key = `typeId`, mô tả tiếng Việt).
-2. Kỹ năng mới (loại chưa có) → thêm vào `EnemyAbilityType` (`types/entities.types.ts`) và `case` trong `systems/EnemySkillSystem.ts`.
+2. Kỹ năng mới (loại chưa có) → thêm vào `EnemyAbilityType` (`types/entities.types.ts`) và `case` trong `wasm-sim/src/systems.rs` (`EnemySkillSystem`).
 3. Hình dạng: map `typeId` → archetype trong `render/EnemyArchetypeRenderer.ts` (nếu không sẽ dùng mặc định).
 4. Đưa vào đợt quái: `config/maps/<map>.map.ts` hoặc `waves_extended.ts`.
 5. Codex tự hiển thị từ `ENEMY_BLUEPRINTS`; chỉ sửa `CodexEnemies.ts` nếu cần bộ lọc/hiển thị mới.
@@ -60,7 +60,7 @@
 ### Cân bằng / thêm tháp
 1. Sửa `config/towers.config.ts` (giữ đủ tier 1–3 + `4_A`, `4_B`).
 2. Loại tháp mới: thêm vào `TowerType`, nhóm `*_TOWER_TYPES`, phím tắt `UIManager#bindKeyboard`,
-   sub-key trong `SideDetailPanel.open`, render ở `TowerRenderer`, logic ở `TowerSystem`/`CombatSystem`/`GameState`.
+   sub-key trong `SideDetailPanel.open`, render ở `wasm-sim/src/webgl/entities.rs`, logic ở `wasm-sim/src/systems.rs` (`TowerSystem` / `CombatSystem`) và `GameState.ts`.
 3. Codex: `CodexBuildings` (phòng ngự), `CodexSoldiers` (triệu hồi), `CodexTraps` (bẫy) – kiểm tra text tĩnh mô tả cơ chế.
 4. Test: `defense_restructure.test.ts`, `architecture.test.ts` (nhóm Game Balance).
 

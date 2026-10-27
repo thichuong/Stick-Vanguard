@@ -5,7 +5,7 @@ description: >-
   Dùng khi sửa/thêm tháp, bẫy, quái, nguyên tố, bản đồ, đợt quái, Cẩm nang (Codex),
   panel trái (HUDManager), panel phải (ArsenalBar / InspectorPanel), phím tắt, âm thanh (Rust WebAudio),
   lõi WebAssembly (wasm-sim / WasmBridge), bộ kết xuất WebGL2 (webgl.rs / UnitSpriteCache),
-  lưới băm không gian (SpatialIndex / spatial.rs), hoặc khi cần hiểu kiến trúc dự án trước khi chỉnh sửa.
+  lưới băm không gian (SpatialGrid / spatial.rs), hoặc khi cần hiểu kiến trúc dự án trước khi chỉnh sửa.
 ---
 
 # Stick Vanguard – Hướng dẫn Cập nhật & Sửa chữa
@@ -37,16 +37,16 @@ Tài liệu chi tiết (chỉ đọc khi cần):
 | **Lõi tính toán WASM / Rust Engine** (State, Systems, Rules, Waves, Audio, WebGL2) | `wasm-sim/src/lib.rs`, `wasm-sim/src/systems.rs`, `wasm-sim/src/state.rs` | `wasm-sim/Cargo.toml`, build bằng `npm run build:wasm` |
 | **Render Chiến trường WebGL2 Thuần Rust** | `wasm-sim/src/webgl/` (`entities.rs`, `scene.rs`, `primitives.rs`) | `src/main.ts#loop`, overlay 2D `#game-hud-overlay` |
 | **Âm thanh WebAudio trong Rust** | `wasm-sim/src/audio.rs` | `src/systems/SoundSystem.ts` (vỏ gọi `WasmBridge`) |
-| **Cầu nối WASM & Config Sync** (Zero-Copy Float32Array, ID Map, `load_game_config`) | `src/core/WasmBridge.ts` | `src/wasm/wasm_sim.js`, `src/core/SimulationEngine.ts` |
-| **Vòng lặp mô phỏng & Fixed Tick** (60Hz loop, sub-stepping, nội suy) | `wasm-sim/src/systems.rs`, `src/core/SimulationEngine.ts` | `src/core/ObjectPool.ts`, `src/core/SpatialIndex.ts` |
-| **Lưới băm không gian (Spatial Grid)** (tìm quái trong tầm, đạn nổ lan $O(1)$) | `wasm-sim/src/spatial.rs`, `src/core/SpatialIndex.ts` | `src/core/WasmBridge.ts` |
+| **Cầu nối WASM & Config Sync** (Zero-Copy Float32Array, ID Map, `load_game_config`) | `src/core/WasmBridge.ts` | `src/wasm/wasm_sim.js`, `src/main.ts` |
+| **Vòng lặp mô phỏng & Fixed Tick** (60Hz loop, sub-stepping, nội suy) | `wasm-sim/src/systems.rs`, `src/main.ts` | `src/core/WasmBridge.ts`, `wasm-sim/src/lib.rs` |
+| **Lưới băm không gian (Spatial Grid)** (tìm quái trong tầm, đạn nổ lan $O(1)$) | `wasm-sim/src/spatial.rs` | `wasm-sim/src/systems.rs`, `src/core/WasmBridge.ts` |
 | **Cẩm nang / Codex** (mô tả, bảng, tab, tra cứu) | `src/config/*` (dữ liệu gốc) | `src/ui/codex/Codex*.ts` (hiển thị), router `src/ui/SideDetailPanel.ts` |
 | **Panel trái** (Vàng, Máu, Đợt, nút gọi đợt, nút overlay canvas, banner thắng/thua) | `src/ui/hud/HUDManager.ts` | `index.html` `#left-panel`, `src/style.css` |
 | Nút trái "Chọn Bản Đồ" / "Cài Đặt" / "Cẩm Nang" | `src/ui/modals/MapSelectionModal.ts` / `src/ui/modals/SettingsModal.ts` / `src/ui/UIManager.ts` | `index.html` |
 | **Panel phải** (chọn tháp, trạng thái đặt tháp, dòng gợi ý) | `src/ui/hud/ArsenalBar.ts` | `src/ui/inspector/InspectorPanel.ts` (render toàn bộ nội dung `#right-panel`) |
 | Chi tiết / nâng cấp / bán tháp, lính triệu hồi, thông tin màn chơi (panel phải) | `src/ui/inspector/InspectorPanel.ts` | `wasm-sim/src/state.rs`, `src/core/GameState.ts` |
 | Chỉ số tháp / bẫy | `src/config/towers.config.ts` | `wasm-sim/src/state.rs`, `src/core/GameState.ts`, `CodexBuildings` / `CodexSoldiers` / `CodexTraps` |
-| Lính / rồng / tiên (đơn vị triệu hồi) | `src/config/towers.config.ts` | `wasm-sim/src/systems.rs`, `src/systems/CombatSystem.ts` |
+| Lính / rồng / tiên (đơn vị triệu hồi) | `src/config/towers.config.ts` | `wasm-sim/src/systems.rs` (`CombatSystem`), `src/core/GameState.ts` |
 | Quái vật | `src/config/enemies/*.enemies.ts` | `wasm-sim/src/systems.rs`, `src/render/EnemyArchetypeRenderer.ts`, `CodexEnemies` |
 | Nguyên tố / phản ứng / khắc chế | `src/config/elements/*` | `wasm-sim/src/rules.rs`, `src/systems/TargetingRuleEngine.ts`, `CodexElements` |
 | Bản đồ / đợt quái | `src/config/maps/*.map.ts`, `src/config/maps/waves_extended.ts` | `wasm-sim/src/wave.rs`, `src/systems/WaveSystem.ts` |
@@ -71,7 +71,7 @@ Tài liệu chi tiết (chỉ đọc khi cần):
     - `audio.rs`: `RustSoundSystem` điều khiển trực tiếp WebAudio (`AudioContext`, `OscillatorNode`, `GainNode`, `BiquadFilterNode`, `AudioBuffer`) qua `wasm-bindgen`.
     - `webgl/`: `WebGl2Renderer` kết xuất chiến trường bằng shader `#version 300 es` kết hợp `UnitSpriteCache` GPU Texture Atlas (module hóa thành `mod.rs`, `gl_bindings.rs`, `primitives.rs`, `scene.rs`, `entities.rs`, `codex.rs`).
   - **Cẩm nang WASM & Render Chuyên Sâu**: Tra cứu skill `stick-vanguard-wasm-engine` (`.agents/skills/stick-vanguard-wasm-engine/`) để hiểu sâu về Flat Memory, Zero-Copy, pipeline render WebGL2 và Fixed 60Hz loop.
-  - **Kiến trúc thuần Rust WASM + WebGL2**: Game vận hành 100% bằng WebAssembly Rust Engine (`wasm-sim/`) và WebGL2, không dùng cơ chế fallback 2D Canvas hay mô phỏng TS cũ. Canvas 2D overlay (`#game-hud-overlay`) chỉ dùng để vẽ vùng đặt tháp và số sát thương bay.
+  - **Kiến trúc thuần Rust WASM + WebGL2**: Game vận hành 100% bằng WebAssembly Rust Engine (`wasm-sim/`) và WebGL2, không dùng cơ chế fallback 2D Canvas hay mô phỏng TS cũ. Đã loại bỏ hoàn toàn các class mô phỏng TS cũ (`CombatSystem`, `EnemySkillSystem`, `TowerSystem`, `TrapSystem`, `ProjectileSystem`, `SpatialIndex`, `SimulationEngine`). `src/systems/` chỉ còn các facade mỏng (`SoundSystem`, `TargetingRuleEngine`, `WaveSystem`, `NavigationSystem`). Canvas 2D overlay (`#game-hud-overlay`) chỉ dùng để vẽ vùng đặt tháp và số sát thương bay.
 - **Cẩm nang**: luôn tra `src/config/` + `src/ui/codex/` trước. Một số Codex là text tĩnh
   (`CodexImbue`, `CodexNavigation`) → phải đối chiếu thủ công với config/systems khi logic đổi.
 - **Hằng số trùng lặp**: `ALL_15_ELEMENTS`, `STATUS_TO_ELEMENT` có ở cả
