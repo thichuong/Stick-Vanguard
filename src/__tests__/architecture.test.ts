@@ -2697,7 +2697,7 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(tower.disabledTimer).toBe(3.5);
     });
 
-    it('should test DOWNGRADE_TOWER dropping tower tier by 1 and destroying Tier 1 towers', async () => {
+    it('should test DOWNGRADE_TOWER dropping tower tier by 1 and preserving living summoned units until death', async () => {
       const state = new GameState();
       state.gold = 1000;
       const slot = state.towerSlots.find((s) => s.placement === 'ROADSIDE')!;
@@ -2709,13 +2709,35 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(tower.tier).toBe(2);
       expect(tower.maxSoldiers).toBe(4);
       expect(state.soldiers.length).toBe(4);
+      const tier2MaxHp = state.soldiers[0].maxHp;
+      expect(tier2MaxHp).toBe(180);
 
-      // Downgrade from Tier 2 -> drops to Tier 1, soldiers reduced back to 3
+      // Downgrade from Tier 2 -> drops to Tier 1, but living soldiers are NOT affected!
       const resDowngrade = state.downgradeOrDestroyTower(tower.id);
       expect(resDowngrade).toBe('DOWNGRADED');
       expect(tower.tier).toBe(1);
       expect(tower.maxSoldiers).toBe(3);
+      // Living units remain 4, keeping their Tier 2 stats
+      expect(state.soldiers.length).toBe(4);
+      expect(state.soldiers[0].tier).toBe(2);
+      expect(state.soldiers[0].maxHp).toBe(180);
+
+      // 1. First soldier dies: since 4 > maxSoldiers (3), this excess unit is removed
+      const deadSoldier1 = state.soldiers[0];
+      state.handleSoldierDeath(deadSoldier1.id);
       expect(state.soldiers.length).toBe(3);
+      expect(tower.soldierIds?.length).toBe(3);
+
+      // 2. Second soldier dies: since 3 <= maxSoldiers (3), unit stays to respawn, but updates to Tier 1 stats!
+      const deadSoldier2 = state.soldiers[0];
+      state.handleSoldierDeath(deadSoldier2.id);
+      expect(state.soldiers.length).toBe(3);
+      expect(deadSoldier2.state).toBe('DEAD');
+      expect(deadSoldier2.tier).toBe(1);
+      expect(deadSoldier2.maxHp).toBe(100); // Tier 1 soldier HP
+      // The other 2 living soldiers still have Tier 2 stats
+      expect(state.soldiers[1].tier).toBe(2);
+      expect(state.soldiers[1].maxHp).toBe(180);
 
       // Downgrade from Tier 1 -> DESTROYED completely!
       const resDestroy = state.downgradeOrDestroyTower(tower.id);
@@ -2723,6 +2745,74 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(state.towers.length).toBe(0);
       expect(state.soldiers.length).toBe(0);
       expect(slot.currentTowerId).toBe(null);
+    });
+
+    it('should verify DAMAGE_REDUCTION_AURA does not stack and chooses the highest ratio', async () => {
+      const { TargetingRuleEngine } = await import('../systems/TargetingRuleEngine.js');
+      const runnerBp = ENEMY_BLUEPRINTS['STICK_RUNNER'];
+      const enemy: EnemyEntity = {
+        id: 'test-dr-stacking',
+        typeId: runnerBp.typeId,
+        name: runnerBp.name,
+        x: 100,
+        y: 100,
+        hp: 300,
+        maxHp: 300,
+        speed: 50,
+        baseSpeed: 50,
+        damage: 10,
+        attackSpeed: 1,
+        attackCooldown: 1,
+        rewardGold: 10,
+        movementType: 'WALK',
+        navigationMode: 'GROUND_PATH',
+        pathDistance: 50,
+        pathTotalLength: 500,
+        elementalProfile: { primaryElement: 'PHYSICAL', immunities: [] },
+        state: 'WALKING',
+        engagedBySoldierId: null,
+        statusEffects: [],
+        tags: [],
+        altitude: 0,
+        size: 15,
+        facing: 0
+      };
+
+      // 1. Apply 25% reduction for 4.0s
+      TargetingRuleEngine.applyDamageReduction(enemy, 0.25, 4.0);
+      expect(TargetingRuleEngine.getEffectiveDamageReductionRatio(enemy)).toBe(0.25);
+      expect(enemy.damageReductionRatio).toBe(0.25);
+      expect(enemy.damageReductionTimer).toBe(4.0);
+
+      // 2. Apply 35% reduction for 2.0s: does NOT stack (not 0.25 + 0.35 = 0.60), chooses highest (0.35)
+      TargetingRuleEngine.applyDamageReduction(enemy, 0.35, 2.0);
+      expect(TargetingRuleEngine.getEffectiveDamageReductionRatio(enemy)).toBe(0.35);
+      expect(enemy.damageReductionRatio).toBe(0.35);
+      expect(enemy.damageReductionTimer).toBe(2.0); // 35% effect has 2.0s duration
+
+      // Verify damage calculation uses only 35% reduction (100 * (1 - 0.35) = 65)
+      const dmgCalc = TargetingRuleEngine.calculateDamage(
+        { amount: 100, element: 'PHYSICAL', sourceId: 'test' },
+        enemy
+      );
+      expect(dmgCalc.finalDamage).toBe(65);
+
+      // 3. Weaker aura applied again does NOT extend the stronger aura's timer
+      TargetingRuleEngine.applyDamageReduction(enemy, 0.25, 4.0);
+      expect(TargetingRuleEngine.getEffectiveDamageReductionRatio(enemy)).toBe(0.35);
+      expect(enemy.damageReductionTimer).toBe(2.0); // Remains 2.0s for the 35% effect
+
+      // 4. Update status effects past 2.0s: 35% expires, reverts to remaining 25% effect
+      TargetingRuleEngine.updateStatusEffects(enemy, 2.1, () => {});
+      expect(TargetingRuleEngine.getEffectiveDamageReductionRatio(enemy)).toBe(0.25);
+      expect(enemy.damageReductionRatio).toBe(0.25);
+      expect(enemy.damageReductionTimer).toBeCloseTo(1.9, 1);
+
+      // 5. Update past remaining time: all expire
+      TargetingRuleEngine.updateStatusEffects(enemy, 2.0, () => {});
+      expect(TargetingRuleEngine.getEffectiveDamageReductionRatio(enemy)).toBe(0);
+      expect(enemy.damageReductionRatio).toBe(0);
+      expect(enemy.damageReductionTimer).toBe(0);
     });
 
     it('should test ARMOR_SHIELD, MAGIC_SHIELD, HEAL_AURA and DAMAGE_REDUCTION_AURA', async () => {

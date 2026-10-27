@@ -549,6 +549,11 @@ export class GameState {
         for (const sid of tower.soldierIds) {
           const dragon = this.soldiers.find((s) => s.id === sid);
           if (dragon) {
+            if (dragon.state !== 'DEAD' && dragon.tier > nextTier) {
+              // Retain higher tier stats from before tower downgrade
+              dragon.rallyPoint = { ...rPoint };
+              continue;
+            }
             dragon.tier = nextTier;
             dragon.branch = branch;
             dragon.baseMaxHp = nextBp.soldierHp || dragon.baseMaxHp;
@@ -624,17 +629,21 @@ export class GameState {
         const sid = tower.soldierIds[i];
         const fairy = this.soldiers.find((s) => s.id === sid);
         if (fairy) {
-          fairy.tier = nextTier;
-          fairy.branch = branch;
-          fairy.baseMaxHp = nextBp.soldierHp || fairy.baseMaxHp;
-          fairy.baseDamage = nextBp.damage;
-          fairy.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : fairy.baseArmor;
-          fairy.maxHp = fairy.baseMaxHp;
-          fairy.hp = fairy.maxHp;
-          fairy.damage = fairy.baseDamage;
-          fairy.armor = fairy.baseArmor;
-          fairy.soldierRegen = nextBp.soldierRegen || 0;
-          fairy.attackSpeed = nextBp.fireRate;
+          if (fairy.state !== 'DEAD' && fairy.tier > nextTier) {
+            // Retain higher tier stats from before tower downgrade
+          } else {
+            fairy.tier = nextTier;
+            fairy.branch = branch;
+            fairy.baseMaxHp = nextBp.soldierHp || fairy.baseMaxHp;
+            fairy.baseDamage = nextBp.damage;
+            fairy.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : fairy.baseArmor;
+            fairy.maxHp = fairy.baseMaxHp;
+            fairy.hp = fairy.maxHp;
+            fairy.damage = fairy.baseDamage;
+            fairy.armor = fairy.baseArmor;
+            fairy.soldierRegen = nextBp.soldierRegen || 0;
+            fairy.attackSpeed = nextBp.fireRate;
+          }
           const offsetAngle = (i / totalCount) * Math.PI * 2;
           fairy.rallyPoint = {
             x: rPoint.x + Math.cos(offsetAngle) * 14,
@@ -705,35 +714,39 @@ export class GameState {
         const sid = tower.soldierIds[i];
         const soldier = this.soldiers.find((s) => s.id === sid);
         if (soldier) {
-          soldier.tier = nextTier;
-          soldier.branch = branch;
-          soldier.baseMaxHp = nextBp.soldierHp || soldier.baseMaxHp;
-          soldier.baseDamage = nextBp.damage;
-          soldier.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : soldier.baseArmor;
-          soldier.soldierRegen = nextBp.soldierRegen || 0;
-          soldier.secondaryElement = tower.secondaryElement || null;
-          soldier.buffedElements = tower.buffedElements ? [...tower.buffedElements] : undefined;
+          if (soldier.state !== 'DEAD' && soldier.tier > nextTier) {
+            // Retain higher tier stats from before tower downgrade
+          } else {
+            soldier.tier = nextTier;
+            soldier.branch = branch;
+            soldier.baseMaxHp = nextBp.soldierHp || soldier.baseMaxHp;
+            soldier.baseDamage = nextBp.damage;
+            soldier.baseArmor = nextBp.soldierArmor !== undefined ? nextBp.soldierArmor : soldier.baseArmor;
+            soldier.soldierRegen = nextBp.soldierRegen || 0;
+            soldier.secondaryElement = tower.secondaryElement || null;
+            soldier.buffedElements = tower.buffedElements ? [...tower.buffedElements] : undefined;
+
+            if (soldier.combatMode === 'RANGED') {
+              soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
+              soldier.damage = Math.max(1, Math.round(soldier.baseDamage * 0.7));
+              soldier.armor = Math.round(soldier.baseArmor * 0.5 * 100) / 100;
+              soldier.canTargetAir = true;
+              soldier.rangedRange = 135 + nextTier * 12;
+            } else {
+              soldier.maxHp = soldier.baseMaxHp;
+              soldier.damage = soldier.baseDamage;
+              soldier.armor = soldier.baseArmor;
+              soldier.canTargetAir = false;
+            }
+
+            soldier.hp = soldier.maxHp;
+          }
 
           const offsetAngle = (i / totalCount) * Math.PI * 2;
           soldier.rallyPoint = {
             x: rPoint.x + Math.cos(offsetAngle) * 12,
             y: rPoint.y + Math.sin(offsetAngle) * 12
           };
-
-          if (soldier.combatMode === 'RANGED') {
-            soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
-            soldier.damage = Math.max(1, Math.round(soldier.baseDamage * 0.7));
-            soldier.armor = Math.round(soldier.baseArmor * 0.5 * 100) / 100;
-            soldier.canTargetAir = true;
-            soldier.rangedRange = 135 + nextTier * 12;
-          } else {
-            soldier.maxHp = soldier.baseMaxHp;
-            soldier.damage = soldier.baseDamage;
-            soldier.armor = soldier.baseArmor;
-            soldier.canTargetAir = false;
-          }
-
-          soldier.hp = soldier.maxHp;
         }
       }
     }
@@ -778,49 +791,9 @@ export class GameState {
         if (tower.type === 'DRAGON_NEST') {
           tower.element = 'DRAGON';
           tower.maxSoldiers = 1;
-          if (tower.soldierIds) {
-            for (const sid of tower.soldierIds) {
-              const dragon = this.soldiers.find((s) => s.id === sid);
-              if (dragon) {
-                dragon.tier = prevTier;
-                dragon.branch = undefined;
-                dragon.baseMaxHp = prevBp.soldierHp || dragon.baseMaxHp;
-                dragon.baseDamage = prevBp.damage;
-                dragon.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : dragon.baseArmor;
-                dragon.aoeRadius = prevBp.aoeRadius || dragon.aoeRadius;
-                dragon.maxHp = dragon.baseMaxHp;
-                dragon.damage = dragon.baseDamage;
-                dragon.armor = dragon.baseArmor;
-                dragon.soldierRegen = prevBp.soldierRegen || 0;
-                dragon.hp = Math.min(dragon.hp, dragon.maxHp);
-              }
-            }
-          }
         } else if (tower.type === 'FAIRY_TREE') {
           tower.element = 'FAIRY';
-          const targetMax = prevBp.maxSoldiers || 2;
-          tower.maxSoldiers = targetMax;
-          if (tower.soldierIds && tower.soldierIds.length > targetMax) {
-            const removedIds = tower.soldierIds.splice(targetMax);
-            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
-          }
-          if (tower.soldierIds) {
-            for (const sid of tower.soldierIds) {
-              const fairy = this.soldiers.find((s) => s.id === sid);
-              if (fairy) {
-                fairy.tier = prevTier;
-                fairy.branch = undefined;
-                fairy.baseMaxHp = prevBp.soldierHp || fairy.baseMaxHp;
-                fairy.baseDamage = prevBp.damage;
-                fairy.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : fairy.baseArmor;
-                fairy.maxHp = fairy.baseMaxHp;
-                fairy.damage = fairy.baseDamage;
-                fairy.armor = fairy.baseArmor;
-                fairy.soldierRegen = prevBp.soldierRegen || 0;
-                fairy.hp = Math.min(fairy.hp, fairy.maxHp);
-              }
-            }
-          }
+          tower.maxSoldiers = prevBp.maxSoldiers || 2;
         } else if (tower.type === 'HEROIC_ALTAR') {
           tower.element = 'GHOST';
           tower.maxSoldiers = prevBp.maxSoldiers || 2;
@@ -828,43 +801,48 @@ export class GameState {
           tower.spiritStatMultiplier = prevBp.spiritStatMultiplier;
           tower.spiritGhostRatio = prevBp.spiritGhostRatio ?? (prevBp.tier === 4 && prevBp.branch === 'B' ? 1.0 : 0.5);
           tower.aoeRadius = prevBp.aoeRadius;
-          if (tower.soldierIds && tower.soldierIds.length > tower.maxSoldiers) {
-            const removedIds = tower.soldierIds.splice(tower.maxSoldiers);
-            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
+        } else if (tower.type === 'BARRACKS') {
+          tower.maxSoldiers = prevBp.maxSoldiers || 3;
+          if (tower.soldierMode === 'RANGED') {
+            tower.targetingFilter = { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
+          } else {
+            tower.targetingFilter = { ...prevBp.targetingFilter };
           }
         } else if (tower.type !== 'MAGE') {
           tower.element = 'PHYSICAL';
         }
 
-        if (tower.type === 'BARRACKS' && tower.soldierMode === 'RANGED') {
-          tower.targetingFilter = { allowedMovement: ['WALK', 'SWIM', 'FLY'] };
-        } else {
+        if (tower.type !== 'BARRACKS' && tower.type !== 'DRAGON_NEST' && tower.type !== 'FAIRY_TREE' && tower.type !== 'HEROIC_ALTAR') {
           tower.targetingFilter = { ...prevBp.targetingFilter };
         }
 
-        if (tower.type === 'BARRACKS') {
-          const targetMax = prevBp.maxSoldiers || 3;
-          tower.maxSoldiers = targetMax;
-          if (tower.soldierIds && tower.soldierIds.length > targetMax) {
-            const removedIds = tower.soldierIds.splice(targetMax);
-            this.soldiers = this.soldiers.filter((s) => !removedIds.includes(s.id));
+        // Handle summoned units when tower is downgraded:
+        // Living summoned units are NOT affected: keep current count and stats.
+        // If there are already-dead units:
+        // 1. If unit count exceeds the new maxSoldiers, remove excess dead units right away so they won't respawn.
+        // 2. Remaining dead units waiting to respawn sync their stats to prevBp.
+        if (tower.soldierIds && tower.soldierIds.length > 0) {
+          const targetMax = tower.maxSoldiers || 1;
+          // Clean up excess dead units first if any
+          for (let i = tower.soldierIds.length - 1; i >= 0; i--) {
+            if (tower.soldierIds.length <= targetMax) break;
+            const sid = tower.soldierIds[i];
+            const soldier = this.soldiers.find((s) => s.id === sid);
+            if (soldier && (soldier.state === 'DEAD' || soldier.hp <= 0)) {
+              tower.soldierIds.splice(i, 1);
+              const sIndex = this.soldiers.findIndex((s) => s.id === sid);
+              if (sIndex !== -1) {
+                this.soldiers.splice(sIndex, 1);
+              }
+            }
           }
 
-          if (tower.soldierIds) {
-            for (const sid of tower.soldierIds) {
-              const soldier = this.soldiers.find((s) => s.id === sid);
-              if (soldier) {
-                soldier.tier = prevTier;
-                soldier.branch = undefined;
-                soldier.baseMaxHp = prevBp.soldierHp || soldier.baseMaxHp;
-                soldier.baseDamage = prevBp.damage;
-                soldier.baseArmor = prevBp.soldierArmor !== undefined ? prevBp.soldierArmor : soldier.baseArmor;
-                soldier.soldierRegen = prevBp.soldierRegen || 0;
-                soldier.maxHp = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseMaxHp * 0.65)) : soldier.baseMaxHp;
-                soldier.damage = soldier.combatMode === 'RANGED' ? Math.max(1, Math.round(soldier.baseDamage * 0.7)) : soldier.baseDamage;
-                soldier.armor = soldier.combatMode === 'RANGED' ? Math.round(soldier.baseArmor * 0.5 * 100) / 100 : soldier.baseArmor;
-                soldier.hp = Math.min(soldier.hp, soldier.maxHp);
-              }
+          // For any remaining already-dead units (waiting to respawn within targetMax), sync stats to prevBp
+          for (const sid of tower.soldierIds) {
+            const soldier = this.soldiers.find((s) => s.id === sid);
+            if (soldier && (soldier.state === 'DEAD' || soldier.hp <= 0)) {
+              this.syncSoldierStatsToTowerBlueprint(soldier, prevBp);
+              soldier.hp = 0;
             }
           }
         }
@@ -1075,6 +1053,107 @@ export class GameState {
     SoundSystem.playRally();
     this.addFloatingText('🚩 Đã đổi điểm tập kết!', targetX, targetY - 10, '#eab308');
     return true;
+  }
+
+  /**
+   * Helper to sync a soldier's stats to a tower blueprint (used when respawning or upgrading).
+   */
+  public syncSoldierStatsToTowerBlueprint(soldier: SoldierEntity, bp: TowerBlueprint): void {
+    soldier.tier = bp.tier;
+    soldier.branch = bp.branch;
+    soldier.baseMaxHp = bp.soldierHp || soldier.baseMaxHp;
+    soldier.baseDamage = bp.damage;
+    soldier.baseArmor = bp.soldierArmor !== undefined ? bp.soldierArmor : soldier.baseArmor;
+    soldier.soldierRegen = bp.soldierRegen || 0;
+    soldier.attackSpeed = bp.fireRate;
+    if (bp.aoeRadius) {
+      soldier.aoeRadius = bp.aoeRadius;
+    }
+    if (bp.soldierRespawn) {
+      soldier.respawnDelay = bp.soldierRespawn;
+    }
+
+    if (soldier.combatMode === 'RANGED') {
+      soldier.maxHp = Math.max(1, Math.round(soldier.baseMaxHp * 0.65));
+      soldier.damage = Math.max(1, Math.round(soldier.baseDamage * 0.7));
+      soldier.armor = Math.round(soldier.baseArmor * 0.5 * 100) / 100;
+      soldier.canTargetAir = true;
+      soldier.rangedRange = 135 + soldier.tier * 12;
+    } else {
+      soldier.maxHp = soldier.baseMaxHp;
+      soldier.damage = soldier.baseDamage;
+      soldier.armor = soldier.baseArmor;
+      if (soldier.archetype !== 'DRAGON' && soldier.archetype !== 'FAIRY') {
+        soldier.canTargetAir = false;
+      }
+    }
+  }
+
+  /**
+   * Called when a summoned unit (Soldier, Dragon, Fairy, Spirit) dies.
+   * Handles:
+   * 1. Heroic Altar resurrection attempt (using the unit's pre-death stats).
+   * 2. If the parent tower was downgraded and currently has excess units beyond its current maxSoldiers,
+   *    the dying unit is permanently removed rather than respawning.
+   * 3. If within the tower's maxSoldiers limit, the unit enters DEAD respawn queue and syncs stats
+   *    to the tower's current tier so it respawns with the new tier's stats.
+   */
+  public handleSoldierDeath(soldierId: string): void {
+    const sIndex = this.soldiers.findIndex((s) => s.id === soldierId);
+    if (sIndex === -1) return;
+    const deadSoldier = this.soldiers[sIndex];
+
+    // 1. Try spawn Heroic Spirit while unit retains its pre-death stats
+    if (!deadSoldier.isSpirit) {
+      this.trySpawnHeroicSpirit(deadSoldier);
+    }
+
+    // 2. Spirits (Heroic Altar) do not respawn; remove permanently
+    if (deadSoldier.isSpirit) {
+      this.soldiers.splice(sIndex, 1);
+      const altar = this.towers.find((t) => t.id === deadSoldier.towerId);
+      if (altar && altar.soldierIds) {
+        const idIdx = altar.soldierIds.indexOf(deadSoldier.id);
+        if (idIdx !== -1) {
+          altar.soldierIds.splice(idIdx, 1);
+        }
+      }
+      return;
+    }
+
+    // 3. Regular summoned unit (Barracks, Dragon Nest, Fairy Tree)
+    const tower = this.towers.find((t) => t.id === deadSoldier.towerId);
+    if (!tower) {
+      this.soldiers.splice(sIndex, 1);
+      return;
+    }
+
+    const currentCap = tower.maxSoldiers || (tower.type === 'HEROIC_ALTAR' ? 2 : 1);
+    const totalAssigned = tower.soldierIds?.length || 0;
+
+    // If unit count exceeds tower's current max capacity (tower was downgraded)
+    if (totalAssigned > currentCap) {
+      // Permanently remove the excess fallen soldier
+      this.soldiers.splice(sIndex, 1);
+      if (tower.soldierIds) {
+        const idIdx = tower.soldierIds.indexOf(deadSoldier.id);
+        if (idIdx !== -1) {
+          tower.soldierIds.splice(idIdx, 1);
+        }
+      }
+      return;
+    }
+
+    // Otherwise, unit remains in soldiers array in DEAD state waiting to respawn.
+    // Sync its stats to the tower's current tier blueprint so it respawns with the tower's current tier stats!
+    const bpKey = `${tower.type}_${tower.tier}${tower.branch ? '_' + tower.branch : ''}`;
+    const currentBp = TOWER_BLUEPRINTS[bpKey];
+    if (currentBp) {
+      this.syncSoldierStatsToTowerBlueprint(deadSoldier, currentBp);
+      deadSoldier.hp = 0;
+      deadSoldier.state = 'DEAD';
+      deadSoldier.respawnTimer = deadSoldier.respawnDelay;
+    }
   }
 
   /**

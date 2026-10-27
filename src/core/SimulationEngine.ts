@@ -184,24 +184,7 @@ export class SimulationEngine {
         this.state.addExplosionParticles(evt.x, evt.y, color, 4);
       } else if (evt.type === 'SOLDIER_DEATH') {
         SoundSystem.playSoldierDeath();
-        const deadSoldier = this.state.soldiers.find((s) => s.id === evt.targetId);
-        if (deadSoldier) {
-          if (!deadSoldier.isSpirit) {
-            this.state.trySpawnHeroicSpirit(deadSoldier);
-          } else {
-            const sIdx = this.state.soldiers.findIndex((s) => s.id === deadSoldier.id);
-            if (sIdx !== -1) {
-              swapRemove(this.state.soldiers, sIdx);
-            }
-            const altar = this.state.towers.find((t) => t.id === deadSoldier.towerId);
-            if (altar && altar.soldierIds) {
-              const idIdx = altar.soldierIds.indexOf(deadSoldier.id);
-              if (idIdx !== -1) {
-                swapRemove(altar.soldierIds, idIdx);
-              }
-            }
-          }
-        }
+        this.state.handleSoldierDeath(evt.targetId);
       }
     }, this.spatialIndex);
 

@@ -519,7 +519,7 @@ export class CodexEnemies {
                         } else if (ab.type === 'DISABLE_TOWER') {
                           return `<div>${UI_ICONS.BOLT} <b>Vô Hiệu Hóa Tháp:</b> Mỗi <b>${ab.interval}s</b>, phóng xung điện từ làm tê liệt <b>${ab.maxTargets || 1} tháp</b> trong bán kính <b>${ab.radius}px</b> suốt <b>${ab.duration}s</b>!</div>`;
                         } else if (ab.type === 'DOWNGRADE_TOWER') {
-                          return `<div>${UI_ICONS.ARROW_DOWN} <b>Hạ Cấp / Phá Hủy Tháp:</b> Mỗi <b>${ab.interval}s</b>, bắn tia tà thuật vào tháp trong bán kính <b>${ab.radius}px</b> làm <b>tháp tụt 1 cấp độ</b> (nếu tháp ở Cấp 1 sẽ <b>bị phá hủy hoàn toàn</b>)!</div>`;
+                          return `<div>${UI_ICONS.ARROW_DOWN} <b>Hạ Cấp / Phá Hủy Tháp:</b> Mỗi <b>${ab.interval}s</b>, bắn tia tà thuật vào tháp trong bán kính <b>${ab.radius}px</b> làm <b>tháp tụt 1 cấp độ</b> (nếu tháp ở Cấp 1 sẽ <b>bị phá hủy hoàn toàn</b>). Đơn vị triệu hồi đang sống không bị ảnh hưởng cho đến khi hy sinh!</div>`;
                         } else if (ab.type === 'ARMOR_SHIELD_AURA') {
                           return `<div>${UI_ICONS.SHIELD} <b>Giáp Ảo Toàn Quân:</b> Mỗi <b>${ab.interval}s</b>, buff thêm <b>${ab.value} Giáp Ảo</b> (chặn sát thương Vật Lý) cho bản thân và toàn bộ quái trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'MAGIC_SHIELD_AURA') {
@@ -527,7 +527,7 @@ export class CodexEnemies {
                         } else if (ab.type === 'HEAL_AURA') {
                           return `<div>${UI_ICONS.HEAL} <b>Trận Địa Trị Liệu:</b> Mỗi <b>${ab.interval}s</b>, hồi phục <b>+${ab.value} Máu</b> cho bản thân và tất cả quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
                         } else if (ab.type === 'DAMAGE_REDUCTION_AURA') {
-                          return `<div>${UI_ICONS.DAMAGE_REDUCE} <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round((ab.value || 0) * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b>!</div>`;
+                          return `<div>${UI_ICONS.DAMAGE_REDUCE} <b>Hào Quang Kiên Cố:</b> Mỗi <b>${ab.interval}s</b>, ban hiệu ứng giảm <b>${Math.round((ab.value || 0) * 100)}% sát thương nhận vào</b> suốt <b>${ab.duration}s</b> cho quái xung quanh trong bán kính <b>${ab.radius}px</b> (không cộng dồn, chỉ chọn hiệu ứng có tỉ số cao nhất)!</div>`;
                         }
                         return '';
                       })

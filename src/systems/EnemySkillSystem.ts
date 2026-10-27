@@ -261,8 +261,7 @@ export class EnemySkillSystem {
           const dx = e.x - sourceEnemy.x;
           const dy = e.y - sourceEnemy.y;
           if (dx * dx + dy * dy <= radius * radius) {
-            e.damageReductionRatio = Math.max(e.damageReductionRatio || 0, ratio);
-            e.damageReductionTimer = Math.max(e.damageReductionTimer || 0, duration);
+            TargetingRuleEngine.applyDamageReduction(e, ratio, duration);
             state.addFloatingText('🛡️ GIẢM SÁT THƯƠNG!', e.x, e.y - 20, '#38bdf8', 12);
           }
         }

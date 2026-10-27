@@ -209,9 +209,10 @@ export class TargetingRuleEngine {
       multiplier *= 1.5;
     }
 
-    // Active Damage Reduction buff on target (DAMAGE_REDUCTION_AURA)
-    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0 && enemy.damageReductionRatio) {
-      multiplier *= Math.max(0.25, 1 - enemy.damageReductionRatio);
+    // Active Damage Reduction buff on target (DAMAGE_REDUCTION_AURA, highest active ratio, non-stacking)
+    const effectiveReduction = this.getEffectiveDamageReductionRatio(enemy);
+    if (effectiveReduction > 0) {
+      multiplier *= Math.max(0.25, 1 - effectiveReduction);
     }
 
     const calculatedDamage = Math.max(1, Math.round(amount * multiplier * this.globalDamageMultiplier));
@@ -953,7 +954,16 @@ export class TargetingRuleEngine {
       }
     }
 
-    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
+    if (enemy.damageReductionBuffs && enemy.damageReductionBuffs.length > 0) {
+      for (let i = enemy.damageReductionBuffs.length - 1; i >= 0; i--) {
+        const b = enemy.damageReductionBuffs[i];
+        b.duration -= dt;
+        if (b.duration <= 0) {
+          enemy.damageReductionBuffs.splice(i, 1);
+        }
+      }
+      this.syncEffectiveDamageReduction(enemy);
+    } else if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0) {
       enemy.damageReductionTimer -= dt;
       if (enemy.damageReductionTimer <= 0) {
         enemy.damageReductionTimer = 0;
@@ -962,6 +972,90 @@ export class TargetingRuleEngine {
     }
 
     enemy.speed = enemy.baseSpeed * speedMult;
+  }
+
+  /**
+   * Applies or refreshes damage reduction buff from DAMAGE_REDUCTION_AURA.
+   * Incoming damage reduction buffs do NOT stack.
+   * Only the effect with the highest ratio is selected.
+   * Weaker auras do not refresh or extend the duration of a stronger aura.
+   */
+  public static applyDamageReduction(
+    enemy: EnemyEntity,
+    ratio: number,
+    duration: number
+  ): void {
+    const clampedRatio = Math.min(0.6, Math.max(0, ratio));
+    if (clampedRatio <= 0 || duration <= 0) return;
+
+    if (!enemy.damageReductionBuffs) {
+      enemy.damageReductionBuffs = [];
+      if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0 && enemy.damageReductionRatio) {
+        enemy.damageReductionBuffs.push({
+          ratio: enemy.damageReductionRatio,
+          duration: enemy.damageReductionTimer
+        });
+      }
+    }
+
+    const existing = enemy.damageReductionBuffs.find((b) => Math.abs(b.ratio - clampedRatio) < 0.001);
+    if (existing) {
+      existing.duration = Math.max(existing.duration, duration);
+    } else {
+      enemy.damageReductionBuffs.push({ ratio: clampedRatio, duration });
+    }
+
+    this.syncEffectiveDamageReduction(enemy);
+  }
+
+  /**
+   * Helper to recalculate and synchronize effective damage reduction ratio and timer.
+   * Selects the single highest ratio among all active buffs (non-stacking).
+   */
+  public static syncEffectiveDamageReduction(enemy: EnemyEntity): void {
+    if (!enemy.damageReductionBuffs || enemy.damageReductionBuffs.length === 0) {
+      enemy.damageReductionRatio = 0;
+      enemy.damageReductionTimer = 0;
+      return;
+    }
+
+    let bestRatio = 0;
+    let bestTimer = 0;
+
+    for (const b of enemy.damageReductionBuffs) {
+      if (b.duration > 0) {
+        if (b.ratio > bestRatio) {
+          bestRatio = b.ratio;
+          bestTimer = b.duration;
+        } else if (Math.abs(b.ratio - bestRatio) < 0.001) {
+          bestTimer = Math.max(bestTimer, b.duration);
+        }
+      }
+    }
+
+    enemy.damageReductionRatio = bestRatio;
+    enemy.damageReductionTimer = bestTimer;
+  }
+
+  /**
+   * Returns the current effective damage reduction ratio on an enemy (highest active ratio, non-stacking)
+   */
+  public static getEffectiveDamageReductionRatio(enemy: EnemyEntity): number {
+    if (enemy.damageReductionBuffs && enemy.damageReductionBuffs.length > 0) {
+      let best = 0;
+      for (const b of enemy.damageReductionBuffs) {
+        if (b.duration > 0 && b.ratio > best) {
+          best = b.ratio;
+        }
+      }
+      return best;
+    }
+
+    if (enemy.damageReductionTimer && enemy.damageReductionTimer > 0 && enemy.damageReductionRatio) {
+      return enemy.damageReductionRatio;
+    }
+
+    return 0;
   }
 }
 

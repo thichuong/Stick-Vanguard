@@ -171,6 +171,7 @@ export interface EnemyEntity {
   maxMagicShield?: number;
   damageReductionRatio?: number;
   damageReductionTimer?: number;
+  damageReductionBuffs?: Array<{ ratio: number; duration: number }>;
 }
 
 export interface TowerEntity {
