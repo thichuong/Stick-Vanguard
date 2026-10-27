@@ -39,6 +39,15 @@ export interface StepRenderOutput {
     maxLifeTime: number;
     size: number;
   }>;
+  soldiers?: Array<{
+    id: string;
+    hp: number;
+    maxHp: number;
+    state: any;
+    respawnTimer: number;
+    x: number;
+    y: number;
+  }>;
 }
 
 export class WasmBridge {

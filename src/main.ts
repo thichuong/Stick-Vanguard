@@ -391,6 +391,20 @@ class GameApp {
         this.state.isGameOver = step.isGameOver;
         this.state.isVictory = step.isVictory;
 
+        if (step.soldiers) {
+          for (const sUpdate of step.soldiers) {
+            const soldier = this.state.soldiers.find((s) => s.id === sUpdate.id);
+            if (soldier) {
+              soldier.hp = sUpdate.hp;
+              soldier.maxHp = sUpdate.maxHp;
+              soldier.state = sUpdate.state;
+              soldier.respawnTimer = sUpdate.respawnTimer;
+              soldier.x = sUpdate.x;
+              soldier.y = sUpdate.y;
+            }
+          }
+        }
+
         if (this.overlayCtx && this.overlayCanvas) {
           this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
           MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, step.animTime);

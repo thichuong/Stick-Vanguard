@@ -21,7 +21,7 @@ use crate::state::RustGameState;
 use crate::systems::RustSimulationEngine;
 use crate::types::{
     DamagePayload, ElementType, ElementalProfile, EnemyEntity, SoldierCombatMode, SoldierEntity,
-    StatusEffectPayload, TargetingFilter, TowerBranch, TowerEntity, TowerType,
+    SoldierState, StatusEffectPayload, TargetingFilter, TowerBranch, TowerEntity, TowerType,
 };
 use crate::wave::WaveSystem;
 use crate::webgl::WebGl2Renderer;
@@ -954,6 +954,22 @@ pub fn engine_step_and_render(raw_dt: f32) -> String {
         renderer.build_scene(registry, state, anim_time, alpha);
         renderer.flush();
 
+        let live_soldiers: Vec<serde_json::Value> = state
+            .soldiers
+            .iter()
+            .map(|s| {
+                serde_json::json!({
+                    "id": s.id,
+                    "hp": s.hp,
+                    "maxHp": s.max_hp,
+                    "state": s.state,
+                    "respawnTimer": s.respawn_timer,
+                    "x": s.x,
+                    "y": s.y,
+                })
+            })
+            .collect();
+
         serde_json::to_string(&serde_json::json!({
             "gold": state.gold,
             "lives": state.lives,
@@ -970,6 +986,7 @@ pub fn engine_step_and_render(raw_dt: f32) -> String {
             "animTime": anim_time,
             "alpha": alpha,
             "floatingTexts": &state.floating_texts,
+            "soldiers": live_soldiers,
         }))
         .unwrap_or_default()
     })
@@ -988,7 +1005,36 @@ pub fn engine_sync_towers_and_soldiers(
         CTX.with(|c| {
             let mut ctx = c.borrow_mut();
             ctx.state.towers = towers;
-            ctx.state.soldiers = soldiers;
+
+            // Retain living soldiers whose towers still exist (e.g. if a summon tower was sold)
+            let valid_tower_ids: std::collections::HashSet<String> =
+                ctx.state.towers.iter().map(|t| t.id.clone()).collect();
+            ctx.state.soldiers.retain(|s| valid_tower_ids.contains(&s.tower_id));
+
+            for incoming in soldiers {
+                if let Some(existing) = ctx.state.soldiers.iter_mut().find(|s| s.id == incoming.id) {
+                    existing.tier = incoming.tier;
+                    existing.branch = incoming.branch;
+                    existing.base_damage = incoming.base_damage;
+                    existing.base_max_hp = incoming.base_max_hp;
+                    existing.max_hp = incoming.max_hp;
+                    existing.armor = incoming.armor;
+                    existing.magic_resist = incoming.magic_resist;
+                    existing.element = incoming.element;
+                    existing.secondary_element = incoming.secondary_element;
+                    existing.combat_mode = incoming.combat_mode;
+
+                    let rp_changed = (existing.rally_point.x - incoming.rally_point.x).abs() > 1.0
+                        || (existing.rally_point.y - incoming.rally_point.y).abs() > 1.0;
+                    if rp_changed {
+                        existing.rally_point = incoming.rally_point;
+                        existing.state = SoldierState::MovingToRally;
+                    }
+                } else {
+                    ctx.state.soldiers.push(incoming);
+                }
+            }
+
             if let Some(g) = gold {
                 ctx.state.gold = g;
             }
