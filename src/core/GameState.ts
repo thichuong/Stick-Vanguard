@@ -1034,6 +1034,7 @@ export class GameState {
    * Change Rally Point for Summon towers (Barracks, Dragon Nest, Fairy Tree, Heroic Altar)
    */
   public setRallyPoint(towerId: string, targetX: number, targetY: number): boolean {
+    this.isSettingRallyPoint = false;
     const tower = this.towers.find((t) => t.id === towerId);
     const validSummon =
       tower &&
@@ -1047,6 +1048,7 @@ export class GameState {
     if (dist > tower.range) {
       SoundSystem.playError();
       this.addFloatingText('Ngoài phạm vi điều động!', targetX, targetY, '#ef4444');
+      this.syncToWasm();
       return false;
     }
 

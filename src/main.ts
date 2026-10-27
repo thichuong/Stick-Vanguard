@@ -272,6 +272,9 @@ class GameApp {
 
       if (this.state.isSettingRallyPoint && this.state.selectedTowerId) {
         this.state.setRallyPoint(this.state.selectedTowerId, clickX, clickY);
+        this.state.isSettingRallyPoint = false;
+        WasmBridge.getInstance().setSelectedTower(this.state.selectedTowerId, false);
+        this.uiManager.updateHotbarVisuals();
         return;
       }
 

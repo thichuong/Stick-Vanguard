@@ -876,17 +876,6 @@ impl WebGl2Renderer {
             if let Some(ref sel_id) = state.selected_tower_id {
                 if let Some(t) = state.towers.iter().find(|t| &t.id == sel_id) {
                     self.draw_ring(t.x, t.y, t.range, 2.0, 36, [0.918, 0.702, 0.031, 0.65]);
-                    self.draw_dashed_line(
-                        t.x,
-                        t.y,
-                        state.mouse_pos.x,
-                        state.mouse_pos.y,
-                        2.0,
-                        5.0,
-                        5.0,
-                        0.0,
-                        [0.918, 0.702, 0.031, 0.75],
-                    );
                 }
             }
         }
@@ -909,20 +898,22 @@ impl WebGl2Renderer {
                 self.draw_circle(tower.x, tower.y, tower.range, 36, [1.0, 1.0, 1.0, 0.05]);
                 self.draw_ring(tower.x, tower.y, tower.range, 1.5, 36, [1.0, 1.0, 1.0, 0.38]);
 
-                if tower.tower_type.is_summon() {
+                if tower.tower_type.is_summon() && !state.is_setting_rally_point {
                     if let Some(rp) = tower.rally_point {
-                        self.draw_dashed_line(
-                            tower.x,
-                            tower.y,
-                            rp.x,
-                            rp.y,
-                            2.0,
-                            5.0,
-                            5.0,
-                            0.0,
-                            [0.918, 0.702, 0.031, 0.75],
-                        );
-                        self.draw_circle(rp.x, rp.y, 6.0, 12, parse_hex_color("#eab308", 0.85));
+                        if rp.x > 0.0 && rp.y > 0.0 {
+                            self.draw_dashed_line(
+                                tower.x,
+                                tower.y,
+                                rp.x,
+                                rp.y,
+                                2.0,
+                                5.0,
+                                5.0,
+                                0.0,
+                                [0.918, 0.702, 0.031, 0.75],
+                            );
+                            self.draw_circle(rp.x, rp.y, 6.0, 12, parse_hex_color("#eab308", 0.85));
+                        }
                     }
                 }
 

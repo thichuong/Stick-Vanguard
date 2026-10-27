@@ -1319,6 +1319,7 @@ impl RustGameState {
         target_x: f32,
         target_y: f32,
     ) -> bool {
+        self.is_setting_rally_point = false;
         let Some(t_idx) = self.towers.iter().position(|t| t.id == tower_id) else {
             return false;
         };

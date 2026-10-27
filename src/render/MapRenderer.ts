@@ -499,34 +499,36 @@ export class MapRenderer {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText(`TẦM ĐÁNH: ${range}px`, selectedTower.x, selectedTower.y - range - 8);
 
-        // If Summon tower (Barracks, Dragon Nest, Fairy Tree, Heroic Altar), draw line to Rally Point
+        // If Summon tower (Barracks, Dragon Nest, Fairy Tree, Heroic Altar), draw line to established Rally Point
         const isSummon =
           selectedTower.type === 'BARRACKS' ||
           selectedTower.type === 'DRAGON_NEST' ||
           selectedTower.type === 'FAIRY_TREE' ||
           selectedTower.type === 'HEROIC_ALTAR';
 
-        if (isSummon && selectedTower.rallyPoint) {
-          ctx.beginPath();
-          ctx.moveTo(selectedTower.x, selectedTower.y);
-          ctx.lineTo(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y);
-          ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
-          ctx.lineWidth = 2.0;
-          ctx.setLineDash([5, 5]);
-          ctx.stroke();
+        if (isSummon && selectedTower.rallyPoint && !state.isSettingRallyPoint) {
+          if (selectedTower.rallyPoint.x > 0 && selectedTower.rallyPoint.y > 0) {
+            ctx.beginPath();
+            ctx.moveTo(selectedTower.x, selectedTower.y);
+            ctx.lineTo(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y);
+            ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
+            ctx.lineWidth = 2.0;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
 
-          // Rally flag / marker
-          ctx.beginPath();
-          ctx.arc(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y, 8, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
-          ctx.fill();
-          ctx.strokeStyle = '#eab308';
-          ctx.lineWidth = 2.0;
-          ctx.stroke();
-          drawUiSvgOnCanvas(ctx, 'FLAG', selectedTower.rallyPoint.x - 7, selectedTower.rallyPoint.y - 18, 14, 14);
+            // Rally flag / marker
+            ctx.beginPath();
+            ctx.arc(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
+            ctx.fill();
+            ctx.strokeStyle = '#eab308';
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+            drawUiSvgOnCanvas(ctx, 'FLAG', selectedTower.rallyPoint.x - 7, selectedTower.rallyPoint.y - 18, 14, 14);
+          }
         }
 
-        // Setting Rally Point: line from tower to mouse cursor
+        // Setting Rally Point: line from tower to mouse cursor only
         if (state.isSettingRallyPoint && mousePos.x > 0 && mousePos.y > 0) {
           const dist = Math.hypot(mousePos.x - selectedTower.x, mousePos.y - selectedTower.y);
           const inRange = dist <= selectedTower.range;
@@ -536,6 +538,15 @@ export class MapRenderer {
           ctx.strokeStyle = inRange ? 'rgba(34, 197, 94, 0.85)' : 'rgba(239, 68, 68, 0.85)';
           ctx.lineWidth = 2.0;
           ctx.setLineDash([4, 4]);
+          ctx.stroke();
+
+          // Target reticle at cursor
+          ctx.beginPath();
+          ctx.arc(mousePos.x, mousePos.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = inRange ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+          ctx.fill();
+          ctx.strokeStyle = inRange ? '#22c55e' : '#ef4444';
+          ctx.lineWidth = 2.0;
           ctx.stroke();
 
           ctx.font = 'bold 12px sans-serif';
