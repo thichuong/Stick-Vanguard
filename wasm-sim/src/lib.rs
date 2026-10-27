@@ -21,7 +21,7 @@ use crate::state::RustGameState;
 use crate::systems::RustSimulationEngine;
 use crate::types::{
     DamagePayload, ElementType, ElementalProfile, EnemyEntity, SoldierCombatMode, SoldierEntity,
-    StatusEffectPayload, TargetingFilter, TowerBranch, TowerType,
+    StatusEffectPayload, TargetingFilter, TowerBranch, TowerEntity, TowerType,
 };
 use crate::wave::WaveSystem;
 use crate::webgl::WebGl2Renderer;
@@ -936,6 +936,148 @@ pub fn render_custom_state_webgl(state_json: &str, anim_time: f32, alpha: f32) -
 }
 
 #[wasm_bindgen]
+pub fn engine_step_and_render(raw_dt: f32) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.update(raw_dt);
+
+        let anim_time = ctx.sim.total_anim_time;
+        let alpha = ctx.sim.interpolation_alpha;
+        let EngineContext {
+            ref registry,
+            ref state,
+            ref mut renderer,
+            ref wave,
+            ..
+        } = *ctx;
+
+        renderer.build_scene(registry, state, anim_time, alpha);
+        renderer.flush();
+
+        serde_json::to_string(&serde_json::json!({
+            "gold": state.gold,
+            "lives": state.lives,
+            "maxLives": state.max_lives,
+            "currentWaveIndex": wave.current_wave_index,
+            "totalWaves": wave.custom_total_waves,
+            "isWaveInProgress": wave.is_wave_in_progress,
+            "isGameOver": state.is_game_over,
+            "isVictory": state.is_victory,
+            "enemyCount": state.enemies.len(),
+            "towerCount": state.towers.len(),
+            "gameSpeed": state.game_speed,
+            "isPaused": state.is_paused,
+            "animTime": anim_time,
+            "alpha": alpha,
+            "floatingTexts": &state.floating_texts,
+        }))
+        .unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_sync_towers_and_soldiers(
+    towers_json: &str,
+    soldiers_json: &str,
+    gold: Option<i32>,
+    lives: Option<i32>,
+) -> bool {
+    let towers_res: Result<Vec<TowerEntity>, _> = serde_json::from_str(towers_json);
+    let soldiers_res: Result<Vec<SoldierEntity>, _> = serde_json::from_str(soldiers_json);
+    if let (Ok(towers), Ok(soldiers)) = (towers_res, soldiers_res) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            ctx.state.towers = towers;
+            ctx.state.soldiers = soldiers;
+            if let Some(g) = gold {
+                ctx.state.gold = g;
+            }
+            if let Some(l) = lives {
+                ctx.state.lives = l;
+            }
+            ctx.state.recalculate_tower_buffs();
+        });
+        true
+    } else {
+        false
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_call_wave_early() -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        if ctx.state.is_game_over || ctx.state.is_victory {
+            return serde_json::json!({ "ok": false }).to_string();
+        }
+        ctx.audio.play_wave_start();
+        let mut bonus_gold = 0;
+        if ctx.wave.is_wave_in_progress {
+            if ctx.wave.current_wave_index + 1 < ctx.wave.custom_total_waves {
+                let base_bonus = 25.0;
+                let bonus = ((base_bonus * ctx.state.gold_multiplier).round() as i32).max(1);
+                ctx.state.gold += bonus;
+                bonus_gold = bonus;
+                ctx.state.add_floating_text(
+                    &format!("+{} 🪙 Gọi đợt sớm!", bonus),
+                    500.0,
+                    80.0,
+                    "#facc15",
+                    15.0,
+                );
+                ctx.wave.current_wave_index += 1;
+                let next_wave = ctx.wave.current_wave_index + 1;
+                let EngineContext { ref registry, ref state, ref mut wave, .. } = *ctx;
+                wave.start_wave(registry, &state.current_map, Some(next_wave));
+            }
+        } else {
+            if ctx.wave.current_wave_index < ctx.wave.custom_total_waves {
+                let wave_num = ctx.wave.current_wave_index + 1;
+                let EngineContext { ref registry, ref state, ref mut wave, .. } = *ctx;
+                wave.start_wave(registry, &state.current_map, Some(wave_num));
+            }
+        }
+        serde_json::json!({
+            "ok": true,
+            "bonusGold": bonus_gold,
+            "currentWaveIndex": ctx.wave.current_wave_index,
+            "isWaveInProgress": ctx.wave.is_wave_in_progress,
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_set_game_settings(custom_waves: usize, gold_mult: f32, dmg_mult: f32, speed: f32, paused: bool) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.custom_total_waves = custom_waves;
+        ctx.wave.set_total_waves(custom_waves);
+        ctx.state.gold_multiplier = gold_mult;
+        ctx.state.damage_multiplier = dmg_mult;
+        ctx.state.game_speed = speed;
+        ctx.state.is_paused = paused;
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_get_tower_info(tower_id: &str) -> String {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        if let Some(t) = ctx.state.towers.iter().find(|t| t.id == tower_id) {
+            serde_json::to_string(t).unwrap_or_default()
+        } else {
+            String::new()
+        }
+    })
+}
+
+#[wasm_bindgen]
+pub fn audio_init() {
+    CTX.with(|c| c.borrow_mut().audio.init());
+}
+
+#[wasm_bindgen]
 pub fn engine_set_map(map_id: &str) -> String {
     CTX.with(|c| {
         let mut ctx = c.borrow_mut();
@@ -1796,5 +1938,19 @@ mod tests {
             assert!(ok);
             assert!(!ctx.renderer.color_vertices.is_empty());
         }
+    }
+
+    #[test]
+    fn test_engine_step_and_render_and_sync() {
+        let json_out = engine_step_and_render(0.016);
+        assert!(!json_out.is_empty());
+        assert!(json_out.contains("gold"));
+        assert!(json_out.contains("lives"));
+
+        let ok = engine_sync_towers_and_soldiers("[]", "[]", Some(500), Some(20));
+        assert!(ok);
+
+        let call_res = engine_call_wave_early();
+        assert!(call_res.contains("currentWaveIndex"));
     }
 }

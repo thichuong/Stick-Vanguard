@@ -14,6 +14,33 @@ import {
   ELEMENT_NAMES
 } from '../config/elements.config.js';
 
+export interface StepRenderOutput {
+  gold: number;
+  lives: number;
+  maxLives: number;
+  currentWaveIndex: number;
+  totalWaves: number;
+  isWaveInProgress: boolean;
+  isGameOver: boolean;
+  isVictory: boolean;
+  enemyCount: number;
+  towerCount: number;
+  gameSpeed: number;
+  isPaused: boolean;
+  animTime: number;
+  alpha: number;
+  floatingTexts: Array<{
+    id: string;
+    text: string;
+    x: number;
+    y: number;
+    color: string;
+    lifeTime: number;
+    maxLifeTime: number;
+    size: number;
+  }>;
+}
+
 export class WasmBridge {
   private static instance: WasmBridge | null = null;
   private static wasmLoadedGlobally = false;
@@ -193,6 +220,86 @@ export class WasmBridge {
   public renderCustomStateWebGl(stateJson: string, animTime: number, alpha: number): number {
     if (!this.isReady) return 0;
     return wasmOps.render_custom_state_webgl(stateJson, animTime, alpha);
+  }
+
+  public stepAndRender(rawDt: number): StepRenderOutput | null {
+    if (!this.isReady) return null;
+    const jsonStr = wasmOps.engine_step_and_render(rawDt);
+    if (!jsonStr) return null;
+    try {
+      return JSON.parse(jsonStr) as StepRenderOutput;
+    } catch {
+      return null;
+    }
+  }
+
+  public syncTowersAndSoldiers(
+    towers: any[],
+    soldiers: any[],
+    gold?: number,
+    lives?: number
+  ): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.engine_sync_towers_and_soldiers(
+      JSON.stringify(towers),
+      JSON.stringify(soldiers),
+      gold,
+      lives
+    );
+  }
+
+  public callWaveEarly(): {
+    ok: boolean;
+    bonusGold?: number;
+    currentWaveIndex?: number;
+    isWaveInProgress?: boolean;
+  } | null {
+    if (!this.isReady) return null;
+    const resStr = wasmOps.engine_call_wave_early();
+    if (!resStr) return null;
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return null;
+    }
+  }
+
+  public setMap(mapId: string): boolean {
+    if (!this.isReady) return false;
+    const res = wasmOps.engine_set_map(mapId);
+    return !!res;
+  }
+
+  public resetEngine(): void {
+    if (!this.isReady) return;
+    wasmOps.engine_reset();
+  }
+
+  public setGameSettings(
+    customWaves: number,
+    goldMult: number,
+    dmgMult: number,
+    speed: number,
+    paused: boolean = false
+  ): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_game_settings(customWaves, goldMult, dmgMult, speed, paused);
+  }
+
+  public getTowerInfo(towerId: string): any | null {
+    if (!this.isReady) return null;
+    const json = wasmOps.engine_get_tower_info(towerId);
+    if (!json) return null;
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }
+
+  public initAudio(): void {
+    if (!this.isReady) return;
+    wasmOps.audio_init();
   }
 
   public isAvailable(): boolean {

@@ -5,6 +5,8 @@ export function audio_clear_recorded_events(): void;
 
 export function audio_get_recorded_events_json(): string;
 
+export function audio_init(): void;
+
 export function audio_play_base_damaged(is_boss: boolean): void;
 
 export function audio_play_build(): void;
@@ -57,11 +59,15 @@ export function engine_build_tower(slot_id: string, tower_type_str: string): str
 
 export function engine_build_tower_at(x: number, y: number, tower_type_str: string): string;
 
+export function engine_call_wave_early(): string;
+
 export function engine_downgrade_or_destroy_tower(tower_id: string): string;
 
 export function engine_get_interpolation_alpha(): number;
 
 export function engine_get_state_json(): string;
+
+export function engine_get_tower_info(tower_id: string): string;
 
 export function engine_get_wave_status_json(): string;
 
@@ -73,6 +79,8 @@ export function engine_sell_tower(tower_id: string): string;
 
 export function engine_set_barracks_mode(tower_id: string, mode_str: string): string;
 
+export function engine_set_game_settings(custom_waves: number, gold_mult: number, dmg_mult: number, speed: number, paused: boolean): void;
+
 export function engine_set_map(map_id: string): string;
 
 export function engine_set_rally_point(tower_id: string, x: number, y: number): string;
@@ -82,6 +90,10 @@ export function engine_set_state_json(json: string): boolean;
 export function engine_set_tower_element(tower_id: string, element_str: string, slot_idx: number): string;
 
 export function engine_start_wave(wave_num?: number | null): string;
+
+export function engine_step_and_render(raw_dt: number): string;
+
+export function engine_sync_towers_and_soldiers(towers_json: string, soldiers_json: string, gold?: number | null, lives?: number | null): boolean;
 
 export function engine_tick(dt: number): string;
 
@@ -194,18 +206,23 @@ export interface InitOutput {
     readonly audio_set_enabled: (a: number) => void;
     readonly engine_build_tower: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_build_tower_at: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly engine_call_wave_early: () => [number, number];
     readonly engine_downgrade_or_destroy_tower: (a: number, b: number) => [number, number];
     readonly engine_get_state_json: () => [number, number];
+    readonly engine_get_tower_info: (a: number, b: number) => [number, number];
     readonly engine_get_wave_status_json: () => [number, number];
     readonly engine_handle_soldier_death: (a: number, b: number) => [number, number];
     readonly engine_reset: () => [number, number];
     readonly engine_sell_tower: (a: number, b: number) => [number, number];
     readonly engine_set_barracks_mode: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly engine_set_game_settings: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly engine_set_map: (a: number, b: number) => [number, number];
     readonly engine_set_rally_point: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_set_state_json: (a: number, b: number) => number;
     readonly engine_set_tower_element: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly engine_start_wave: (a: number) => [number, number];
+    readonly engine_step_and_render: (a: number) => [number, number];
+    readonly engine_sync_towers_and_soldiers: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly engine_tick: (a: number) => [number, number];
     readonly engine_update: (a: number) => [number, number];
     readonly engine_upgrade_tower: (a: number, b: number, c: number, d: number) => [number, number];
@@ -247,6 +264,7 @@ export interface InitOutput {
     readonly audio_set_volume: (a: number) => void;
     readonly query_radius: (a: number, b: number, c: number) => number;
     readonly clear_enemies: () => void;
+    readonly audio_init: () => void;
     readonly audio_play_game_over: () => void;
     readonly audio_play_upgrade: () => void;
     readonly audio_play_victory: () => void;

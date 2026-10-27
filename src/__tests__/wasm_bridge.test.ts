@@ -183,6 +183,33 @@ describe('WasmBridge Core & Fallback Architecture', () => {
 
       const dragonRenderOk = ops.render_codex_soldier_webgl('DRAGON_NEST', 'MELEE', 1.5, 240, 180);
       expect(dragonRenderOk).toBe(true);
+
+      // Test New Pure Rust Step and Render Loop API
+      const stepOut = bridge.stepAndRender(0.016);
+      expect(stepOut).not.toBeNull();
+      expect(stepOut!.gold).toBeDefined();
+      expect(stepOut!.lives).toBeDefined();
+      expect(stepOut!.currentWaveIndex).toBeDefined();
+      expect(Array.isArray(stepOut!.floatingTexts)).toBe(true);
+
+      // Test syncTowersAndSoldiers
+      const syncOk = bridge.syncTowersAndSoldiers(
+        [{ id: 't-test', x: 200, y: 200, type: 'ARCHER', tier: 1, element: 'PHYSICAL', placement: 'ROADSIDE', totalInvested: 100 }],
+        [],
+        450,
+        18
+      );
+      expect(syncOk).toBe(true);
+
+      // Test getTowerInfo
+      const towerInfo = bridge.getTowerInfo('t-test');
+      expect(towerInfo).not.toBeNull();
+      expect(towerInfo.id).toBe('t-test');
+
+      // Test callWaveEarly
+      const earlyRes = bridge.callWaveEarly();
+      expect(earlyRes).not.toBeNull();
+      expect(earlyRes!.ok).toBe(true);
     }
   });
 });

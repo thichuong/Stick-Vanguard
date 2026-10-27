@@ -20,6 +20,10 @@ export function audio_get_recorded_events_json() {
     }
 }
 
+export function audio_init() {
+    wasm.audio_init();
+}
+
 /**
  * @param {boolean} is_boss
  */
@@ -204,6 +208,22 @@ export function engine_build_tower_at(x, y, tower_type_str) {
 }
 
 /**
+ * @returns {string}
+ */
+export function engine_call_wave_early() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.engine_call_wave_early();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
  * @param {string} tower_id
  * @returns {string}
  */
@@ -243,6 +263,25 @@ export function engine_get_state_json() {
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
+ * @param {string} tower_id
+ * @returns {string}
+ */
+export function engine_get_tower_info(tower_id) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(tower_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.engine_get_tower_info(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
 }
 
@@ -339,6 +378,17 @@ export function engine_set_barracks_mode(tower_id, mode_str) {
 }
 
 /**
+ * @param {number} custom_waves
+ * @param {number} gold_mult
+ * @param {number} dmg_mult
+ * @param {number} speed
+ * @param {boolean} paused
+ */
+export function engine_set_game_settings(custom_waves, gold_mult, dmg_mult, speed, paused) {
+    wasm.engine_set_game_settings(custom_waves, gold_mult, dmg_mult, speed, paused);
+}
+
+/**
  * @param {string} map_id
  * @returns {string}
  */
@@ -427,6 +477,39 @@ export function engine_start_wave(wave_num) {
     } finally {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
+}
+
+/**
+ * @param {number} raw_dt
+ * @returns {string}
+ */
+export function engine_step_and_render(raw_dt) {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.engine_step_and_render(raw_dt);
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
+ * @param {string} towers_json
+ * @param {string} soldiers_json
+ * @param {number | null} [gold]
+ * @param {number | null} [lives]
+ * @returns {boolean}
+ */
+export function engine_sync_towers_and_soldiers(towers_json, soldiers_json, gold, lives) {
+    const ptr0 = passStringToWasm0(towers_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(soldiers_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.engine_sync_towers_and_soldiers(ptr0, len0, ptr1, len1, isLikeNone(gold) ? Number.MAX_SAFE_INTEGER : (gold) >> 0, isLikeNone(lives) ? Number.MAX_SAFE_INTEGER : (lives) >> 0);
+    return ret !== 0;
 }
 
 /**

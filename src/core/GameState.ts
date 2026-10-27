@@ -32,6 +32,7 @@ import {
 import { StorageService } from './StorageService.js';
 import { SoundSystem } from '../systems/SoundSystem.js';
 import { particlePool, floatingTextPool } from './ObjectPool.js';
+import { WasmBridge } from './WasmBridge.js';
 
 export class GameState {
   public gold: number = 320;
@@ -119,6 +120,18 @@ export class GameState {
     this.projectiles = [];
     this.floatingTexts = [];
     this.particles = [];
+    this.syncToWasm();
+  }
+
+  public syncToWasm(): void {
+    try {
+      const bridge = WasmBridge.getInstance();
+      if (bridge.isAvailable()) {
+        bridge.syncTowersAndSoldiers(this.towers, this.soldiers, this.gold, this.lives);
+      }
+    } catch {
+      // Ignored if wasm is not available
+    }
   }
 
   public getSelectedSlot(): TowerSlot | null {
@@ -467,6 +480,7 @@ export class GameState {
 
     SoundSystem.playBuild();
     this.addFloatingText(`-${bp.cost} 🪙`, x, y - 15, '#eab308');
+    this.syncToWasm();
     return true;
   }
 
@@ -762,6 +776,7 @@ export class GameState {
 
     SoundSystem.playUpgrade();
     this.addFloatingText(`CẤP ${nextTier}! -${nextBp.cost} 🪙`, tower.x, tower.y - 20, '#38bdf8');
+    this.syncToWasm();
     return true;
   }
 
@@ -852,6 +867,7 @@ export class GameState {
       SoundSystem.playTowerDamaged('DOWNGRADED');
       this.addFloatingText(`⬇️ RƠI CẤP (CẤP ${prevTier})!`, tower.x, tower.y - 20, '#ef4444', 16);
       this.addExplosionParticles(tower.x, tower.y, '#ef4444', 12);
+      this.syncToWasm();
       return 'DOWNGRADED';
     }
 
@@ -876,6 +892,7 @@ export class GameState {
     SoundSystem.playTowerDamaged('DESTROYED');
     this.addFloatingText('💥 PHÁ HỦY THÁP!', x, y - 20, '#dc2626', 18);
     this.addExplosionParticles(x, y, '#dc2626', 22);
+    this.syncToWasm();
     return 'DESTROYED';
   }
 
@@ -923,6 +940,7 @@ export class GameState {
     this.recalculateTowerBuffs();
     SoundSystem.playImbue();
     this.addFloatingText(`✨ Thuộc tính ${name}! -${cost} 🪙`, tower.x, tower.y - 20, '#facc15');
+    this.syncToWasm();
     return true;
   }
 
@@ -974,6 +992,7 @@ export class GameState {
       '#38bdf8'
     );
     SoundSystem.playRally();
+    this.syncToWasm();
     return true;
   }
 
@@ -1007,6 +1026,7 @@ export class GameState {
 
     SoundSystem.playSell();
     this.addFloatingText(`+${refund} 🪙 Bán tháp`, tower.x, tower.y, '#22c55e');
+    this.syncToWasm();
     return true;
   }
 
@@ -1052,6 +1072,7 @@ export class GameState {
     this.isSettingRallyPoint = false;
     SoundSystem.playRally();
     this.addFloatingText('🚩 Đã đổi điểm tập kết!', targetX, targetY - 10, '#eab308');
+    this.syncToWasm();
     return true;
   }
 

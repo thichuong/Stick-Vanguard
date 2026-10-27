@@ -79,6 +79,15 @@ class GameApp {
     bridge.init().then((active) => {
       if (active) {
         this.simEngine.onMapChanged();
+        bridge.setMap(this.state.currentMapId);
+        bridge.setGameSettings(
+          this.state.customTotalWaves,
+          this.state.goldMultiplier,
+          this.state.damageMultiplier,
+          this.state.gameSpeed,
+          this.state.isPaused
+        );
+        bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
         if (this.gl) {
           this.webglReady = bridge.initWebGlRenderer(this.gl);
           if (this.webglReady) {
@@ -112,7 +121,14 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
-    WasmBridge.getInstance().clearAll();
+    const bridge = WasmBridge.getInstance();
+    bridge.clearAll();
+    if (bridge.isAvailable()) {
+      bridge.resetEngine();
+      bridge.setMap(this.state.currentMapId);
+      bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
+      bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
+    }
     this.simEngine.onMapChanged();
     MapRenderer.clearCache();
 
@@ -156,6 +172,15 @@ class GameApp {
 
     SoundSystem.playWaveStart();
 
+    const bridge = WasmBridge.getInstance();
+    if (this.gl && this.webglReady && bridge.isAvailable()) {
+      const res = bridge.callWaveEarly();
+      if (res && res.bonusGold) {
+        this.state.gold += res.bonusGold;
+      }
+      return;
+    }
+
     if (this.waveSystem.isWaveInProgress) {
       if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
         return;
@@ -196,7 +221,14 @@ class GameApp {
     this.navSystem.setMap(this.state.currentMap);
     this.waveSystem.setMap(this.state.currentMap);
     this.waveSystem.setTotalWaves(keepWaves);
-    WasmBridge.getInstance().clearAll();
+    const bridge = WasmBridge.getInstance();
+    bridge.clearAll();
+    if (bridge.isAvailable()) {
+      bridge.resetEngine();
+      bridge.setMap(this.state.currentMapId);
+      bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
+      bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
+    }
     this.simEngine.onMapChanged();
     MapRenderer.clearCache();
   }
@@ -328,6 +360,43 @@ class GameApp {
     const rawDt = (currentTime - this.lastTime) / 1000;
     this.lastTime = currentTime;
 
+    const bridge = WasmBridge.getInstance();
+
+    // Primary High-Performance Path: Pure Rust Simulation Engine & WebGL2 Hardware Render
+    if (this.gl && this.webglReady && bridge.isAvailable()) {
+      bridge.setGameSettings(
+        this.state.customTotalWaves,
+        this.state.goldMultiplier,
+        this.state.damageMultiplier,
+        this.state.gameSpeed,
+        this.state.isPaused
+      );
+
+      const step = bridge.stepAndRender(rawDt);
+      if (step) {
+        this.state.gold = step.gold;
+        this.state.lives = step.lives;
+        this.state.isGameOver = step.isGameOver;
+        this.state.isVictory = step.isVictory;
+
+        if (this.overlayCtx && this.overlayCanvas) {
+          this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+          MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, step.animTime);
+          TowerRenderer.renderFloatingTexts(this.overlayCtx, step.floatingTexts as any);
+        }
+
+        this.uiManager.updateHUD(
+          step.currentWaveIndex + 1,
+          step.totalWaves,
+          step.isWaveInProgress
+        );
+
+        requestAnimationFrame((t) => this.loop(t));
+        return;
+      }
+    }
+
+    // Fallback Path: 2D Canvas & TS Simulation Engine (when WebGL2 or WASM is unavailable)
     this.simEngine.update(rawDt);
 
     this.render(this.simEngine.getInterpolationAlpha());
@@ -343,20 +412,6 @@ class GameApp {
 
   private render(alpha: number = 1.0): void {
     const animTime = this.simEngine.getTotalAnimTime();
-    const bridge = WasmBridge.getInstance();
-
-    // Primary Path: Rust WASM + WebGL2 Hardware Accelerated Renderer
-    if (this.gl && this.webglReady && bridge.isAvailable()) {
-      bridge.renderCustomStateWebGl(JSON.stringify(this.state), animTime, alpha);
-
-      if (this.overlayCtx && this.overlayCanvas) {
-        this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
-        MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, animTime);
-        TowerRenderer.renderFloatingTexts(this.overlayCtx, this.state.floatingTexts);
-      }
-      return;
-    }
-
     // Fallback Path: 2D Canvas Context (when WebGL2 or WASM is unavailable)
     const ctx = this.ctx || this.overlayCtx;
     if (!ctx) return;
