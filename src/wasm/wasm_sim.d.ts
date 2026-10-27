@@ -85,6 +85,8 @@ export function engine_set_map(map_id: string): string;
 
 export function engine_set_rally_point(tower_id: string, x: number, y: number): string;
 
+export function engine_set_selected_tower(tower_id: string | null | undefined, is_setting_rally: boolean): void;
+
 export function engine_set_state_json(json: string): boolean;
 
 export function engine_set_tower_element(tower_id: string, element_str: string, slot_idx: number): string;
@@ -218,6 +220,7 @@ export interface InitOutput {
     readonly engine_set_game_settings: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly engine_set_map: (a: number, b: number) => [number, number];
     readonly engine_set_rally_point: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly engine_set_selected_tower: (a: number, b: number, c: number) => void;
     readonly engine_set_state_json: (a: number, b: number) => number;
     readonly engine_set_tower_element: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly engine_start_wave: (a: number) => [number, number];

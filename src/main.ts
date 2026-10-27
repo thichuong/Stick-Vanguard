@@ -298,7 +298,11 @@ class GameApp {
         }
       }
 
-      if (clickedTower) return;
+      if (clickedTower) {
+        WasmBridge.getInstance().setSelectedTower(this.state.selectedTowerId, this.state.isSettingRallyPoint);
+        this.uiManager.updateHotbarVisuals();
+        return;
+      }
 
       let clickedSoldier = false;
       for (const soldier of this.state.soldiers) {
@@ -315,7 +319,11 @@ class GameApp {
         }
       }
 
-      if (clickedSoldier) return;
+      if (clickedSoldier) {
+        WasmBridge.getInstance().setSelectedTower(this.state.selectedTowerId, this.state.isSettingRallyPoint);
+        this.uiManager.updateHotbarVisuals();
+        return;
+      }
 
       const valTrap = this.state.validatePlacement(clickX, clickY, 'TRAP_GENERIC');
       const valTower = this.state.validatePlacement(clickX, clickY, 'TOWER_GENERIC');
@@ -371,6 +379,7 @@ class GameApp {
         this.state.gameSpeed,
         this.state.isPaused
       );
+      bridge.setSelectedTower(this.state.selectedTowerId, this.state.isSettingRallyPoint);
 
       const step = bridge.stepAndRender(rawDt);
       if (step) {

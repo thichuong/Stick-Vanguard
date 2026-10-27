@@ -461,6 +461,95 @@ export class MapRenderer {
         ctx.restore();
       }
     }
+
+    // 4. Selected tower range and rally point indicator
+    if (state.selectedTowerId && !activePlacementType && !selectedBuildPoint) {
+      const selectedTower = state.getSelectedTower();
+      if (selectedTower) {
+        ctx.save();
+
+        const isTrap = selectedTower.placement !== 'ROADSIDE';
+        const range = isTrap
+          ? (selectedTower.triggerRadius || selectedTower.range || 40)
+          : selectedTower.range;
+
+        // Animated dashed range circle
+        ctx.beginPath();
+        ctx.arc(selectedTower.x, selectedTower.y, range, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([8, 6]);
+        ctx.lineDashOffset = -animTime * 16;
+        ctx.stroke();
+
+        // Pulsing base ring around selected tower
+        const pulse = Math.sin(animTime * 6) * 2;
+        ctx.beginPath();
+        ctx.arc(selectedTower.x, selectedTower.y, 22 + pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+
+        // Range badge above the circle
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(`TẦM ĐÁNH: ${range}px`, selectedTower.x, selectedTower.y - range - 8);
+
+        // If Summon tower (Barracks, Dragon Nest, Fairy Tree, Heroic Altar), draw line to Rally Point
+        const isSummon =
+          selectedTower.type === 'BARRACKS' ||
+          selectedTower.type === 'DRAGON_NEST' ||
+          selectedTower.type === 'FAIRY_TREE' ||
+          selectedTower.type === 'HEROIC_ALTAR';
+
+        if (isSummon && selectedTower.rallyPoint) {
+          ctx.beginPath();
+          ctx.moveTo(selectedTower.x, selectedTower.y);
+          ctx.lineTo(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y);
+          ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([5, 5]);
+          ctx.stroke();
+
+          // Rally flag / marker
+          ctx.beginPath();
+          ctx.arc(selectedTower.rallyPoint.x, selectedTower.rallyPoint.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
+          ctx.fill();
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 2.0;
+          ctx.stroke();
+          drawUiSvgOnCanvas(ctx, 'FLAG', selectedTower.rallyPoint.x - 7, selectedTower.rallyPoint.y - 18, 14, 14);
+        }
+
+        // Setting Rally Point: line from tower to mouse cursor
+        if (state.isSettingRallyPoint && mousePos.x > 0 && mousePos.y > 0) {
+          const dist = Math.hypot(mousePos.x - selectedTower.x, mousePos.y - selectedTower.y);
+          const inRange = dist <= selectedTower.range;
+          ctx.beginPath();
+          ctx.moveTo(selectedTower.x, selectedTower.y);
+          ctx.lineTo(mousePos.x, mousePos.y);
+          ctx.strokeStyle = inRange ? 'rgba(34, 197, 94, 0.85)' : 'rgba(239, 68, 68, 0.85)';
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillStyle = inRange ? '#22c55e' : '#ef4444';
+          ctx.fillText(
+            inRange ? 'BẤM ĐỂ ĐẶT ĐIỂM TẬP KẾT' : 'NGOÀI PHẠM VI ĐIỀU ĐỘNG',
+            mousePos.x,
+            mousePos.y - 18
+          );
+        }
+
+        ctx.restore();
+      }
+    }
   }
 
   /**

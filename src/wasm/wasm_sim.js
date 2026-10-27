@@ -429,6 +429,16 @@ export function engine_set_rally_point(tower_id, x, y) {
 }
 
 /**
+ * @param {string | null | undefined} tower_id
+ * @param {boolean} is_setting_rally
+ */
+export function engine_set_selected_tower(tower_id, is_setting_rally) {
+    var ptr0 = isLikeNone(tower_id) ? 0 : passStringToWasm0(tower_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = WASM_VECTOR_LEN;
+    wasm.engine_set_selected_tower(ptr0, len0, is_setting_rally);
+}
+
+/**
  * @param {string} json
  * @returns {boolean}
  */

@@ -34,6 +34,7 @@ export const engine_set_barracks_mode: (a: number, b: number, c: number, d: numb
 export const engine_set_game_settings: (a: number, b: number, c: number, d: number, e: number) => void;
 export const engine_set_map: (a: number, b: number) => [number, number];
 export const engine_set_rally_point: (a: number, b: number, c: number, d: number) => [number, number];
+export const engine_set_selected_tower: (a: number, b: number, c: number) => void;
 export const engine_set_state_json: (a: number, b: number) => number;
 export const engine_set_tower_element: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const engine_start_wave: (a: number) => [number, number];

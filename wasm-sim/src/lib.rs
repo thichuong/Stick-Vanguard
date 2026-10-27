@@ -1073,6 +1073,15 @@ pub fn engine_get_tower_info(tower_id: &str) -> String {
 }
 
 #[wasm_bindgen]
+pub fn engine_set_selected_tower(tower_id: Option<String>, is_setting_rally: bool) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.selected_tower_id = tower_id;
+        ctx.state.is_setting_rally_point = is_setting_rally;
+    });
+}
+
+#[wasm_bindgen]
 pub fn audio_init() {
     CTX.with(|c| c.borrow_mut().audio.init());
 }

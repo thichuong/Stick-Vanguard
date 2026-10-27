@@ -297,6 +297,11 @@ export class WasmBridge {
     }
   }
 
+  public setSelectedTower(towerId: string | null, isSettingRally: boolean = false): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_selected_tower(towerId || undefined, isSettingRally);
+  }
+
   public initAudio(): void {
     if (!this.isReady) return;
     wasmOps.audio_init();
