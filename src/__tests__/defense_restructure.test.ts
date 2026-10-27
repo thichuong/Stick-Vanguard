@@ -133,10 +133,16 @@ describe('Defense System Restructure & New Summon Towers', () => {
     expect(dragon!.aoeRadius).toBeGreaterThan(0);
     expect(dragon!.element).toBe('DRAGON');
 
+    // Damage dragon to verify HP is refilled on upgrade
+    dragon!.hp = 20;
+    expect(dragon!.hp).toBe(20);
+
     // Upgrade Dragon Nest
     state.upgradeTower(dragonTower.id);
     expect(dragonTower.tier).toBe(2);
     expect(dragonTower.soldierIds!.length).toBe(1); // Still 1 dragon
+    expect(dragon!.hp).toBe(dragon!.maxHp); // Dragon HP auto-refilled to full maxHp on upgrade!
+    expect(dragon!.hp).toBeGreaterThan(20);
 
     // 2. Build Fairy Tree
     const buildSuccess2 = state.buildTowerAt(200, 200, 'FAIRY_TREE');
@@ -152,10 +158,22 @@ describe('Defense System Restructure & New Summon Towers', () => {
     expect(fairies[0].archetype).toBe('FAIRY');
     expect(fairies[0].canBlockAir).toBe(true);
 
+    // Damage fairy 0 and kill fairy 1 before upgrade
+    fairies[0].hp = 15;
+    fairies[1].state = 'DEAD';
+    fairies[1].hp = 0;
+
     // Upgrade Fairy Tree to Tier 2 -> 3 fairies
     state.upgradeTower(fairyTower.id);
     expect(fairyTower.tier).toBe(2);
     expect(fairyTower.soldierIds!.length).toBe(3);
+
+    // All fairies should have full HP and dead fairy revived
+    const fairiesT2 = state.soldiers.filter((s) => fairyTower.soldierIds!.includes(s.id));
+    for (const f of fairiesT2) {
+      expect(f.hp).toBe(f.maxHp);
+      expect(f.state).not.toBe('DEAD');
+    }
 
     // 3. Build Heroic Altar
     const buildSuccess3 = state.buildTowerAt(300, 300, 'HEROIC_ALTAR');

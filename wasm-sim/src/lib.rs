@@ -1013,6 +1013,8 @@ pub fn engine_sync_towers_and_soldiers(
 
             for incoming in soldiers {
                 if let Some(existing) = ctx.state.soldiers.iter_mut().find(|s| s.id == incoming.id) {
+                    let tier_changed = existing.tier != incoming.tier || existing.branch != incoming.branch;
+
                     existing.tier = incoming.tier;
                     existing.branch = incoming.branch;
                     existing.base_damage = incoming.base_damage;
@@ -1023,6 +1025,18 @@ pub fn engine_sync_towers_and_soldiers(
                     existing.element = incoming.element;
                     existing.secondary_element = incoming.secondary_element;
                     existing.combat_mode = incoming.combat_mode;
+
+                    // Fully restore soldier HP to max_hp upon upgrade (tier/branch change or incoming full hp)
+                    if tier_changed || incoming.hp >= incoming.max_hp {
+                        existing.hp = existing.max_hp;
+                        if existing.state == SoldierState::DEAD {
+                            existing.state = SoldierState::IDLE;
+                            existing.respawn_timer = 0.0;
+                            existing.x = existing.rally_point.x;
+                            existing.y = existing.rally_point.y;
+                            existing.target_pos = existing.rally_point;
+                        }
+                    }
 
                     let rp_changed = (existing.rally_point.x - incoming.rally_point.x).abs() > 1.0
                         || (existing.rally_point.y - incoming.rally_point.y).abs() > 1.0;
@@ -2004,6 +2018,29 @@ mod tests {
 
         let ok = engine_sync_towers_and_soldiers("[]", "[]", Some(500), Some(20));
         assert!(ok);
+
+        // Test soldier HP refill upon upgrade
+        let initial_soldier_json = r#"[{"id":"test-s1","towerId":"t1","name":"Lính 1","x":100.0,"y":100.0,"hp":30.0,"maxHp":100.0,"baseMaxHp":100.0,"damage":15.0,"baseDamage":15.0,"attackSpeed":1.0,"attackCooldown":0.0,"element":"PHYSICAL","state":"IDLE","rallyPoint":{"x":100.0,"y":100.0},"targetPos":{"x":100.0,"y":100.0},"armor":0.1,"baseArmor":0.1,"magicResist":0.1,"respawnTimer":0.0,"respawnDelay":7.0,"tier":1}]"#;
+        engine_sync_towers_and_soldiers(r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":1,"damage":15.0,"range":150.0,"fireRate":1.0,"totalInvested":100,"element":"PHYSICAL"}]"#, initial_soldier_json, None, None);
+
+        // Check it was added with 30 HP
+        CTX.with(|c| {
+            let s = c.borrow().state.soldiers.iter().find(|s| s.id == "test-s1").unwrap().clone();
+            assert_eq!(s.hp, 30.0);
+            assert_eq!(s.max_hp, 100.0);
+        });
+
+        // Upgrade tower to tier 2 with full max_hp (180)
+        let upgraded_soldier_json = r#"[{"id":"test-s1","towerId":"t1","name":"Lính 1","x":100.0,"y":100.0,"hp":180.0,"maxHp":180.0,"baseMaxHp":180.0,"damage":25.0,"baseDamage":25.0,"attackSpeed":1.0,"attackCooldown":0.0,"element":"PHYSICAL","state":"IDLE","rallyPoint":{"x":100.0,"y":100.0},"targetPos":{"x":100.0,"y":100.0},"armor":0.15,"baseArmor":0.15,"magicResist":0.1,"respawnTimer":0.0,"respawnDelay":7.0,"tier":2}]"#;
+        engine_sync_towers_and_soldiers(r#"[{"id":"t1","type":"BARRACKS","x":100.0,"y":100.0,"tier":2,"damage":25.0,"range":160.0,"fireRate":1.0,"totalInvested":220,"element":"PHYSICAL"}]"#, upgraded_soldier_json, None, None);
+
+        // Verify that existing soldier's HP is refilled to 180 (100% maxHp)
+        CTX.with(|c| {
+            let s = c.borrow().state.soldiers.iter().find(|s| s.id == "test-s1").unwrap().clone();
+            assert_eq!(s.hp, 180.0);
+            assert_eq!(s.max_hp, 180.0);
+            assert_eq!(s.tier, 2);
+        });
 
         let call_res = engine_call_wave_early();
         assert!(call_res.contains("currentWaveIndex"));

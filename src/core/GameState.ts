@@ -581,6 +581,13 @@ export class GameState {
             dragon.soldierRegen = nextBp.soldierRegen || 0;
             dragon.attackSpeed = nextBp.fireRate;
             dragon.rallyPoint = { ...rPoint };
+            if (dragon.state === 'DEAD') {
+              dragon.state = 'IDLE';
+              dragon.respawnTimer = 0;
+              dragon.x = dragon.rallyPoint.x;
+              dragon.y = dragon.rallyPoint.y;
+              dragon.targetPos = { ...dragon.rallyPoint };
+            }
           }
         }
       }
@@ -657,12 +664,22 @@ export class GameState {
             fairy.armor = fairy.baseArmor;
             fairy.soldierRegen = nextBp.soldierRegen || 0;
             fairy.attackSpeed = nextBp.fireRate;
+            if (fairy.state === 'DEAD') {
+              fairy.state = 'IDLE';
+              fairy.respawnTimer = 0;
+              fairy.x = rPoint.x;
+              fairy.y = rPoint.y;
+              fairy.targetPos = { x: rPoint.x, y: rPoint.y };
+            }
           }
           const offsetAngle = (i / totalCount) * Math.PI * 2;
           fairy.rallyPoint = {
             x: rPoint.x + Math.cos(offsetAngle) * 14,
             y: rPoint.y + Math.sin(offsetAngle) * 14
           };
+          if (fairy.state === 'IDLE') {
+            fairy.targetPos = { ...fairy.rallyPoint };
+          }
         }
       }
     } else if (tower.type === 'HEROIC_ALTAR') {
@@ -672,6 +689,21 @@ export class GameState {
       tower.spiritStatMultiplier = nextBp.spiritStatMultiplier;
       tower.spiritGhostRatio = nextBp.spiritGhostRatio ?? (nextBp.tier === 4 && nextBp.branch === 'B' ? 1.0 : 0.5);
       tower.aoeRadius = nextBp.aoeRadius;
+      if (tower.soldierIds) {
+        const mult = tower.spiritStatMultiplier || 1.0;
+        for (const sid of tower.soldierIds) {
+          const spirit = this.soldiers.find((s) => s.id === sid);
+          if (spirit && spirit.state !== 'DEAD') {
+            spirit.tier = nextTier;
+            spirit.branch = branch;
+            if (tower.spiritStatMultiplier) {
+              spirit.maxHp = Math.round(spirit.baseMaxHp * mult);
+              spirit.damage = Math.round(spirit.baseDamage * mult);
+            }
+            spirit.hp = spirit.maxHp;
+          }
+        }
+      }
     } else if (tower.type === 'BARRACKS') {
       const targetMaxSoldiers = nextBp.maxSoldiers || 3;
       tower.maxSoldiers = targetMaxSoldiers;
@@ -754,6 +786,13 @@ export class GameState {
             }
 
             soldier.hp = soldier.maxHp;
+            if (soldier.state === 'DEAD') {
+              soldier.state = 'IDLE';
+              soldier.respawnTimer = 0;
+              soldier.x = rPoint.x;
+              soldier.y = rPoint.y;
+              soldier.targetPos = { x: rPoint.x, y: rPoint.y };
+            }
           }
 
           const offsetAngle = (i / totalCount) * Math.PI * 2;
@@ -761,6 +800,9 @@ export class GameState {
             x: rPoint.x + Math.cos(offsetAngle) * 12,
             y: rPoint.y + Math.sin(offsetAngle) * 12
           };
+          if (soldier.state === 'IDLE') {
+            soldier.targetPos = { ...soldier.rallyPoint };
+          }
         }
       }
     }

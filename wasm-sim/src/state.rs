@@ -737,6 +737,13 @@ impl RustGameState {
                         dragon.soldier_regen = Some(next_bp.soldier_regen.unwrap_or(0.0));
                         dragon.attack_speed = next_bp.fire_rate;
                         dragon.rally_point = r_point;
+                        if dragon.state == SoldierState::DEAD {
+                            dragon.state = SoldierState::IDLE;
+                            dragon.respawn_timer = 0.0;
+                            dragon.x = r_point.x;
+                            dragon.y = r_point.y;
+                            dragon.target_pos = r_point;
+                        }
                     }
                 }
             }
@@ -817,12 +824,22 @@ impl RustGameState {
                             fairy.armor = fairy.base_armor;
                             fairy.soldier_regen = Some(next_bp.soldier_regen.unwrap_or(0.0));
                             fairy.attack_speed = next_bp.fire_rate;
+                            if fairy.state == SoldierState::DEAD {
+                                fairy.state = SoldierState::IDLE;
+                                fairy.respawn_timer = 0.0;
+                                fairy.x = r_point.x;
+                                fairy.y = r_point.y;
+                                fairy.target_pos = r_point;
+                            }
                         }
                         let offset_angle = (i as f32 / total_count as f32) * PI * 2.0;
                         fairy.rally_point = Vector2D {
                             x: r_point.x + offset_angle.cos() * 14.0,
                             y: r_point.y + offset_angle.sin() * 14.0,
                         };
+                        if fairy.state == SoldierState::IDLE {
+                            fairy.target_pos = fairy.rally_point;
+                        }
                     }
                 }
                 self.towers[t_idx].soldier_ids = Some(sids);
@@ -839,6 +856,19 @@ impl RustGameState {
                 };
                 tower.spirit_ghost_ratio = Some(next_bp.spirit_ghost_ratio.unwrap_or(default_ratio));
                 tower.aoe_radius = next_bp.aoe_radius;
+                let sids = tower.soldier_ids.clone().unwrap_or_default();
+                let mult = tower.spirit_stat_multiplier.unwrap_or(1.0);
+                for sid in sids {
+                    if let Some(spirit) = self.soldiers.iter_mut().find(|s| &s.id == &sid) {
+                        if spirit.state != SoldierState::DEAD {
+                            spirit.tier = next_tier;
+                            spirit.branch = branch;
+                            spirit.max_hp = (spirit.base_max_hp * mult).round();
+                            spirit.damage = (spirit.base_damage * mult).round();
+                            spirit.hp = spirit.max_hp;
+                        }
+                    }
+                }
             }
             TowerType::BARRACKS => {
                 let target_max = next_bp.max_soldiers.unwrap_or(3);
@@ -929,12 +959,22 @@ impl RustGameState {
                                 soldier.can_target_air = Some(false);
                             }
                             soldier.hp = soldier.max_hp;
+                            if soldier.state == SoldierState::DEAD {
+                                soldier.state = SoldierState::IDLE;
+                                soldier.respawn_timer = 0.0;
+                                soldier.x = r_point.x;
+                                soldier.y = r_point.y;
+                                soldier.target_pos = r_point;
+                            }
                         }
                         let offset_angle = (i as f32 / total_count as f32) * PI * 2.0;
                         soldier.rally_point = Vector2D {
                             x: r_point.x + offset_angle.cos() * 12.0,
                             y: r_point.y + offset_angle.sin() * 12.0,
                         };
+                        if soldier.state == SoldierState::IDLE {
+                            soldier.target_pos = soldier.rally_point;
+                        }
                     }
                 }
                 self.towers[t_idx].soldier_ids = Some(sids);
