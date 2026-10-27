@@ -107,6 +107,8 @@ export function get_render_stride(): number;
 
 export function has_enemy_finished(id: number): boolean;
 
+export function init_codex_webgl_renderer(gl_ctx: any): boolean;
+
 export function init_webgl_renderer(gl_ctx: any): boolean;
 
 export function init_world(width: number, height: number): void;
@@ -118,6 +120,10 @@ export function query_radius(x: number, y: number, radius: number): number;
 export function rebuild_spatial_grid(): void;
 
 export function remove_enemy(id: number): boolean;
+
+export function render_codex_enemy_webgl(enemy_type_id: string, anim_time: number, width: number, height: number): boolean;
+
+export function render_codex_soldier_webgl(soldier_type: string, stance: string, anim_time: number, width: number, height: number): boolean;
 
 export function render_custom_state_webgl(state_json: string, anim_time: number, alpha: number): number;
 
@@ -154,6 +160,8 @@ export function spawn_enemy(id: number, speed: number, path_distance: number, na
 export function step_simulation(dt: number, anim_time: number): void;
 
 export function update_enemy_status(id: number, speed: number, hp_ratio: number, state: number): void;
+
+export function upload_codex_webgl_atlas(image: any, manifest_json: string): boolean;
 
 export function upload_webgl_atlas(image: any, manifest_json: string): boolean;
 
@@ -209,10 +217,13 @@ export interface InitOutput {
     readonly get_render_buffer_ptr: () => number;
     readonly get_render_stride: () => number;
     readonly has_enemy_finished: (a: number) => number;
+    readonly init_codex_webgl_renderer: (a: any) => number;
     readonly init_webgl_renderer: (a: any) => number;
     readonly load_game_config: (a: number, b: number) => number;
     readonly rebuild_spatial_grid: () => void;
     readonly remove_enemy: (a: number) => number;
+    readonly render_codex_enemy_webgl: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly render_codex_soldier_webgl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
     readonly render_custom_state_webgl: (a: number, b: number, c: number, d: number) => number;
     readonly rules_apply_all_payload_effects: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rules_apply_damage_to_enemy: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
@@ -227,6 +238,7 @@ export interface InitOutput {
     readonly rules_get_crowd_control_modifiers: (a: number, b: number) => [number, number];
     readonly rules_update_status_effects: (a: number, b: number, c: number, d: number) => [number, number];
     readonly set_path: (a: number, b: number, c: number, d: number) => void;
+    readonly upload_codex_webgl_atlas: (a: any, b: number, c: number) => number;
     readonly upload_webgl_atlas: (a: any, b: number, c: number) => number;
     readonly wave_create_enemy: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly wave_generate_config: (a: number, b: number, c: number) => [number, number];

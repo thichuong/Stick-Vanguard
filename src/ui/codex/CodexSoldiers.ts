@@ -8,6 +8,8 @@ import {
 import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
 import { TowerType } from '../../types/entities.types.js';
+import { WasmBridge } from '../../core/WasmBridge.js';
+import { UnitSpriteCache } from '../../render/UnitSpriteCache.js';
 
 export type SummonCodexSubTab = 'BARRACKS' | 'DRAGON_NEST' | 'FAIRY_TREE' | 'HEROIC_ALTAR' | 'OVERVIEW';
 
@@ -16,6 +18,9 @@ export class CodexSoldiers {
   public selectedTierKey: string = 'BARRACKS_1';
   public previewElement: ElementType = 'FIRE';
   public barracksStance: 'MELEE' | 'RANGED' = 'MELEE';
+
+  private soldierAnimFrameId: number | null = null;
+  private soldierAnimStartTime: number = 0;
 
   constructor(public onNavigate?: (cat: string, subId?: string) => void) {}
 
@@ -200,6 +205,12 @@ export class CodexSoldiers {
                 <span class="dt-cost">${UI_ICONS.GOLD} ${selectedBp.cost} Vàng</span>
               </div>
               <p class="dt-desc">${selectedBp.description}</p>
+
+              <!-- Soldier Canvas Preview (Rust WASM WebGL2) -->
+              <div class="codex-monster-canvas-box" style="margin: 8px 0 12px 0;">
+                <canvas id="codex-soldier-canvas" width="240" height="180"></canvas>
+                <span class="codex-monster-canvas-hint">Mô phỏng đồ họa chiến binh Rust WebGL2</span>
+              </div>
 
               ${
                 type === 'BARRACKS'
@@ -817,5 +828,53 @@ export class CodexSoldiers {
         }
       });
     });
+
+    if (this.currentSubTab !== 'OVERVIEW') {
+      this.startSoldierAnimation(this.currentSubTab, this.barracksStance);
+    }
+  }
+
+  public startSoldierAnimation(type: SummonCodexSubTab, stance: 'MELEE' | 'RANGED'): void {
+    this.stopSoldierAnimation();
+
+    const canvas = document.getElementById('codex-soldier-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const bridge = WasmBridge.ensureSingletonReady();
+    const gl = canvas.getContext ? canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false }) : null;
+
+    if (gl && bridge.isAvailable()) {
+      bridge.initCodexWebGlRenderer(gl);
+      UnitSpriteCache.uploadCodexAtlas(bridge);
+    }
+
+    this.soldierAnimStartTime = performance.now();
+    const raf = typeof requestAnimationFrame !== 'undefined'
+      ? requestAnimationFrame
+      : (cb: FrameRequestCallback) => setTimeout(cb, 16) as unknown as number;
+
+    const loop = (timestamp: number) => {
+      const animTime = (timestamp - this.soldierAnimStartTime) / 1000;
+
+      if (gl && bridge.isAvailable()) {
+        bridge.renderCodexSoldier(type, stance, animTime, canvas.width, canvas.height);
+        this.soldierAnimFrameId = raf(loop);
+        return;
+      }
+
+      this.soldierAnimFrameId = raf(loop);
+    };
+
+    this.soldierAnimFrameId = raf(loop);
+  }
+
+  public stopSoldierAnimation(): void {
+    if (this.soldierAnimFrameId !== null) {
+      const caf = typeof cancelAnimationFrame !== 'undefined'
+        ? cancelAnimationFrame
+        : (id: number) => clearTimeout(id as any);
+      caf(this.soldierAnimFrameId);
+      this.soldierAnimFrameId = null;
+    }
   }
 }

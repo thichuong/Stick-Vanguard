@@ -154,6 +154,37 @@ export class WasmBridge {
     return wasmOps.upload_webgl_atlas(image, manifestJson);
   }
 
+  public initCodexWebGlRenderer(gl: WebGL2RenderingContext): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.init_codex_webgl_renderer(gl);
+  }
+
+  public uploadCodexWebGlAtlas(image: TexImageSource, manifestJson: string): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.upload_codex_webgl_atlas(image, manifestJson);
+  }
+
+  public renderCodexEnemy(
+    enemyTypeId: string,
+    animTime: number,
+    width: number = 240,
+    height: number = 200
+  ): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.render_codex_enemy_webgl(enemyTypeId, animTime, width, height);
+  }
+
+  public renderCodexSoldier(
+    soldierType: string,
+    stance: string,
+    animTime: number,
+    width: number = 240,
+    height: number = 180
+  ): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.render_codex_soldier_webgl(soldierType, stance, animTime, width, height);
+  }
+
   public renderWebGlFrame(): void {
     if (!this.isReady) return;
     wasmOps.render_webgl_frame();

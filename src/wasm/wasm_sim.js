@@ -579,6 +579,15 @@ export function has_enemy_finished(id) {
  * @param {any} gl_ctx
  * @returns {boolean}
  */
+export function init_codex_webgl_renderer(gl_ctx) {
+    const ret = wasm.init_codex_webgl_renderer(gl_ctx);
+    return ret !== 0;
+}
+
+/**
+ * @param {any} gl_ctx
+ * @returns {boolean}
+ */
 export function init_webgl_renderer(gl_ctx) {
     const ret = wasm.init_webgl_renderer(gl_ctx);
     return ret !== 0;
@@ -624,6 +633,37 @@ export function rebuild_spatial_grid() {
  */
 export function remove_enemy(id) {
     const ret = wasm.remove_enemy(id);
+    return ret !== 0;
+}
+
+/**
+ * @param {string} enemy_type_id
+ * @param {number} anim_time
+ * @param {number} width
+ * @param {number} height
+ * @returns {boolean}
+ */
+export function render_codex_enemy_webgl(enemy_type_id, anim_time, width, height) {
+    const ptr0 = passStringToWasm0(enemy_type_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.render_codex_enemy_webgl(ptr0, len0, anim_time, width, height);
+    return ret !== 0;
+}
+
+/**
+ * @param {string} soldier_type
+ * @param {string} stance
+ * @param {number} anim_time
+ * @param {number} width
+ * @param {number} height
+ * @returns {boolean}
+ */
+export function render_codex_soldier_webgl(soldier_type, stance, anim_time, width, height) {
+    const ptr0 = passStringToWasm0(soldier_type, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(stance, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.render_codex_soldier_webgl(ptr0, len0, ptr1, len1, anim_time, width, height);
     return ret !== 0;
 }
 
@@ -939,6 +979,18 @@ export function step_simulation(dt, anim_time) {
  */
 export function update_enemy_status(id, speed, hp_ratio, state) {
     wasm.update_enemy_status(id, speed, hp_ratio, state);
+}
+
+/**
+ * @param {any} image
+ * @param {string} manifest_json
+ * @returns {boolean}
+ */
+export function upload_codex_webgl_atlas(image, manifest_json) {
+    const ptr0 = passStringToWasm0(manifest_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.upload_codex_webgl_atlas(image, ptr0, len0);
+    return ret !== 0;
 }
 
 /**

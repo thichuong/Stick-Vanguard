@@ -7,7 +7,8 @@ import {
 } from '../../config/elements.config.js';
 import { UI_ICONS } from '../../config/ui/icons/index.js';
 import { ElementType } from '../../types/elements.types.js';
-import { StickmanRenderer } from '../../render/StickmanRenderer.js';
+import { WasmBridge } from '../../core/WasmBridge.js';
+import { UnitSpriteCache } from '../../render/UnitSpriteCache.js';
 import { EnemyArchetypeRenderer } from '../../render/EnemyArchetypeRenderer.js';
 import { TargetingRuleEngine } from '../../systems/TargetingRuleEngine.js';
 import { ALL_15_ELEMENTS } from './CodexTypes.js';
@@ -693,10 +694,19 @@ export class CodexEnemies {
 
     const canvas = document.getElementById('codex-enemy-canvas') as HTMLCanvasElement;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+
+    const bridge = WasmBridge.ensureSingletonReady();
+    const gl = canvas.getContext ? canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false }) : null;
+
+    if (gl && bridge.isAvailable()) {
+      bridge.initCodexWebGlRenderer(gl);
+      UnitSpriteCache.uploadCodexAtlas(bridge);
+    }
 
     this.enemyAnimStartTime = performance.now();
+    const raf = typeof requestAnimationFrame !== 'undefined'
+      ? requestAnimationFrame
+      : (cb: FrameRequestCallback) => setTimeout(cb, 16) as unknown as number;
 
     const loop = (timestamp: number) => {
       if (!this.isPanelOpen() || this.getCurrentCategory() !== 'ENEMIES') {
@@ -705,78 +715,39 @@ export class CodexEnemies {
       }
 
       const animTime = (timestamp - this.enemyAnimStartTime) / 1000;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const cx = canvas.width / 2;
-      const isBoss = bp.tags.includes('BOSS');
-      const isFlying = bp.movementType === 'FLY';
-      const isSwimmer = bp.movementType === 'SWIM';
+      // Primary Path: Rust WASM WebGL2 Hardware Accelerated Preview
+      if (gl && bridge.isAvailable()) {
+        bridge.renderCodexEnemy(bp.typeId, animTime, canvas.width, canvas.height);
+        this.enemyAnimFrameId = raf(loop);
+        return;
+      }
 
-      // For bosses or large creatures, adjust center so health bar & wings don't get cut off at top
-      const cy = isBoss ? canvas.height * 0.76 : canvas.height * 0.72;
-      const elemColor = ELEMENT_COLORS[bp.elementalProfile.primaryElement] || '#60a5fa';
+      // Graceful 2D Fallback (when WebGL2 or WASM is unavailable)
+      const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const cx = canvas.width / 2;
+        const cy = canvas.height * 0.72;
+        const elemColor = ELEMENT_COLORS[bp.elementalProfile.primaryElement] || '#60a5fa';
+        ctx.fillStyle = elemColor;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 20, bp.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // Subtle ambient glow
-      const glowGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy - 20, 90);
-      glowGrad.addColorStop(0, `${elemColor}30`);
-      glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Floor reference line
-      ctx.strokeStyle = isSwimmer ? 'rgba(56, 189, 248, 0.4)' : 'rgba(71, 85, 105, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 75, cy + 8);
-      ctx.lineTo(cx + 75, cy + 8);
-      ctx.stroke();
-
-      const alt = isFlying ? (isBoss ? 26 : 24) : 0;
-
-      // Cycle animation between moving and periodic attack showcase
-      const cycle = animTime % 4.0;
-      const isPreviewAttacking = cycle > 2.8;
-
-      const mockEnemy: any = {
-        id: 'preview',
-        typeId: bp.typeId,
-        type: bp.typeId,
-        name: bp.name,
-        x: cx,
-        y: cy,
-        size: bp.size,
-        altitude: alt,
-        movementType: bp.movementType,
-        navigationMode: bp.navigationMode,
-        elementalProfile: bp.elementalProfile,
-        tags: bp.tags || [],
-        hp: bp.hp,
-        maxHp: bp.hp,
-        speed: bp.speed,
-        baseSpeed: bp.speed,
-        damage: bp.damage,
-        attackSpeed: bp.attackSpeed,
-        attackCooldown: 0,
-        rewardGold: bp.rewardGold,
-        pathDistance: 0,
-        pathTotalLength: 100,
-        state: isPreviewAttacking ? 'ATTACKING' : (isFlying ? 'FLYING' : isSwimmer ? 'SWIMMING' : 'WALKING'),
-        engagedBySoldierId: null,
-        statusEffects: [],
-        facing: 0 // Face forward/right
-      };
-
-      StickmanRenderer.renderEnemy(ctx, mockEnemy, animTime);
-
-      this.enemyAnimFrameId = requestAnimationFrame(loop);
+      this.enemyAnimFrameId = raf(loop);
     };
 
-    this.enemyAnimFrameId = requestAnimationFrame(loop);
+    this.enemyAnimFrameId = raf(loop);
   }
 
   public stopEnemyAnimation(): void {
     if (this.enemyAnimFrameId !== null) {
-      cancelAnimationFrame(this.enemyAnimFrameId);
+      const caf = typeof cancelAnimationFrame !== 'undefined'
+        ? cancelAnimationFrame
+        : (id: number) => clearTimeout(id as any);
+      caf(this.enemyAnimFrameId);
       this.enemyAnimFrameId = null;
     }
   }

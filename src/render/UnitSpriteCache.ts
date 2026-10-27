@@ -26,6 +26,9 @@ export class UnitSpriteCache {
   private static readonly TILE_SIZE = 84;
   private static readonly HALF_TILE = 42;
   private static atlasUploaded = false;
+  private static codexAtlasUploaded = false;
+  private static cachedAtlasCanvas: HTMLCanvasElement | null = null;
+  private static cachedManifestJson: string = '';
 
   public static clear(): void {
     this.cache.clear();
@@ -142,8 +145,27 @@ export class UnitSpriteCache {
       }
     }
 
-    this.atlasUploaded = bridge.uploadWebGlAtlas(atlasCanvas, JSON.stringify(manifest));
+    this.cachedAtlasCanvas = atlasCanvas;
+    this.cachedManifestJson = JSON.stringify(manifest);
+    this.atlasUploaded = bridge.uploadWebGlAtlas(atlasCanvas, this.cachedManifestJson);
     return this.atlasUploaded;
+  }
+
+  /**
+   * Uploads the cached GPU Texture Atlas to the Codex WebGL2 context
+   */
+  public static uploadCodexAtlas(bridge: WasmBridge): boolean {
+    if (typeof document === 'undefined' || !bridge.isAvailable()) return false;
+    if (!this.cachedAtlasCanvas || !this.cachedManifestJson) {
+      this.bakeAndUploadWebGlAtlas(bridge);
+    }
+    if (this.cachedAtlasCanvas && this.cachedManifestJson) {
+      this.codexAtlasUploaded = bridge.uploadCodexWebGlAtlas(
+        this.cachedAtlasCanvas,
+        this.cachedManifestJson
+      );
+    }
+    return this.codexAtlasUploaded;
   }
 
   public static quantizeAnimPhase(animTime: number, steps = 12): number {

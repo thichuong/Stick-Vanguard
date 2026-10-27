@@ -159,6 +159,7 @@ export class SideDetailPanel {
 
   public close(): void {
     this.enemiesCodex.stopEnemyAnimation();
+    this.buildingsCodex.stopSoldierAnimation();
     this.enemiesCodex.resetFilters();
     this.backdropEl.classList.add('hidden');
   }
@@ -173,6 +174,7 @@ export class SideDetailPanel {
 
   private renderContent(): void {
     this.enemiesCodex.stopEnemyAnimation();
+    this.buildingsCodex.stopSoldierAnimation();
     switch (this.currentCategory) {
       case 'BUILDINGS':
         this.renderBuildingsCategory();

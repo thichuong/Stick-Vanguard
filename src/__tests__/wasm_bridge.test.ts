@@ -173,6 +173,16 @@ describe('WasmBridge Core & Fallback Architecture', () => {
       const recordedAudio = JSON.parse(ops.audio_get_recorded_events_json());
       expect(recordedAudio.length).toBeGreaterThan(0);
       expect(recordedAudio[0].sound).toBe('SHOOT');
+
+      // Test Codex Unit Preview Rendering via Rust WASM
+      const enemyRenderOk = ops.render_codex_enemy_webgl('STICK_RUNNER', 1.2, 240, 200);
+      expect(enemyRenderOk).toBe(true);
+
+      const soldierRenderOk = ops.render_codex_soldier_webgl('BARRACKS', 'MELEE', 0.8, 240, 180);
+      expect(soldierRenderOk).toBe(true);
+
+      const dragonRenderOk = ops.render_codex_soldier_webgl('DRAGON_NEST', 'MELEE', 1.5, 240, 180);
+      expect(dragonRenderOk).toBe(true);
     }
   });
 });

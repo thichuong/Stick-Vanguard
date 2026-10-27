@@ -8,7 +8,6 @@ import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { TargetingRuleEngine } from '../systems/TargetingRuleEngine.js';
 import { EnemySkillSystem } from '../systems/EnemySkillSystem.js';
 import { SpatialIndex } from './SpatialIndex.js';
-import { SimWorkerBridge } from './SimWorkerBridge.js';
 import { WasmBridge } from './WasmBridge.js';
 import { swapRemove, particlePool, floatingTextPool } from './ObjectPool.js';
 import { ELEMENT_COLORS } from '../config/elements.config.js';
@@ -20,7 +19,6 @@ export class SimulationEngine {
   private static readonly MAX_SUB_STEPS = 4;
 
   public spatialIndex: SpatialIndex;
-  public workerBridge: SimWorkerBridge;
   public wasmBridge: WasmBridge;
 
   private accumulator = 0;
@@ -33,14 +31,11 @@ export class SimulationEngine {
     public waveSystem: WaveSystem
   ) {
     this.spatialIndex = new SpatialIndex();
-    this.workerBridge = new SimWorkerBridge();
-    this.workerBridge.syncPaths(this.navSystem);
     this.wasmBridge = WasmBridge.getInstance();
     this.wasmBridge.syncPaths(this.navSystem);
   }
 
   public onMapChanged(): void {
-    this.workerBridge.syncPaths(this.navSystem);
     this.wasmBridge.syncPaths(this.navSystem);
   }
 

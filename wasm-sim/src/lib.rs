@@ -697,6 +697,7 @@ impl EngineContext {
 thread_local! {
     static WORLD: RefCell<SimulationWorld> = RefCell::new(SimulationWorld::new(1000.0, 650.0));
     static CTX: RefCell<EngineContext> = RefCell::new(EngineContext::new());
+    static CODEX_RENDERER: RefCell<WebGl2Renderer> = RefCell::new(WebGl2Renderer::new(240.0, 200.0));
 }
 
 #[wasm_bindgen]
@@ -866,6 +867,36 @@ pub fn init_webgl_renderer(gl_ctx: JsValue) -> bool {
 #[wasm_bindgen]
 pub fn upload_webgl_atlas(image: JsValue, manifest_json: &str) -> bool {
     CTX.with(|c| c.borrow_mut().renderer.upload_atlas(&image, manifest_json))
+}
+
+#[wasm_bindgen]
+pub fn init_codex_webgl_renderer(gl_ctx: JsValue) -> bool {
+    CODEX_RENDERER.with(|r| r.borrow_mut().init_context(gl_ctx))
+}
+
+#[wasm_bindgen]
+pub fn upload_codex_webgl_atlas(image: JsValue, manifest_json: &str) -> bool {
+    CODEX_RENDERER.with(|r| r.borrow_mut().upload_atlas(&image, manifest_json))
+}
+
+#[wasm_bindgen]
+pub fn render_codex_enemy_webgl(enemy_type_id: &str, anim_time: f32, width: f32, height: f32) -> bool {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        CODEX_RENDERER.with(|r| {
+            r.borrow_mut().render_codex_enemy_preview(&ctx.registry, enemy_type_id, anim_time, width, height)
+        })
+    })
+}
+
+#[wasm_bindgen]
+pub fn render_codex_soldier_webgl(soldier_type: &str, stance: &str, anim_time: f32, width: f32, height: f32) -> bool {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        CODEX_RENDERER.with(|r| {
+            r.borrow_mut().render_codex_soldier_preview(&ctx.registry, soldier_type, stance, anim_time, width, height)
+        })
+    })
 }
 
 #[wasm_bindgen]
