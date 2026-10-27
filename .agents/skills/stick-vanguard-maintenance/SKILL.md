@@ -35,7 +35,7 @@ Tài liệu chi tiết (chỉ đọc khi cần):
 | Yêu cầu | Mở trước | Sau đó |
 |---|---|---|
 | **Lõi tính toán WASM / Rust Engine** (State, Systems, Rules, Waves, Audio, WebGL2) | `wasm-sim/src/lib.rs`, `wasm-sim/src/systems.rs`, `wasm-sim/src/state.rs` | `wasm-sim/Cargo.toml`, build bằng `npm run build:wasm` |
-| **Render Chiến trường WebGL2 & GPU Atlas** | `wasm-sim/src/webgl.rs`, `src/render/UnitSpriteCache.ts` | `src/main.ts#loop`, overlay 2D `src/render/*Renderer.ts` |
+| **Render Chiến trường WebGL2 & GPU Atlas** | `wasm-sim/src/webgl/`, `src/render/UnitSpriteCache.ts`, `src/render/archetypes/` | `src/main.ts#loop`, overlay 2D `src/render/*Renderer.ts` |
 | **Âm thanh WebAudio trong Rust** | `wasm-sim/src/audio.rs` | `src/systems/SoundSystem.ts` (vỏ gọi `WasmBridge`) |
 | **Cầu nối WASM & Config Sync** (Zero-Copy Float32Array, ID Map, `load_game_config`) | `src/core/WasmBridge.ts` | `src/wasm/wasm_sim.js`, `src/core/SimulationEngine.ts` |
 | **Vòng lặp mô phỏng & Fixed Tick** (60Hz loop, sub-stepping, nội suy) | `wasm-sim/src/systems.rs`, `src/core/SimulationEngine.ts` | `src/core/ObjectPool.ts`, `src/core/SpatialIndex.ts` |
@@ -69,7 +69,8 @@ Tài liệu chi tiết (chỉ đọc khi cần):
     - `wave.rs`: `WaveSystem` (sinh quái đợt 1–10 và đợt mở rộng/Boss >10).
     - `state.rs` & `systems.rs`: `RustGameState`, `EnemySkillSystem`, `TrapSystem`, `CombatSystem`, `TowerSystem`, `ProjectileSystem`, `RustSimulationEngine` (Fixed 60Hz).
     - `audio.rs`: `RustSoundSystem` điều khiển trực tiếp WebAudio (`AudioContext`, `OscillatorNode`, `GainNode`, `BiquadFilterNode`, `AudioBuffer`) qua `wasm-bindgen`.
-    - `webgl.rs`: `WebGl2Renderer` kết xuất chiến trường bằng shader `#version 300 es` kết hợp `UnitSpriteCache` GPU Texture Atlas.
+    - `webgl/`: `WebGl2Renderer` kết xuất chiến trường bằng shader `#version 300 es` kết hợp `UnitSpriteCache` GPU Texture Atlas (module hóa thành `mod.rs`, `gl_bindings.rs`, `primitives.rs`, `scene.rs`, `entities.rs`, `codex.rs`).
+  - **Cẩm nang WASM & Render Chuyên Sâu**: Tra cứu skill `stick-vanguard-wasm-engine` (`.agents/skills/stick-vanguard-wasm-engine/`) để hiểu sâu về Flat Memory, Zero-Copy, pipeline render WebGL2 và Fixed 60Hz loop.
   - **Kiến trúc thuần Rust WASM + WebGL2**: Game vận hành 100% bằng WebAssembly Rust Engine (`wasm-sim/`) và WebGL2, không dùng cơ chế fallback 2D Canvas hay mô phỏng TS cũ. Canvas 2D overlay (`#game-hud-overlay`) chỉ dùng để vẽ vùng đặt tháp và số sát thương bay.
 - **Cẩm nang**: luôn tra `src/config/` + `src/ui/codex/` trước. Một số Codex là text tĩnh
   (`CodexImbue`, `CodexNavigation`) → phải đối chiếu thủ công với config/systems khi logic đổi.

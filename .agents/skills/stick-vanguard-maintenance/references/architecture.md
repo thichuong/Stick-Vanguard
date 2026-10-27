@@ -33,7 +33,13 @@ wasm-sim/                  # MÃ NGUỒN RUST WEBASSEMBLY (SIMULATION, AUDIO, WE
     ├── state.rs           #   RustGameState (xây/nâng/hạ/bán tháp, gắn nguyên tố, hồi sinh anh linh)
     ├── systems.rs         #   EnemySkill, Trap, Combat, Tower, Projectile & RustSimulationEngine (60Hz)
     ├── audio.rs           #   RustSoundSystem tổng hợp âm thanh WebAudio trực tiếp từ Rust
-    └── webgl.rs           #   WebGl2Renderer (#version 300 es) vẽ bản đồ, tháp, đạn, hạt & GPU Atlas
+    └── webgl/             #   WebGl2Renderer (#version 300 es) vẽ bản đồ, tháp, đạn, hạt & GPU Atlas
+        ├── mod.rs         #   WebGl2Renderer struct, lifecycle, Atlas manifest
+        ├── gl_bindings.rs #   Khai báo extern FFI WebGL2 JS context & shader strings
+        ├── primitives.rs  #   Màu hex/element, vertex batcher & hình học 2D
+        ├── scene.rs       #   build_scene: bản đồ, đường, sông, căn cứ, VFX
+        ├── entities.rs    #   Render tháp, bẫy, lính/rồng/tiên, quái (atlas & procedural)
+        └── codex.rs       #   Preview quái & lính trong Cẩm Nang
 src/
 ├── main.ts                # GameApp: khởi tạo WebGL2 + WASM, bake GPU Atlas, game loop, input canvas
 ├── style.css              # Toàn bộ CSS
@@ -52,7 +58,10 @@ src/
 ├── systems/               # Các lớp vỏ gọi xuống Rust WASM (SoundSystem, TargetingRuleEngine, WaveSystem…)
 ├── render/
 │   ├── UnitSpriteCache.ts       # Nướng GPU Texture Atlas (quái + icon) nạp vào Rust WebGL2 Renderer
-│   ├── EnemyArchetypeRenderer.ts# Hình dạng quái theo archetype (dùng để bake GPU Atlas)
+│   ├── EnemyArchetypeRenderer.ts# Facade nhận diện & điều hướng render archetype
+│   ├── archetypes/              # 10 module vẽ archetype độc lập (dragon, serpent, humanoid...)
+│   │   ├── types.ts             # EnemyVisualArchetype, ArchetypeInfo, getArchetype
+│   │   └── *.ts                 # dragon.ts, serpent.ts, colossus.ts, humanoid.ts...
 │   ├── MapRenderer.ts           # Vẽ feedback đặt tháp trên overlay 2D (#game-hud-overlay)
 │   ├── TowerRenderer.ts         # Vẽ chữ nổi (FloatingTexts) trên overlay 2D (#game-hud-overlay)
 │   └── StickmanRenderer.ts      # Vẽ preview quái trong Cẩm nang (#codex-enemy-canvas)
