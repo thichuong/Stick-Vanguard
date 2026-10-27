@@ -1,10 +1,24 @@
 import initWasm, * as wasmOps from '../wasm/wasm_sim.js';
 import { EnemyEntity } from '../types/entities.types.js';
 import { NavigationSystem } from '../systems/NavigationSystem.js';
-import { NavigationMode } from '../types/elements.types.js';
+import { ElementType, NavigationMode } from '../types/elements.types.js';
+import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
+import { ENEMY_BLUEPRINTS, ENEMY_CC_CONFIG } from '../config/enemies.config.js';
+import { MAPS_CONFIG } from '../config/map.config.js';
+import {
+  ALL_15_ELEMENTS,
+  ALL_ELEMENT_DEFINITIONS,
+  ELEMENTAL_MATCHUPS,
+  ELEMENTAL_REACTIONS,
+  ELEMENT_COLORS,
+  ELEMENT_NAMES
+} from '../config/elements.config.js';
 
 export class WasmBridge {
   private static instance: WasmBridge | null = null;
+  private static wasmLoadedGlobally = false;
+  private static globalMemory: WebAssembly.Memory | null = null;
+
   private isReady = false;
   private memory: WebAssembly.Memory | null = null;
 
@@ -19,6 +33,47 @@ export class WasmBridge {
     return WasmBridge.instance;
   }
 
+  /**
+   * Ensures the singleton WASM instance is initialized (including synchronous init in Node/Vitest).
+   */
+  public static ensureSingletonReady(): WasmBridge {
+    const inst = WasmBridge.getInstance();
+    if (inst.isReady) return inst;
+
+    if (WasmBridge.wasmLoadedGlobally && WasmBridge.globalMemory) {
+      inst.memory = WasmBridge.globalMemory;
+      inst.isReady = true;
+      inst.syncGameConfigToRust();
+      return inst;
+    }
+
+    // Attempt synchronous initialization in Node/Vitest if available
+    try {
+      const proc = (globalThis as any).process;
+      if (proc && typeof proc.getBuiltinModule === 'function') {
+        const fsMod = proc.getBuiltinModule('fs');
+        const pathMod = proc.getBuiltinModule('path');
+        if (fsMod && pathMod) {
+          const wasmPath = pathMod.resolve(proc.cwd(), 'src/wasm/wasm_sim_bg.wasm');
+          if (fsMod.existsSync(wasmPath)) {
+            const bytes = fsMod.readFileSync(wasmPath);
+            const out = wasmOps.initSync({ module: bytes });
+            WasmBridge.wasmLoadedGlobally = true;
+            WasmBridge.globalMemory = out.memory;
+            inst.memory = out.memory;
+            inst.isReady = true;
+            wasmOps.init_world(1000, 650);
+            inst.syncGameConfigToRust();
+          }
+        }
+      }
+    } catch {
+      // Fallback to async init in browser
+    }
+
+    return inst;
+  }
+
   public async init(wasmSource?: string | URL | RequestInfo | BufferSource | WebAssembly.Module): Promise<boolean> {
     if (this.isReady) return true;
 
@@ -27,7 +82,6 @@ export class WasmBridge {
       if (wasmSource) {
         initOutput = await initWasm({ module_or_path: wasmSource as any });
       } else {
-        // Try importing the default wasm url if in Vite browser environment
         try {
           const wasmUrl = (await import('../wasm/wasm_sim_bg.wasm?url')).default;
           initOutput = await initWasm({ module_or_path: wasmUrl });
@@ -38,14 +92,76 @@ export class WasmBridge {
 
       this.memory = initOutput.memory;
       this.isReady = true;
+      WasmBridge.wasmLoadedGlobally = true;
+      WasmBridge.globalMemory = initOutput.memory;
+      if (WasmBridge.instance && !WasmBridge.instance.isReady) {
+        WasmBridge.instance.memory = initOutput.memory;
+        WasmBridge.instance.isReady = true;
+      }
+
       wasmOps.init_world(1000, 650);
-      console.log('[WASM Core] Initialized successfully. High-performance Flat Memory & Spatial Grid active.');
+      this.syncGameConfigToRust();
+      console.log('[WASM Core] Initialized successfully. Rust Engine, Audio & WebGL2 Renderer active.');
       return true;
     } catch (err) {
-      console.warn('[WASM Core] Initialization skipped or failed; using TypeScript fallback.', err);
+      console.warn('[WASM Core] Initialization skipped or failed; using fallback.', err);
       this.isReady = false;
       return false;
     }
+  }
+
+  public syncGameConfigToRust(): boolean {
+    if (!this.isReady) return false;
+    try {
+      const elementCombatStats: Record<string, any> = {};
+      for (const elem of ALL_15_ELEMENTS) {
+        const def = ALL_ELEMENT_DEFINITIONS[elem as ElementType];
+        if (def?.combatStats) {
+          elementCombatStats[elem] = def.combatStats;
+        }
+      }
+
+      const payload = {
+        towers: TOWER_BLUEPRINTS,
+        enemies: ENEMY_BLUEPRINTS,
+        maps: MAPS_CONFIG,
+        elementMatchups: ELEMENTAL_MATCHUPS,
+        elementReactions: ELEMENTAL_REACTIONS,
+        elementCombatStats,
+        elementColors: ELEMENT_COLORS,
+        elementNames: ELEMENT_NAMES,
+        ccConfig: ENEMY_CC_CONFIG
+      };
+
+      return wasmOps.load_game_config(JSON.stringify(payload));
+    } catch (e) {
+      console.error('[WASM Core] Failed to sync game config to Rust:', e);
+      return false;
+    }
+  }
+
+  public getOps(): typeof wasmOps {
+    return wasmOps;
+  }
+
+  public initWebGlRenderer(gl: WebGL2RenderingContext): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.init_webgl_renderer(gl);
+  }
+
+  public uploadWebGlAtlas(image: TexImageSource, manifestJson: string): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.upload_webgl_atlas(image, manifestJson);
+  }
+
+  public renderWebGlFrame(): void {
+    if (!this.isReady) return;
+    wasmOps.render_webgl_frame();
+  }
+
+  public renderCustomStateWebGl(stateJson: string, animTime: number, alpha: number): number {
+    if (!this.isReady) return 0;
+    return wasmOps.render_custom_state_webgl(stateJson, animTime, alpha);
   }
 
   public isAvailable(): boolean {
@@ -102,7 +218,6 @@ export class WasmBridge {
         if (!lane.segments || lane.segments.length === 0) continue;
 
         const waypoints: number[] = [];
-        // Push start of first segment
         waypoints.push(lane.segments[0].p1.x, lane.segments[0].p1.y);
         for (let s = 0; s < lane.segments.length; s++) {
           waypoints.push(lane.segments[s].p2.x, lane.segments[s].p2.y);
@@ -112,7 +227,6 @@ export class WasmBridge {
       }
     };
 
-    // 0 = Ground, 1 = Water, 2 = Air
     syncLanePool('GROUND_PATH', 0);
     syncLanePool('WATER_PATH', 1);
     syncLanePool('AIR_DIRECT', 2);
@@ -196,10 +310,6 @@ export class WasmBridge {
     return wasmOps.has_enemy_finished(u32Id);
   }
 
-  /**
-   * Zero-copy Direct Memory View into WASM Linear Memory.
-   * Stride = 12 floats: [id, x, y, prev_x, prev_y, facing, hp_ratio, altitude, state, size, path_dist, has_finished]
-   */
   public getRenderView(): Float32Array | null {
     if (!this.isReady || !this.memory) return null;
 

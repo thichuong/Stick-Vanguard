@@ -4,6 +4,6 @@
 - Cẩm nang (Codex): tra `src/config/` (dữ liệu) và `src/ui/codex/` (hiển thị) trước.
 - Panel trái: `src/ui/hud/HUDManager.ts`. Panel phải: `src/ui/hud/ArsenalBar.ts` (đặt tháp) + `src/ui/inspector/InspectorPanel.ts` (nội dung).
 - Số liệu cân bằng chỉ sửa trong `src/config/`; import TS dùng đuôi `.js`.
-- Module WebAssembly Rust (`wasm-sim/`): Nếu sửa mã Rust, chạy `npm run build:wasm` để biên dịch sang `src/wasm/`. Cầu nối `src/core/WasmBridge.ts` quản lý bộ nhớ phẳng Flat Memory và bản đồ ID (`u32 <-> string`).
-- Luôn giữ cơ chế Graceful Fallback: nếu WASM chưa tải hoặc trong test không nạp wasm, `SimulationEngine.ts` và `SpatialIndex.ts` tự động chạy bằng thuật toán TypeScript.
+- Module WebAssembly Rust (`wasm-sim/`): Chứa toàn bộ lõi mô phỏng (`state.rs`, `systems.rs`, `rules.rs`, `wave.rs`, `navigation.rs`, `spatial.rs`), bộ tổng hợp âm thanh WebAudio (`audio.rs`) và bộ kết xuất đồ họa phần cứng **WebGL2 + GPU Texture Atlas** (`webgl.rs`). Nếu sửa mã Rust, chạy `npm run build:wasm` để biên dịch sang `src/wasm/`. Cầu nối `src/core/WasmBridge.ts` tự động đồng bộ `src/config/` sang Rust (`load_game_config`), quản lý bộ nhớ phẳng Flat Memory và bản đồ ID (`u32 <-> string`).
+- Luôn giữ cơ chế Graceful Fallback: nếu môi trường chưa tải WASM hoặc không có ngữ cảnh WebGL2, lớp vỏ TypeScript tự động fallback mượt mà.
 - Sau khi sửa: `npm run build:wasm` (nếu sửa Rust), `npx tsc --noEmit` và `npm test` phải xanh 100%.

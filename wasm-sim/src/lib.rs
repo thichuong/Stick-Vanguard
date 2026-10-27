@@ -1,6 +1,31 @@
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
+pub mod types;
+pub mod config;
+pub mod navigation;
+pub mod spatial;
+pub mod rules;
+pub mod wave;
+pub mod audio;
+pub mod state;
+pub mod systems;
+pub mod webgl;
+
+use crate::audio::RustSoundSystem;
+use crate::config::{GameConfigRegistry, MapConfig};
+use crate::navigation::NavigationSystem;
+use crate::rules::{SimpleRng, TargetingRuleEngine};
+use crate::spatial::SpatialGrid;
+use crate::state::RustGameState;
+use crate::systems::RustSimulationEngine;
+use crate::types::{
+    DamagePayload, ElementType, ElementalProfile, EnemyEntity, SoldierCombatMode, SoldierEntity,
+    StatusEffectPayload, TargetingFilter, TowerBranch, TowerType,
+};
+use crate::wave::WaveSystem;
+use crate::webgl::WebGl2Renderer;
+
 const STRIDE: usize = 12;
 const CELL_SIZE: f32 = 64.0;
 const COLS: usize = 16; // 1000 / 64
@@ -101,9 +126,9 @@ pub struct EnemyPod {
     pub facing: f32,
     pub hp_ratio: f32,
     pub altitude: f32,
-    pub state: u32,       // 0=Walking, 1=Flying, 2=Swimming, 3=Engaged, 4=Attacking, 5=Dead
+    pub state: u32,    // 0=Walking, 1=Flying, 2=Swimming, 3=Engaged, 4=Attacking, 5=Dead
     pub size: f32,
-    pub nav_mode: u32,   // 0=Ground, 1=Water, 2=AirDirect, 3=AirWaypoints
+    pub nav_mode: u32, // 0=Ground, 1=Water, 2=AirDirect, 3=AirWaypoints
     pub lane_index: u32,
     pub has_finished: bool,
     pub is_alive: bool,
@@ -117,15 +142,10 @@ pub struct SimulationWorld {
     pub air_lanes: Vec<PathLane>,
 
     pub enemies: Vec<EnemyPod>,
-    pub enemy_id_to_index: Vec<Option<usize>>, // Fast sparse lookup if ids are small
+    pub enemy_id_to_index: Vec<Option<usize>>,
 
-    // Spatial Hash Grid storing Enemy IDs (safe against vector swap-remove)
     pub grid_cells: Vec<Vec<u32>>,
-
-    // Flat Render Buffer exposed directly to JavaScript / WebAssembly.Memory
     pub render_buffer: Vec<f32>,
-
-    // Query result buffers
     pub query_result_ids: Vec<u32>,
 }
 
@@ -171,6 +191,7 @@ impl SimulationWorld {
         self.air_lanes.clear();
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_enemy(
         &mut self,
         id: u32,
@@ -187,7 +208,13 @@ impl SimulationWorld {
         facing: f32,
     ) {
         let (x, y, face) = if init_x == 0.0 && init_y == 0.0 {
-            if let Some(path) = Self::resolve_path_lane(&self.ground_lanes, &self.water_lanes, &self.air_lanes, nav_mode, lane_index) {
+            if let Some(path) = Self::resolve_path_lane(
+                &self.ground_lanes,
+                &self.water_lanes,
+                &self.air_lanes,
+                nav_mode,
+                lane_index,
+            ) {
                 if let Some(seg) = path.segments.first() {
                     let dx = seg.p2_x - seg.p1_x;
                     let dy = seg.p2_y - seg.p1_y;
@@ -241,7 +268,6 @@ impl SimulationWorld {
             if idx < self.enemies.len() {
                 self.enemies.swap_remove(idx);
                 self.enemy_id_to_index[id_usize] = None;
-                // Update swapped element's index
                 if idx < self.enemies.len() {
                     let swapped_id = self.enemies[idx].id as usize;
                     if swapped_id < self.enemy_id_to_index.len() {
@@ -311,7 +337,6 @@ impl SimulationWorld {
         let water = &self.water_lanes;
         let air = &self.air_lanes;
 
-        // 1. Update each enemy position
         for i in 0..enemy_count {
             let e = &mut self.enemies[i];
             if !e.is_alive || e.state == 5 {
@@ -321,11 +346,12 @@ impl SimulationWorld {
             e.prev_x = e.x;
             e.prev_y = e.y;
 
-            // Only move if not engaged or attacking
             if e.state != 3 && e.state != 4 {
                 e.path_distance += e.speed * dt;
 
-                if let Some(path) = Self::resolve_path_lane(ground, water, air, e.nav_mode, e.lane_index) {
+                if let Some(path) =
+                    Self::resolve_path_lane(ground, water, air, e.nav_mode, e.lane_index)
+                {
                     if path.segments.is_empty() {
                         e.has_finished = true;
                     } else if e.path_distance >= path.total_length {
@@ -346,7 +372,11 @@ impl SimulationWorld {
                         let seg = &path.segments[seg_idx];
                         let prev_cum = seg.cumulative_length - seg.length;
                         let seg_dist = e.path_distance - prev_cum;
-                        let t = if seg.length > 0.0 { seg_dist / seg.length } else { 0.0 };
+                        let t = if seg.length > 0.0 {
+                            seg_dist / seg.length
+                        } else {
+                            0.0
+                        };
 
                         let mut cur_x = seg.p1_x + (seg.p2_x - seg.p1_x) * t;
                         let mut cur_y = seg.p1_y + (seg.p2_y - seg.p1_y) * t;
@@ -356,15 +386,19 @@ impl SimulationWorld {
                         let facing = dy.atan2(dx);
 
                         if e.nav_mode == 2 {
-                            // AIR_DIRECT: sinusoidal wobble perpendicular to direction
                             let perp_x = -facing.sin();
                             let perp_y = facing.cos();
-                            let wobble = (anim_time * 3.0 + e.path_distance * 0.05 + (e.lane_index as f32)).sin() * 8.0;
+                            let wobble = (anim_time * 3.0
+                                + e.path_distance * 0.05
+                                + (e.lane_index as f32))
+                                .sin()
+                                * 8.0;
                             cur_x += perp_x * wobble;
                             cur_y += perp_y * wobble;
                         } else if e.nav_mode == 1 {
-                            // WATER_PATH: wave oscillation
-                            cur_y += (anim_time * 4.0 + cur_x * 0.04 + (e.lane_index as f32)).sin() * 3.0;
+                            cur_y +=
+                                (anim_time * 4.0 + cur_x * 0.04 + (e.lane_index as f32)).sin()
+                                    * 3.0;
                         }
 
                         e.x = cur_x;
@@ -374,7 +408,6 @@ impl SimulationWorld {
                 }
             }
 
-            // Populate render buffer
             let offset = i * STRIDE;
             self.render_buffer[offset] = e.id as f32;
             self.render_buffer[offset + 1] = e.x;
@@ -390,7 +423,6 @@ impl SimulationWorld {
             self.render_buffer[offset + 11] = if e.has_finished { 1.0 } else { 0.0 };
         }
 
-        // 2. Rebuild spatial grid with updated positions
         self.rebuild_spatial_grid();
     }
 
@@ -417,10 +449,14 @@ impl SimulationWorld {
             return 0;
         }
 
-        let col_min = ((clamped_min_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
-        let col_max = ((clamped_max_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
-        let row_min = ((clamped_min_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
-        let row_max = ((clamped_max_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
+        let col_min =
+            ((clamped_min_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
+        let col_max =
+            ((clamped_max_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
+        let row_min =
+            ((clamped_min_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
+        let row_max =
+            ((clamped_max_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
 
         if col_min > col_max || row_min > row_max {
             return 0;
@@ -429,10 +465,10 @@ impl SimulationWorld {
         let range_sq = range * range;
         let mut best_id: u32 = 0;
         let mut best_score: f32 = match mode {
-            1 => f32::MAX, // CLOSEST: smallest distance
-            2 => -1.0,    // STRONGEST: highest hp
-            3 => f32::MAX, // WEAKEST: lowest hp
-            _ => -1.0,    // FIRST: largest path_distance
+            1 => f32::MAX, // CLOSEST
+            2 => -1.0,     // STRONGEST
+            3 => f32::MAX, // WEAKEST
+            _ => -1.0,     // FIRST
         };
 
         for r in row_min..=row_max {
@@ -454,28 +490,24 @@ impl SimulationWorld {
                                 if dist_sq <= range_sq {
                                     match mode {
                                         1 => {
-                                            // CLOSEST
                                             if dist_sq < best_score {
                                                 best_score = dist_sq;
                                                 best_id = e.id;
                                             }
                                         }
                                         2 => {
-                                            // STRONGEST
                                             if e.hp_ratio > best_score {
                                                 best_score = e.hp_ratio;
                                                 best_id = e.id;
                                             }
                                         }
                                         3 => {
-                                            // WEAKEST
                                             if e.hp_ratio < best_score {
                                                 best_score = e.hp_ratio;
                                                 best_id = e.id;
                                             }
                                         }
                                         _ => {
-                                            // FIRST: largest path_distance
                                             if e.path_distance > best_score {
                                                 best_score = e.path_distance;
                                                 best_id = e.id;
@@ -518,10 +550,14 @@ impl SimulationWorld {
             return 0;
         }
 
-        let col_min = ((clamped_min_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
-        let col_max = ((clamped_max_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
-        let row_min = ((clamped_min_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
-        let row_max = ((clamped_max_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
+        let col_min =
+            ((clamped_min_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
+        let col_max =
+            ((clamped_max_x / CELL_SIZE).floor() as isize).clamp(0, (COLS - 1) as isize) as usize;
+        let row_min =
+            ((clamped_min_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
+        let row_max =
+            ((clamped_max_y / CELL_SIZE).floor() as isize).clamp(0, (ROWS - 1) as isize) as usize;
 
         if col_min > col_max || row_min > row_max {
             return 0;
@@ -557,9 +593,110 @@ impl SimulationWorld {
     }
 }
 
-// Global thread-local world instance
+pub struct EngineContext {
+    pub registry: GameConfigRegistry,
+    pub state: RustGameState,
+    pub nav: NavigationSystem,
+    pub wave: WaveSystem,
+    pub spatial: SpatialGrid,
+    pub audio: RustSoundSystem,
+    pub rng: SimpleRng,
+    pub sim: RustSimulationEngine,
+    pub renderer: WebGl2Renderer,
+}
+
+impl Default for EngineContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl EngineContext {
+    pub fn new() -> Self {
+        EngineContext {
+            registry: GameConfigRegistry::default(),
+            state: RustGameState::new(),
+            nav: NavigationSystem::new(),
+            wave: WaveSystem::new(15),
+            spatial: SpatialGrid::new(1000.0, 650.0),
+            audio: RustSoundSystem::new(),
+            rng: SimpleRng::new(0x9E37_79B9),
+            sim: RustSimulationEngine::new(),
+            renderer: WebGl2Renderer::new(1000.0, 650.0),
+        }
+    }
+
+    pub fn load_config(&mut self, json: &str) -> bool {
+        if let Ok(reg) = serde_json::from_str::<GameConfigRegistry>(json) {
+            self.registry = reg;
+            let map_id = if self.state.current_map_id.is_empty() {
+                "VALLEY_ORIGIN".to_string()
+            } else {
+                self.state.current_map_id.clone()
+            };
+            if !self.set_map(&map_id) {
+                if let Some(first_map) = self.registry.maps.first() {
+                    let first_id = first_map.id.clone();
+                    self.set_map(&first_id);
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_map(&mut self, map_id: &str) -> bool {
+        let ok = self.state.set_map(&self.registry, map_id);
+        if ok {
+            self.nav.rebuild_from_map(&self.state.current_map);
+            self.wave.reset();
+            self.wave.set_total_waves(self.state.custom_total_waves);
+            self.spatial.clear();
+        }
+        ok
+    }
+
+    pub fn reset(&mut self) {
+        self.state.reset();
+        self.nav.rebuild_from_map(&self.state.current_map);
+        self.wave.reset();
+        self.wave.set_total_waves(self.state.custom_total_waves);
+        self.spatial.clear();
+        self.sim.accumulator = 0.0;
+        self.sim.interpolation_alpha = 1.0;
+    }
+
+    pub fn tick(&mut self, dt: f32) {
+        self.sim.tick(
+            &self.registry,
+            &mut self.state,
+            &self.nav,
+            &mut self.wave,
+            &mut self.spatial,
+            &mut self.audio,
+            &mut self.rng,
+            dt,
+        );
+    }
+
+    pub fn update(&mut self, raw_dt: f32) {
+        self.sim.update(
+            &self.registry,
+            &mut self.state,
+            &self.nav,
+            &mut self.wave,
+            &mut self.spatial,
+            &mut self.audio,
+            &mut self.rng,
+            raw_dt,
+        );
+    }
+}
+
 thread_local! {
     static WORLD: RefCell<SimulationWorld> = RefCell::new(SimulationWorld::new(1000.0, 650.0));
+    static CTX: RefCell<EngineContext> = RefCell::new(EngineContext::new());
 }
 
 #[wasm_bindgen]
@@ -584,6 +721,7 @@ pub fn clear_paths() {
 }
 
 #[wasm_bindgen]
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_enemy(
     id: u32,
     speed: f32,
@@ -709,4 +847,899 @@ pub fn has_enemy_finished(id: u32) -> bool {
         }
         false
     })
+}
+
+// =========================================================================
+// Full Rust WASM Engine, Config, Rules, Audio, and WebGL2 Renderer Exports
+// =========================================================================
+
+#[wasm_bindgen]
+pub fn load_game_config(json: &str) -> bool {
+    CTX.with(|c| c.borrow_mut().load_config(json))
+}
+
+#[wasm_bindgen]
+pub fn init_webgl_renderer(gl_ctx: JsValue) -> bool {
+    CTX.with(|c| c.borrow_mut().renderer.init_context(gl_ctx))
+}
+
+#[wasm_bindgen]
+pub fn upload_webgl_atlas(image: JsValue, manifest_json: &str) -> bool {
+    CTX.with(|c| c.borrow_mut().renderer.upload_atlas(&image, manifest_json))
+}
+
+#[wasm_bindgen]
+pub fn render_webgl_frame() {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let anim_time = ctx.sim.total_anim_time;
+        let alpha = ctx.sim.interpolation_alpha;
+        let EngineContext {
+            ref registry,
+            ref state,
+            ref mut renderer,
+            ..
+        } = *ctx;
+        renderer.build_scene(registry, state, anim_time, alpha);
+        renderer.flush();
+    });
+}
+
+#[wasm_bindgen]
+pub fn render_custom_state_webgl(state_json: &str, anim_time: f32, alpha: f32) -> usize {
+    if let Ok(custom_state) = serde_json::from_str::<RustGameState>(state_json) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut renderer,
+                ..
+            } = *ctx;
+            renderer.build_scene(registry, &custom_state, anim_time, alpha);
+            renderer.flush();
+            renderer.color_vertices.len() + renderer.tex_vertices.len()
+        })
+    } else {
+        0
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_set_map(map_id: &str) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.set_map(map_id);
+        serde_json::to_string(&ctx.state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_reset() -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.reset();
+        serde_json::to_string(&ctx.state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_get_state_json() -> String {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        serde_json::to_string(&ctx.state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_set_state_json(json: &str) -> bool {
+    if let Ok(new_state) = serde_json::from_str::<RustGameState>(json) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            ctx.nav.rebuild_from_map(&new_state.current_map);
+            ctx.wave.set_total_waves(new_state.custom_total_waves);
+            ctx.state = new_state;
+        });
+        true
+    } else {
+        false
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_tick(dt: f32) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.tick(dt);
+        serde_json::to_string(&ctx.state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_update(raw_dt: f32) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.update(raw_dt);
+        serde_json::to_string(&ctx.state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_get_interpolation_alpha() -> f32 {
+    CTX.with(|c| c.borrow().sim.interpolation_alpha)
+}
+
+#[wasm_bindgen]
+pub fn engine_get_wave_status_json() -> String {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        serde_json::json!({
+            "currentWaveIndex": ctx.wave.current_wave_index,
+            "isWaveInProgress": ctx.wave.is_wave_in_progress,
+            "waveTime": ctx.wave.wave_time,
+            "customTotalWaves": ctx.wave.custom_total_waves,
+            "activeSpawners": ctx.wave.active_spawners,
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_start_wave(wave_num: Option<usize>) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref registry,
+            ref state,
+            ref mut wave,
+            ref mut audio,
+            ..
+        } = *ctx;
+        let ok = wave.start_wave(registry, &state.current_map, wave_num);
+        if ok {
+            audio.play_wave_start();
+        }
+        serde_json::json!({
+            "ok": ok,
+            "currentWaveIndex": wave.current_wave_index,
+            "isWaveInProgress": wave.is_wave_in_progress,
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_validate_placement(x: f32, y: f32, tower_type_str: &str) -> String {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        let res = ctx.state.validate_placement(x, y, tower_type_str);
+        serde_json::to_string(&res).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str) -> String {
+    let parsed_type: Result<TowerType, _> =
+        serde_json::from_value(serde_json::Value::String(tower_type_str.to_string()));
+    if let Ok(tower_type) = parsed_type {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut state,
+                ref mut audio,
+                ..
+            } = *ctx;
+            let ok = state.build_tower_at(registry, audio, x, y, tower_type);
+            serde_json::json!({
+                "ok": ok,
+                "state": state
+            })
+            .to_string()
+        })
+    } else {
+        serde_json::json!({ "ok": false }).to_string()
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_build_tower(slot_id: &str, tower_type_str: &str) -> String {
+    let parsed_type: Result<TowerType, _> =
+        serde_json::from_value(serde_json::Value::String(tower_type_str.to_string()));
+    if let Ok(tower_type) = parsed_type {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut state,
+                ref mut audio,
+                ..
+            } = *ctx;
+            let ok = state.build_tower(registry, audio, slot_id, tower_type);
+            serde_json::json!({
+                "ok": ok,
+                "state": state
+            })
+            .to_string()
+        })
+    } else {
+        serde_json::json!({ "ok": false }).to_string()
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_upgrade_tower(tower_id: &str, branch_str: Option<String>) -> String {
+    let branch = branch_str
+        .and_then(|b| serde_json::from_value::<TowerBranch>(serde_json::Value::String(b)).ok());
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref registry,
+            ref mut state,
+            ref mut audio,
+            ..
+        } = *ctx;
+        let ok = state.upgrade_tower(registry, audio, tower_id, branch);
+        serde_json::json!({
+            "ok": ok,
+            "state": state
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_downgrade_or_destroy_tower(tower_id: &str) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref registry,
+            ref mut state,
+            ref mut audio,
+            ref mut rng,
+            ..
+        } = *ctx;
+        let res = state.downgrade_or_destroy_tower(registry, audio, rng, tower_id);
+        serde_json::json!({
+            "result": res,
+            "state": state
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_set_tower_element(tower_id: &str, element_str: &str, slot_idx: u8) -> String {
+    let parsed_elem: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(element_str.to_string()));
+    if let Ok(elem) = parsed_elem {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut state,
+                ref mut audio,
+                ..
+            } = *ctx;
+            let ok = state.set_tower_element(registry, audio, tower_id, elem, slot_idx);
+            serde_json::json!({
+                "ok": ok,
+                "state": state
+            })
+            .to_string()
+        })
+    } else {
+        serde_json::json!({ "ok": false }).to_string()
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_set_barracks_mode(tower_id: &str, mode_str: &str) -> String {
+    let parsed_mode: Result<SoldierCombatMode, _> =
+        serde_json::from_value(serde_json::Value::String(mode_str.to_string()));
+    if let Ok(mode) = parsed_mode {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref mut state,
+                ref mut audio,
+                ..
+            } = *ctx;
+            let ok = state.set_barracks_soldier_mode(audio, tower_id, mode);
+            serde_json::json!({
+                "ok": ok,
+                "state": state
+            })
+            .to_string()
+        })
+    } else {
+        serde_json::json!({ "ok": false }).to_string()
+    }
+}
+
+#[wasm_bindgen]
+pub fn engine_sell_tower(tower_id: &str) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref mut state,
+            ref mut audio,
+            ..
+        } = *ctx;
+        let ok = state.sell_tower(audio, tower_id);
+        serde_json::json!({
+            "ok": ok,
+            "state": state
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_set_rally_point(tower_id: &str, x: f32, y: f32) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref mut state,
+            ref mut audio,
+            ..
+        } = *ctx;
+        let ok = state.set_rally_point(audio, tower_id, x, y);
+        serde_json::json!({
+            "ok": ok,
+            "state": state
+        })
+        .to_string()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_handle_soldier_death(soldier_id: &str) -> String {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        let EngineContext {
+            ref registry,
+            ref mut state,
+            ref mut audio,
+            ref mut rng,
+            ..
+        } = *ctx;
+        state.handle_soldier_death(registry, audio, rng, soldier_id);
+        serde_json::to_string(state).unwrap_or_default()
+    })
+}
+
+// =========================================================================
+// Rule Engine & Wave System Stateless Helpers for UI & Tests
+// =========================================================================
+
+#[wasm_bindgen]
+pub fn rules_can_target(filter_json: &str, enemy_json: &str) -> bool {
+    let filter: Result<TargetingFilter, _> = serde_json::from_str(filter_json);
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    if let (Ok(f), Ok(e)) = (filter, enemy) {
+        TargetingRuleEngine::can_target(&f, &e)
+    } else {
+        false
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_calculate_elemental_matchup(attacker_str: &str, profile_json: &str) -> f32 {
+    let attacker: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(attacker_str.to_string()));
+    let profile: Result<ElementalProfile, _> = serde_json::from_str(profile_json);
+    if let (Ok(att), Ok(prof)) = (attacker, profile) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            TargetingRuleEngine::calculate_elemental_matchup(&ctx.registry, att, &prof)
+        })
+    } else {
+        1.0
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_calculate_damage(
+    payload_json: &str,
+    enemy_json: &str,
+    global_damage_mult: f32,
+) -> String {
+    let payload: Result<DamagePayload, _> = serde_json::from_str(payload_json);
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    if let (Ok(p), Ok(e)) = (payload, enemy) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let res =
+                TargetingRuleEngine::calculate_damage(&ctx.registry, global_damage_mult, &p, &e);
+            serde_json::to_string(&res).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_damage_to_enemy(
+    enemy_json: &str,
+    calc_json: &str,
+    elem_str: &str,
+    sec_elem_str: Option<String>,
+) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let calc: Result<crate::rules::DamageCalculationResult, _> = serde_json::from_str(calc_json);
+    let elem: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(elem_str.to_string()));
+    let sec_elem = sec_elem_str
+        .and_then(|s| serde_json::from_value::<ElementType>(serde_json::Value::String(s)).ok());
+
+    if let (Ok(mut e), Ok(c), Ok(el)) = (enemy, calc, elem) {
+        let (hp_lost, shield_absorbed) =
+            TargetingRuleEngine::apply_damage_to_enemy(&mut e, &c, el, sec_elem);
+        serde_json::json!({
+            "hpLost": hp_lost,
+            "shieldAbsorbed": shield_absorbed,
+            "enemy": e
+        })
+        .to_string()
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_elemental_hit_effects(
+    enemy_json: &str,
+    element_str: &str,
+    base_damage: f32,
+) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let elem: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(element_str.to_string()));
+    if let (Ok(mut e), Ok(el)) = (enemy, elem) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut rng,
+                ..
+            } = *ctx;
+            TargetingRuleEngine::apply_elemental_hit_effects(
+                registry,
+                rng,
+                &mut e,
+                el,
+                base_damage,
+            );
+            serde_json::to_string(&e).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_all_payload_effects(enemy_json: &str, payload_json: &str) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let payload: Result<DamagePayload, _> = serde_json::from_str(payload_json);
+    if let (Ok(mut e), Ok(p)) = (enemy, payload) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref registry,
+                ref mut rng,
+                ..
+            } = *ctx;
+            TargetingRuleEngine::apply_all_payload_effects(registry, rng, &mut e, &p);
+            serde_json::to_string(&e).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_status_effect(enemy_json: &str, payload_json: &str) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let payload: Result<StatusEffectPayload, _> = serde_json::from_str(payload_json);
+    if let (Ok(mut e), Ok(p)) = (enemy, payload) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            TargetingRuleEngine::apply_status_effect(&ctx.registry, &mut e, p);
+            serde_json::to_string(&e).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_update_status_effects(enemy_json: &str, dt: f32, global_dmg_mult: f32) -> String {
+    if let Ok(mut e) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let mut dot_events: Vec<serde_json::Value> = Vec::new();
+            TargetingRuleEngine::update_status_effects(
+                &ctx.registry,
+                global_dmg_mult,
+                &mut e,
+                dt,
+                |dmg, elem| {
+                    dot_events.push(serde_json::json!({
+                        "damage": dmg,
+                        "element": elem
+                    }));
+                },
+            );
+            serde_json::json!({
+                "enemy": e,
+                "dots": dot_events
+            })
+            .to_string()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_calculate_enemy_damage_to_soldier(enemy_json: &str, soldier_json: &str) -> String {
+    let enemy: Result<EnemyEntity, _> = serde_json::from_str(enemy_json);
+    let soldier: Result<SoldierEntity, _> = serde_json::from_str(soldier_json);
+    if let (Ok(e), Ok(s)) = (enemy, soldier) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let res = TargetingRuleEngine::calculate_enemy_damage_to_soldier_detailed(
+                &ctx.registry,
+                &e,
+                &s,
+            );
+            serde_json::to_string(&res).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_calculate_soldier_defensive_multiplier(
+    attacker_str: &str,
+    soldier_json: &str,
+) -> String {
+    let attacker: Result<ElementType, _> =
+        serde_json::from_value(serde_json::Value::String(attacker_str.to_string()));
+    let soldier: Result<SoldierEntity, _> = serde_json::from_str(soldier_json);
+    if let (Ok(att), Ok(s)) = (attacker, soldier) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let (matchup_mult, armor_or_resist, final_intake_ratio) =
+                TargetingRuleEngine::calculate_soldier_defensive_multiplier(&ctx.registry, att, &s);
+            serde_json::json!({
+                "matchupMultiplier": matchup_mult,
+                "armorOrResistReduction": armor_or_resist,
+                "finalDamageIntakeRatio": final_intake_ratio,
+            })
+            .to_string()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_get_crowd_control_modifiers(enemy_json: &str) -> String {
+    if let Ok(e) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let cc = TargetingRuleEngine::get_crowd_control_modifiers(&ctx.registry, &e);
+            serde_json::to_string(&cc).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn rules_apply_knockback(enemy_json: &str, base_distance: f32) -> String {
+    if let Ok(mut e) = serde_json::from_str::<EnemyEntity>(enemy_json) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let dist = TargetingRuleEngine::apply_knockback(&ctx.registry, &mut e, base_distance);
+            serde_json::json!({
+                "actualDistance": dist,
+                "enemy": e
+            })
+            .to_string()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn wave_generate_config(map_json: &str, wave_index: usize) -> String {
+    if let Ok(map) = serde_json::from_str::<MapConfig>(map_json) {
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            let cfg = ctx
+                .wave
+                .generate_wave_config(&ctx.registry, &map, wave_index);
+            serde_json::to_string(&cfg).unwrap_or_default()
+        })
+    } else {
+        String::new()
+    }
+}
+
+#[wasm_bindgen]
+pub fn wave_create_enemy(
+    map_json: &str,
+    type_id: &str,
+    wave_index: usize,
+    forced_lane_index: Option<usize>,
+) -> String {
+    if let Ok(map) = serde_json::from_str::<MapConfig>(map_json) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let prev_wave = ctx.wave.current_wave_index;
+            ctx.wave.current_wave_index = wave_index;
+            let EngineContext {
+                ref registry,
+                ref mut wave,
+                ..
+            } = *ctx;
+            let enemy = wave.create_enemy(registry, &map, type_id, forced_lane_index);
+            wave.current_wave_index = prev_wave;
+            if let Some(e) = enemy {
+                serde_json::to_string(&e).unwrap_or_default()
+            } else {
+                String::new()
+            }
+        })
+    } else {
+        String::new()
+    }
+}
+
+// =========================================================================
+// Audio Exports (SoundSystem in Rust)
+// =========================================================================
+
+#[wasm_bindgen]
+pub fn audio_set_enabled(enabled: bool) {
+    CTX.with(|c| c.borrow_mut().audio.set_enabled(enabled));
+}
+
+#[wasm_bindgen]
+pub fn audio_set_volume(volume: f32) {
+    CTX.with(|c| c.borrow_mut().audio.set_volume(volume));
+}
+
+#[wasm_bindgen]
+pub fn audio_get_recorded_events_json() -> String {
+    CTX.with(|c| {
+        let ctx = c.borrow();
+        serde_json::to_string(&ctx.audio.recorded_events).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn audio_clear_recorded_events() {
+    CTX.with(|c| c.borrow_mut().audio.recorded_events.clear());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_shoot(shoot_type: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_shoot(shoot_type));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_hit(is_immune: bool, is_reaction: bool, is_melee: bool) {
+    CTX.with(|c| {
+        c.borrow_mut()
+            .audio
+            .play_hit(is_immune, is_reaction, is_melee)
+    });
+}
+
+#[wasm_bindgen]
+pub fn audio_play_explosion(scale: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_explosion(scale));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_trap_trigger(trap_type: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_trap_trigger(trap_type));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_enemy_death(tier: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_enemy_death(tier));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_soldier_death() {
+    CTX.with(|c| c.borrow_mut().audio.play_soldier_death());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_tower_damaged(severity: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_tower_damaged(severity));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_base_damaged(is_boss: bool) {
+    CTX.with(|c| c.borrow_mut().audio.play_base_damaged(is_boss));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_enemy_skill(skill: &str) {
+    CTX.with(|c| c.borrow_mut().audio.play_enemy_skill(skill));
+}
+
+#[wasm_bindgen]
+pub fn audio_play_build() {
+    CTX.with(|c| c.borrow_mut().audio.play_build());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_upgrade() {
+    CTX.with(|c| c.borrow_mut().audio.play_upgrade());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_imbue() {
+    CTX.with(|c| c.borrow_mut().audio.play_imbue());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_sell() {
+    CTX.with(|c| c.borrow_mut().audio.play_sell());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_rally() {
+    CTX.with(|c| c.borrow_mut().audio.play_rally());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_error() {
+    CTX.with(|c| c.borrow_mut().audio.play_error());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_wave_start() {
+    CTX.with(|c| c.borrow_mut().audio.play_wave_start());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_wave_complete() {
+    CTX.with(|c| c.borrow_mut().audio.play_wave_complete());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_victory() {
+    CTX.with(|c| c.borrow_mut().audio.play_victory());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_game_over() {
+    CTX.with(|c| c.borrow_mut().audio.play_game_over());
+}
+
+#[wasm_bindgen]
+pub fn audio_play_ui_click() {
+    CTX.with(|c| c.borrow_mut().audio.play_ui_click());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::*;
+
+    #[test]
+    fn test_spatial_grid_and_path_lane() {
+        let mut world = SimulationWorld::new(1000.0, 650.0);
+        world.set_path(0, 0, &[0.0, 100.0, 500.0, 100.0, 500.0, 400.0]);
+        world.spawn_enemy(1, 100.0, 0.0, 0, 0, 1.0, 0.0, 1.0, 0, 0.0, 0.0, 0.0);
+        world.step_simulation(1.0, 1.0);
+        assert_eq!(world.enemies.len(), 1);
+        assert!((world.enemies[0].x - 100.0).abs() < 1e-3);
+        let found = world.find_best_target_in_range(100.0, 100.0, 50.0, 0);
+        assert_eq!(found, 1);
+    }
+
+    #[test]
+    fn test_targeting_rule_engine_can_target_and_damage() {
+        let ground_only = TargetingFilter {
+            allowed_movement: vec![MovementType::WALK],
+            excluded_elements: None,
+            excluded_tags: Some(vec!["STEALTH".to_string()]),
+            skip_immune_targets: None,
+        };
+        let mut enemy = EnemyEntity {
+            id: "e1".to_string(),
+            type_id: "GRUNT".to_string(),
+            name: "Grunt".to_string(),
+            movement_type: MovementType::WALK,
+            navigation_mode: NavigationMode::GroundPath,
+            lane_index: Some(0),
+            hp: 100.0,
+            max_hp: 100.0,
+            speed: 50.0,
+            base_speed: 50.0,
+            size: 12.0,
+            damage: 5.0,
+            attack_speed: 1.0,
+            attack_cooldown: 0.0,
+            reward_gold: 10,
+            elemental_profile: ElementalProfile {
+                primary_element: ElementType::GRASS,
+                secondary_element: None,
+                immunities: vec![ElementType::POISON],
+                damage_multipliers: None,
+            },
+            tags: vec![],
+            abilities: None,
+            ability_timers: None,
+            x: 100.0,
+            y: 100.0,
+            prev_x: Some(100.0),
+            prev_y: Some(100.0),
+            path_distance: 0.0,
+            path_total_length: 500.0,
+            facing: 0.0,
+            altitude: 0.0,
+            state: EnemyState::WALKING,
+            status_effects: vec![],
+            engaged_by_soldier_id: None,
+            armor_shield: None,
+            max_armor_shield: None,
+            magic_shield: None,
+            max_magic_shield: None,
+            damage_reduction_ratio: None,
+            damage_reduction_timer: None,
+            damage_reduction_buffs: None,
+            cc_resistance: None,
+        };
+
+        assert!(TargetingRuleEngine::can_target(&ground_only, &enemy));
+        enemy.tags.push("STEALTH".to_string());
+        assert!(!TargetingRuleEngine::can_target(&ground_only, &enemy));
+        enemy.tags.clear();
+
+        let reg = GameConfigRegistry::default();
+        let payload = DamagePayload {
+            amount: 40.0,
+            element: ElementType::POISON,
+            secondary_element: None,
+            secondary_amount: None,
+            bonus_elements: None,
+            source_id: "t1".to_string(),
+            is_crit: Some(false),
+            status_effect: None,
+            secondary_status_effect: None,
+        };
+        let res = TargetingRuleEngine::calculate_damage(&reg, 1.0, &payload, &enemy);
+        assert!(res.is_immune);
+        assert_eq!(res.final_damage, 0.0);
+    }
+
+    #[test]
+    fn test_audio_recording_and_throttling() {
+        let mut audio = RustSoundSystem::new();
+        audio.set_enabled(true);
+        audio.play_shoot("ARCHER");
+        audio.play_explosion("LARGE");
+        assert_eq!(audio.recorded_events.len(), 3); // SET_ENABLED, SHOOT, EXPLOSION
+        assert_eq!(audio.recorded_events[1].sound, "SHOOT");
+        assert_eq!(audio.recorded_events[2].sound, "EXPLOSION");
+    }
+
+    #[test]
+    fn test_webgl_batcher_generates_vertices() {
+        let mut ctx = EngineContext::new();
+        ctx.renderer
+            .build_scene(&ctx.registry, &ctx.state, 0.5, 1.0);
+        assert!(!ctx.renderer.color_vertices.is_empty());
+    }
 }

@@ -7,13 +7,19 @@ import { TargetingRuleEngine } from './systems/TargetingRuleEngine.js';
 import { MapRenderer } from './render/MapRenderer.js';
 import { StickmanRenderer } from './render/StickmanRenderer.js';
 import { TowerRenderer } from './render/TowerRenderer.js';
+import { UnitSpriteCache } from './render/UnitSpriteCache.js';
 import { UIManager } from './ui/UIManager.js';
 import { MAPS_CONFIG } from './config/map.config.js';
 import { SoundSystem } from './systems/SoundSystem.js';
 
 class GameApp {
   private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
+  private gl: WebGL2RenderingContext | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private overlayCanvas: HTMLCanvasElement | null = null;
+  private overlayCtx: CanvasRenderingContext2D | null = null;
+  private webglReady: boolean = false;
+
   private state: GameState;
   private navSystem: NavigationSystem;
   private waveSystem: WaveSystem;
@@ -23,7 +29,34 @@ class GameApp {
 
   constructor() {
     this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
-    this.ctx = this.canvas.getContext('2d')!;
+
+    // Try WebGL2 context first for Rust WASM GPU renderer
+    try {
+      this.gl = this.canvas.getContext('webgl2', { alpha: false, antialias: true }) as WebGL2RenderingContext | null;
+    } catch {
+      this.gl = null;
+    }
+
+    if (this.gl) {
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (wrapper) {
+        const overlay = document.createElement('canvas');
+        overlay.id = 'game-hud-overlay';
+        overlay.width = this.canvas.width;
+        overlay.height = this.canvas.height;
+        overlay.style.position = 'absolute';
+        overlay.style.inset = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        wrapper.insertBefore(overlay, this.canvas.nextSibling);
+        this.overlayCanvas = overlay;
+        this.overlayCtx = overlay.getContext('2d');
+      }
+    } else {
+      this.ctx = this.canvas.getContext('2d');
+    }
+
     this.state = new GameState();
     this.state.loadSettingsFromStorage();
     TargetingRuleEngine.globalDamageMultiplier = this.state.damageMultiplier;
@@ -42,9 +75,16 @@ class GameApp {
     this.setupResize();
     this.bindCanvasEvents();
 
-    WasmBridge.getInstance().init().then((active) => {
+    const bridge = WasmBridge.getInstance();
+    bridge.init().then((active) => {
       if (active) {
         this.simEngine.onMapChanged();
+        if (this.gl) {
+          this.webglReady = bridge.initWebGlRenderer(this.gl);
+          if (this.webglReady) {
+            UnitSpriteCache.bakeAndUploadWebGlAtlas(bridge);
+          }
+        }
       }
     });
 
@@ -117,7 +157,6 @@ class GameApp {
     SoundSystem.playWaveStart();
 
     if (this.waveSystem.isWaveInProgress) {
-      // Đã ở đợt quái cuối cùng (đầy waves) thì không thể gọi thêm đợt nữa
       if (this.waveSystem.currentWaveIndex >= this.waveSystem.getTotalWaves() - 1) {
         return;
       }
@@ -163,7 +202,6 @@ class GameApp {
   }
 
   private bindCanvasEvents(): void {
-    // Mouse move tracking
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
@@ -182,7 +220,6 @@ class GameApp {
       this.state.hoveredTowerId = foundTower;
     });
 
-    // Right click cancels selection / placement
     this.canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       this.state.activePlacementType = null;
@@ -201,13 +238,11 @@ class GameApp {
       const clickX = (e.clientX - rect.left) * scaleX;
       const clickY = (e.clientY - rect.top) * scaleY;
 
-      // 1. If currently setting rally point for a barracks
       if (this.state.isSettingRallyPoint && this.state.selectedTowerId) {
         this.state.setRallyPoint(this.state.selectedTowerId, clickX, clickY);
         return;
       }
 
-      // 2. If in Quick-Placement Mode from hotbar/keys: build directly at (clickX, clickY)
       if (this.state.activePlacementType) {
         const built = this.state.buildTowerAt(clickX, clickY, this.state.activePlacementType);
         if (built && !e.shiftKey) {
@@ -217,7 +252,6 @@ class GameApp {
         return;
       }
 
-      // 3. Check if clicked on an existing tower
       let clickedTower = false;
       for (const tower of this.state.towers) {
         const dist = Math.hypot(clickX - tower.x, clickY - tower.y);
@@ -234,7 +268,6 @@ class GameApp {
 
       if (clickedTower) return;
 
-      // 3b. Check if clicked on an active summoned soldier
       let clickedSoldier = false;
       for (const soldier of this.state.soldiers) {
         if (soldier.state === 'DEAD') continue;
@@ -252,12 +285,10 @@ class GameApp {
 
       if (clickedSoldier) return;
 
-      // 4. Clicked on an empty spot on the map: evaluate terrain & set selectedBuildPoint
       const valTrap = this.state.validatePlacement(clickX, clickY, 'TRAP_GENERIC');
       const valTower = this.state.validatePlacement(clickX, clickY, 'TOWER_GENERIC');
 
       if (valTrap.valid) {
-        // Point is on road or water: offer traps
         this.state.selectedBuildPoint = {
           x: Math.round(clickX),
           y: Math.round(clickY),
@@ -270,7 +301,6 @@ class GameApp {
         this.uiManager.updateHotbarVisuals();
         return;
       } else if (valTower.valid) {
-        // Point is on land: offer towers
         this.state.selectedBuildPoint = {
           x: Math.round(clickX),
           y: Math.round(clickY),
@@ -284,7 +314,6 @@ class GameApp {
         return;
       }
 
-      // Clicked outside valid areas (e.g. out of bounds or overlapping)
       this.state.selectedSlotId = null;
       this.state.selectedTowerId = null;
       this.state.selectedBuildPoint = null;
@@ -313,56 +342,57 @@ class GameApp {
   }
 
   private render(alpha: number = 1.0): void {
-    const { ctx } = this;
+    const animTime = this.simEngine.getTotalAnimTime();
+    const bridge = WasmBridge.getInstance();
+
+    // Primary Path: Rust WASM + WebGL2 Hardware Accelerated Renderer
+    if (this.gl && this.webglReady && bridge.isAvailable()) {
+      bridge.renderCustomStateWebGl(JSON.stringify(this.state), animTime, alpha);
+
+      if (this.overlayCtx && this.overlayCanvas) {
+        this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+        MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, animTime);
+        TowerRenderer.renderFloatingTexts(this.overlayCtx, this.state.floatingTexts);
+      }
+      return;
+    }
+
+    // Fallback Path: 2D Canvas Context (when WebGL2 or WASM is unavailable)
+    const ctx = this.ctx || this.overlayCtx;
+    if (!ctx) return;
+
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    const animTime = this.simEngine.getTotalAnimTime();
-
-    // 1. Map & Road & River of current active map (uses cached static terrain)
     MapRenderer.renderBackground(ctx, animTime, this.state.currentMap);
-
-    // 2. Traps and Towers
     TowerRenderer.renderTowers(ctx, this.state.towers, this.state.selectedTowerId, animTime);
 
-    // 3. Update Smart LOD based on total live units on battlefield
     StickmanRenderer.currentLOD = StickmanRenderer.getLODLevel(
       this.state.enemies.length + this.state.soldiers.length
     );
 
-    // 4. Ground/Water Enemies
     for (const enemy of this.state.enemies) {
       if (enemy.movementType !== 'FLY') {
         StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
       }
     }
 
-    // 5. Soldiers
     for (const soldier of this.state.soldiers) {
       StickmanRenderer.renderSoldier(ctx, soldier, animTime);
     }
 
-    // 6. Flying Enemies
     for (const enemy of this.state.enemies) {
       if (enemy.movementType === 'FLY') {
         StickmanRenderer.renderEnemy(ctx, enemy, animTime, alpha);
       }
     }
 
-    // 7. Free Placement Cursor Feedback & Range Preview
     MapRenderer.renderPlacementFeedback(ctx, this.state, animTime);
-
-    // 8. Projectiles
     TowerRenderer.renderProjectiles(ctx, this.state.projectiles);
-
-    // 9. Particles & Explosions
     TowerRenderer.renderParticles(ctx, this.state.particles);
-
-    // 10. Floating Texts
     TowerRenderer.renderFloatingTexts(ctx, this.state.floatingTexts);
   }
 }
 
-// Start application
 window.addEventListener('DOMContentLoaded', () => {
   new GameApp();
 });

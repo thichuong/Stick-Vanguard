@@ -1,6 +1,7 @@
 import { EnemyEntity } from '../types/entities.types.js';
 import { WaveConfig, MAP_CONFIG, MapConfig, getTraversableLaneCount } from '../config/map.config.js';
 import { ENEMY_BLUEPRINTS } from '../config/enemies.config.js';
+import { WasmBridge } from '../core/WasmBridge.js';
 
 interface ActiveSpawner {
   typeId: string;
@@ -66,6 +67,18 @@ export class WaveSystem {
    *     * Boss xuất hiện trên tất cả lane có thể đi được (số lượng Boss = traversableLanes * n).
    */
   public generateWaveConfig(waveIdx: number, _totalWaves?: number): WaveConfig {
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable() && this.currentMap) {
+      const json = bridge.getOps().wave_generate_config(JSON.stringify(this.currentMap), waveIdx);
+      if (json) {
+        try {
+          return JSON.parse(json) as WaveConfig;
+        } catch {
+          // Fallback to TS if JSON parse fails
+        }
+      }
+    }
+
     const waveNum = waveIdx + 1;
     const mapWaves = this.currentMap?.waves || [];
 

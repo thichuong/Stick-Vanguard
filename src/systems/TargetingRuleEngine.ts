@@ -13,6 +13,7 @@ import {
   TierCCConfig,
   EnemyTierCategory
 } from '../config/enemies.config.js';
+import { WasmBridge } from '../core/WasmBridge.js';
 
 export interface DamageCalculationResult {
   finalDamage: number;
@@ -45,6 +46,11 @@ export class TargetingRuleEngine {
     filter: TargetingFilter,
     enemy: EnemyEntity
   ): boolean {
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable()) {
+      return bridge.getOps().rules_can_target(JSON.stringify(filter), JSON.stringify(enemy));
+    }
+
     if (enemy.hp <= 0 || enemy.state === 'DEAD') {
       return false;
     }
@@ -82,6 +88,11 @@ export class TargetingRuleEngine {
     attacker: ElementType,
     profile: ElementalProfile
   ): number {
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable()) {
+      return bridge.getOps().rules_calculate_elemental_matchup(attacker, JSON.stringify(profile));
+    }
+
     if (profile.immunities.includes(attacker)) {
       return 0;
     }
@@ -244,6 +255,20 @@ export class TargetingRuleEngine {
     payload: DamagePayload,
     enemy: EnemyEntity
   ): DamageCalculationResult {
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable()) {
+      const json = bridge
+        .getOps()
+        .rules_calculate_damage(JSON.stringify(payload), JSON.stringify(enemy), this.globalDamageMultiplier);
+      if (json) {
+        try {
+          return JSON.parse(json) as DamageCalculationResult;
+        } catch {
+          // Fallback to TS if JSON parse fails
+        }
+      }
+    }
+
     const primary = this.calculateSingleDamage(payload.amount, payload.element, payload.isCrit, enemy);
     let totalBase = payload.amount;
     let allImmune = primary.isImmune;

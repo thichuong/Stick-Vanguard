@@ -138,6 +138,41 @@ describe('WasmBridge Core & Fallback Architecture', () => {
       bridge.removeEnemy('test-enemy-3');
       bridge.clearAll();
       expect(bridge.getRenderView()?.length || 0).toBe(0);
+
+      // Test Full Rust WASM Engine, Rules, Wave Generator, Audio & WebGL2 Vertex Batcher
+      const ops = bridge.getOps();
+      const mapStateJson = ops.engine_set_map('valley_origin');
+      const mapState = JSON.parse(mapStateJson);
+      expect(mapState.currentMapId).toBe('valley_origin');
+      expect(mapState.gold).toBe(320);
+
+      // Build an Archer tower in Rust
+      const buildRes = JSON.parse(ops.engine_build_tower('slot-r1', 'ARCHER'));
+      expect(buildRes.ok).toBe(true);
+      expect(buildRes.state.towers.length).toBe(1);
+      expect(buildRes.state.towers[0].type).toBe('ARCHER');
+
+      // Start Wave 1 in Rust and run simulation ticks
+      const waveStart = JSON.parse(ops.engine_start_wave(1));
+      expect(waveStart.ok).toBe(true);
+      expect(waveStart.isWaveInProgress).toBe(true);
+
+      let tickedState = buildRes.state;
+      for (let i = 0; i < 65; i++) {
+        tickedState = JSON.parse(ops.engine_tick(1 / 60));
+      }
+      expect(tickedState.enemies.length).toBeGreaterThan(0);
+
+      // Test WebGL2 scene vertex generation in Rust
+      const vertexCount = bridge.renderCustomStateWebGl(JSON.stringify(tickedState), 1.0, 1.0);
+      expect(vertexCount).toBeGreaterThan(100);
+
+      // Test Rust Audio recording
+      ops.audio_clear_recorded_events();
+      ops.audio_play_shoot('ARCHER');
+      const recordedAudio = JSON.parse(ops.audio_get_recorded_events_json());
+      expect(recordedAudio.length).toBeGreaterThan(0);
+      expect(recordedAudio[0].sound).toBe('SHOOT');
     }
   });
 });
