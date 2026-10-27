@@ -2151,6 +2151,74 @@ mod tests {
             assert!(ok);
             assert!(!ctx.renderer.color_vertices.is_empty());
         }
+
+        // Test all redesigned enemy archetypes render non-empty vertices
+        let enemy_archetype_cases = [
+            "DARK_DRAGON_BOSS",
+            "WYVERN_RAIDER",
+            "DRAKE_WARRIOR",
+            "RIVER_DRAKE",
+            "VOID_HYDRA_BOSS",
+            "SPARK_EEL",
+            "AQUA_SERPENT",
+            "ARCHANGEL_MONARCH_BOSS",
+            "CELESTIAL_FAIRY",
+            "FAIRY_SPRITE",
+            "EMP_DRONE",
+            "TOXIC_BAT",
+            "VENOM_ARACHNID",
+            "MOSS_TURTLE",
+            "PLAGUE_LEVIATHAN",
+            "ABYSSAL_CRAB",
+            "ICE_SHARDLING",
+            "MAGMA_SLIME",
+            "EMBER_BLOB",
+            "CHRONO_DESTROYER_BOSS",
+            "INFERNO_MONARCH_BOSS",
+            "ANCIENT_TREANT_BOSS",
+            "FROST_CRYSTAL_GOLEM",
+            "IRON_COLOSSUS",
+            "SOUL_EMPEROR_BOSS",
+            "PHANTOM_REAPER",
+            "SPECTRAL_BANSHEE",
+            "HEX_DEGRADER",
+            "TEMPEST_LEVIATHAN_BOSS",
+            "STORM_CALLER_SIREN",
+            "STICK_RUNNER",
+            "FIRE_IMP",
+            "SKELETON_MINION",
+            "NECRO_WARLOCK",
+        ];
+        for type_id in enemy_archetype_cases {
+            let enemy = EnemyEntity {
+                type_id: type_id.to_string(),
+                x: 100.0,
+                y: 100.0,
+                size: 20.0,
+                altitude: 0.0,
+                hp: 100.0,
+                max_hp: 100.0,
+                tags: if type_id.ends_with("_BOSS") {
+                    vec!["BOSS".to_string()]
+                } else {
+                    vec![]
+                },
+                elemental_profile: ElementalProfile {
+                    primary_element: ElementType::FIRE,
+                    secondary_element: Some(ElementType::LIGHTNING),
+                    immunities: vec![],
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            ctx.renderer.color_vertices.clear();
+            ctx.renderer.render_enemy(&ctx.registry, &enemy, 1.0, 1.0);
+            assert!(
+                !ctx.renderer.color_vertices.is_empty(),
+                "Failed to generate vertices for {}",
+                type_id
+            );
+        }
     }
 
     #[test]
