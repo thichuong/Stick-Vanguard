@@ -10,6 +10,7 @@ export interface SavedSettings {
   currentMapId: string;
   soundEnabled: boolean;
   soundVolume: number;
+  autoNextWave: boolean;
 }
 
 export const STORAGE_KEY_SETTINGS = 'stick_vanguard_settings_v1';
@@ -22,7 +23,8 @@ export const DEFAULT_SETTINGS: SavedSettings = {
   gameSpeed: 1,
   currentMapId: MAPS_CONFIG[0]?.id || 'valley_origin',
   soundEnabled: true,
-  soundVolume: 0.7
+  soundVolume: 0.7,
+  autoNextWave: false
 };
 
 export class StorageService {
@@ -92,6 +94,11 @@ export class StorageService {
       soundVolume = Math.max(0, Math.min(1.0, Math.round(raw.soundVolume * 100) / 100));
     }
 
+    let autoNextWave = DEFAULT_SETTINGS.autoNextWave;
+    if (typeof raw.autoNextWave === 'boolean') {
+      autoNextWave = raw.autoNextWave;
+    }
+
     return {
       version: 1,
       customTotalWaves,
@@ -100,7 +107,8 @@ export class StorageService {
       gameSpeed,
       currentMapId,
       soundEnabled,
-      soundVolume
+      soundVolume,
+      autoNextWave
     };
   }
 
@@ -151,7 +159,8 @@ export class StorageService {
       gameSpeed: (state.gameSpeed === 2 ? 2 : 1) as 1 | 2,
       currentMapId: state.currentMapId,
       soundEnabled: state.soundEnabled,
-      soundVolume: state.soundVolume
+      soundVolume: state.soundVolume,
+      autoNextWave: state.autoNextWave
     };
     return this.saveSettings(data);
   }
@@ -170,6 +179,7 @@ export class StorageService {
     state.gameSpeed = settings.gameSpeed;
     state.soundEnabled = settings.soundEnabled;
     state.soundVolume = settings.soundVolume;
+    state.autoNextWave = settings.autoNextWave;
     return settings;
   }
 

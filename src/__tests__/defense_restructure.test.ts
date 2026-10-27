@@ -13,6 +13,9 @@ import { SoldierEntity, EnemyEntity, TowerEntity } from '../types/entities.types
 import { ArsenalBar } from '../ui/hud/ArsenalBar.js';
 import { InspectorPanel } from '../ui/inspector/InspectorPanel.js';
 import { SummonedUnitDetailModal } from '../ui/modals/SummonedUnitDetailModal.js';
+import { SoundSystem } from '../systems/SoundSystem.js';
+import { StorageService } from '../core/StorageService.js';
+import { WasmBridge } from '../core/WasmBridge.js';
 
 describe('Defense System Restructure & New Summon Towers', () => {
   it('correctly classifies towers into 3 categories', () => {
@@ -980,6 +983,139 @@ describe('Defense System Restructure & New Summon Towers', () => {
       modal.close();
       expect(modal.isOpen()).toBe(false);
       expect(modal.currentSoldierId).toBeNull();
+    } finally {
+      (globalThis as any).document = origDoc;
+    }
+  });
+
+  it('verifies SoundSystem syncToWasm and persistent storage synchronization', () => {
+    // Save disabled sound to storage
+    StorageService.saveSettings({ soundEnabled: false, soundVolume: 0.3 });
+    const loaded = StorageService.loadSettings();
+    expect(loaded.soundEnabled).toBe(false);
+    expect(loaded.soundVolume).toBe(0.3);
+
+    // Apply to GameState and SoundSystem
+    const state = new GameState();
+    state.loadSettingsFromStorage();
+    expect(state.soundEnabled).toBe(false);
+    expect(state.soundVolume).toBe(0.3);
+    expect(SoundSystem.soundEnabled).toBe(false);
+    expect(SoundSystem.soundVolume).toBe(0.3);
+
+    // Verify bridge sync
+    SoundSystem.syncToWasm();
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable()) {
+      const ops = bridge.getOps();
+      expect(typeof ops.audio_set_enabled).toBe('function');
+      expect(typeof ops.audio_set_volume).toBe('function');
+    }
+  });
+
+  it('verifies Heroic Altar summoned spirit units render stats and cards on InspectorPanel', () => {
+    const state = new GameState();
+    state.validatePlacement = () => ({ valid: true, placement: 'ROADSIDE' });
+    const built = state.buildTowerAt(300, 200, 'HEROIC_ALTAR');
+    expect(built).toBe(true);
+    const altar = state.towers.find((t) => t.type === 'HEROIC_ALTAR')!;
+    expect(altar).toBeDefined();
+    expect(altar.type).toBe('HEROIC_ALTAR');
+    expect(altar.range).toBe(220);
+
+    const mockContent: any = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [], addEventListener: () => {} };
+    const mockInspectorEl: any = {
+      innerHTML: '',
+      querySelector: () => mockContent,
+      querySelectorAll: () => [],
+      addEventListener: () => {}
+    };
+
+    const origDoc = (globalThis as any).document;
+    (globalThis as any).document = {
+      getElementById: (id: string) => {
+        if (id === 'right-panel') return mockInspectorEl;
+        if (id === 'inspector-content') return mockContent;
+        return {
+          innerHTML: '',
+          textContent: '',
+          classList: { add: () => {}, remove: () => {}, toggle: () => {} },
+          addEventListener: () => {},
+          setAttribute: () => {},
+          getAttribute: () => null,
+          querySelector: () => null,
+          querySelectorAll: () => []
+        };
+      },
+      querySelectorAll: () => []
+    };
+
+    try {
+      const mockSidePanel: any = { open: () => {}, close: () => {} };
+      const inspector = new InspectorPanel(
+        state,
+        mockSidePanel,
+        () => {},
+        () => {}
+      );
+
+      state.selectedTowerId = altar.id;
+      inspector.render();
+
+      // Before spirits spawn: shows altar stats with Tầm chiêu hồn and Tỉ lệ chiêu hồn
+      expect(mockContent.innerHTML).toContain('Tầm chiêu hồn');
+      expect(mockContent.innerHTML).toContain('Tỉ lệ chiêu hồn');
+      expect(mockContent.innerHTML).toContain('Chưa có Anh Linh nào xuất hiện');
+
+      // Simulate a fallen ally resurrected into spirit
+      const spiritId = 'spirit-test-1';
+      const spiritUnit: SoldierEntity = {
+        id: spiritId,
+        towerId: altar.id,
+        name: 'Anh Linh Chiến Binh 1',
+        archetype: 'SOLDIER',
+        isSpirit: true,
+        spiritSourceArchetype: 'SOLDIER',
+        spiritGhostRatio: 0.5,
+        x: 310,
+        y: 210,
+        hp: 120,
+        maxHp: 120,
+        baseMaxHp: 120,
+        damage: 25,
+        baseDamage: 25,
+        attackSpeed: 1.0,
+        attackCooldown: 0.5,
+        element: 'PHYSICAL',
+        combatMode: 'MELEE',
+        state: 'IDLE',
+        engagedEnemyId: null,
+        rallyPoint: { x: 310, y: 210 },
+        targetPos: { x: 310, y: 210 },
+        armor: 0.2,
+        baseArmor: 0.2,
+        magicResist: 0.25,
+        respawnTimer: 0,
+        respawnDelay: 999999,
+        tier: 1
+      };
+      state.soldiers.push(spiritUnit);
+      altar.soldierIds = [spiritId];
+
+      (inspector as any).lastRenderKey = '';
+      inspector.render();
+
+      // After spirit spawn: summoned units card is rendered with stats!
+      expect(mockContent.innerHTML).toContain('ĐƠN VỊ ĐANG TRIỆU HỒI');
+      expect(mockContent.innerHTML).toContain('Anh Linh Chiến Binh 1');
+      expect(mockContent.innerHTML).toContain('120/120');
+      expect(mockContent.innerHTML).toContain('25 DMG');
+      expect(mockContent.innerHTML).toContain('20%'); // armor
+
+      // Also verify direct HTML helper
+      const summonedHtml = inspector.renderSummonedUnitsSectionHtml(altar);
+      expect(summonedHtml).toContain('Anh Linh Chiến Binh 1');
+      expect(summonedHtml).toContain('1/2 Sẵn sàng');
     } finally {
       (globalThis as any).document = origDoc;
     }

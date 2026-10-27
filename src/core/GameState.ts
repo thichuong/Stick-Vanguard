@@ -52,6 +52,9 @@ export class GameState {
   public soundEnabled: boolean = true;
   public soundVolume: number = 0.7; // 0.0 to 1.0
 
+  // Wave Automation Settings
+  public autoNextWave: boolean = false;
+
   public currentMapId: string = MAPS_CONFIG[0].id;
   public currentMap: MapConfig = MAPS_CONFIG[0];
 

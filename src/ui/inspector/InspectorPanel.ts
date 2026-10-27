@@ -500,12 +500,12 @@ export class InspectorPanel {
           </div>
           <div class="insp-stats-grid">
             <div class="insp-stat-item">
-              <span class="isi-lbl">${isSummon ? 'Tầm điều động' : 'Tầm bắn'}</span>
+              <span class="isi-lbl">${isSummon ? (tower.type === 'HEROIC_ALTAR' ? 'Tầm chiêu hồn' : 'Tầm điều động') : 'Tầm bắn'}</span>
               <span class="isi-val">${tower.range} px</span>
             </div>
             <div class="insp-stat-item">
-              <span class="isi-lbl">Tốc độ</span>
-              <span class="isi-val">${tower.fireRate}/s</span>
+              <span class="isi-lbl">${tower.type === 'HEROIC_ALTAR' ? 'Tỉ lệ chiêu hồn' : 'Tốc độ'}</span>
+              <span class="isi-val">${tower.type === 'HEROIC_ALTAR' ? `${Math.round((tower.resurrectChance || 0.3) * 100)}%` : `${tower.fireRate}/s`}</span>
             </div>
             <div class="insp-stat-item">
               <span class="isi-lbl">Đã đầu tư</span>
@@ -516,7 +516,9 @@ export class InspectorPanel {
             ${isSummon ? 'Sát thương đơn vị triệu hồi:' : 'Sát thương:'} ${damageDisplay}
           </div>
           ${
-            isSummon
+            tower.type === 'HEROIC_ALTAR'
+              ? `<div style="margin-top: 4px; font-size: 10.5px; color: #a5b4fc;">${ELEMENT_ICONS.GHOST} Tế đàn cổ đại không trực tiếp tấn công; khi đồng minh ngã xuống trong tầm, linh hồn được chiêu mộ thành Anh Linh mang thêm Hệ Ma.</div>`
+              : isSummon
               ? `<div style="margin-top: 4px; font-size: 10.5px; color: #38bdf8;">${UI_ICONS.FLAG} Tháp triệu hồi không trực tiếp tấn công; đơn vị triệu hồi sẽ ra chốt chặn và chiến đấu.</div>`
               : ''
           }
@@ -827,6 +829,9 @@ export class InspectorPanel {
         const rangeText = type.startsWith('TRAP_')
           ? `${bp.triggerRadius || bp.range || 40}px`
           : `${bp.range}px`;
+        const descText = type === 'HEROIC_ALTAR'
+          ? `${icon} [${bp.element}] • ${ELEMENT_ICONS.GHOST} Chiêu hồn ${Math.round((bp.resurrectChance || 0.3) * 100)}% • ${UI_ICONS.TARGET} ${rangeText} • ${bp.description}`
+          : `${icon} [${bp.element}] • ${UI_ICONS.SWORDS} ${bp.damage} • ${UI_ICONS.TARGET} ${rangeText} • ${bp.description}`;
         return `
           <button class="build-option ${isSelected ? 'active' : ''} ${canAfford ? '' : 'disabled'}" data-type="${type}">
             <div class="opt-top">
@@ -836,7 +841,7 @@ export class InspectorPanel {
               </span>
               <span class="opt-cost">${UI_ICONS.GOLD} ${bp.cost}</span>
             </div>
-            <div class="opt-desc">${icon} [${bp.element}] • ${UI_ICONS.SWORDS} ${bp.damage} • ${UI_ICONS.TARGET} ${rangeText} • ${bp.description}</div>
+            <div class="opt-desc">${descText}</div>
           </button>
         `;
       };
@@ -1104,6 +1109,7 @@ export class InspectorPanel {
     const armorPct = Math.round((u.armor || 0) * 100);
     const elemIcon = ELEMENT_ICONS[u.element] || '';
     const secIcon = u.secondaryElement ? ELEMENT_ICONS[u.secondaryElement] : '';
+    const ghostBadge = u.isSpirit && u.element !== 'GHOST' && u.secondaryElement !== 'GHOST' ? ELEMENT_ICONS.GHOST : '';
 
     return `
       <div class="summoned-unit-card ${isDead ? 'unit-is-dead' : ''}" data-soldier-id="${u.id}" title="Nhấp để xem chi tiết chỉ số & bảng sát thương">
@@ -1111,7 +1117,7 @@ export class InspectorPanel {
           <div class="suc-name-box">
             <span class="suc-icon">${icon}</span>
             <span class="suc-name">${nameDisplay}</span>
-            <span class="suc-elems">${elemIcon}${secIcon}</span>
+            <span class="suc-elems">${elemIcon}${secIcon}${ghostBadge}</span>
           </div>
           <div class="suc-hp-text">
             <span class="suc-view-detail-hint">🔍 Chi tiết</span>

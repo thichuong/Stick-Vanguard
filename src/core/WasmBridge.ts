@@ -1,5 +1,5 @@
 import initWasm, * as wasmOps from '../wasm/wasm_sim.js';
-import { EnemyEntity } from '../types/entities.types.js';
+import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
 import { NavigationSystem } from '../systems/NavigationSystem.js';
 import { ElementType, NavigationMode } from '../types/elements.types.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
@@ -39,15 +39,7 @@ export interface StepRenderOutput {
     maxLifeTime: number;
     size: number;
   }>;
-  soldiers?: Array<{
-    id: string;
-    hp: number;
-    maxHp: number;
-    state: any;
-    respawnTimer: number;
-    x: number;
-    y: number;
-  }>;
+  soldiers?: SoldierEntity[];
 }
 
 export class WasmBridge {

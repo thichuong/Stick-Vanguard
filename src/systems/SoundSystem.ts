@@ -31,24 +31,27 @@ export class SoundSystem {
 
   public static init(): void {
     WasmBridge.ensureSingletonReady();
+    this.syncToWasm();
+  }
+
+  public static syncToWasm(): void {
+    const bridge = WasmBridge.ensureSingletonReady();
+    if (bridge.isAvailable()) {
+      bridge.getOps().audio_set_enabled(this.soundEnabled);
+      bridge.getOps().audio_set_volume(this.soundVolume);
+    }
   }
 
   public static setEnabled(enabled: boolean): void {
     this.soundEnabled = enabled;
     this.record('SET_ENABLED', { enabled });
-    const bridge = WasmBridge.ensureSingletonReady();
-    if (bridge.isAvailable()) {
-      bridge.getOps().audio_set_enabled(enabled);
-    }
+    this.syncToWasm();
   }
 
   public static setVolume(volume: number): void {
     this.soundVolume = Math.max(0, Math.min(1.0, volume));
     this.record('SET_VOLUME', { volume: this.soundVolume });
-    const bridge = WasmBridge.ensureSingletonReady();
-    if (bridge.isAvailable()) {
-      bridge.getOps().audio_set_volume(this.soundVolume);
-    }
+    this.syncToWasm();
   }
 
   public static playShoot(type: ShootSoundType): void {

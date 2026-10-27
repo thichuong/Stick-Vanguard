@@ -8,6 +8,7 @@ interface ActiveSpawner {
   interval: number;
   timer: number;
   laneCursor: number;
+  waveIndex?: number;
 }
 
 export class WaveSystem {
@@ -17,6 +18,7 @@ export class WaveSystem {
   public customTotalWaves: number = 15;
   private currentMap: MapConfig;
   private activeSpawners: ActiveSpawner[] = [];
+  public pendingRewards: number[] = [];
 
   constructor(mapConfig: MapConfig = MAP_CONFIG, totalWaves: number = 15) {
     this.currentMap = mapConfig;
@@ -29,6 +31,7 @@ export class WaveSystem {
     this.isWaveInProgress = false;
     this.waveTime = 0;
     this.activeSpawners = [];
+    this.pendingRewards = [];
   }
 
   public setTotalWaves(waves: number): void {
@@ -80,6 +83,8 @@ export class WaveSystem {
     const config = this.getCurrentWaveConfig();
     if (!config) return false;
 
+    const thisWaveIdx = this.currentWaveIndex;
+    this.pendingRewards = [config.rewardGold];
     this.isWaveInProgress = true;
     this.waveTime = 0;
     this.activeSpawners = config.enemies.map((entry) => ({
@@ -87,9 +92,35 @@ export class WaveSystem {
       remainingCount: entry.count,
       interval: entry.interval,
       timer: entry.delay,
-      laneCursor: 0
+      laneCursor: 0,
+      waveIndex: thisWaveIdx
     }));
 
+    return true;
+  }
+
+  public callWaveEarly(): boolean {
+    if (!this.isWaveInProgress || this.currentWaveIndex + 1 >= this.getTotalWaves()) {
+      return false;
+    }
+
+    this.currentWaveIndex++;
+    const config = this.getCurrentWaveConfig();
+    if (!config) return false;
+
+    const thisWaveIdx = this.currentWaveIndex;
+    this.pendingRewards.push(config.rewardGold);
+
+    const newSpawners: ActiveSpawner[] = config.enemies.map((entry) => ({
+      typeId: entry.typeId,
+      remainingCount: entry.count,
+      interval: entry.interval,
+      timer: entry.delay,
+      laneCursor: 0,
+      waveIndex: thisWaveIdx
+    }));
+
+    this.activeSpawners.push(...newSpawners);
     return true;
   }
 
@@ -113,7 +144,7 @@ export class WaveSystem {
           spawner.remainingCount--;
 
           const forcedLane = spawner.laneCursor++;
-          const enemy = this.createEnemy(spawner.typeId, forcedLane);
+          const enemy = this.createEnemy(spawner.typeId, forcedLane, spawner.waveIndex);
           if (enemy) {
             onSpawnEnemy(enemy);
           }
@@ -121,12 +152,16 @@ export class WaveSystem {
       }
     }
 
+    this.activeSpawners = this.activeSpawners.filter((s) => s.remainingCount > 0);
+
     if (allSpawned && activeEnemiesCount === 0) {
       this.isWaveInProgress = false;
-      const config = this.getCurrentWaveConfig();
-      const reward = config ? config.rewardGold : 50;
+      const totalReward = this.pendingRewards.length > 0
+        ? this.pendingRewards.reduce((sum, r) => sum + r, 0)
+        : (this.getCurrentWaveConfig()?.rewardGold ?? 50);
+      this.pendingRewards = [];
 
-      onWaveComplete(reward);
+      onWaveComplete(totalReward);
 
       if (this.currentWaveIndex < this.getTotalWaves() - 1) {
         this.currentWaveIndex++;
@@ -149,12 +184,13 @@ export class WaveSystem {
     return 1.0 + extraWaves * 0.1;
   }
 
-  private createEnemy(typeId: string, forcedLaneIndex?: number): EnemyEntity | null {
+  private createEnemy(typeId: string, forcedLaneIndex?: number, waveIndex?: number): EnemyEntity | null {
     const bridge = WasmBridge.ensureSingletonReady();
+    const effWaveIdx = waveIndex !== undefined ? waveIndex : this.currentWaveIndex;
     const json = bridge.getOps().wave_create_enemy(
       JSON.stringify(this.currentMap),
       typeId,
-      this.currentWaveIndex,
+      effWaveIdx,
       forcedLaneIndex
     );
     if (!json) return null;

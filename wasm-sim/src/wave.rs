@@ -10,6 +10,8 @@ pub struct ActiveSpawner {
     pub interval: f32,
     pub timer: f32,
     pub lane_cursor: usize,
+    #[serde(default)]
+    pub wave_index: usize,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -23,6 +25,7 @@ pub struct WaveSystem {
     pub ground_lane_index: usize,
     pub water_lane_index: usize,
     pub air_lane_index: usize,
+    pub pending_rewards: Vec<u32>,
 }
 
 impl WaveSystem {
@@ -37,6 +40,7 @@ impl WaveSystem {
             ground_lane_index: 0,
             water_lane_index: 0,
             air_lane_index: 0,
+            pending_rewards: Vec::new(),
         }
     }
 
@@ -45,6 +49,7 @@ impl WaveSystem {
         self.is_wave_in_progress = false;
         self.wave_time = 0.0;
         self.active_spawners.clear();
+        self.pending_rewards.clear();
         self.ground_lane_index = 0;
         self.water_lane_index = 0;
         self.air_lane_index = 0;
@@ -242,6 +247,10 @@ impl WaveSystem {
         }
 
         let config = self.get_current_wave_config(registry, map);
+        let this_wave_idx = self.current_wave_index;
+        self.pending_rewards.clear();
+        self.pending_rewards.push(config.reward_gold);
+
         self.is_wave_in_progress = true;
         self.wave_time = 0.0;
         self.active_spawners = config
@@ -253,9 +262,41 @@ impl WaveSystem {
                 interval: entry.interval,
                 timer: entry.delay,
                 lane_cursor: 0,
+                wave_index: this_wave_idx,
             })
             .collect();
 
+        true
+    }
+
+    pub fn call_wave_early(
+        &mut self,
+        registry: &GameConfigRegistry,
+        map: &MapConfig,
+    ) -> bool {
+        if !self.is_wave_in_progress || self.current_wave_index + 1 >= self.get_total_waves() {
+            return false;
+        }
+
+        self.current_wave_index += 1;
+        let config = self.get_current_wave_config(registry, map);
+        let this_wave_idx = self.current_wave_index;
+        self.pending_rewards.push(config.reward_gold);
+
+        let new_spawners: Vec<ActiveSpawner> = config
+            .enemies
+            .into_iter()
+            .map(|entry| ActiveSpawner {
+                type_id: entry.type_id,
+                remaining_count: entry.count,
+                interval: entry.interval,
+                timer: entry.delay,
+                lane_cursor: 0,
+                wave_index: this_wave_idx,
+            })
+            .collect();
+
+        self.active_spawners.extend(new_spawners);
         true
     }
 
@@ -288,19 +329,33 @@ impl WaveSystem {
                     let forced_lane = self.active_spawners[i].lane_cursor;
                     self.active_spawners[i].lane_cursor += 1;
                     let type_id = self.active_spawners[i].type_id.clone();
+                    let spawner_wave_idx = self.active_spawners[i].wave_index;
 
-                    if let Some(enemy) = self.create_enemy(registry, map, &type_id, Some(forced_lane))
-                    {
+                    if let Some(enemy) = self.create_enemy(
+                        registry,
+                        map,
+                        &type_id,
+                        Some(forced_lane),
+                        Some(spawner_wave_idx),
+                    ) {
                         on_spawn_enemy(enemy);
                     }
                 }
             }
         }
 
+        // Dọn dẹp bớt các spawner đã hoàn tất sinh quái
+        self.active_spawners.retain(|s| s.remaining_count > 0);
+
         if all_spawned && active_enemies_count == 0 {
             self.is_wave_in_progress = false;
-            let config = self.get_current_wave_config(registry, map);
-            on_wave_complete(config.reward_gold);
+            let total_reward: u32 = if !self.pending_rewards.is_empty() {
+                self.pending_rewards.drain(..).sum()
+            } else {
+                let config = self.get_current_wave_config(registry, map);
+                config.reward_gold
+            };
+            on_wave_complete(total_reward);
 
             if self.current_wave_index + 1 < self.get_total_waves() {
                 self.current_wave_index += 1;
@@ -314,11 +369,13 @@ impl WaveSystem {
         map: &MapConfig,
         type_id: &str,
         forced_lane_index: Option<usize>,
+        spawner_wave_index: Option<usize>,
     ) -> Option<EnemyEntity> {
         let bp = registry.enemies.get(type_id)?;
         self.enemy_counter += 1;
 
-        let hp_mult = self.get_wave_hp_multiplier(self.current_wave_index);
+        let eff_wave_idx = spawner_wave_index.unwrap_or(self.current_wave_index);
+        let hp_mult = self.get_wave_hp_multiplier(eff_wave_idx);
         let final_hp = (bp.hp * hp_mult).round().max(1.0);
 
         let lane_index: usize;

@@ -954,22 +954,6 @@ pub fn engine_step_and_render(raw_dt: f32) -> String {
         renderer.build_scene(registry, state, anim_time, alpha);
         renderer.flush();
 
-        let live_soldiers: Vec<serde_json::Value> = state
-            .soldiers
-            .iter()
-            .map(|s| {
-                serde_json::json!({
-                    "id": s.id,
-                    "hp": s.hp,
-                    "maxHp": s.max_hp,
-                    "state": s.state,
-                    "respawnTimer": s.respawn_timer,
-                    "x": s.x,
-                    "y": s.y,
-                })
-            })
-            .collect();
-
         serde_json::to_string(&serde_json::json!({
             "gold": state.gold,
             "lives": state.lives,
@@ -986,7 +970,7 @@ pub fn engine_step_and_render(raw_dt: f32) -> String {
             "animTime": anim_time,
             "alpha": alpha,
             "floatingTexts": &state.floating_texts,
-            "soldiers": live_soldiers,
+            "soldiers": &state.soldiers,
         }))
         .unwrap_or_default()
     })
@@ -1085,10 +1069,8 @@ pub fn engine_call_wave_early() -> String {
                     "#facc15",
                     15.0,
                 );
-                ctx.wave.current_wave_index += 1;
-                let next_wave = ctx.wave.current_wave_index + 1;
                 let EngineContext { ref registry, ref state, ref mut wave, .. } = *ctx;
-                wave.start_wave(registry, &state.current_map, Some(next_wave));
+                wave.call_wave_early(registry, &state.current_map);
             }
         } else {
             if ctx.wave.current_wave_index < ctx.wave.custom_total_waves {
@@ -1836,7 +1818,7 @@ pub fn wave_create_enemy(
                 ref mut wave,
                 ..
             } = *ctx;
-            let enemy = wave.create_enemy(registry, &map, type_id, forced_lane_index);
+            let enemy = wave.create_enemy(registry, &map, type_id, forced_lane_index, Some(wave_index));
             wave.current_wave_index = prev_wave;
             if let Some(e) = enemy {
                 serde_json::to_string(&e).unwrap_or_default()
@@ -2149,7 +2131,41 @@ mod tests {
             assert_eq!(s.tier, 2);
         });
 
+        // Setup mock map waves so waves 1-5 have enemy entries
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            ctx.state.current_map.waves = (1..=10).map(|w| crate::config::WaveConfig {
+                wave_number: w,
+                name: format!("Đợt {}", w),
+                reward_gold: (50 + w * 10) as u32,
+                enemies: vec![crate::config::WaveEnemyEntry {
+                    type_id: "STICK_RUNNER".to_string(),
+                    count: 5,
+                    interval: 1.0,
+                    delay: 0.0,
+                }],
+            }).collect();
+        });
+
         let call_res = engine_call_wave_early();
         assert!(call_res.contains("currentWaveIndex"));
+
+        // Test rapid successive early wave calls (Waves 1 to 5)
+        // Ensure spawners are extended and wave 5 (and all previous waves) are NOT swallowed.
+        for _ in 0..4 {
+            let res = engine_call_wave_early();
+            assert!(res.contains("\"ok\":true"));
+        }
+
+        CTX.with(|c| {
+            let ctx = c.borrow();
+            // Wave index should now be at 4 (Wave 5)
+            assert_eq!(ctx.wave.current_wave_index, 4);
+            assert!(ctx.wave.is_wave_in_progress);
+            // Spawners from all 5 waves must be queued simultaneously (not overwritten)
+            assert_eq!(ctx.wave.active_spawners.len(), 5);
+            // Pending rewards must accumulate all 5 called waves
+            assert_eq!(ctx.wave.pending_rewards.len(), 5);
+        });
     }
 }

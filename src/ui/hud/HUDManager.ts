@@ -46,6 +46,19 @@ export class HUDManager {
       });
     }
 
+    // Auto Next Wave Checkbox
+    const autoWaveChk = document.getElementById('chk-auto-wave') as HTMLInputElement | null;
+    if (autoWaveChk) {
+      autoWaveChk.checked = this.state.autoNextWave;
+      autoWaveChk.addEventListener('change', () => {
+        this.state.autoNextWave = autoWaveChk.checked;
+        this.state.saveSettingsToStorage();
+        if (this.state.soundEnabled) {
+          SoundSystem.playUIClick();
+        }
+      });
+    }
+
     // Speed button
     const speedBtn = document.getElementById('btn-speed');
     if (speedBtn) {
@@ -157,6 +170,11 @@ export class HUDManager {
 
     if (this.hudMapNameEl) {
       this.hudMapNameEl.textContent = this.state.currentMap.name;
+    }
+
+    const autoWaveChk = document.getElementById('chk-auto-wave') as HTMLInputElement | null;
+    if (autoWaveChk && autoWaveChk.checked !== this.state.autoNextWave) {
+      autoWaveChk.checked = this.state.autoNextWave;
     }
     if (this.hudMapWavesEl) {
       if (currentWave > 10) {

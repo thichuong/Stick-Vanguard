@@ -3270,5 +3270,108 @@ describe('Stick Vanguard - Core Architecture Tests', () => {
       expect(wave10?.enemies.some((e) => e.typeId === 'CELESTIAL_FAIRY')).toBe(true);
     });
   });
+
+  describe('Wave System & Auto Next Wave Mechanics', () => {
+    it('should save and load autoNextWave setting via StorageService and GameState', async () => {
+      const { StorageService } = await import('../core/StorageService.js');
+      StorageService.clear();
+      const state = new GameState();
+      expect(state.autoNextWave).toBe(false);
+
+      state.autoNextWave = true;
+      state.saveSettingsToStorage();
+
+      const newState = new GameState();
+      newState.loadSettingsFromStorage();
+      expect(newState.autoNextWave).toBe(true);
+
+      StorageService.clear();
+    });
+
+    it('should bind #chk-auto-wave in HUDManager and update state.autoNextWave', async () => {
+      const { HUDManager } = await import('../ui/hud/HUDManager.js');
+      const state = new GameState();
+      const changeListeners: (() => void)[] = [];
+      const mockCheckbox: any = {
+        checked: false,
+        addEventListener: (event: string, cb: () => void) => {
+          if (event === 'change') changeListeners.push(cb);
+        }
+      };
+
+      const mockElements: Record<string, any> = {
+        'btn-sound-toggle': { innerHTML: '', addEventListener: () => {} },
+        'btn-next-wave': { innerHTML: '', disabled: false, addEventListener: () => {} },
+        'chk-auto-wave': mockCheckbox,
+        'btn-speed': { innerHTML: '', addEventListener: () => {} },
+        'btn-pause': { innerHTML: '', addEventListener: () => {} },
+        'btn-restart': { addEventListener: () => {} },
+        'message-banner': { classList: { add: () => {}, remove: () => {} } },
+        'hud-map-name': { textContent: '' },
+        'hud-map-waves': { textContent: '' },
+        'hud-gold': { textContent: '' },
+        'hud-lives': { textContent: '' },
+        'hud-wave': { textContent: '', title: '' },
+        'hud-wave-hp-buff': { innerHTML: '', title: '', style: {}, classList: { add: () => {}, remove: () => {} } }
+      };
+
+      const originalDocument = (globalThis as any).document;
+      (globalThis as any).document = {
+        getElementById: (id: string) => mockElements[id] || null,
+        addEventListener: () => {},
+      };
+
+      try {
+        new HUDManager(state, {
+          onCallWave: () => {},
+          onRestart: () => {},
+          onOpenMapModal: () => {},
+          onSelectMap: () => {},
+        });
+
+        expect(mockCheckbox.checked).toBe(false);
+
+        // Simulate user checking the auto next wave box
+        mockCheckbox.checked = true;
+        changeListeners.forEach((cb) => cb());
+        expect(state.autoNextWave).toBe(true);
+      } finally {
+        (globalThis as any).document = originalDocument;
+      }
+    });
+
+    it('should extend spawners and accumulate rewards on consecutive early wave calls in WaveSystem', async () => {
+      const { WaveSystem } = await import('../systems/WaveSystem.js');
+      const waveSys = new WaveSystem(undefined, 15);
+
+      // Start wave 1
+      expect(waveSys.startWave(1)).toBe(true);
+      expect(waveSys.isWaveInProgress).toBe(true);
+      expect(waveSys.pendingRewards.length).toBe(1);
+
+      // Call early for wave 2, 3, 4, 5 consecutively
+      for (let w = 2; w <= 5; w++) {
+        expect(waveSys.callWaveEarly()).toBe(true);
+      }
+
+      expect(waveSys.currentWaveIndex).toBe(4); // Wave 5
+      expect(waveSys.pendingRewards.length).toBe(5);
+      const expectedTotalGold = waveSys.pendingRewards.reduce((sum, r) => sum + r, 0);
+      expect(expectedTotalGold).toBeGreaterThan(0);
+
+      // Force-complete all spawners to simulate wave completion
+      (waveSys as any).activeSpawners.forEach((s: any) => {
+        s.remainingCount = 0;
+      });
+
+      // Verify that completing all enemies grants accumulated gold from all 5 waves
+      let receivedReward = 0;
+      waveSys.update(0.016, () => {}, (totalReward) => {
+        receivedReward = totalReward;
+      }, 0); // 0 active enemies and all spawned -> completed
+      expect(receivedReward).toBe(expectedTotalGold);
+      expect(waveSys.isWaveInProgress).toBe(false);
+    });
+  });
 });
 

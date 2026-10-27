@@ -18,6 +18,8 @@ class GameApp {
   private state!: GameState;
   private uiManager!: UIManager;
   private lastTime: number = 0;
+  private autoWaveDelayTimer: number = 0;
+  private wasWaveInProgress: boolean = false;
 
   constructor() {
     this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -77,6 +79,8 @@ class GameApp {
     const bridge = WasmBridge.getInstance();
     bridge.init().then((active) => {
       if (active) {
+        SoundSystem.setEnabled(this.state.soundEnabled);
+        SoundSystem.setVolume(this.state.soundVolume);
         bridge.setMap(this.state.currentMapId);
         bridge.setGameSettings(
           this.state.customTotalWaves,
@@ -101,6 +105,9 @@ class GameApp {
   private handleSelectMap(mapId: string): void {
     const found = MAPS_CONFIG.find((m) => m.id === mapId);
     if (!found) return;
+
+    this.autoWaveDelayTimer = 0;
+    this.wasWaveInProgress = false;
 
     const keepWaves = this.state.customTotalWaves;
     const keepGoldMult = this.state.goldMultiplier;
@@ -164,6 +171,7 @@ class GameApp {
   private handleCallWave(): void {
     if (this.state.isGameOver || this.state.isVictory) return;
 
+    this.autoWaveDelayTimer = 0;
     SoundSystem.playWaveStart();
 
     const bridge = WasmBridge.getInstance();
@@ -176,6 +184,9 @@ class GameApp {
   }
 
   private restartGame(): void {
+    this.autoWaveDelayTimer = 0;
+    this.wasWaveInProgress = false;
+
     const keepWaves = this.state.customTotalWaves;
     const keepGoldMult = this.state.goldMultiplier;
     const keepDmgMult = this.state.damageMultiplier;
@@ -358,6 +369,12 @@ class GameApp {
         this.state.isVictory = step.isVictory;
 
         if (step.soldiers) {
+          const rustSoldierIds = new Set(step.soldiers.map((s) => s.id));
+          // Remove dead spirits that have been removed from Rust simulation
+          this.state.soldiers = this.state.soldiers.filter(
+            (s) => !s.isSpirit || rustSoldierIds.has(s.id)
+          );
+
           for (const sUpdate of step.soldiers) {
             const soldier = this.state.soldiers.find((s) => s.id === sUpdate.id);
             if (soldier) {
@@ -367,6 +384,22 @@ class GameApp {
               soldier.respawnTimer = sUpdate.respawnTimer;
               soldier.x = sUpdate.x;
               soldier.y = sUpdate.y;
+              if (sUpdate.damage !== undefined) soldier.damage = sUpdate.damage;
+              if (sUpdate.armor !== undefined) soldier.armor = sUpdate.armor;
+              if (sUpdate.magicResist !== undefined) soldier.magicResist = sUpdate.magicResist;
+              if (sUpdate.attackCooldown !== undefined) soldier.attackCooldown = sUpdate.attackCooldown;
+              if (sUpdate.buffedElements) soldier.buffedElements = sUpdate.buffedElements;
+            } else {
+              this.state.soldiers.push(sUpdate);
+            }
+          }
+
+          // Ensure tower.soldierIds remains in sync for HEROIC_ALTAR
+          for (const tower of this.state.towers) {
+            if (tower.type === 'HEROIC_ALTAR') {
+              tower.soldierIds = this.state.soldiers
+                .filter((s) => s.towerId === tower.id)
+                .map((s) => s.id);
             }
           }
         }
@@ -383,6 +416,30 @@ class GameApp {
           step.totalWaves,
           step.isWaveInProgress
         );
+
+        // Auto Next Wave Automation
+        if (this.state.autoNextWave && !this.state.isGameOver && !this.state.isVictory) {
+          if (!step.isWaveInProgress && (step.currentWaveIndex + 1) <= step.totalWaves) {
+            // Khi vừa hoàn thành một đợt quái, bắt đầu đếm trễ ngắn (~0.8s) trước khi sang đợt mới
+            if (this.wasWaveInProgress) {
+              this.autoWaveDelayTimer = 0.8;
+            }
+
+            if (this.autoWaveDelayTimer > 0) {
+              this.autoWaveDelayTimer -= rawDt;
+              if (this.autoWaveDelayTimer <= 0) {
+                this.autoWaveDelayTimer = 0;
+                this.handleCallWave();
+              }
+            }
+          } else {
+            this.autoWaveDelayTimer = 0;
+          }
+        } else {
+          this.autoWaveDelayTimer = 0;
+        }
+
+        this.wasWaveInProgress = step.isWaveInProgress;
       }
     }
 

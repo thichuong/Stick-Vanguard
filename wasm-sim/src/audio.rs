@@ -207,7 +207,12 @@ impl RustSoundSystem {
             if self.audio_ctx.is_none() {
                 if let Ok(ctx) = JsAudioContext::new() {
                     let gain = ctx.create_gain();
-                    gain.gain().set_value_at_time(self.sound_volume, ctx.current_time());
+                    let initial_vol = if self.sound_enabled {
+                        self.sound_volume
+                    } else {
+                        0.0
+                    };
+                    gain.gain().set_value_at_time(initial_vol, ctx.current_time());
                     gain.connect(&ctx.destination());
 
                     let rate = ctx.sample_rate();
@@ -240,6 +245,17 @@ impl RustSoundSystem {
 
     pub fn set_enabled(&mut self, enabled: bool) {
         self.sound_enabled = enabled;
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let (Some(ref ctx), Some(ref gain)) = (&self.audio_ctx, &self.master_gain) {
+                let target_vol = if self.sound_enabled {
+                    self.sound_volume
+                } else {
+                    0.0
+                };
+                gain.gain().set_value_at_time(target_vol, ctx.current_time());
+            }
+        }
         self.record("SET_ENABLED", Some(enabled.to_string()));
     }
 
@@ -248,8 +264,12 @@ impl RustSoundSystem {
         #[cfg(target_arch = "wasm32")]
         {
             if let (Some(ref ctx), Some(ref gain)) = (&self.audio_ctx, &self.master_gain) {
-                gain.gain()
-                    .set_value_at_time(self.sound_volume, ctx.current_time());
+                let target_vol = if self.sound_enabled {
+                    self.sound_volume
+                } else {
+                    0.0
+                };
+                gain.gain().set_value_at_time(target_vol, ctx.current_time());
             }
         }
         self.record("SET_VOLUME", Some(format!("{:.2}", self.sound_volume)));
