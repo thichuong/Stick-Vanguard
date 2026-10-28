@@ -210,6 +210,21 @@ describe('WasmBridge Core Architecture', () => {
       const earlyRes = bridge.callWaveEarly();
       expect(earlyRes).not.toBeNull();
       expect(earlyRes!.ok).toBe(true);
+
+      // Test Typed Engine Facade Methods
+      const valRes = bridge.validatePlacement(150, 105, 'ARCHER');
+      expect(typeof valRes.valid).toBe('boolean');
+
+      const buildAtRes = bridge.buildTowerAt(150, 105, 'ARCHER');
+      expect(typeof buildAtRes.ok).toBe('boolean');
+
+      // Test addFloatingText facade
+      bridge.addFloatingText('Test Floating Text', 200, 200, '#ffffff', 14);
+
+      // Test engine state json
+      const stateJson = bridge.getStateJson();
+      expect(typeof stateJson).toBe('string');
+      expect(stateJson.length).toBeGreaterThan(0);
     }
   });
 });

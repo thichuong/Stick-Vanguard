@@ -188,6 +188,21 @@ export function combat_find_unengaged_enemy_near(enemies_json, x, y, radius, can
 }
 
 /**
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {string} color
+ * @param {number} size
+ */
+export function engine_add_floating_text(text, x, y, color, size) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(color, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    wasm.engine_add_floating_text(ptr0, len0, x, y, ptr1, len1, size);
+}
+
+/**
  * @param {string} slot_id
  * @param {string} tower_type_str
  * @returns {string}

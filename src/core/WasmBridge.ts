@@ -1,5 +1,12 @@
 import initWasm, * as wasmOps from '../wasm/wasm_sim.js';
-import { EnemyEntity, SoldierEntity } from '../types/entities.types.js';
+import {
+  EnemyEntity,
+  SoldierEntity,
+  TowerType,
+  TowerBranch,
+  PlacementType,
+  SoldierCombatMode
+} from '../types/entities.types.js';
 import { NavigationSystem } from '../systems/NavigationSystem.js';
 import { ElementType, NavigationMode } from '../types/elements.types.js';
 import { TOWER_BLUEPRINTS } from '../config/towers.config.js';
@@ -338,6 +345,194 @@ export class WasmBridge {
   public isAvailable(): boolean {
     return this.isReady && this.memory !== null;
   }
+
+  // =========================================================================
+  // Rust Engine Facade Methods (Direct typed RPC to CTX / RustGameState)
+  // =========================================================================
+
+  public addFloatingText(
+    text: string,
+    x: number,
+    y: number,
+    color: string = '#ffffff',
+    size: number = 13
+  ): void {
+    if (!this.isReady) return;
+    wasmOps.engine_add_floating_text(text, x, y, color, size);
+  }
+
+  public validatePlacement(
+    x: number,
+    y: number,
+    towerType: string
+  ): { valid: boolean; placement: PlacementType; reason?: string } {
+    if (!this.isReady) {
+      return { valid: false, placement: 'ROADSIDE', reason: 'WASM engine not ready' };
+    }
+    const resStr = wasmOps.engine_validate_placement(x, y, towerType);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { valid: false, placement: 'ROADSIDE', reason: 'Parse error' };
+    }
+  }
+
+  public buildTowerAt(
+    x: number,
+    y: number,
+    towerType: TowerType
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_build_tower_at(x, y, towerType);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public buildTower(
+    slotId: string,
+    towerType: TowerType
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_build_tower(slotId, towerType);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public upgradeTower(
+    towerId: string,
+    branch?: TowerBranch
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_upgrade_tower(towerId, branch);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public downgradeOrDestroyTower(
+    towerId: string
+  ): { result: 'DOWNGRADED' | 'DESTROYED' | 'NONE'; state?: any } {
+    if (!this.isReady) return { result: 'NONE' };
+    const resStr = wasmOps.engine_downgrade_or_destroy_tower(towerId);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { result: 'NONE' };
+    }
+  }
+
+  public setTowerElement(
+    towerId: string,
+    element: string,
+    slotIdx: 1 | 2 = 1
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_set_tower_element(towerId, element, slotIdx);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public setBarracksMode(
+    towerId: string,
+    mode: SoldierCombatMode
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_set_barracks_mode(towerId, mode);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public sellTower(towerId: string): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_sell_tower(towerId);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public setRallyPoint(
+    towerId: string,
+    x: number,
+    y: number
+  ): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_set_rally_point(towerId, x, y);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public handleSoldierDeath(soldierId: string): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_handle_soldier_death(soldierId);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public startWave(waveNum?: number): { ok: boolean; isWaveInProgress?: boolean } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_start_wave(waveNum);
+    try {
+      return JSON.parse(resStr);
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public getStateJson(): string {
+    if (!this.isReady) return '';
+    return wasmOps.engine_get_state_json();
+  }
+
+  public setStateJson(json: string): boolean {
+    if (!this.isReady) return false;
+    return wasmOps.engine_set_state_json(json);
+  }
+
+  public getWaveStatusJson(): string {
+    if (!this.isReady) return '';
+    return wasmOps.engine_get_wave_status_json();
+  }
+
+  public tick(dt: number): any {
+    if (!this.isReady) return null;
+    const jsonStr = wasmOps.engine_tick(dt);
+    try {
+      return JSON.parse(jsonStr);
+    } catch {
+      return null;
+    }
+  }
+
+  public getInterpolationAlpha(): number {
+    if (!this.isReady) return 0;
+    return wasmOps.engine_get_interpolation_alpha();
+  }
+
+  // =========================================================================
+  // Legacy Phase 1 Compatibility Facade (Preserved for backwards test suites)
+  // =========================================================================
 
   public getOrCreateU32Id(strId: string): number {
     let u32 = this.strToU32.get(strId);

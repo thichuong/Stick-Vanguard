@@ -1274,6 +1274,14 @@ pub fn engine_start_wave(wave_num: Option<usize>) -> String {
 }
 
 #[wasm_bindgen]
+pub fn engine_add_floating_text(text: &str, x: f32, y: f32, color: &str, size: f32) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.add_floating_text(text, x, y, color, size);
+    });
+}
+
+#[wasm_bindgen]
 pub fn engine_validate_placement(x: f32, y: f32, tower_type_str: &str) -> String {
     CTX.with(|c| {
         let ctx = c.borrow();

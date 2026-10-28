@@ -57,6 +57,8 @@ export function clear_paths(): void;
 
 export function combat_find_unengaged_enemy_near(enemies_json: string, x: number, y: number, radius: number, can_block_air: boolean): string;
 
+export function engine_add_floating_text(text: string, x: number, y: number, color: string, size: number): void;
+
 export function engine_build_tower(slot_id: string, tower_type_str: string): string;
 
 export function engine_build_tower_at(x: number, y: number, tower_type_str: string): string;
@@ -223,6 +225,7 @@ export interface InitOutput {
     readonly audio_play_wave_start: () => void;
     readonly audio_set_enabled: (a: number) => void;
     readonly combat_find_unengaged_enemy_near: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly engine_add_floating_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly engine_build_tower: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_build_tower_at: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_call_wave_early: () => [number, number];

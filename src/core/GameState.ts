@@ -31,7 +31,7 @@ import {
 } from '../config/elements.config.js';
 import { StorageService } from './StorageService.js';
 import { SoundSystem } from '../systems/SoundSystem.js';
-import { particlePool, floatingTextPool } from './ObjectPool.js';
+import { floatingTextPool } from './ObjectPool.js';
 import { WasmBridge } from './WasmBridge.js';
 
 export class GameState {
@@ -61,9 +61,13 @@ export class GameState {
   public towerSlots: TowerSlot[] = [];
   public towers: TowerEntity[] = [];
   public soldiers: SoldierEntity[] = [];
+
+  /** @deprecated Enemies are 100% managed inside Rust Engine (wasm-sim). Kept for backwards type compatibility. */
   public enemies: EnemyEntity[] = [];
+  /** @deprecated Projectiles are simulated and rendered inside Rust Engine WebGL2. Kept for backwards type compatibility. */
   public projectiles: ProjectileEntity[] = [];
   public floatingTexts: FloatingText[] = [];
+  /** @deprecated GPU particles are batched and rendered directly in Rust WebGL2. Kept for backwards type compatibility. */
   public particles: Particle[] = [];
 
   public selectedSlotId: string | null = null;
@@ -911,7 +915,6 @@ export class GameState {
       this.recalculateTowerBuffs();
       SoundSystem.playTowerDamaged('DOWNGRADED');
       this.addFloatingText(`⬇️ RƠI CẤP (CẤP ${prevTier})!`, tower.x, tower.y - 20, '#ef4444', 16);
-      this.addExplosionParticles(tower.x, tower.y, '#ef4444', 12);
       this.syncToWasm();
       return 'DOWNGRADED';
     }
@@ -936,7 +939,6 @@ export class GameState {
     this.recalculateTowerBuffs();
     SoundSystem.playTowerDamaged('DESTROYED');
     this.addFloatingText('💥 PHÁ HỦY THÁP!', x, y - 20, '#dc2626', 18);
-    this.addExplosionParticles(x, y, '#dc2626', 22);
     this.syncToWasm();
     return 'DESTROYED';
   }
@@ -1309,7 +1311,6 @@ export class GameState {
     this.recalculateTowerBuffs();
 
     this.addFloatingText('👻 ANH LINH HỒI SINH!', deadSoldier.x, deadSoldier.y - 20, '#818cf8', 16);
-    this.addExplosionParticles(deadSoldier.x, deadSoldier.y, '#818cf8', 15);
     SoundSystem.playEnemySkill('SUMMON');
     return true;
   }
@@ -1393,7 +1394,17 @@ export class GameState {
     color: string = '#ffffff',
     size: number = 13
   ): void {
-    // Throttle floating texts when crowded
+    // 1. Forward to Rust Engine so it is included in step.floatingTexts and rendered on HUD overlay
+    try {
+      const bridge = WasmBridge.getInstance();
+      if (bridge.isAvailable()) {
+        bridge.addFloatingText(text, x, y, color, size);
+      }
+    } catch {
+      // WASM not ready or running in headless mode
+    }
+
+    // 2. Throttle & retain in local pool for test assertions & headless environments
     if (this.floatingTexts.length >= 150) {
       return;
     }
@@ -1408,31 +1419,11 @@ export class GameState {
     this.floatingTexts.push(item);
   }
 
-  public addExplosionParticles(x: number, y: number, color: string, count: number = 12): void {
-    // Smart throttling based on current particle density
-    let actualCount = count;
-    if (this.particles.length > 500) {
-      actualCount = Math.max(1, Math.floor(count * 0.25));
-    } else if (this.particles.length > 250) {
-      actualCount = Math.max(2, Math.floor(count * 0.5));
-    }
-
-    for (let i = 0; i < actualCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 40 + Math.random() * 80;
-      const p = particlePool.acquire();
-      p.x = x;
-      p.y = y;
-      p.prevX = x;
-      p.prevY = y;
-      p.vx = Math.cos(angle) * speed;
-      p.vy = Math.sin(angle) * speed;
-      p.color = color;
-      p.size = 2.5 + Math.random() * 2.5;
-      p.lifeTime = 0.6 + Math.random() * 0.3;
-      p.maxLifeTime = p.lifeTime;
-      p.shape = 'CIRCLE';
-      this.particles.push(p);
-    }
+  /**
+   * @deprecated GPU particles and explosions are simulated and rendered directly in Rust WebGL2.
+   * Kept as a no-op method for backwards compatibility with tests and callers.
+   */
+  public addExplosionParticles(_x: number, _y: number, _color: string, _count: number = 12): void {
+    // No-op: handled automatically by Rust WebGL2 GPU particle batcher
   }
 }

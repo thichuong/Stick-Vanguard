@@ -21,6 +21,7 @@ export const audio_play_ui_click: () => void;
 export const audio_play_wave_start: () => void;
 export const audio_set_enabled: (a: number) => void;
 export const combat_find_unengaged_enemy_near: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+export const engine_add_floating_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const engine_build_tower: (a: number, b: number, c: number, d: number) => [number, number];
 export const engine_build_tower_at: (a: number, b: number, c: number, d: number) => [number, number];
 export const engine_call_wave_early: () => [number, number];
