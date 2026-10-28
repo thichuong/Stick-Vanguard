@@ -7,8 +7,8 @@ use crate::state::RustGameState;
 use crate::types::{
     BonusElementEntry, DamagePayload, ElementType, EnemyAbilityConfig, EnemyAbilityType,
     EnemyEntity, EnemyState, MovementType, PlacementType, ProjectileEntity, SoldierCombatMode,
-    SoldierState, StatusEffectPayload, StatusEffectType, SummonUnitArchetype, TowerBranch,
-    TowerType, Vector2D,
+    SoldierEntity, SoldierState, StatusEffectPayload, StatusEffectType, SummonUnitArchetype,
+    TowerBranch, TowerType, Vector2D,
 };
 use crate::wave::WaveSystem;
 use std::collections::HashSet;
@@ -568,6 +568,34 @@ impl CombatSystem {
                 continue;
             }
 
+            // Dragon & Fairy summons: Flying ranged combat
+            let arch = state.soldiers[s_idx].archetype;
+            let is_dragon = arch == Some(SummonUnitArchetype::DRAGON)
+                || (state.soldiers[s_idx].is_spirit.unwrap_or(false)
+                    && state.soldiers[s_idx].spirit_source_archetype
+                        == Some(SummonUnitArchetype::DRAGON));
+            let is_fairy = arch == Some(SummonUnitArchetype::FAIRY)
+                || (state.soldiers[s_idx].is_spirit.unwrap_or(false)
+                    && state.soldiers[s_idx].spirit_source_archetype
+                        == Some(SummonUnitArchetype::FAIRY));
+
+            if is_dragon || is_fairy {
+                if let Some(dead_sid) = Self::update_summon_ranged_combat(
+                    registry,
+                    state,
+                    spatial,
+                    audio,
+                    rng,
+                    s_idx,
+                    dt,
+                    is_dragon,
+                    is_fairy,
+                ) {
+                    dead_soldier_ids.push(dead_sid);
+                }
+                continue;
+            }
+
             // 3. Melee mode: Check engaged enemy validity
             let mut current_enemy_idx: Option<usize> = None;
             if let Some(ref eng_id) = state.soldiers[s_idx].engaged_enemy_id {
@@ -739,6 +767,172 @@ impl CombatSystem {
     }
 
     #[allow(clippy::too_many_arguments)]
+    fn update_summon_ranged_combat(
+        registry: &GameConfigRegistry,
+        state: &mut RustGameState,
+        spatial: &SpatialGrid,
+        audio: &mut RustSoundSystem,
+        rng: &mut SimpleRng,
+        s_idx: usize,
+        dt: f32,
+        is_dragon: bool,
+        is_fairy: bool,
+    ) -> Option<String> {
+        let sx = state.soldiers[s_idx].x;
+        let sy = state.soldiers[s_idx].y;
+        let rp = state.soldiers[s_idx].rally_point;
+
+        // 1. Stay/hover around rally point
+        let dist_to_rally = ((sx - rp.x).powi(2) + (sy - rp.y).powi(2)).sqrt();
+        if dist_to_rally > 8.0 {
+            state.soldiers[s_idx].state = SoldierState::MovingToRally;
+            let angle = (rp.y - sy).atan2(rp.x - sx);
+            let move_speed = 70.0;
+            state.soldiers[s_idx].x += angle.cos() * move_speed * dt;
+            state.soldiers[s_idx].y += angle.sin() * move_speed * dt;
+        } else {
+            state.soldiers[s_idx].state = SoldierState::IDLE;
+        }
+
+        if state.soldiers[s_idx].attack_cooldown > 0.0 {
+            state.soldiers[s_idx].attack_cooldown -= dt;
+        }
+
+        // 2. Intercept / Block and take melee retaliation if enemy reaches rally point
+        let block_radius = 32.0;
+        let melee_indices = spatial.query_radius_indices(&state.enemies, sx, sy, block_radius);
+        for e_idx in melee_indices {
+            let m_type = state.enemies[e_idx].movement_type;
+            let can_block = m_type == MovementType::WALK || m_type == MovementType::FLY;
+            if !can_block {
+                continue;
+            }
+
+            // Block enemy movement if not engaged
+            if state.enemies[e_idx].engaged_by_soldier_id.is_none() {
+                state.enemies[e_idx].engaged_by_soldier_id = Some(state.soldiers[s_idx].id.clone());
+                state.enemies[e_idx].state = EnemyState::ENGAGED;
+            }
+
+            // Enemy attacks summon if not stunned/frozen
+            if !TargetingRuleEngine::is_enemy_stunned_or_frozen(&state.enemies[e_idx]) {
+                state.enemies[e_idx].attack_cooldown -= dt;
+                if state.enemies[e_idx].attack_cooldown <= 0.0 {
+                    let atk_mult = TargetingRuleEngine::get_enemy_attack_speed_multiplier(
+                        registry,
+                        &state.enemies[e_idx],
+                    );
+                    state.enemies[e_idx].attack_cooldown =
+                        1.0 / (state.enemies[e_idx].attack_speed * atk_mult).max(0.1);
+                    let calc = TargetingRuleEngine::calculate_enemy_damage_to_soldier_detailed(
+                        registry,
+                        &state.enemies[e_idx],
+                        &state.soldiers[s_idx],
+                    );
+                    state.soldiers[s_idx].hp -= calc.final_damage;
+
+                    let disp_elem = calc.secondary_element.unwrap_or(calc.primary_element);
+                    let color = registry.get_element_color(disp_elem).to_string();
+                    audio.play_hit(false, calc.label.is_some(), true);
+
+                    let lbl_prefix = calc
+                        .label
+                        .as_ref()
+                        .map(|l| format!("{} ", l))
+                        .unwrap_or_default();
+                    state.add_floating_text(
+                        &format!("{}-{}", lbl_prefix, calc.final_damage as i32),
+                        sx,
+                        sy - 12.0,
+                        &color,
+                        13.0,
+                    );
+                    state.add_explosion_particles(rng, sx, sy, &color, 4);
+
+                    if state.soldiers[s_idx].hp <= 0.0 {
+                        state.soldiers[s_idx].state = SoldierState::DEAD;
+                        state.soldiers[s_idx].respawn_timer = state.soldiers[s_idx].respawn_delay;
+                        state.enemies[e_idx].engaged_by_soldier_id = None;
+                        state.enemies[e_idx].state = EnemyState::WALKING;
+                        return Some(state.soldiers[s_idx].id.clone());
+                    }
+                }
+            }
+        }
+
+        // 3. Ranged attack if cooldown ready
+        if state.soldiers[s_idx].attack_cooldown > 0.0 {
+            return None;
+        }
+
+        let range = state.soldiers[s_idx].ranged_range.unwrap_or(150.0);
+        let best_idx = spatial.find_best_target_index(&state.enemies, sx, sy, range, |_| true)?;
+
+        let tx = state.enemies[best_idx].x;
+        let ty = state.enemies[best_idx].y;
+        let target_y = ty - state.enemies[best_idx].altitude;
+        state.soldiers[s_idx].facing = Some((ty - sy).atan2(tx - sx));
+        state.soldiers[s_idx].state = SoldierState::ATTACKING;
+        state.soldiers[s_idx].attack_cooldown = 1.0 / state.soldiers[s_idx].attack_speed.max(0.2);
+
+        let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+        let proj_id = state.next_projectile_id();
+        let target_id = Some(state.enemies[best_idx].id.clone());
+        let src_id = state.soldiers[s_idx].tower_id.clone();
+
+        if is_dragon {
+            audio.play_shoot("ARTILLERY");
+            let aoe_radius = state.soldiers[s_idx].aoe_radius.unwrap_or(65.0);
+            state.projectiles.push(ProjectileEntity {
+                id: proj_id,
+                source_tower_id: src_id,
+                x: sx,
+                y: sy - 12.0,
+                prev_x: Some(sx),
+                prev_y: Some(sy - 12.0),
+                start_x: sx,
+                start_y: sy - 12.0,
+                target_x: tx,
+                target_y,
+                target_enemy_id: target_id,
+                speed: 340.0,
+                damage_payload: payload,
+                aoe_radius,
+                is_parabolic: false,
+                arc_height: 0.0,
+                progress: 0.0,
+                chain_count: None,
+                color: None,
+            });
+        } else if is_fairy {
+            audio.play_shoot("MAGE");
+            state.projectiles.push(ProjectileEntity {
+                id: proj_id,
+                source_tower_id: src_id,
+                x: sx,
+                y: sy - 8.0,
+                prev_x: Some(sx),
+                prev_y: Some(sy - 8.0),
+                start_x: sx,
+                start_y: sy - 8.0,
+                target_x: tx,
+                target_y,
+                target_enemy_id: target_id,
+                speed: 400.0,
+                damage_payload: payload,
+                aoe_radius: 0.0,
+                is_parabolic: false,
+                arc_height: 0.0,
+                progress: 0.0,
+                chain_count: None,
+                color: None,
+            });
+        }
+
+        None
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn update_ranged_soldier(
         registry: &GameConfigRegistry,
         state: &mut RustGameState,
@@ -747,7 +941,7 @@ impl CombatSystem {
         rng: &mut SimpleRng,
         s_idx: usize,
         dt: f32,
-        global_dmg_mult: f32,
+        _global_dmg_mult: f32,
     ) -> Option<String> {
         let sx = state.soldiers[s_idx].x;
         let sy = state.soldiers[s_idx].y;
@@ -823,35 +1017,108 @@ impl CombatSystem {
         let range = state.soldiers[s_idx].ranged_range.unwrap_or(150.0);
         let best_idx = spatial.find_best_target_index(&state.enemies, sx, sy, range, |_| true)?;
 
+        let tx = state.enemies[best_idx].x;
+        let ty = state.enemies[best_idx].y;
+        state.soldiers[s_idx].facing = Some((ty - sy).atan2(tx - sx));
+
         state.soldiers[s_idx].attack_cooldown = 1.0 / state.soldiers[s_idx].attack_speed.max(0.1);
         state.soldiers[s_idx].state = SoldierState::ATTACKING;
 
         audio.play_shoot("JAVELIN");
-        Self::perform_soldier_hybrid_hit(
-            registry,
-            state,
-            spatial,
-            audio,
-            rng,
-            s_idx,
-            best_idx,
-            false,
-            global_dmg_mult,
-        );
+        let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+        let proj_id = state.next_projectile_id();
+        let target_id = Some(state.enemies[best_idx].id.clone());
+        let target_y = ty - state.enemies[best_idx].altitude;
+        let aoe_radius = state.soldiers[s_idx].aoe_radius.unwrap_or(0.0);
+        let src_id = state.soldiers[s_idx].tower_id.clone();
+
+        state.projectiles.push(ProjectileEntity {
+            id: proj_id,
+            source_tower_id: src_id,
+            x: sx,
+            y: sy - 10.0,
+            prev_x: Some(sx),
+            prev_y: Some(sy - 10.0),
+            start_x: sx,
+            start_y: sy - 10.0,
+            target_x: tx,
+            target_y,
+            target_enemy_id: target_id,
+            speed: 380.0,
+            damage_payload: payload,
+            aoe_radius,
+            is_parabolic: false,
+            arc_height: 0.0,
+            progress: 0.0,
+            chain_count: None,
+            color: None,
+        });
 
         None
     }
 
+    pub fn build_soldier_damage_payload(
+        soldier: &SoldierEntity,
+        override_damage: Option<f32>,
+        override_element: Option<ElementType>,
+    ) -> DamagePayload {
+        let s_dmg = override_damage.unwrap_or(soldier.damage);
+        let primary_elem = override_element.unwrap_or(soldier.element);
+        let sec_elem = soldier.secondary_element;
+        let arch = soldier.archetype;
+        let is_dragon_or_fairy =
+            arch == Some(SummonUnitArchetype::DRAGON) || arch == Some(SummonUnitArchetype::FAIRY);
+        let sec_ratio = if is_dragon_or_fairy { 0.60 } else { 0.45 };
+        let sec_amt = sec_elem.map(|_| (s_dmg * sec_ratio).round().max(1.0));
+
+        let mut bonus_elements: Vec<BonusElementEntry> = soldier
+            .buffed_elements
+            .as_ref()
+            .map(|list| {
+                list.iter()
+                    .map(|&el| BonusElementEntry {
+                        element: el,
+                        amount: (s_dmg * 0.45).round().max(1.0),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        if soldier.is_spirit.unwrap_or(false) {
+            let g_ratio = soldier.spirit_ghost_ratio.unwrap_or(0.5);
+            bonus_elements.push(BonusElementEntry {
+                element: ElementType::GHOST,
+                amount: (s_dmg * g_ratio).round().max(1.0),
+            });
+        }
+
+        DamagePayload {
+            amount: s_dmg,
+            element: primary_elem,
+            secondary_amount: sec_amt,
+            secondary_element: sec_elem,
+            bonus_elements: if bonus_elements.is_empty() {
+                None
+            } else {
+                Some(bonus_elements)
+            },
+            is_crit: None,
+            source_id: soldier.id.clone(),
+            status_effect: None,
+            secondary_status_effect: None,
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn check_aerial_soldier_attack(
-        registry: &GameConfigRegistry,
+        _registry: &GameConfigRegistry,
         state: &mut RustGameState,
         spatial: &SpatialGrid,
         audio: &mut RustSoundSystem,
-        rng: &mut SimpleRng,
+        _rng: &mut SimpleRng,
         s_idx: usize,
         dt: f32,
-        global_dmg_mult: f32,
+        _global_dmg_mult: f32,
     ) {
         if state.soldiers[s_idx].attack_cooldown > 0.0 {
             state.soldiers[s_idx].attack_cooldown -= dt;
@@ -900,79 +1167,135 @@ impl CombatSystem {
 
         if !can_hit_all {
             let javelin_dmg = state.soldiers[s_idx].damage * 0.9;
-            let payload = DamagePayload {
-                amount: javelin_dmg,
-                element: ElementType::LIGHTNING,
-                secondary_amount: None,
-                secondary_element: None,
-                bonus_elements: None,
-                is_crit: None,
-                source_id: state.soldiers[s_idx].id.clone(),
-                status_effect: None,
-                secondary_status_effect: None,
-            };
-            let calc = TargetingRuleEngine::calculate_damage(
-                registry,
-                global_dmg_mult,
-                &payload,
-                &state.enemies[target_idx],
+            let payload = Self::build_soldier_damage_payload(
+                &state.soldiers[s_idx],
+                Some(javelin_dmg),
+                Some(ElementType::LIGHTNING),
             );
-            if !calc.is_immune {
-                TargetingRuleEngine::apply_damage_to_enemy(
-                    &mut state.enemies[target_idx],
-                    &calc,
-                    ElementType::LIGHTNING,
-                    None,
-                );
-                TargetingRuleEngine::apply_elemental_hit_effects(
-                    registry,
-                    rng,
-                    &mut state.enemies[target_idx],
-                    ElementType::LIGHTNING,
-                    javelin_dmg,
-                );
-            }
+            let proj_id = state.next_projectile_id();
+            let target_id = Some(state.enemies[target_idx].id.clone());
+            let target_y = ty - state.enemies[target_idx].altitude;
+            let src_id = state.soldiers[s_idx].tower_id.clone();
+
             audio.play_shoot("JAVELIN");
-            audio.play_hit(
-                calc.is_immune,
-                calc.label.is_some() && !calc.is_immune,
-                false,
-            );
-            let color = registry
-                .get_element_color(ElementType::LIGHTNING)
-                .to_string();
-            let draw_y = ty - state.enemies[target_idx].altitude;
-            if calc.is_immune {
-                state.add_floating_text("MIỄN NHIỄM!", tx, draw_y - 12.0, "#94a3b8", 13.0);
-            } else {
-                let lbl_prefix = calc
-                    .label
-                    .as_ref()
-                    .map(|l| format!("{} ", l))
-                    .unwrap_or_default();
-                state.add_floating_text(
-                    &format!("{}-{}", lbl_prefix, calc.final_damage as i32),
-                    tx,
-                    draw_y - 12.0,
-                    &color,
-                    13.0,
-                );
-            }
-            state.add_explosion_particles(rng, tx, draw_y, &color, 4);
+            state.projectiles.push(ProjectileEntity {
+                id: proj_id,
+                source_tower_id: src_id,
+                x: sx,
+                y: sy - 10.0,
+                prev_x: Some(sx),
+                prev_y: Some(sy - 10.0),
+                start_x: sx,
+                start_y: sy - 10.0,
+                target_x: tx,
+                target_y,
+                target_enemy_id: target_id,
+                speed: 360.0,
+                damage_payload: payload,
+                aoe_radius: 0.0,
+                is_parabolic: false,
+                arc_height: 0.0,
+                progress: 0.0,
+                chain_count: None,
+                color: None,
+            });
             return;
         }
 
-        Self::perform_soldier_hybrid_hit(
-            registry,
-            state,
-            spatial,
-            audio,
-            rng,
-            s_idx,
-            target_idx,
-            true,
-            global_dmg_mult,
-        );
+        if is_dragon {
+            audio.play_shoot("ARTILLERY");
+            let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+            let aoe_radius = state.soldiers[s_idx].aoe_radius.unwrap_or(65.0);
+            let proj_id = state.next_projectile_id();
+            let target_id = Some(state.enemies[target_idx].id.clone());
+            let target_y = ty - state.enemies[target_idx].altitude;
+            let src_id = state.soldiers[s_idx].tower_id.clone();
+
+            state.projectiles.push(ProjectileEntity {
+                id: proj_id,
+                source_tower_id: src_id,
+                x: sx,
+                y: sy - 12.0,
+                prev_x: Some(sx),
+                prev_y: Some(sy - 12.0),
+                start_x: sx,
+                start_y: sy - 12.0,
+                target_x: tx,
+                target_y,
+                target_enemy_id: target_id,
+                speed: 340.0,
+                damage_payload: payload,
+                aoe_radius,
+                is_parabolic: false,
+                arc_height: 0.0,
+                progress: 0.0,
+                chain_count: None,
+                color: None,
+            });
+            return;
+        }
+
+        if is_fairy {
+            audio.play_shoot("MAGE");
+            let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+            let proj_id = state.next_projectile_id();
+            let target_id = Some(state.enemies[target_idx].id.clone());
+            let target_y = ty - state.enemies[target_idx].altitude;
+            let src_id = state.soldiers[s_idx].tower_id.clone();
+
+            state.projectiles.push(ProjectileEntity {
+                id: proj_id,
+                source_tower_id: src_id,
+                x: sx,
+                y: sy - 8.0,
+                prev_x: Some(sx),
+                prev_y: Some(sy - 8.0),
+                start_x: sx,
+                start_y: sy - 8.0,
+                target_x: tx,
+                target_y,
+                target_enemy_id: target_id,
+                speed: 400.0,
+                damage_payload: payload,
+                aoe_radius: 0.0,
+                is_parabolic: false,
+                arc_height: 0.0,
+                progress: 0.0,
+                chain_count: None,
+                color: None,
+            });
+            return;
+        }
+
+        let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+        let aoe_radius = state.soldiers[s_idx].aoe_radius.unwrap_or(0.0);
+        let proj_id = state.next_projectile_id();
+        let target_id = Some(state.enemies[target_idx].id.clone());
+        let target_y = ty - state.enemies[target_idx].altitude;
+        let src_id = state.soldiers[s_idx].tower_id.clone();
+
+        audio.play_shoot("JAVELIN");
+        state.projectiles.push(ProjectileEntity {
+            id: proj_id,
+            source_tower_id: src_id,
+            x: sx,
+            y: sy - 10.0,
+            prev_x: Some(sx),
+            prev_y: Some(sy - 10.0),
+            start_x: sx,
+            start_y: sy - 10.0,
+            target_x: tx,
+            target_y,
+            target_enemy_id: target_id,
+            speed: 360.0,
+            damage_payload: payload,
+            aoe_radius,
+            is_parabolic: false,
+            arc_height: 0.0,
+            progress: 0.0,
+            chain_count: None,
+            color: None,
+        });
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -987,58 +1310,22 @@ impl CombatSystem {
         is_melee: bool,
         global_dmg_mult: f32,
     ) {
-        let s_dmg = state.soldiers[s_idx].damage;
-        let primary_elem = state.soldiers[s_idx].element;
-        let sec_elem = state.soldiers[s_idx].secondary_element;
-        let arch = state.soldiers[s_idx].archetype;
-        let is_dragon_or_fairy =
-            arch == Some(SummonUnitArchetype::DRAGON) || arch == Some(SummonUnitArchetype::FAIRY);
-        let sec_ratio = if is_dragon_or_fairy { 0.60 } else { 0.45 };
-        let sec_amt = sec_elem.map(|_| (s_dmg * sec_ratio).round().max(1.0));
-
-        let mut bonus_elements: Vec<BonusElementEntry> = state.soldiers[s_idx]
-            .buffed_elements
-            .as_ref()
-            .map(|list| {
-                list.iter()
-                    .map(|&el| BonusElementEntry {
-                        element: el,
-                        amount: (s_dmg * 0.45).round().max(1.0),
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        if state.soldiers[s_idx].is_spirit.unwrap_or(false) {
-            let g_ratio = state.soldiers[s_idx].spirit_ghost_ratio.unwrap_or(0.5);
-            bonus_elements.push(BonusElementEntry {
-                element: ElementType::GHOST,
-                amount: (s_dmg * g_ratio).round().max(1.0),
-            });
-        }
-
-        let sid = state.soldiers[s_idx].id.clone();
+        let payload = Self::build_soldier_damage_payload(&state.soldiers[s_idx], None, None);
+        let s_dmg = payload.amount;
+        let primary_elem = payload.element;
+        let sec_elem = payload.secondary_element;
+        let bonus_elements = payload.bonus_elements.clone().unwrap_or_default();
+        let sid = payload.source_id.clone();
         let aoe_rad = state.soldiers[s_idx].aoe_radius.unwrap_or(0.0);
+
         let has_light = primary_elem == ElementType::LIGHT
             || sec_elem == Some(ElementType::LIGHT)
-            || state.soldiers[s_idx]
-                .buffed_elements
-                .as_ref()
-                .map(|b| b.contains(&ElementType::LIGHT))
-                .unwrap_or(false);
+            || bonus_elements.iter().any(|b| b.element == ElementType::LIGHT);
         let has_grass = primary_elem == ElementType::GRASS
             || sec_elem == Some(ElementType::GRASS)
-            || state.soldiers[s_idx]
-                .buffed_elements
-                .as_ref()
-                .map(|b| b.contains(&ElementType::GRASS))
-                .unwrap_or(false);
+            || bonus_elements.iter().any(|b| b.element == ElementType::GRASS);
         let has_lightning = sec_elem == Some(ElementType::LIGHTNING)
-            || state.soldiers[s_idx]
-                .buffed_elements
-                .as_ref()
-                .map(|b| b.contains(&ElementType::LIGHTNING))
-                .unwrap_or(false);
+            || bonus_elements.iter().any(|b| b.element == ElementType::LIGHTNING);
 
         let display_element = bonus_elements
             .first()
@@ -1046,22 +1333,6 @@ impl CombatSystem {
             .or(sec_elem)
             .unwrap_or(primary_elem);
         let color = registry.get_element_color(display_element).to_string();
-
-        let payload = DamagePayload {
-            amount: s_dmg,
-            element: primary_elem,
-            secondary_amount: sec_amt,
-            secondary_element: sec_elem,
-            bonus_elements: if bonus_elements.is_empty() {
-                None
-            } else {
-                Some(bonus_elements.clone())
-            },
-            is_crit: None,
-            source_id: sid.clone(),
-            status_effect: None,
-            secondary_status_effect: None,
-        };
 
         let calc = TargetingRuleEngine::calculate_damage(
             registry,
@@ -1689,6 +1960,47 @@ impl ProjectileSystem {
                 &mut state.enemies[e_idx],
                 &p.damage_payload,
             );
+
+            // Heal summon/soldier on hit if projectile carries LIGHT or GRASS
+            let primary_elem = p.damage_payload.element;
+            let sec_elem = p.damage_payload.secondary_element;
+            let has_light = primary_elem == ElementType::LIGHT
+                || sec_elem == Some(ElementType::LIGHT)
+                || p.damage_payload
+                    .bonus_elements
+                    .as_ref()
+                    .map(|b| b.iter().any(|x| x.element == ElementType::LIGHT))
+                    .unwrap_or(false);
+            let has_grass = primary_elem == ElementType::GRASS
+                || sec_elem == Some(ElementType::GRASS)
+                || p.damage_payload
+                    .bonus_elements
+                    .as_ref()
+                    .map(|b| b.iter().any(|x| x.element == ElementType::GRASS))
+                    .unwrap_or(false);
+
+            if has_light || has_grass {
+                if let Some(soldier) = state
+                    .soldiers
+                    .iter_mut()
+                    .find(|s| s.id == p.damage_payload.source_id && s.state != SoldierState::DEAD)
+                {
+                    let heal = if has_light {
+                        registry
+                            .element_combat_stats
+                            .get(&ElementType::LIGHT)
+                            .and_then(|s| s.soldier_heal_on_hit)
+                            .unwrap_or(5.0)
+                    } else {
+                        registry
+                            .element_combat_stats
+                            .get(&ElementType::GRASS)
+                            .and_then(|s| s.soldier_heal_on_hit)
+                            .unwrap_or(3.0)
+                    };
+                    soldier.hp = (soldier.hp + heal).min(soldier.max_hp);
+                }
+            }
         }
 
         let disp_elem = p
@@ -1821,12 +2133,19 @@ impl ProjectileSystem {
             .unwrap_or(p.damage_payload.element);
         let color = registry.get_element_color(disp_elem).to_string();
 
-        audio.play_explosion("SMALL");
-        state.add_explosion_particles(rng, p.target_x, p.target_y, &color, 16);
+        let explosion_power = if p.aoe_radius >= 65.0 {
+            "MEDIUM"
+        } else {
+            "SMALL"
+        };
+        let particle_count = if p.aoe_radius >= 65.0 { 22 } else { 16 };
+        audio.play_explosion(explosion_power);
+        state.add_explosion_particles(rng, p.target_x, p.target_y, &color, particle_count);
 
         let aoe_indices =
             spatial.query_radius_indices(&state.enemies, p.target_x, p.target_y, p.aoe_radius);
 
+        let mut any_hit = false;
         for e_idx in aoe_indices {
             if e_idx >= state.enemies.len() {
                 continue;
@@ -1839,6 +2158,7 @@ impl ProjectileSystem {
             let dy = state.enemies[e_idx].y - p.target_y;
             let dist = (dx * dx + dy * dy).sqrt();
             if dist <= p.aoe_radius {
+                any_hit = true;
                 let falloff = (1.0 - (dist / p.aoe_radius.max(1.0)) * 0.6).max(0.4);
                 let bonus_elements = p.damage_payload.bonus_elements.as_ref().map(|b| {
                     b.iter()
@@ -1909,6 +2229,48 @@ impl ProjectileSystem {
                     );
                 }
                 state.add_explosion_particles(rng, ex, ey, &color, 6);
+            }
+        }
+
+        if any_hit {
+            let primary_elem = p.damage_payload.element;
+            let sec_elem = p.damage_payload.secondary_element;
+            let has_light = primary_elem == ElementType::LIGHT
+                || sec_elem == Some(ElementType::LIGHT)
+                || p.damage_payload
+                    .bonus_elements
+                    .as_ref()
+                    .map(|b| b.iter().any(|x| x.element == ElementType::LIGHT))
+                    .unwrap_or(false);
+            let has_grass = primary_elem == ElementType::GRASS
+                || sec_elem == Some(ElementType::GRASS)
+                || p.damage_payload
+                    .bonus_elements
+                    .as_ref()
+                    .map(|b| b.iter().any(|x| x.element == ElementType::GRASS))
+                    .unwrap_or(false);
+
+            if has_light || has_grass {
+                if let Some(soldier) = state
+                    .soldiers
+                    .iter_mut()
+                    .find(|s| s.id == p.damage_payload.source_id && s.state != SoldierState::DEAD)
+                {
+                    let heal = if has_light {
+                        registry
+                            .element_combat_stats
+                            .get(&ElementType::LIGHT)
+                            .and_then(|s| s.soldier_heal_on_hit)
+                            .unwrap_or(5.0)
+                    } else {
+                        registry
+                            .element_combat_stats
+                            .get(&ElementType::GRASS)
+                            .and_then(|s| s.soldier_heal_on_hit)
+                            .unwrap_or(3.0)
+                    };
+                    soldier.hp = (soldier.hp + heal).min(soldier.max_hp);
+                }
             }
         }
     }

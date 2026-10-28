@@ -4,7 +4,7 @@ use super::primitives::parse_hex_color;
 use super::WebGl2Renderer;
 use crate::config::GameConfigRegistry;
 use crate::state::RustGameState;
-use crate::types::{EnemyState, PlacementType, TowerBranch, TowerType};
+use crate::types::{ElementType, EnemyState, PlacementType, TowerBranch, TowerType};
 
 impl WebGl2Renderer {
     pub fn build_scene(
@@ -320,9 +320,40 @@ impl WebGl2Renderer {
                 .secondary_element
                 .unwrap_or(p.damage_payload.element);
             let c = parse_hex_color(registry.get_element_color(disp_elem), 0.95);
-            let rad = if p.is_parabolic { 6.0 } else { 4.0 };
-            self.draw_circle(px, py, rad, 10, c);
-            self.draw_circle(px, py, rad * 0.5, 8, [1.0, 1.0, 1.0, 0.9]);
+
+            let is_dragon_shot = p.damage_payload.element == ElementType::DRAGON
+                || (p.aoe_radius >= 45.0 && !p.is_parabolic);
+            let is_fairy_shot = p.damage_payload.element == ElementType::FAIRY;
+            let is_soldier_javelin = p.damage_payload.source_id.starts_with("soldier-");
+
+            if is_dragon_shot {
+                // Large fiery dragon breath orb with outer halo & hot molten core
+                let rad = 7.0;
+                let mut halo = c;
+                halo[3] = 0.35;
+                self.draw_circle(px, py, rad * 1.6, 12, halo);
+                self.draw_circle(px, py, rad, 10, c);
+                self.draw_circle(px, py, rad * 0.55, 8, [1.0, 0.94, 0.55, 0.95]);
+            } else if is_fairy_shot {
+                // Starlight fey missile with radiant fairy aura & glowing white-pink core
+                let rad = 5.0;
+                let fairy_color = parse_hex_color(registry.get_element_color(ElementType::FAIRY), 0.40);
+                self.draw_circle(px, py, rad * 1.6, 10, fairy_color);
+                self.draw_circle(px, py, rad, 8, c);
+                self.draw_circle(px, py, rad * 0.5, 6, [1.0, 1.0, 1.0, 0.95]);
+            } else if is_soldier_javelin {
+                // Sleek javelin / throwing arrow with sharp front core
+                let rad = 4.0;
+                let mut glow = c;
+                glow[3] = 0.45;
+                self.draw_circle(px, py, rad * 1.35, 8, glow);
+                self.draw_circle(px, py, rad, 8, c);
+                self.draw_circle(px, py, rad * 0.45, 6, [1.0, 1.0, 1.0, 0.9]);
+            } else {
+                let rad = if p.is_parabolic { 6.0 } else { 4.0 };
+                self.draw_circle(px, py, rad, 10, c);
+                self.draw_circle(px, py, rad * 0.5, 8, [1.0, 1.0, 1.0, 0.9]);
+            }
         }
 
         // 11. Particles

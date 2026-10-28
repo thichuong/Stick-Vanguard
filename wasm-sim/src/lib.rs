@@ -2317,4 +2317,259 @@ mod tests {
             assert_eq!(ctx.wave.pending_rewards.len(), 5);
         });
     }
+
+    #[test]
+    fn test_summon_and_ranged_projectiles_flight_and_damage() {
+        let registry = GameConfigRegistry::default();
+        let mut state = RustGameState::new();
+        let mut spatial = SpatialGrid::new(1000.0, 650.0);
+        let mut audio = RustSoundSystem::new();
+        let mut rng = SimpleRng::new(12345);
+
+        // 1. Test Ranged Soldier shoots projectile
+        state.soldiers.push(SoldierEntity {
+            id: "soldier-ranged-1".to_string(),
+            tower_id: "t1".to_string(),
+            name: "Lính Cung".to_string(),
+            x: 100.0,
+            y: 100.0,
+            hp: 100.0,
+            max_hp: 100.0,
+            base_max_hp: 100.0,
+            damage: 25.0,
+            base_damage: 25.0,
+            attack_speed: 1.0,
+            attack_cooldown: 0.0,
+            element: ElementType::PHYSICAL,
+            combat_mode: SoldierCombatMode::RANGED,
+            ranged_range: Some(150.0),
+            state: SoldierState::IDLE,
+            rally_point: Vector2D { x: 100.0, y: 100.0 },
+            target_pos: Vector2D { x: 100.0, y: 100.0 },
+            armor: 0.1,
+            base_armor: 0.1,
+            magic_resist: 0.0,
+            respawn_timer: 0.0,
+            respawn_delay: 7.0,
+            tier: 1,
+            ..Default::default()
+        });
+
+        state.enemies.push(EnemyEntity {
+            id: "enemy-1".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 160.0,
+            y: 100.0,
+            hp: 100.0,
+            max_hp: 100.0,
+            movement_type: MovementType::WALK,
+            state: EnemyState::WALKING,
+            ..Default::default()
+        });
+
+        spatial.rebuild(&state.enemies);
+
+        // Update combat: Soldier should spawn a projectile targeting enemy-1
+        crate::systems::CombatSystem::update_combat(
+            &registry,
+            &mut state,
+            &spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
+
+        assert_eq!(state.projectiles.len(), 1, "Ranged soldier must spawn a projectile");
+        assert_eq!(
+            state.projectiles[0].target_enemy_id.as_deref(),
+            Some("enemy-1"),
+            "Projectile must target enemy-1"
+        );
+        assert_eq!(state.enemies[0].hp, 100.0, "Enemy must not take damage instantly before projectile hits");
+
+        // Step projectiles until impact
+        for _ in 0..60 {
+            if state.projectiles.is_empty() {
+                break;
+            }
+            crate::systems::ProjectileSystem::update_projectiles(
+                &registry,
+                &mut state,
+                &spatial,
+                &mut audio,
+                &mut rng,
+                0.016,
+            );
+        }
+
+        assert!(state.projectiles.is_empty(), "Projectile should have reached target and detonated");
+        assert!(state.enemies[0].hp < 100.0, "Enemy must take damage from projectile impact");
+
+        // 2. Test Dragon shoots AoE breath projectile
+        state.projectiles.clear();
+        state.enemies.clear();
+        state.soldiers.clear();
+
+        state.soldiers.push(SoldierEntity {
+            id: "dragon-1".to_string(),
+            tower_id: "t2".to_string(),
+            name: "Rồng Lửa".to_string(),
+            x: 200.0,
+            y: 200.0,
+            hp: 200.0,
+            max_hp: 200.0,
+            base_max_hp: 200.0,
+            damage: 40.0,
+            base_damage: 40.0,
+            attack_speed: 1.0,
+            attack_cooldown: 0.0,
+            element: ElementType::DRAGON,
+            secondary_element: Some(ElementType::FIRE),
+            archetype: Some(SummonUnitArchetype::DRAGON),
+            aoe_radius: Some(70.0),
+            state: SoldierState::IDLE,
+            rally_point: Vector2D { x: 200.0, y: 200.0 },
+            target_pos: Vector2D { x: 200.0, y: 200.0 },
+            armor: 0.3,
+            base_armor: 0.3,
+            magic_resist: 0.2,
+            respawn_timer: 0.0,
+            respawn_delay: 8.0,
+            tier: 1,
+            ..Default::default()
+        });
+
+        // 2 enemies clustered together
+        state.enemies.push(EnemyEntity {
+            id: "enemy-target".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 250.0,
+            y: 200.0,
+            hp: 150.0,
+            max_hp: 150.0,
+            movement_type: MovementType::WALK,
+            state: EnemyState::WALKING,
+            ..Default::default()
+        });
+        state.enemies.push(EnemyEntity {
+            id: "enemy-splash".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 265.0,
+            y: 205.0,
+            hp: 150.0,
+            max_hp: 150.0,
+            movement_type: MovementType::WALK,
+            state: EnemyState::WALKING,
+            ..Default::default()
+        });
+
+        spatial.rebuild(&state.enemies);
+
+        crate::systems::CombatSystem::update_combat(
+            &registry,
+            &mut state,
+            &spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
+
+        assert_eq!(state.projectiles.len(), 1, "Dragon must shoot a breath projectile");
+        assert!(state.projectiles[0].aoe_radius >= 65.0, "Dragon projectile must have AoE radius");
+
+        // Flight simulation
+        for _ in 0..60 {
+            if state.projectiles.is_empty() {
+                break;
+            }
+            crate::systems::ProjectileSystem::update_projectiles(
+                &registry,
+                &mut state,
+                &spatial,
+                &mut audio,
+                &mut rng,
+                0.016,
+            );
+        }
+
+        assert!(state.projectiles.is_empty(), "Dragon fireball detonated");
+        assert!(state.enemies[0].hp < 150.0, "Direct target damaged by dragon fireball");
+        assert!(state.enemies[1].hp < 150.0, "Splash target damaged by dragon fireball AoE");
+
+        // 3. Test Fairy shoots starlight projectile and heals
+        state.projectiles.clear();
+        state.enemies.clear();
+        state.soldiers.clear();
+
+        state.soldiers.push(SoldierEntity {
+            id: "fairy-1".to_string(),
+            tower_id: "t3".to_string(),
+            name: "Tiên Tinh Linh".to_string(),
+            x: 300.0,
+            y: 300.0,
+            hp: 60.0, // injured
+            max_hp: 100.0,
+            base_max_hp: 100.0,
+            damage: 20.0,
+            base_damage: 20.0,
+            attack_speed: 1.2,
+            attack_cooldown: 0.0,
+            element: ElementType::FAIRY,
+            secondary_element: Some(ElementType::LIGHT),
+            archetype: Some(SummonUnitArchetype::FAIRY),
+            state: SoldierState::IDLE,
+            rally_point: Vector2D { x: 300.0, y: 300.0 },
+            target_pos: Vector2D { x: 300.0, y: 300.0 },
+            armor: 0.1,
+            base_armor: 0.1,
+            magic_resist: 0.3,
+            respawn_timer: 0.0,
+            respawn_delay: 6.0,
+            tier: 1,
+            ..Default::default()
+        });
+
+        state.enemies.push(EnemyEntity {
+            id: "enemy-fairy-target".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 380.0,
+            y: 300.0,
+            hp: 100.0,
+            max_hp: 100.0,
+            movement_type: MovementType::WALK,
+            state: EnemyState::WALKING,
+            ..Default::default()
+        });
+
+        spatial.rebuild(&state.enemies);
+
+        crate::systems::CombatSystem::update_combat(
+            &registry,
+            &mut state,
+            &spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
+
+        assert_eq!(state.projectiles.len(), 1, "Fairy must shoot starlight missile");
+
+        for _ in 0..60 {
+            if state.projectiles.is_empty() {
+                break;
+            }
+            crate::systems::ProjectileSystem::update_projectiles(
+                &registry,
+                &mut state,
+                &spatial,
+                &mut audio,
+                &mut rng,
+                0.016,
+            );
+        }
+
+        assert!(state.projectiles.is_empty(), "Fairy missile hit target");
+        assert!(state.enemies[0].hp < 100.0, "Enemy took damage from fairy missile");
+        assert!(state.soldiers[0].hp > 60.0, "Fairy should be healed on hit by Light element");
+    }
 }

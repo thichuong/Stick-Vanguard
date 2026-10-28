@@ -66,6 +66,8 @@ pub struct RustGameState {
     pub text_id_counter: u32,
     #[serde(default)]
     pub particle_id_counter: u32,
+    #[serde(default)]
+    pub projectile_id_counter: u32,
 }
 
 impl Default for RustGameState {
@@ -109,6 +111,7 @@ impl RustGameState {
             soldier_id_counter: 0,
             text_id_counter: 0,
             particle_id_counter: 0,
+            projectile_id_counter: 0,
         };
         s.reset();
         s
@@ -170,6 +173,12 @@ impl RustGameState {
         self.projectiles.clear();
         self.floating_texts.clear();
         self.particles.clear();
+        self.projectile_id_counter = 0;
+    }
+
+    pub fn next_projectile_id(&mut self) -> String {
+        self.projectile_id_counter += 1;
+        format!("proj-{}", self.projectile_id_counter)
     }
 
     pub fn validate_placement(&self, x: f32, y: f32, type_str: &str) -> PlacementValidationResult {
@@ -451,7 +460,7 @@ impl RustGameState {
                         spirit_ghost_ratio: None,
                         buffed_elements: None,
                         ranged_damage: None,
-                        ranged_range: None,
+                        ranged_range: Some(bp.range),
                     });
                     soldier_ids = Some(vec![sid]);
                 }
@@ -509,7 +518,7 @@ impl RustGameState {
                             aoe_radius: None,
                             buffed_elements: None,
                             ranged_damage: None,
-                            ranged_range: None,
+                            ranged_range: Some(bp.range),
                             facing: Some(0.0),
                         });
                     }
