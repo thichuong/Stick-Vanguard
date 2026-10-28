@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::approx_constant, clippy::excessive_precision)]
 
 use super::WebGl2Renderer;
 use crate::config::GameConfigRegistry;
