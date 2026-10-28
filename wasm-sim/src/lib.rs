@@ -2650,4 +2650,126 @@ mod tests {
             "Fairy should be healed on hit by Light element"
         );
     }
+
+    #[test]
+    fn test_summon_death_releases_blocked_enemies() {
+        let registry = crate::config::GameConfigRegistry::default();
+        let mut state = crate::state::RustGameState::default();
+        let mut spatial = crate::spatial::SpatialGrid::new(1000.0, 650.0);
+        let mut nav = crate::navigation::NavigationSystem::new();
+        nav.ground_paths.push(crate::navigation::PathLane::from_vectors(&[
+            crate::types::Vector2D { x: 0.0, y: 200.0 },
+            crate::types::Vector2D { x: 1000.0, y: 200.0 },
+        ]));
+        nav.air_paths.push(crate::navigation::PathLane::from_vectors(&[
+            crate::types::Vector2D { x: 0.0, y: 200.0 },
+            crate::types::Vector2D { x: 1000.0, y: 200.0 },
+        ]));
+        let mut wave = crate::wave::WaveSystem::new(10);
+        let mut audio = crate::audio::RustSoundSystem::default();
+        let mut rng = crate::rules::SimpleRng::new(12345);
+        let mut sim = crate::systems::RustSimulationEngine::new();
+
+        // 1. Add a summon soldier (e.g. dragon summon)
+        state.soldiers.push(crate::types::SoldierEntity {
+            id: "summon-1".to_string(),
+            tower_id: "tower-summon-1".to_string(),
+            name: "Chiến Binh Long Tộc".to_string(),
+            x: 200.0,
+            y: 200.0,
+            hp: 50.0,
+            max_hp: 100.0,
+            base_max_hp: 100.0,
+            damage: 20.0,
+            base_damage: 20.0,
+            attack_speed: 1.0,
+            attack_cooldown: 0.0,
+            element: crate::types::ElementType::DRAGON,
+            archetype: Some(crate::types::SummonUnitArchetype::DRAGON),
+            state: crate::types::SoldierState::IDLE,
+            rally_point: crate::types::Vector2D { x: 200.0, y: 200.0 },
+            target_pos: crate::types::Vector2D { x: 200.0, y: 200.0 },
+            respawn_delay: 8.0,
+            can_block_air: Some(true),
+            ..Default::default()
+        });
+
+        // 2. Add ground enemy and flying enemy in blocking radius
+        state.enemies.push(crate::types::EnemyEntity {
+            id: "ground-enemy".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 205.0,
+            y: 200.0,
+            hp: 100.0,
+            max_hp: 100.0,
+            speed: 50.0,
+            base_speed: 50.0,
+            path_distance: 205.0,
+            movement_type: crate::types::MovementType::WALK,
+            state: crate::types::EnemyState::WALKING,
+            ..Default::default()
+        });
+
+        state.enemies.push(crate::types::EnemyEntity {
+            id: "fly-enemy".to_string(),
+            type_id: "AIR_BAT".to_string(),
+            x: 195.0,
+            y: 200.0,
+            hp: 80.0,
+            max_hp: 80.0,
+            speed: 60.0,
+            base_speed: 60.0,
+            path_distance: 195.0,
+            movement_type: crate::types::MovementType::FLY,
+            state: crate::types::EnemyState::FLYING,
+            ..Default::default()
+        });
+
+        spatial.rebuild(&state.enemies);
+
+        // 3. Run combat tick - summon blocks both enemies
+        crate::systems::CombatSystem::update_combat(
+            &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
+        );
+
+        assert_eq!(state.enemies[0].state, crate::types::EnemyState::ENGAGED);
+        assert_eq!(state.enemies[0].engaged_by_soldier_id.as_deref(), Some("summon-1"));
+        assert_eq!(state.enemies[1].state, crate::types::EnemyState::ENGAGED);
+        assert_eq!(state.enemies[1].engaged_by_soldier_id.as_deref(), Some("summon-1"));
+
+        // While engaged, enemies cannot move during tick
+        let prev_dist_0 = state.enemies[0].path_distance;
+        let prev_dist_1 = state.enemies[1].path_distance;
+        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
+        assert_eq!(state.enemies[0].path_distance, prev_dist_0, "Blocked enemy must not move");
+        assert_eq!(state.enemies[1].path_distance, prev_dist_1, "Blocked flying enemy must not move");
+
+        // 4. Now the summon is destroyed / killed
+        state.soldiers[0].hp = 0.0;
+        state.soldiers[0].state = crate::types::SoldierState::DEAD;
+        state.disengage_enemies_blocked_by_soldier("summon-1");
+
+        // 5. Tick simulation - both enemies must be released and move again!
+        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
+
+        assert_eq!(state.enemies[0].engaged_by_soldier_id, None, "Ground enemy engagement must be cleared");
+        assert_eq!(state.enemies[0].state, crate::types::EnemyState::WALKING, "Ground enemy state must return to WALKING");
+        assert!(state.enemies[0].path_distance > prev_dist_0, "Ground enemy must resume moving along path");
+
+        assert_eq!(state.enemies[1].engaged_by_soldier_id, None, "Flying enemy engagement must be cleared");
+        assert_eq!(state.enemies[1].state, crate::types::EnemyState::FLYING, "Flying enemy state must return to FLYING");
+        assert!(state.enemies[1].path_distance > prev_dist_1, "Flying enemy must resume moving along path");
+
+        // 6. Test automatic reconciliation during simulation tick when soldier is removed/killed
+        state.soldiers.clear(); // Soldier removed completely (e.g. spirit deleted or tower sold)
+        state.enemies[0].engaged_by_soldier_id = Some("missing-soldier".to_string());
+        state.enemies[0].state = crate::types::EnemyState::ENGAGED;
+        let dist_before_auto = state.enemies[0].path_distance;
+
+        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
+
+        assert_eq!(state.enemies[0].engaged_by_soldier_id, None, "Orphaned engagement must be auto-cleared");
+        assert_eq!(state.enemies[0].state, crate::types::EnemyState::WALKING, "Orphaned state must return to WALKING");
+        assert!(state.enemies[0].path_distance > dist_before_auto, "Auto-reconciled enemy must move");
+    }
 }

@@ -726,9 +726,9 @@ impl CombatSystem {
                                 state.soldiers[s_idx].respawn_timer =
                                     state.soldiers[s_idx].respawn_delay;
                                 state.soldiers[s_idx].engaged_enemy_id = None;
-                                state.enemies[e_idx].engaged_by_soldier_id = None;
-                                state.enemies[e_idx].state = EnemyState::WALKING;
-                                dead_soldier_ids.push(state.soldiers[s_idx].id.clone());
+                                let sid = state.soldiers[s_idx].id.clone();
+                                state.disengage_enemies_blocked_by_soldier(&sid);
+                                dead_soldier_ids.push(sid);
                             }
                         }
                     }
@@ -799,6 +799,9 @@ impl CombatSystem {
             if !can_block {
                 continue;
             }
+            if state.enemies[e_idx].tags.iter().any(|t| t == "UNBLOCKABLE") {
+                continue;
+            }
 
             // Block enemy movement if not engaged
             if state.enemies[e_idx].engaged_by_soldier_id.is_none() {
@@ -844,9 +847,9 @@ impl CombatSystem {
                     if state.soldiers[s_idx].hp <= 0.0 {
                         state.soldiers[s_idx].state = SoldierState::DEAD;
                         state.soldiers[s_idx].respawn_timer = state.soldiers[s_idx].respawn_delay;
-                        state.enemies[e_idx].engaged_by_soldier_id = None;
-                        state.enemies[e_idx].state = EnemyState::WALKING;
-                        return Some(state.soldiers[s_idx].id.clone());
+                        let sid = state.soldiers[s_idx].id.clone();
+                        state.disengage_enemies_blocked_by_soldier(&sid);
+                        return Some(sid);
                     }
                 }
             }
@@ -996,7 +999,9 @@ impl CombatSystem {
                     if state.soldiers[s_idx].hp <= 0.0 {
                         state.soldiers[s_idx].state = SoldierState::DEAD;
                         state.soldiers[s_idx].respawn_timer = state.soldiers[s_idx].respawn_delay;
-                        return Some(state.soldiers[s_idx].id.clone());
+                        let sid = state.soldiers[s_idx].id.clone();
+                        state.disengage_enemies_blocked_by_soldier(&sid);
+                        return Some(sid);
                     }
                 }
             }
@@ -2580,10 +2585,54 @@ impl RustSimulationEngine {
                 continue;
             }
 
+            // Verify engaged / attacking validity to avoid any enemy being permanently blocked by dead or removed soldiers
+            if let Some(ref sid) = state.enemies[i].engaged_by_soldier_id {
+                let soldier_alive = state
+                    .soldiers
+                    .iter()
+                    .any(|s| &s.id == sid && s.state != SoldierState::DEAD && s.hp > 0.0);
+                if !soldier_alive {
+                    state.enemies[i].engaged_by_soldier_id = None;
+                    if state.enemies[i].state == EnemyState::ENGAGED
+                        || state.enemies[i].state == EnemyState::ATTACKING
+                    {
+                        state.enemies[i].state = match state.enemies[i].movement_type {
+                            MovementType::FLY => EnemyState::FLYING,
+                            MovementType::SWIM => EnemyState::SWIMMING,
+                            _ => EnemyState::WALKING,
+                        };
+                    }
+                }
+            }
+
             if state.enemies[i].state == EnemyState::ENGAGED
                 || state.enemies[i].state == EnemyState::ATTACKING
             {
-                continue;
+                let mut is_valid_engagement = false;
+                if let Some(ref sid) = state.enemies[i].engaged_by_soldier_id {
+                    if let Some(s) = state.soldiers.iter().find(|s| &s.id == sid) {
+                        if s.state != SoldierState::DEAD && s.hp > 0.0 {
+                            let is_melee_target =
+                                s.engaged_enemy_id.as_deref() == Some(&state.enemies[i].id);
+                            let dist_sq = (s.x - state.enemies[i].x).powi(2)
+                                + (s.y - state.enemies[i].y).powi(2);
+                            if is_melee_target || dist_sq <= 38.0 * 38.0 {
+                                is_valid_engagement = true;
+                            }
+                        }
+                    }
+                }
+
+                if !is_valid_engagement {
+                    state.enemies[i].engaged_by_soldier_id = None;
+                    state.enemies[i].state = match state.enemies[i].movement_type {
+                        MovementType::FLY => EnemyState::FLYING,
+                        MovementType::SWIM => EnemyState::SWIMMING,
+                        _ => EnemyState::WALKING,
+                    };
+                } else {
+                    continue;
+                }
             }
 
             let speed = state.enemies[i].speed;

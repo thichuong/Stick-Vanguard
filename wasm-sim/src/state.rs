@@ -5,9 +5,9 @@ use crate::config::{
 };
 use crate::rules::SimpleRng;
 use crate::types::{
-    ElementType, EnemyEntity, FloatingText, MovementType, Particle, ParticleShape, PlacementType,
-    ProjectileEntity, SoldierCombatMode, SoldierEntity, SoldierState, SummonUnitArchetype,
-    TargetingFilter, TowerBranch, TowerEntity, TowerSlot, TowerType, Vector2D,
+    ElementType, EnemyEntity, EnemyState, FloatingText, MovementType, Particle, ParticleShape,
+    PlacementType, ProjectileEntity, SoldierCombatMode, SoldierEntity, SoldierState,
+    SummonUnitArchetype, TargetingFilter, TowerBranch, TowerEntity, TowerSlot, TowerType, Vector2D,
 };
 use serde::{Deserialize, Serialize};
 use std::f32::consts::PI;
@@ -1320,6 +1320,7 @@ impl RustGameState {
                 );
                 soldier.state = SoldierState::MovingToRally;
             }
+            self.disengage_enemies_blocked_by_soldier(&sid);
         }
 
         let label = if mode == SoldierCombatMode::MELEE {
@@ -1347,6 +1348,9 @@ impl RustGameState {
         }
 
         if let Some(ref sids) = tower.soldier_ids {
+            for sid in sids {
+                self.disengage_enemies_blocked_by_soldier(sid);
+            }
             self.soldiers.retain(|s| !sids.contains(&s.id));
         }
 
@@ -1418,6 +1422,7 @@ impl RustGameState {
                     soldier.state = SoldierState::MovingToRally;
                 }
             }
+            self.disengage_enemies_blocked_by_soldier(sid);
         }
 
         self.is_setting_rally_point = false;
@@ -1432,6 +1437,21 @@ impl RustGameState {
         true
     }
 
+    pub fn disengage_enemies_blocked_by_soldier(&mut self, soldier_id: &str) {
+        for enemy in &mut self.enemies {
+            if enemy.engaged_by_soldier_id.as_deref() == Some(soldier_id) {
+                enemy.engaged_by_soldier_id = None;
+                if enemy.state == EnemyState::ENGAGED || enemy.state == EnemyState::ATTACKING {
+                    enemy.state = match enemy.movement_type {
+                        MovementType::FLY => EnemyState::FLYING,
+                        MovementType::SWIM => EnemyState::SWIMMING,
+                        _ => EnemyState::WALKING,
+                    };
+                }
+            }
+        }
+    }
+
     pub fn handle_soldier_death(
         &mut self,
         registry: &GameConfigRegistry,
@@ -1439,6 +1459,8 @@ impl RustGameState {
         rng: &mut SimpleRng,
         soldier_id: &str,
     ) {
+        self.disengage_enemies_blocked_by_soldier(soldier_id);
+
         let Some(s_idx) = self.soldiers.iter().position(|s| s.id == soldier_id) else {
             return;
         };

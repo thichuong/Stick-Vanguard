@@ -458,6 +458,10 @@ export class WasmBridge {
       ? 4
       : enemy.state === 'ENGAGED'
       ? 3
+      : enemy.movementType === 'SWIM'
+      ? 2
+      : enemy.movementType === 'FLY'
+      ? 1
       : 0;
 
     const hpRatio = enemy.maxHp > 0 ? Math.max(0, Math.min(1, enemy.hp / enemy.maxHp)) : 0;
