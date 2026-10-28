@@ -2248,16 +2248,49 @@ mod tests {
         assert!(get_unit_circle_table(20).is_some());
         assert!(get_unit_circle_table(999).is_none());
 
-        // 4. Test static map cache across multiple builds
-        ctx.renderer
-            .build_scene(&ctx.registry, &ctx.state, 0.0, 1.0);
-        let v_len1 = ctx.renderer.color_vertices.len();
-        assert!(!ctx.renderer.cached_map.static_vertices.is_empty());
+        // 4. Test build_scene with towers, soldiers, and enemies
+        ctx.state.towers.push(crate::types::TowerEntity {
+            id: "t_test_1".to_string(),
+            tower_type: TowerType::ARCHER,
+            x: 200.0,
+            y: 200.0,
+            range: 120.0,
+            element: ElementType::FIRE,
+            placement: PlacementType::ROADSIDE,
+            tier: 1,
+            ..Default::default()
+        });
+        ctx.state.soldiers.push(crate::types::SoldierEntity {
+            id: "s_test_1".to_string(),
+            tower_id: "t_test_1".to_string(),
+            x: 220.0,
+            y: 220.0,
+            hp: 100.0,
+            max_hp: 100.0,
+            element: ElementType::PHYSICAL,
+            state: crate::types::SoldierState::IDLE,
+            ..Default::default()
+        });
+        ctx.state.enemies.push(EnemyEntity {
+            id: "e_test_1".to_string(),
+            type_id: "STICK_RUNNER".to_string(),
+            x: 250.0,
+            y: 200.0,
+            size: 20.0,
+            hp: 50.0,
+            max_hp: 50.0,
+            state: EnemyState::WALKING,
+            elemental_profile: ElementalProfile {
+                primary_element: ElementType::PHYSICAL,
+                ..Default::default()
+            },
+            ..Default::default()
+        });
 
         ctx.renderer
-            .build_scene(&ctx.registry, &ctx.state, 0.5, 1.0);
-        let v_len2 = ctx.renderer.color_vertices.len();
-        assert_eq!(v_len1, v_len2);
+            .build_scene(&ctx.registry, &ctx.state, 0.0, 1.0);
+        let v_len = ctx.renderer.color_vertices.len();
+        assert!(v_len > 1000, "Expected color vertices for map + tower + soldier + enemy, got {}", v_len);
     }
 
     #[test]

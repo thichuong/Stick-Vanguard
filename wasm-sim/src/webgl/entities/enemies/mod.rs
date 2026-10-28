@@ -171,28 +171,12 @@ impl WebGl2Renderer {
             self.draw_ring(x, draw_y - size * 0.2, size * 1.05, 2.2, 20, sc);
         }
 
-        // 6. Draw Body (Texture Atlas Quad or Procedural Vector Archetype)
+        // 6. Draw Body (Modular WebGL2 Procedural Archetypes)
         let flip_x = enemy.facing.abs() > PI * 0.5;
         let dir = if flip_x { -1.0 } else { 1.0 };
-        let mut drew_quad = false;
-        if self.has_atlas_texture {
-            let frame = ((anim_time * 8.0) as usize) % 4;
-            let atlas_key = format!("{}_walk_{}", enemy.type_id, frame);
-            drew_quad = self.draw_atlas_quad(
-                &atlas_key,
-                x,
-                draw_y,
-                size * 2.2,
-                size * 2.2,
-                flip_x,
-                elem_col,
-            );
-        }
-        if !drew_quad {
-            self.render_enemy_procedural_archetype(
-                enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
-            );
-        }
+        self.render_enemy_procedural_archetype(
+            enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+        );
 
         // 7. Boss Crown Overlay if Boss
         if is_boss {

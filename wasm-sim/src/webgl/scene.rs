@@ -2,26 +2,26 @@
 
 use super::primitives::{element_color_rgba, parse_hex_color};
 use super::WebGl2Renderer;
-use crate::config::{GameConfigRegistry, MapConfig};
+use crate::config::GameConfigRegistry;
 use crate::state::RustGameState;
 use crate::types::{ElementType, EnemyState, PlacementType, TowerBranch, TowerType};
 
 impl WebGl2Renderer {
-    pub fn rebuild_map_cache(&mut self, map: &MapConfig, map_id: &str) {
+    pub fn build_scene(
+        &mut self,
+        registry: &GameConfigRegistry,
+        state: &RustGameState,
+        anim_time: f32,
+        alpha: f32,
+    ) {
+        self.color_vertices.clear();
+        self.tex_vertices.clear();
+
+        let map = &state.current_map;
         let width = map.width.unwrap_or(1000.0);
         let height = map.height.unwrap_or(650.0);
         self.width = width;
         self.height = height;
-
-        let ground_lanes = map.get_resolved_ground_lanes();
-        let water_lanes = map.get_resolved_water_lanes();
-        let air_lanes = map.get_resolved_air_lanes();
-        let ground_spawns = MapConfig::get_unique_lane_spawns(&map.ground_lanes);
-        let water_spawns = MapConfig::get_unique_lane_spawns(&map.water_lanes);
-        let bases = map.get_map_bases();
-
-        // Build static vertex buffer temporarily using color_vertices
-        self.color_vertices.clear();
 
         // 1. Tactical Background & Grid
         let bg_color = if map.theme_color.is_empty() {
@@ -53,9 +53,9 @@ impl WebGl2Renderer {
         let road_border = parse_hex_color("#78350f", 1.0);
         let road_dash = parse_hex_color("#d97706", 0.85);
 
-        for lane in &ground_lanes {
-            self.draw_polyline(lane, road_w + 6.0, road_border);
-            self.draw_polyline(lane, road_w, road_col);
+        for lane in map.get_resolved_ground_lanes() {
+            self.draw_polyline(&lane, road_w + 6.0, road_border);
+            self.draw_polyline(&lane, road_w, road_col);
             for i in 0..lane.len().saturating_sub(1) {
                 self.draw_dashed_line(
                     lane[i].x,
@@ -71,7 +71,7 @@ impl WebGl2Renderer {
             }
         }
 
-        // 3. Rivers (Static base lines)
+        // 3. Rivers
         let river_w = map.river_width.unwrap_or(38.0);
         let river_col = if map.river_color.is_empty() {
             parse_hex_color("#0284c7", 1.0)
@@ -79,14 +79,58 @@ impl WebGl2Renderer {
             parse_hex_color(&map.river_color, 1.0)
         };
         let river_border = parse_hex_color("#0369a1", 1.0);
+        let river_flow = [0.490, 0.827, 0.988, 0.85];
 
-        for lane in &water_lanes {
-            self.draw_polyline(lane, river_w + 6.0, river_border);
-            self.draw_polyline(lane, river_w, river_col);
+        for lane in map.get_resolved_water_lanes() {
+            self.draw_polyline(&lane, river_w + 6.0, river_border);
+            self.draw_polyline(&lane, river_w, river_col);
+            for i in 0..lane.len().saturating_sub(1) {
+                self.draw_dashed_line(
+                    lane[i].x,
+                    lane[i].y,
+                    lane[i + 1].x,
+                    lane[i + 1].y,
+                    2.0,
+                    14.0,
+                    20.0,
+                    -anim_time * 40.0,
+                    river_flow,
+                );
+            }
         }
 
-        // 4. Spawners & Bases (Static core icons)
-        for gs in &ground_spawns {
+        // 4. Air Corridors
+        let air_col = [0.204, 0.827, 0.60, 0.28];
+        for (idx, lane) in map.get_resolved_air_lanes().iter().enumerate() {
+            for i in 0..lane.len().saturating_sub(1) {
+                self.draw_dashed_line(
+                    lane[i].x,
+                    lane[i].y,
+                    lane[i + 1].x,
+                    lane[i + 1].y,
+                    2.0,
+                    6.0,
+                    10.0,
+                    -anim_time * 25.0 - (idx as f32) * 5.0,
+                    air_col,
+                );
+            }
+        }
+
+        // 5. Spawners & Bases
+        for (idx, gs) in crate::config::MapConfig::get_unique_lane_spawns(&map.ground_lanes)
+            .iter()
+            .enumerate()
+        {
+            let pulse = (anim_time * 4.0 + idx as f32).sin() * 2.0;
+            self.draw_ring(
+                gs.x,
+                gs.y,
+                22.0 + pulse,
+                2.0,
+                20,
+                [0.937, 0.267, 0.267, 0.4],
+            );
             self.draw_circle(gs.x, gs.y, 18.0, 20, parse_hex_color("#ef4444", 1.0));
             // Procedural Skull Icon
             self.draw_circle(gs.x, gs.y - 2.0, 7.5, 14, [1.0, 1.0, 1.0, 0.95]);
@@ -103,7 +147,12 @@ impl WebGl2Renderer {
             );
         }
 
-        for ws in &water_spawns {
+        for (idx, ws) in crate::config::MapConfig::get_unique_lane_spawns(&map.water_lanes)
+            .iter()
+            .enumerate()
+        {
+            let pulse = (anim_time * 3.5 + idx as f32).sin() * 2.5;
+            self.draw_ring(ws.x, ws.y, 21.0 + pulse, 2.0, 20, [0.22, 0.74, 0.97, 0.45]);
             self.draw_circle(ws.x, ws.y, 17.0, 20, parse_hex_color("#0284c7", 1.0));
             // Procedural Water Waves Icon
             let wave_col = [1.0, 1.0, 1.0, 0.95];
@@ -157,7 +206,16 @@ impl WebGl2Renderer {
             );
         }
 
-        for base in &bases {
+        for (idx, base) in map.get_map_bases().iter().enumerate() {
+            let pulse = (anim_time * 2.5 + idx as f32).sin() * 3.0;
+            self.draw_ring(
+                base.x,
+                base.y,
+                base.radius + pulse,
+                2.5,
+                28,
+                [0.23, 0.51, 0.96, 0.35],
+            );
             self.draw_circle(base.x, base.y, 28.0, 24, parse_hex_color("#1e3a8a", 1.0));
             self.draw_ring(
                 base.x,
@@ -184,119 +242,7 @@ impl WebGl2Renderer {
             self.draw_circle(base.x, base.y + 2.0, 2.5, 10, [0.12, 0.23, 0.54, 1.0]);
         }
 
-        self.cached_map.map_id = map_id.to_string();
-        self.cached_map.width = width;
-        self.cached_map.height = height;
-        self.cached_map.static_vertices = self.color_vertices.clone();
-        self.cached_map.ground_lanes = ground_lanes;
-        self.cached_map.water_lanes = water_lanes;
-        self.cached_map.air_lanes = air_lanes;
-        self.cached_map.ground_spawns = ground_spawns;
-        self.cached_map.water_spawns = water_spawns;
-        self.cached_map.bases = bases;
-
-        self.color_vertices.clear();
-    }
-
-    pub fn build_scene(
-        &mut self,
-        registry: &GameConfigRegistry,
-        state: &RustGameState,
-        anim_time: f32,
-        alpha: f32,
-    ) {
-        let map = &state.current_map;
-        let map_id = if state.current_map_id.is_empty() {
-            "DEFAULT_MAP"
-        } else {
-            &state.current_map_id
-        };
-
-        if self.cached_map.map_id != map_id {
-            self.rebuild_map_cache(map, map_id);
-        }
-
-        let cached_map = std::mem::take(&mut self.cached_map);
-
-        self.color_vertices.clear();
-        self.tex_vertices.clear();
-
-        self.width = cached_map.width;
-        self.height = cached_map.height;
-
-        // 1. Copy pre-tessellated static map geometry directly (zero heap allocations)
-        self.color_vertices
-            .extend_from_slice(&cached_map.static_vertices);
-
-        // 2. Animated River Flow Dashes
-        let river_flow = [0.490, 0.827, 0.988, 0.85];
-        for lane in &cached_map.water_lanes {
-            for i in 0..lane.len().saturating_sub(1) {
-                self.draw_dashed_line(
-                    lane[i].x,
-                    lane[i].y,
-                    lane[i + 1].x,
-                    lane[i + 1].y,
-                    2.0,
-                    14.0,
-                    20.0,
-                    -anim_time * 40.0,
-                    river_flow,
-                );
-            }
-        }
-
-        // 3. Animated Air Corridors
-        let air_col = [0.204, 0.827, 0.60, 0.28];
-        for (idx, lane) in cached_map.air_lanes.iter().enumerate() {
-            for i in 0..lane.len().saturating_sub(1) {
-                self.draw_dashed_line(
-                    lane[i].x,
-                    lane[i].y,
-                    lane[i + 1].x,
-                    lane[i + 1].y,
-                    2.0,
-                    6.0,
-                    10.0,
-                    -anim_time * 25.0 - (idx as f32) * 5.0,
-                    air_col,
-                );
-            }
-        }
-
-        // 4. Pulsing Spawners & Bases Rings
-        for (idx, gs) in cached_map.ground_spawns.iter().enumerate() {
-            let pulse = (anim_time * 4.0 + idx as f32).sin() * 2.0;
-            self.draw_ring(
-                gs.x,
-                gs.y,
-                22.0 + pulse,
-                2.0,
-                20,
-                [0.937, 0.267, 0.267, 0.4],
-            );
-        }
-
-        for (idx, ws) in cached_map.water_spawns.iter().enumerate() {
-            let pulse = (anim_time * 3.5 + idx as f32).sin() * 2.5;
-            self.draw_ring(ws.x, ws.y, 21.0 + pulse, 2.0, 20, [0.22, 0.74, 0.97, 0.45]);
-        }
-
-        for (idx, base) in cached_map.bases.iter().enumerate() {
-            let pulse = (anim_time * 2.5 + idx as f32).sin() * 3.0;
-            self.draw_ring(
-                base.x,
-                base.y,
-                base.radius + pulse,
-                2.5,
-                28,
-                [0.23, 0.51, 0.96, 0.35],
-            );
-        }
-
-        self.cached_map = cached_map;
-
-        // 5. Placement Preview Cursor
+        // 6. Placement Preview Cursor
         if let Some(active_type) = state.active_placement_type {
             let mx = state.mouse_pos.x;
             let my = state.mouse_pos.y;
@@ -334,7 +280,7 @@ impl WebGl2Renderer {
             }
         }
 
-        // 6. Towers & Traps
+        // 7. Towers & Traps
         for tower in &state.towers {
             let is_selected = state.selected_tower_id.as_deref() == Some(tower.id.as_str());
 
@@ -373,7 +319,7 @@ impl WebGl2Renderer {
                                 0.0,
                                 [0.918, 0.702, 0.031, 0.75],
                             );
-                            self.draw_circle(rp.x, rp.y, 6.0, 12, parse_hex_color("#eab308", 0.85));
+                            self.draw_circle(rp.x, rp.y, 6.0, 12, [0.918, 0.702, 0.031, 0.85]);
                         }
                     }
                 }
@@ -407,12 +353,12 @@ impl WebGl2Renderer {
             }
         }
 
-        // 7. Summoned Soldiers / Dragons / Fairies
+        // 8. Summoned Soldiers / Dragons / Fairies
         for soldier in &state.soldiers {
             self.render_soldier(registry, soldier, anim_time, alpha);
         }
 
-        // 8. Enemies
+        // 9. Enemies
         for enemy in &state.enemies {
             if enemy.hp <= 0.0 || enemy.state == EnemyState::DEAD {
                 continue;
@@ -420,10 +366,10 @@ impl WebGl2Renderer {
             self.render_enemy(registry, enemy, anim_time, alpha);
         }
 
-        // 9. Projectiles
+        // 10. Projectiles
         for p in &state.projectiles {
             let px = p.prev_x.map(|px| px + (p.x - px) * alpha).unwrap_or(p.x);
-            let py = p.prev_y.map(|py| py + (p.y - py) * alpha).unwrap_or(p.y);
+            let py = p.prev_y.map(|py| py + (py - py) * alpha).unwrap_or(p.y);
             let disp_elem = p
                 .damage_payload
                 .secondary_element
@@ -465,7 +411,7 @@ impl WebGl2Renderer {
             }
         }
 
-        // 10. Particles (Fast Quad / Diamond for size <= 3.5, LUT Circle for larger)
+        // 11. Particles (Fast Quad / Diamond for size <= 3.5, LUT Circle for larger)
         for pt in &state.particles {
             let px = pt.prev_x.map(|px| px + (pt.x - px) * alpha).unwrap_or(pt.x);
             let py = pt.prev_y.map(|py| py + (pt.y - py) * alpha).unwrap_or(pt.y);
@@ -475,42 +421,12 @@ impl WebGl2Renderer {
             if r <= 3.5 {
                 self.color_vertices.reserve(36);
                 self.color_vertices.extend_from_slice(&[
-                    px,
-                    py - r,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
-                    px + r,
-                    py,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
-                    px,
-                    py + r,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
-                    px,
-                    py - r,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
-                    px,
-                    py + r,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
-                    px - r,
-                    py,
-                    c[0],
-                    c[1],
-                    c[2],
-                    c[3],
+                    px, py - r, c[0], c[1], c[2], c[3],
+                    px + r, py, c[0], c[1], c[2], c[3],
+                    px, py + r, c[0], c[1], c[2], c[3],
+                    px, py - r, c[0], c[1], c[2], c[3],
+                    px, py + r, c[0], c[1], c[2], c[3],
+                    px - r, py, c[0], c[1], c[2], c[3],
                 ]);
             } else {
                 self.draw_circle(px, py, r, 8, c);

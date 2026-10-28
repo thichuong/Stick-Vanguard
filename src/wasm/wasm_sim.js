@@ -1306,9 +1306,6 @@ function __wbg_get_imports() {
         __wbg_bufferData_1256745d89e9fb20: function(arg0, arg1, arg2, arg3, arg4) {
             arg0.bufferData(arg1 >>> 0, getArrayF32FromWasm0(arg2, arg3), arg4 >>> 0);
         },
-        __wbg_bufferSubData_93311d5c33b28832: function(arg0, arg1, arg2, arg3, arg4) {
-            arg0.bufferSubData(arg1 >>> 0, arg2, getArrayF32FromWasm0(arg3, arg4));
-        },
         __wbg_clearColor_b5eb97f09aff8fbe: function(arg0, arg1, arg2, arg3, arg4) {
             arg0.clearColor(arg1, arg2, arg3, arg4);
         },
