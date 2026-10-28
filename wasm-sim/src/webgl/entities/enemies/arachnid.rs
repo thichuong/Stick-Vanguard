@@ -54,7 +54,12 @@ impl WebGl2Renderer {
         self.draw_circle(head_x, head_y, s * 0.28, 12, elem_col);
 
         // Cluster of 4 predatory red eyes
-        for &(ox, oy) in &[(dir * 3.0, -3.0), (dir * 4.5, -1.0), (dir * 4.5, 1.5), (dir * 3.0, 3.5)] {
+        for &(ox, oy) in &[
+            (dir * 3.0, -3.0),
+            (dir * 4.5, -1.0),
+            (dir * 4.5, 1.5),
+            (dir * 3.0, 3.5),
+        ] {
             self.draw_circle(head_x + ox, head_y + oy, 1.4, 6, [0.96, 0.2, 0.2, 1.0]);
         }
 
@@ -63,8 +68,22 @@ impl WebGl2Renderer {
         let fang_top_x = head_x + dir * (s * 0.26) + dir * bite_anim;
         let fang_bot_x = head_x + dir * (s * 0.45) + dir * bite_anim;
 
-        self.draw_line(fang_top_x, head_y - 3.5, fang_bot_x, head_y - 1.0, 2.2, [0.96, 0.2, 0.2, 1.0]);
-        self.draw_line(fang_top_x, head_y + 3.5, fang_bot_x, head_y + 1.0, 2.2, [0.96, 0.2, 0.2, 1.0]);
+        self.draw_line(
+            fang_top_x,
+            head_y - 3.5,
+            fang_bot_x,
+            head_y - 1.0,
+            2.2,
+            [0.96, 0.2, 0.2, 1.0],
+        );
+        self.draw_line(
+            fang_top_x,
+            head_y + 3.5,
+            fang_bot_x,
+            head_y + 1.0,
+            2.2,
+            [0.96, 0.2, 0.2, 1.0],
+        );
         // Venom droplets
         self.draw_circle(fang_bot_x, head_y, 1.8, 6, [0.45, 0.95, 0.1, 0.95]);
 
@@ -99,4 +118,3 @@ impl WebGl2Renderer {
         }
     }
 }
-

@@ -2222,6 +2222,45 @@ mod tests {
     }
 
     #[test]
+    fn test_webgl_optimizations_and_cache() {
+        use crate::webgl::primitives::{
+            element_color_rgba, get_unit_circle_table, parse_hex_color,
+        };
+        let mut ctx = EngineContext::new();
+
+        // 1. Test fast hex parser
+        let c1 = parse_hex_color("#ef4444", 1.0);
+        assert!((c1[0] - 0.937).abs() < 0.01);
+        assert!((c1[1] - 0.267).abs() < 0.01);
+        assert!((c1[2] - 0.267).abs() < 0.01);
+        assert_eq!(c1[3], 1.0);
+
+        let c2 = parse_hex_color("3b82f6", 0.5);
+        assert!((c2[0] - 0.231).abs() < 0.01);
+        assert_eq!(c2[3], 0.5);
+
+        // 2. Test direct element color
+        let fire_c = element_color_rgba(&ctx.registry, ElementType::FIRE, 1.0);
+        assert!((fire_c[0] - 0.937).abs() < 0.01);
+
+        // 3. Test circle lookup table
+        assert!(get_unit_circle_table(8).is_some());
+        assert!(get_unit_circle_table(20).is_some());
+        assert!(get_unit_circle_table(999).is_none());
+
+        // 4. Test static map cache across multiple builds
+        ctx.renderer
+            .build_scene(&ctx.registry, &ctx.state, 0.0, 1.0);
+        let v_len1 = ctx.renderer.color_vertices.len();
+        assert!(!ctx.renderer.cached_map.static_vertices.is_empty());
+
+        ctx.renderer
+            .build_scene(&ctx.registry, &ctx.state, 0.5, 1.0);
+        let v_len2 = ctx.renderer.color_vertices.len();
+        assert_eq!(v_len1, v_len2);
+    }
+
+    #[test]
     fn test_engine_step_and_render_and_sync() {
         let json_out = engine_step_and_render(0.016);
         assert!(!json_out.is_empty());
@@ -2371,21 +2410,23 @@ mod tests {
 
         // Update combat: Soldier should spawn a projectile targeting enemy-1
         crate::systems::CombatSystem::update_combat(
-            &registry,
-            &mut state,
-            &spatial,
-            &mut audio,
-            &mut rng,
-            0.016,
+            &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
         );
 
-        assert_eq!(state.projectiles.len(), 1, "Ranged soldier must spawn a projectile");
+        assert_eq!(
+            state.projectiles.len(),
+            1,
+            "Ranged soldier must spawn a projectile"
+        );
         assert_eq!(
             state.projectiles[0].target_enemy_id.as_deref(),
             Some("enemy-1"),
             "Projectile must target enemy-1"
         );
-        assert_eq!(state.enemies[0].hp, 100.0, "Enemy must not take damage instantly before projectile hits");
+        assert_eq!(
+            state.enemies[0].hp, 100.0,
+            "Enemy must not take damage instantly before projectile hits"
+        );
 
         // Step projectiles until impact
         for _ in 0..60 {
@@ -2393,17 +2434,18 @@ mod tests {
                 break;
             }
             crate::systems::ProjectileSystem::update_projectiles(
-                &registry,
-                &mut state,
-                &spatial,
-                &mut audio,
-                &mut rng,
-                0.016,
+                &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
             );
         }
 
-        assert!(state.projectiles.is_empty(), "Projectile should have reached target and detonated");
-        assert!(state.enemies[0].hp < 100.0, "Enemy must take damage from projectile impact");
+        assert!(
+            state.projectiles.is_empty(),
+            "Projectile should have reached target and detonated"
+        );
+        assert!(
+            state.enemies[0].hp < 100.0,
+            "Enemy must take damage from projectile impact"
+        );
 
         // 2. Test Dragon shoots AoE breath projectile
         state.projectiles.clear();
@@ -2466,16 +2508,18 @@ mod tests {
         spatial.rebuild(&state.enemies);
 
         crate::systems::CombatSystem::update_combat(
-            &registry,
-            &mut state,
-            &spatial,
-            &mut audio,
-            &mut rng,
-            0.016,
+            &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
         );
 
-        assert_eq!(state.projectiles.len(), 1, "Dragon must shoot a breath projectile");
-        assert!(state.projectiles[0].aoe_radius >= 65.0, "Dragon projectile must have AoE radius");
+        assert_eq!(
+            state.projectiles.len(),
+            1,
+            "Dragon must shoot a breath projectile"
+        );
+        assert!(
+            state.projectiles[0].aoe_radius >= 65.0,
+            "Dragon projectile must have AoE radius"
+        );
 
         // Flight simulation
         for _ in 0..60 {
@@ -2483,18 +2527,19 @@ mod tests {
                 break;
             }
             crate::systems::ProjectileSystem::update_projectiles(
-                &registry,
-                &mut state,
-                &spatial,
-                &mut audio,
-                &mut rng,
-                0.016,
+                &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
             );
         }
 
         assert!(state.projectiles.is_empty(), "Dragon fireball detonated");
-        assert!(state.enemies[0].hp < 150.0, "Direct target damaged by dragon fireball");
-        assert!(state.enemies[1].hp < 150.0, "Splash target damaged by dragon fireball AoE");
+        assert!(
+            state.enemies[0].hp < 150.0,
+            "Direct target damaged by dragon fireball"
+        );
+        assert!(
+            state.enemies[1].hp < 150.0,
+            "Splash target damaged by dragon fireball AoE"
+        );
 
         // 3. Test Fairy shoots starlight projectile and heals
         state.projectiles.clear();
@@ -2544,32 +2589,32 @@ mod tests {
         spatial.rebuild(&state.enemies);
 
         crate::systems::CombatSystem::update_combat(
-            &registry,
-            &mut state,
-            &spatial,
-            &mut audio,
-            &mut rng,
-            0.016,
+            &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
         );
 
-        assert_eq!(state.projectiles.len(), 1, "Fairy must shoot starlight missile");
+        assert_eq!(
+            state.projectiles.len(),
+            1,
+            "Fairy must shoot starlight missile"
+        );
 
         for _ in 0..60 {
             if state.projectiles.is_empty() {
                 break;
             }
             crate::systems::ProjectileSystem::update_projectiles(
-                &registry,
-                &mut state,
-                &spatial,
-                &mut audio,
-                &mut rng,
-                0.016,
+                &registry, &mut state, &spatial, &mut audio, &mut rng, 0.016,
             );
         }
 
         assert!(state.projectiles.is_empty(), "Fairy missile hit target");
-        assert!(state.enemies[0].hp < 100.0, "Enemy took damage from fairy missile");
-        assert!(state.soldiers[0].hp > 60.0, "Fairy should be healed on hit by Light element");
+        assert!(
+            state.enemies[0].hp < 100.0,
+            "Enemy took damage from fairy missile"
+        );
+        assert!(
+            state.soldiers[0].hp > 60.0,
+            "Fairy should be healed on hit by Light element"
+        );
     }
 }

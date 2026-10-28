@@ -57,6 +57,9 @@ extern "C" {
     #[wasm_bindgen(method, js_name = bufferData)]
     pub fn buffer_data_f32(this: &JsWebGl2Context, target: u32, data: &[f32], usage: u32);
 
+    #[wasm_bindgen(method, js_name = bufferSubData)]
+    pub fn buffer_sub_data_f32(this: &JsWebGl2Context, target: u32, offset: i32, data: &[f32]);
+
     #[wasm_bindgen(method, js_name = createVertexArray)]
     pub fn create_vertex_array(this: &JsWebGl2Context) -> Option<JsWebGlVao>;
 

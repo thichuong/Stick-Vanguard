@@ -52,15 +52,34 @@ impl WebGl2Renderer {
         } else {
             [0.08, 0.12, 0.18, 1.0]
         };
-        self.draw_circle(head_cx + dir * (head_r * 0.4), head_y - 1.0, 1.6, 6, eye_col);
+        self.draw_circle(
+            head_cx + dir * (head_r * 0.4),
+            head_y - 1.0,
+            1.6,
+            6,
+            eye_col,
+        );
 
         // Headgear variations
         if is_runner {
             // Red ninja bandana flying back in wind
             let band_tail_x = head_cx - dir * (head_r + 10.0);
             let band_tail_y = head_y + walk * 4.0;
-            self.draw_line(head_cx - dir * head_r, head_y, band_tail_x, band_tail_y, 2.2, [0.94, 0.2, 0.2, 1.0]);
-            self.draw_circle(head_cx, head_y - head_r * 0.5, head_r * 0.8, 10, [0.94, 0.2, 0.2, 0.4]);
+            self.draw_line(
+                head_cx - dir * head_r,
+                head_y,
+                band_tail_x,
+                band_tail_y,
+                2.2,
+                [0.94, 0.2, 0.2, 1.0],
+            );
+            self.draw_circle(
+                head_cx,
+                head_y - head_r * 0.5,
+                head_r * 0.8,
+                10,
+                [0.94, 0.2, 0.2, 0.4],
+            );
         } else if is_imp {
             // Imp devil horns
             self.draw_triangle(
@@ -83,19 +102,60 @@ impl WebGl2Renderer {
             );
         } else if is_treant {
             // Leafy tree branches sprouting from head
-            self.draw_line(head_cx, head_y - head_r, head_cx, head_y - head_r - 8.0, 2.2, [0.45, 0.25, 0.15, 1.0]);
-            self.draw_circle(head_cx + 4.0, head_y - head_r - 9.0, 3.2, 8, [0.2, 0.75, 0.25, 0.95]);
+            self.draw_line(
+                head_cx,
+                head_y - head_r,
+                head_cx,
+                head_y - head_r - 8.0,
+                2.2,
+                [0.45, 0.25, 0.15, 1.0],
+            );
+            self.draw_circle(
+                head_cx + 4.0,
+                head_y - head_r - 9.0,
+                3.2,
+                8,
+                [0.2, 0.75, 0.25, 0.95],
+            );
         } else if is_vanguard || is_paladin {
             // Helmet visor crest
-            self.draw_line(head_cx - 4.0, head_y - 1.5, head_cx + 4.0, head_y - 1.5, 2.0, sec_col);
+            self.draw_line(
+                head_cx - 4.0,
+                head_y - 1.5,
+                head_cx + 4.0,
+                head_y - 1.5,
+                2.0,
+                sec_col,
+            );
             if is_paladin {
                 // Golden halo crest
-                self.draw_ellipse(head_cx, head_y - head_r - 4.0, 5.0, 2.0, 10, [0.99, 0.92, 0.35, 0.95]);
+                self.draw_ellipse(
+                    head_cx,
+                    head_y - head_r - 4.0,
+                    5.0,
+                    2.0,
+                    10,
+                    [0.99, 0.92, 0.35, 0.95],
+                );
             }
         } else if is_shaman {
             // Antler horns
-            self.draw_line(head_cx - 3.0, head_y - head_r, head_cx - 7.0, head_y - head_r - 7.0, 2.0, sec_col);
-            self.draw_line(head_cx + 3.0, head_y - head_r, head_cx + 7.0, head_y - head_r - 7.0, 2.0, sec_col);
+            self.draw_line(
+                head_cx - 3.0,
+                head_y - head_r,
+                head_cx - 7.0,
+                head_y - head_r - 7.0,
+                2.0,
+                sec_col,
+            );
+            self.draw_line(
+                head_cx + 3.0,
+                head_y - head_r,
+                head_cx + 7.0,
+                head_y - head_r - 7.0,
+                2.0,
+                sec_col,
+            );
         }
 
         // 2. Spine & Ribs
@@ -144,26 +204,95 @@ impl WebGl2Renderer {
         let weapon_hand_y = shoulder_y + 2.0 - walk * 3.0;
 
         // Front arm
-        self.draw_line(head_cx, shoulder_y, weapon_hand_x, weapon_hand_y, 2.4, elem_col);
+        self.draw_line(
+            head_cx,
+            shoulder_y,
+            weapon_hand_x,
+            weapon_hand_y,
+            2.4,
+            elem_col,
+        );
         // Back arm
-        self.draw_line(head_cx, shoulder_y, x - dir * (s * 0.35), shoulder_y + 4.0 + walk * 3.0, 2.2, elem_col);
+        self.draw_line(
+            head_cx,
+            shoulder_y,
+            x - dir * (s * 0.35),
+            shoulder_y + 4.0 + walk * 3.0,
+            2.2,
+            elem_col,
+        );
 
         // Weapon Render by Archetype Role
         if is_warlock {
             // Necromancer Bone Staff with glowing purple skull orb
-            self.draw_line(weapon_hand_x, weapon_hand_y - 18.0, weapon_hand_x, weapon_hand_y + 12.0, 2.2, [0.35, 0.3, 0.25, 1.0]);
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y - 18.0,
+                weapon_hand_x,
+                weapon_hand_y + 12.0,
+                2.2,
+                [0.35, 0.3, 0.25, 1.0],
+            );
             self.draw_circle(weapon_hand_x, weapon_hand_y - 18.0, 4.5, 10, sec_col);
-            self.draw_circle(weapon_hand_x, weapon_hand_y - 18.0, 2.0, 6, [0.95, 0.5, 1.0, 1.0]);
+            self.draw_circle(
+                weapon_hand_x,
+                weapon_hand_y - 18.0,
+                2.0,
+                6,
+                [0.95, 0.5, 1.0, 1.0],
+            );
         } else if is_imp {
             // Fire Trident
-            self.draw_line(weapon_hand_x, weapon_hand_y - 12.0, weapon_hand_x, weapon_hand_y + 8.0, 2.0, [0.95, 0.45, 0.1, 1.0]);
-            self.draw_line(weapon_hand_x - 3.5, weapon_hand_y - 12.0, weapon_hand_x - 3.5, weapon_hand_y - 16.0, 1.6, [0.95, 0.45, 0.1, 1.0]);
-            self.draw_line(weapon_hand_x + 3.5, weapon_hand_y - 12.0, weapon_hand_x + 3.5, weapon_hand_y - 16.0, 1.6, [0.95, 0.45, 0.1, 1.0]);
-            self.draw_line(weapon_hand_x, weapon_hand_y - 12.0, weapon_hand_x, weapon_hand_y - 18.0, 1.8, [0.95, 0.45, 0.1, 1.0]);
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y - 12.0,
+                weapon_hand_x,
+                weapon_hand_y + 8.0,
+                2.0,
+                [0.95, 0.45, 0.1, 1.0],
+            );
+            self.draw_line(
+                weapon_hand_x - 3.5,
+                weapon_hand_y - 12.0,
+                weapon_hand_x - 3.5,
+                weapon_hand_y - 16.0,
+                1.6,
+                [0.95, 0.45, 0.1, 1.0],
+            );
+            self.draw_line(
+                weapon_hand_x + 3.5,
+                weapon_hand_y - 12.0,
+                weapon_hand_x + 3.5,
+                weapon_hand_y - 16.0,
+                1.6,
+                [0.95, 0.45, 0.1, 1.0],
+            );
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y - 12.0,
+                weapon_hand_x,
+                weapon_hand_y - 18.0,
+                1.8,
+                [0.95, 0.45, 0.1, 1.0],
+            );
         } else if is_vanguard || is_paladin || id == "STICK_WARRIOR" {
             // Knight Sword & Shield
-            self.draw_line(weapon_hand_x, weapon_hand_y, weapon_hand_x + dir * 14.0, weapon_hand_y - 12.0, 2.6, sec_col);
-            self.draw_line(weapon_hand_x + dir * 3.0, weapon_hand_y - 2.0, weapon_hand_x - dir * 2.0, weapon_hand_y + 4.0, 2.0, sec_col);
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y,
+                weapon_hand_x + dir * 14.0,
+                weapon_hand_y - 12.0,
+                2.6,
+                sec_col,
+            );
+            self.draw_line(
+                weapon_hand_x + dir * 3.0,
+                weapon_hand_y - 2.0,
+                weapon_hand_x - dir * 2.0,
+                weapon_hand_y + 4.0,
+                2.0,
+                sec_col,
+            );
 
             // Shield on back arm
             let shield_x = x - dir * (s * 0.25);
@@ -172,13 +301,39 @@ impl WebGl2Renderer {
             self.draw_ring(shield_x, shield_y, s * 0.24, 1.8, 10, elem_col);
         } else if is_saboteur {
             // Dual Void Daggers
-            self.draw_line(weapon_hand_x, weapon_hand_y, weapon_hand_x + dir * 8.0, weapon_hand_y - 8.0, 2.2, sec_col);
-            self.draw_line(x - dir * (s * 0.35), shoulder_y + 4.0, x - dir * (s * 0.45), shoulder_y - 4.0, 2.2, sec_col);
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y,
+                weapon_hand_x + dir * 8.0,
+                weapon_hand_y - 8.0,
+                2.2,
+                sec_col,
+            );
+            self.draw_line(
+                x - dir * (s * 0.35),
+                shoulder_y + 4.0,
+                x - dir * (s * 0.45),
+                shoulder_y - 4.0,
+                2.2,
+                sec_col,
+            );
         } else if is_shaman {
             // Druid Oak Staff with emerald gem
-            self.draw_line(weapon_hand_x, weapon_hand_y - 16.0, weapon_hand_x, weapon_hand_y + 10.0, 2.2, [0.45, 0.28, 0.15, 1.0]);
-            self.draw_circle(weapon_hand_x, weapon_hand_y - 16.0, 3.5, 8, [0.2, 0.85, 0.3, 0.95]);
+            self.draw_line(
+                weapon_hand_x,
+                weapon_hand_y - 16.0,
+                weapon_hand_x,
+                weapon_hand_y + 10.0,
+                2.2,
+                [0.45, 0.28, 0.15, 1.0],
+            );
+            self.draw_circle(
+                weapon_hand_x,
+                weapon_hand_y - 16.0,
+                3.5,
+                8,
+                [0.2, 0.85, 0.3, 0.95],
+            );
         }
     }
 }
-

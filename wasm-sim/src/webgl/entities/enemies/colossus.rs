@@ -17,7 +17,8 @@ impl WebGl2Renderer {
         sec_col: [f32; 4],
         is_boss: bool,
     ) {
-        let is_ice = enemy.type_id == "FROST_CRYSTAL_GOLEM" || enemy.type_id == "GLACIAL_TITAN_BOSS";
+        let is_ice =
+            enemy.type_id == "FROST_CRYSTAL_GOLEM" || enemy.type_id == "GLACIAL_TITAN_BOSS";
         let is_iron = enemy.type_id == "IRON_COLOSSUS" || enemy.type_id == "IRON_OVERLORD_BOSS";
         let is_treant = enemy.type_id == "ANCIENT_TREANT_BOSS";
         let is_chrono = enemy.type_id == "CHRONO_DESTROYER_BOSS";
@@ -56,10 +57,31 @@ impl WebGl2Renderer {
         );
 
         // Torso outline
-        self.draw_line(x - shoulder_w, torso_top, x + shoulder_w, torso_top, 2.5, sec_col);
-        self.draw_line(x + shoulder_w, torso_top, x + waist_w, torso_bot, 2.5, sec_col);
+        self.draw_line(
+            x - shoulder_w,
+            torso_top,
+            x + shoulder_w,
+            torso_top,
+            2.5,
+            sec_col,
+        );
+        self.draw_line(
+            x + shoulder_w,
+            torso_top,
+            x + waist_w,
+            torso_bot,
+            2.5,
+            sec_col,
+        );
         self.draw_line(x + waist_w, torso_bot, x - waist_w, torso_bot, 2.5, sec_col);
-        self.draw_line(x - waist_w, torso_bot, x - shoulder_w, torso_top, 2.5, sec_col);
+        self.draw_line(
+            x - waist_w,
+            torso_bot,
+            x - shoulder_w,
+            torso_top,
+            2.5,
+            sec_col,
+        );
 
         // 2. Glowing Elemental Chest Rune Core
         let core_y = body_y - s * 0.12;
@@ -68,7 +90,14 @@ impl WebGl2Renderer {
         if is_chrono {
             // Chrono gear rune
             self.draw_circle(x, core_y, 7.0 * core_pulse, 12, [0.38, 0.85, 0.98, 0.95]);
-            self.draw_ring(x, core_y, 7.0 * core_pulse, 1.8, 12, [0.99, 0.92, 0.35, 1.0]);
+            self.draw_ring(
+                x,
+                core_y,
+                7.0 * core_pulse,
+                1.8,
+                12,
+                [0.99, 0.92, 0.35, 1.0],
+            );
         } else if is_inferno {
             // Blazing magma core
             self.draw_circle(x, core_y, 7.5 * core_pulse, 12, [0.98, 0.45, 0.08, 0.95]);
@@ -121,8 +150,21 @@ impl WebGl2Renderer {
                 self.draw_circle(sp_x, sp_y, 3.0, 6, [0.85, 0.9, 0.95, 1.0]);
             } else if is_treant {
                 // Mossy leafy branches
-                self.draw_line(sp_x, sp_y - s * 0.1, sp_x + side * 6.0, sp_y - s * 0.4, 2.4, [0.15, 0.65, 0.2, 1.0]);
-                self.draw_circle(sp_x + side * 6.0, sp_y - s * 0.4, 3.5, 8, [0.22, 0.78, 0.25, 0.9]);
+                self.draw_line(
+                    sp_x,
+                    sp_y - s * 0.1,
+                    sp_x + side * 6.0,
+                    sp_y - s * 0.4,
+                    2.4,
+                    [0.15, 0.65, 0.2, 1.0],
+                );
+                self.draw_circle(
+                    sp_x + side * 6.0,
+                    sp_y - s * 0.4,
+                    3.5,
+                    8,
+                    [0.22, 0.78, 0.25, 0.9],
+                );
             } else if is_inferno || is_boss {
                 // Fiery molten shoulder spikes
                 self.draw_triangle(
@@ -182,15 +224,28 @@ impl WebGl2Renderer {
         let arm_r_root_x = x - dir * shoulder_w;
         let arm_r_fist_x = arm_r_root_x - dir * 8.0;
         let arm_r_fist_y = torso_bot + 4.0;
-        self.draw_line(arm_r_root_x, torso_top + 4.0, arm_r_fist_x, arm_r_fist_y, 4.5, elem_col);
+        self.draw_line(
+            arm_r_root_x,
+            torso_top + 4.0,
+            arm_r_fist_x,
+            arm_r_fist_y,
+            4.5,
+            elem_col,
+        );
         self.draw_circle(arm_r_fist_x, arm_r_fist_y, s * 0.2, 10, sec_col);
 
         // Front punch arm
         let arm_f_root_x = x + dir * shoulder_w;
         let arm_f_fist_x = arm_f_root_x + dir * (s * 0.3) + punch;
         let arm_f_fist_y = torso_bot;
-        self.draw_line(arm_f_root_x, torso_top + 4.0, arm_f_fist_x, arm_f_fist_y, 5.0, elem_col);
+        self.draw_line(
+            arm_f_root_x,
+            torso_top + 4.0,
+            arm_f_fist_x,
+            arm_f_fist_y,
+            5.0,
+            elem_col,
+        );
         self.draw_circle(arm_f_fist_x, arm_f_fist_y, s * 0.24, 10, sec_col);
     }
 }
-

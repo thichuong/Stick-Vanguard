@@ -2,7 +2,7 @@
 
 use crate::config::GameConfigRegistry;
 use crate::types::{SoldierCombatMode, SoldierState, SummonUnitArchetype, TowerBranch};
-use crate::webgl::primitives::parse_hex_color;
+use crate::webgl::primitives::{element_color_rgba, parse_hex_color};
 use crate::webgl::WebGl2Renderer;
 use std::f32::consts::PI;
 
@@ -37,13 +37,13 @@ impl WebGl2Renderer {
         let elem_col = if is_spirit {
             parse_hex_color("#818cf8", body_alpha)
         } else {
-            parse_hex_color(registry.get_element_color(s.element), body_alpha)
+            element_color_rgba(registry, s.element, body_alpha)
         };
 
         let sec_col = if is_spirit {
             parse_hex_color("#c7d2fe", body_alpha)
         } else if let Some(sec) = s.secondary_element {
-            parse_hex_color(registry.get_element_color(sec), body_alpha)
+            element_color_rgba(registry, sec, body_alpha)
         } else {
             elem_col
         };

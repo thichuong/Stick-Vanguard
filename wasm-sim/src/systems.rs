@@ -581,15 +581,7 @@ impl CombatSystem {
 
             if is_dragon || is_fairy {
                 if let Some(dead_sid) = Self::update_summon_ranged_combat(
-                    registry,
-                    state,
-                    spatial,
-                    audio,
-                    rng,
-                    s_idx,
-                    dt,
-                    is_dragon,
-                    is_fairy,
+                    registry, state, spatial, audio, rng, s_idx, dt, is_dragon, is_fairy,
                 ) {
                     dead_soldier_ids.push(dead_sid);
                 }
@@ -1320,12 +1312,18 @@ impl CombatSystem {
 
         let has_light = primary_elem == ElementType::LIGHT
             || sec_elem == Some(ElementType::LIGHT)
-            || bonus_elements.iter().any(|b| b.element == ElementType::LIGHT);
+            || bonus_elements
+                .iter()
+                .any(|b| b.element == ElementType::LIGHT);
         let has_grass = primary_elem == ElementType::GRASS
             || sec_elem == Some(ElementType::GRASS)
-            || bonus_elements.iter().any(|b| b.element == ElementType::GRASS);
+            || bonus_elements
+                .iter()
+                .any(|b| b.element == ElementType::GRASS);
         let has_lightning = sec_elem == Some(ElementType::LIGHTNING)
-            || bonus_elements.iter().any(|b| b.element == ElementType::LIGHTNING);
+            || bonus_elements
+                .iter()
+                .any(|b| b.element == ElementType::LIGHTNING);
 
         let display_element = bonus_elements
             .first()

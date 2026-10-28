@@ -19,7 +19,9 @@ impl WebGl2Renderer {
     ) {
         let is_celestial = enemy.type_id == "CELESTIAL_FAIRY";
         let is_fairy = enemy.type_id == "FAIRY_SPRITE" || is_celestial;
-        let is_angel = enemy.type_id == "SERAPH_VALKYRIE" || enemy.type_id == "ARCHANGEL_MONARCH_BOSS" || is_boss;
+        let is_angel = enemy.type_id == "SERAPH_VALKYRIE"
+            || enemy.type_id == "ARCHANGEL_MONARCH_BOSS"
+            || is_boss;
         let is_drone = enemy.type_id == "EMP_DRONE";
 
         let s = size * 0.85;
@@ -42,7 +44,14 @@ impl WebGl2Renderer {
                 self.draw_line(x, cy, arm_x, cy - 2.0, 2.4, [0.4, 0.45, 0.55, 1.0]);
                 // Rotor blades
                 let blade_w = (rot * side).sin() * (s * 0.45);
-                self.draw_line(arm_x - blade_w, cy - 4.0, arm_x + blade_w, cy - 4.0, 1.8, sec_col);
+                self.draw_line(
+                    arm_x - blade_w,
+                    cy - 4.0,
+                    arm_x + blade_w,
+                    cy - 4.0,
+                    1.8,
+                    sec_col,
+                );
                 self.draw_circle(arm_x, cy - 4.0, 2.2, 8, [0.95, 0.95, 0.95, 1.0]);
             }
             // Antennas
@@ -56,7 +65,7 @@ impl WebGl2Renderer {
             let wing_tiers = [
                 (-s * 0.55, 1.4_f32, wing_flap * 1.2), // Upper wings
                 (-s * 0.2, 1.25_f32, wing_flap * 0.8), // Middle wings
-                (s * 0.15, 0.95_f32, wing_flap * 0.5),  // Lower wings
+                (s * 0.15, 0.95_f32, wing_flap * 0.5), // Lower wings
             ];
 
             let mut wing_mem = sec_col;
@@ -71,9 +80,25 @@ impl WebGl2Renderer {
                     let w_tip_x = x + side * (s * span_mult);
                     let w_tip_y = w_mid_y + s * 0.25;
 
-                    self.draw_line(w_root_x, w_root_y, w_mid_x, w_mid_y, 2.2, [0.99, 0.95, 0.75, 1.0]);
-                    self.draw_line(w_mid_x, w_mid_y, w_tip_x, w_tip_y, 2.0, [0.99, 0.95, 0.75, 1.0]);
-                    self.draw_triangle(w_root_x, w_root_y, w_mid_x, w_mid_y, w_tip_x, w_tip_y, wing_mem);
+                    self.draw_line(
+                        w_root_x,
+                        w_root_y,
+                        w_mid_x,
+                        w_mid_y,
+                        2.2,
+                        [0.99, 0.95, 0.75, 1.0],
+                    );
+                    self.draw_line(
+                        w_mid_x,
+                        w_mid_y,
+                        w_tip_x,
+                        w_tip_y,
+                        2.0,
+                        [0.99, 0.95, 0.75, 1.0],
+                    );
+                    self.draw_triangle(
+                        w_root_x, w_root_y, w_mid_x, w_mid_y, w_tip_x, w_tip_y, wing_mem,
+                    );
                 }
             }
 
@@ -87,7 +112,14 @@ impl WebGl2Renderer {
 
             // Sacred golden lance / spear of light
             let lance_x = x + dir * (s * 0.55);
-            self.draw_line(lance_x, cy - s * 0.9, lance_x, cy + s * 0.7, 2.2, [0.99, 0.88, 0.25, 1.0]);
+            self.draw_line(
+                lance_x,
+                cy - s * 0.9,
+                lance_x,
+                cy + s * 0.7,
+                2.2,
+                [0.99, 0.88, 0.25, 1.0],
+            );
             self.draw_triangle(
                 lance_x - 3.0,
                 cy - s * 0.75,
@@ -106,7 +138,14 @@ impl WebGl2Renderer {
             self.draw_circle(x, head_y, s * 0.22, 12, elem_col);
             self.draw_line(x, head_y + s * 0.18, x, cy + s * 0.35, 2.2, elem_col);
             // Dainty bent legs
-            self.draw_line(x, cy + s * 0.35, x - dir * 4.0, cy + s * 0.65, 1.8, elem_col);
+            self.draw_line(
+                x,
+                cy + s * 0.35,
+                x - dir * 4.0,
+                cy + s * 0.65,
+                1.8,
+                elem_col,
+            );
 
             if is_celestial {
                 // Golden halo for Celestial Fairy
@@ -133,7 +172,14 @@ impl WebGl2Renderer {
 
             // Magic Wand with star gem
             let wand_x = x + dir * (s * 0.45);
-            self.draw_line(x, cy - s * 0.1, wand_x, cy - s * 0.1, 1.6, [0.99, 0.92, 0.35, 1.0]);
+            self.draw_line(
+                x,
+                cy - s * 0.1,
+                wand_x,
+                cy - s * 0.1,
+                1.6,
+                [0.99, 0.92, 0.35, 1.0],
+            );
             self.draw_circle(wand_x, cy - s * 0.1, 3.0, 8, [1.0, 1.0, 1.0, 1.0]);
         } else {
             // --- Toxic Bat & Winged Gargoyle ---
@@ -169,11 +215,31 @@ impl WebGl2Renderer {
             );
 
             // Fierce Red Glowing Eyes
-            self.draw_circle(head_x + dir * 2.5, head_y - 1.0, 1.6, 6, [0.95, 0.15, 0.15, 1.0]);
+            self.draw_circle(
+                head_x + dir * 2.5,
+                head_y - 1.0,
+                1.6,
+                6,
+                [0.95, 0.15, 0.15, 1.0],
+            );
 
             // Talons tucked beneath
-            self.draw_line(x, body_y + s * 0.3, x - dir * 4.0, body_y + s * 0.55, 2.0, elem_col);
-            self.draw_line(x - dir * 4.0, body_y + s * 0.55, x - dir * 7.0, body_y + s * 0.65, 1.8, sec_col);
+            self.draw_line(
+                x,
+                body_y + s * 0.3,
+                x - dir * 4.0,
+                body_y + s * 0.55,
+                2.0,
+                elem_col,
+            );
+            self.draw_line(
+                x - dir * 4.0,
+                body_y + s * 0.55,
+                x - dir * 7.0,
+                body_y + s * 0.65,
+                1.8,
+                sec_col,
+            );
 
             // Articulated Bat Wings with webbing
             let mut mem_col = sec_col;
@@ -202,4 +268,3 @@ impl WebGl2Renderer {
         }
     }
 }
-

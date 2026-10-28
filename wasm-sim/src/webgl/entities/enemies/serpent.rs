@@ -32,7 +32,8 @@ impl WebGl2Renderer {
         for i in 0..num_segs {
             let ratio = (i as f32) / (num_segs as f32);
             let px = x - dir * ((i as f32) * seg_len) + dir * (s * 0.35);
-            let wave = (anim_time * wave_freq - (i as f32) * 0.75).sin() * wave_amp * (1.0 - ratio * 0.35);
+            let wave =
+                (anim_time * wave_freq - (i as f32) * 0.75).sin() * wave_amp * (1.0 - ratio * 0.35);
             let py = draw_y - s * 0.1 + wave;
             let radius = s * (0.45 - ratio * 0.28).max(0.12);
             seg_points.push((px, py, radius));
@@ -87,7 +88,11 @@ impl WebGl2Renderer {
             self.draw_line(neck_mid_x, neck_mid_y, hx, hy, 2.8, elem_col);
 
             // Serpent / Hydra Head (Diamond viper wedge)
-            let head_w = if is_hydra && idx == 1 { s * 0.48 } else { s * 0.38 };
+            let head_w = if is_hydra && idx == 1 {
+                s * 0.48
+            } else {
+                s * 0.38
+            };
             let head_tip_x = hx + dir * head_w;
             let head_tip_y = hy;
 
@@ -126,11 +131,31 @@ impl WebGl2Renderer {
             let tongue_cycle = ((anim_time * 14.0 + (idx as f32) * 1.5).sin()).max(0.0);
             if tongue_cycle > 0.3 {
                 let tx = head_tip_x + dir * (6.0 * tongue_cycle);
-                self.draw_line(head_tip_x, head_tip_y, tx, head_tip_y, 1.6, [0.95, 0.2, 0.2, 1.0]);
-                self.draw_line(tx, head_tip_y, tx + dir * 3.5, head_tip_y - 2.5, 1.2, [0.95, 0.2, 0.2, 1.0]);
-                self.draw_line(tx, head_tip_y, tx + dir * 3.5, head_tip_y + 2.5, 1.2, [0.95, 0.2, 0.2, 1.0]);
+                self.draw_line(
+                    head_tip_x,
+                    head_tip_y,
+                    tx,
+                    head_tip_y,
+                    1.6,
+                    [0.95, 0.2, 0.2, 1.0],
+                );
+                self.draw_line(
+                    tx,
+                    head_tip_y,
+                    tx + dir * 3.5,
+                    head_tip_y - 2.5,
+                    1.2,
+                    [0.95, 0.2, 0.2, 1.0],
+                );
+                self.draw_line(
+                    tx,
+                    head_tip_y,
+                    tx + dir * 3.5,
+                    head_tip_y + 2.5,
+                    1.2,
+                    [0.95, 0.2, 0.2, 1.0],
+                );
             }
         }
     }
 }
-

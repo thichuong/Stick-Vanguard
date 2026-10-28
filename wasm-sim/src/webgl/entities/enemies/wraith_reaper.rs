@@ -41,9 +41,21 @@ impl WebGl2Renderer {
         let tail_r_y = cy + s * 0.7;
 
         // Triangles forming flowing ghostly shroud
-        self.draw_triangle(x, chest_y, tail_l_x, tail_l_y, tail_m_x, tail_m_y, cloak_fill);
-        self.draw_triangle(x, chest_y, tail_m_x, tail_m_y, tail_r_x, tail_r_y, cloak_fill);
-        self.draw_triangle(x - s * 0.35, chest_y, x, hood_top_y, x + s * 0.35, chest_y, elem_col);
+        self.draw_triangle(
+            x, chest_y, tail_l_x, tail_l_y, tail_m_x, tail_m_y, cloak_fill,
+        );
+        self.draw_triangle(
+            x, chest_y, tail_m_x, tail_m_y, tail_r_x, tail_r_y, cloak_fill,
+        );
+        self.draw_triangle(
+            x - s * 0.35,
+            chest_y,
+            x,
+            hood_top_y,
+            x + s * 0.35,
+            chest_y,
+            elem_col,
+        );
 
         // Ghostly robe tatter lines
         self.draw_line(x, chest_y, tail_l_x, tail_l_y, 2.0, sec_col);
@@ -110,7 +122,14 @@ impl WebGl2Renderer {
             let staff_bot_x = x + dir * (s * 0.15);
             let staff_bot_y = cy + s * 0.65;
 
-            self.draw_line(staff_top_x, staff_top_y, staff_bot_x, staff_bot_y, 2.6, [0.35, 0.3, 0.25, 1.0]);
+            self.draw_line(
+                staff_top_x,
+                staff_top_y,
+                staff_bot_x,
+                staff_bot_y,
+                2.6,
+                [0.35, 0.3, 0.25, 1.0],
+            );
 
             // Crescent Scythe Blade
             let blade_tip_x = staff_top_x + dir * (s * 0.75);
@@ -127,7 +146,14 @@ impl WebGl2Renderer {
                 blade_mid_y,
                 sec_col,
             );
-            self.draw_line(staff_top_x, staff_top_y, blade_tip_x, blade_tip_y, 2.4, [0.95, 0.95, 1.0, 1.0]);
+            self.draw_line(
+                staff_top_x,
+                staff_top_y,
+                blade_tip_x,
+                blade_tip_y,
+                2.4,
+                [0.95, 0.95, 1.0, 1.0],
+            );
 
             if is_emperor {
                 // Orbiting Soul Wisps
@@ -142,4 +168,3 @@ impl WebGl2Renderer {
         }
     }
 }
-

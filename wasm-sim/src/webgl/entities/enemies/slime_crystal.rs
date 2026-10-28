@@ -84,8 +84,22 @@ impl WebGl2Renderer {
             );
 
             // Facet edge highlights
-            self.draw_line(x + pts[0].0, shard_y + pts[0].1, x + pts[2].0, shard_y + pts[2].1, 1.8, [1.0, 1.0, 1.0, 0.9]);
-            self.draw_line(x + pts[1].0, shard_y + pts[1].1, x + pts[3].0, shard_y + pts[3].1, 1.5, [0.8, 0.95, 1.0, 0.8]);
+            self.draw_line(
+                x + pts[0].0,
+                shard_y + pts[0].1,
+                x + pts[2].0,
+                shard_y + pts[2].1,
+                1.8,
+                [1.0, 1.0, 1.0, 0.9],
+            );
+            self.draw_line(
+                x + pts[1].0,
+                shard_y + pts[1].1,
+                x + pts[3].0,
+                shard_y + pts[3].1,
+                1.5,
+                [0.8, 0.95, 1.0, 0.8],
+            );
 
             // Orbiting satellite mini-crystals
             for i in 0..3 {
@@ -131,7 +145,13 @@ impl WebGl2Renderer {
             // 2. Inner Glowing Hot Molten Core
             let core_r = (rx * 0.38).min(ry * 0.45);
             self.draw_circle(x, body_y - ry * 0.15, core_r, 12, [1.0, 0.95, 0.45, 0.95]);
-            self.draw_circle(x, body_y - ry * 0.15, core_r * 0.5, 8, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_circle(
+                x,
+                body_y - ry * 0.15,
+                core_r * 0.5,
+                8,
+                [1.0, 1.0, 1.0, 0.95],
+            );
 
             // 3. Expressive Angry Stick Eyes
             let eye_x = x + dir * (rx * 0.32);
@@ -152,8 +172,13 @@ impl WebGl2Renderer {
             let bubble_t = (anim_time * 5.0) % 1.0;
             let bubble_x = x - dir * (rx * 0.35);
             let bubble_y = body_y - ry * 0.2 - bubble_t * 8.0;
-            self.draw_circle(bubble_x, bubble_y, 1.8 * (1.0 - bubble_t), 6, [1.0, 0.6, 0.1, 0.9]);
+            self.draw_circle(
+                bubble_x,
+                bubble_y,
+                1.8 * (1.0 - bubble_t),
+                6,
+                [1.0, 0.6, 0.1, 0.9],
+            );
         }
     }
 }
-

@@ -2,7 +2,7 @@
 
 use crate::config::GameConfigRegistry;
 use crate::types::{TowerBranch, TowerType};
-use crate::webgl::primitives::parse_hex_color;
+use crate::webgl::primitives::{element_color_rgba, parse_hex_color};
 use crate::webgl::WebGl2Renderer;
 use std::f32::consts::PI;
 
@@ -32,14 +32,14 @@ impl WebGl2Renderer {
 
         if let Some(sec_el) = tower.secondary_element {
             if tower.tower_type != TowerType::MAGE {
-                let ec = parse_hex_color(registry.get_element_color(sec_el), 0.9);
+                let ec = element_color_rgba(registry, sec_el, 0.9);
                 self.draw_ring(x, y, 20.5, 1.8, 20, ec);
             }
         }
 
         if let Some(ref buffed) = tower.buffed_elements {
             if let Some(&b0) = buffed.first() {
-                let bc = parse_hex_color(registry.get_element_color(b0), 0.85);
+                let bc = element_color_rgba(registry, b0, 0.85);
                 self.draw_ring(x, y, 22.5 + (anim_time * 4.0).sin() * 1.5, 1.8, 20, bc);
             }
         }
@@ -80,9 +80,9 @@ impl WebGl2Renderer {
                 let spire = parse_hex_color("#475569", 1.0);
                 self.draw_triangle(x - 8.0, y + 8.0, x, y - 14.0, x + 8.0, y + 8.0, spire);
                 let fy = y - 24.0 + (anim_time * 3.0).sin() * 3.0;
-                let c1 = parse_hex_color(registry.get_element_color(tower.element), 1.0);
+                let c1 = element_color_rgba(registry, tower.element, 1.0);
                 if let Some(sec) = tower.secondary_element {
-                    let c2 = parse_hex_color(registry.get_element_color(sec), 1.0);
+                    let c2 = element_color_rgba(registry, sec, 1.0);
                     let ang = anim_time * 3.0;
                     self.draw_circle(x + ang.cos() * 7.0, fy + ang.sin() * 3.0, 5.0, 12, c1);
                     self.draw_circle(
@@ -156,7 +156,7 @@ impl WebGl2Renderer {
     ) {
         let x = trap.x;
         let y = trap.y;
-        let elem_c = parse_hex_color(registry.get_element_color(trap.element), 0.85);
+        let elem_c = element_color_rgba(registry, trap.element, 0.85);
         self.draw_circle(x, y, 13.0, 14, parse_hex_color("#1e293b", 0.85));
         self.draw_ring(x, y, 13.0, if is_selected { 2.5 } else { 1.8 }, 14, elem_c);
         if trap.attack_cooldown <= 0.0 {
@@ -164,4 +164,3 @@ impl WebGl2Renderer {
         }
     }
 }
-

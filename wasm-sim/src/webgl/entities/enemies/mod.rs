@@ -13,7 +13,7 @@ pub mod wraith_reaper;
 
 use crate::config::GameConfigRegistry;
 use crate::types::{EnemyEntity, MovementType};
-use crate::webgl::primitives::parse_hex_color;
+use crate::webgl::primitives::element_color_rgba;
 use crate::webgl::WebGl2Renderer;
 use std::f32::consts::PI;
 
@@ -130,11 +130,14 @@ impl WebGl2Renderer {
             1.0
         };
 
-        let elem_hex = registry.get_element_color(enemy.elemental_profile.primary_element);
-        let elem_col = parse_hex_color(elem_hex, ghost_alpha);
+        let elem_col = element_color_rgba(
+            registry,
+            enemy.elemental_profile.primary_element,
+            ghost_alpha,
+        );
         let sec_elem = enemy.elemental_profile.secondary_element;
         let sec_col = sec_elem
-            .map(|e| parse_hex_color(registry.get_element_color(e), ghost_alpha))
+            .map(|e| element_color_rgba(registry, e, ghost_alpha))
             .unwrap_or(elem_col);
 
         // 4. Boss & Elite Auras
@@ -161,19 +164,35 @@ impl WebGl2Renderer {
         // Shield Rings (Armor / Magic)
         if enemy.armor_shield.unwrap_or(0.0) > 0.0 || enemy.magic_shield.unwrap_or(0.0) > 0.0 {
             let sc = if enemy.magic_shield.unwrap_or(0.0) > 0.0 {
-                parse_hex_color("#c084fc", 0.85)
+                [0.753, 0.518, 0.988, 0.85]
             } else {
-                parse_hex_color("#e2e8f0", 0.85)
+                [0.886, 0.910, 0.941, 0.85]
             };
             self.draw_ring(x, draw_y - size * 0.2, size * 1.05, 2.2, 20, sc);
         }
 
-        // 6. Draw Body (Modular WebGL2 Procedural Archetypes)
+        // 6. Draw Body (Texture Atlas Quad or Procedural Vector Archetype)
         let flip_x = enemy.facing.abs() > PI * 0.5;
         let dir = if flip_x { -1.0 } else { 1.0 };
-        self.render_enemy_procedural_archetype(
-            enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
-        );
+        let mut drew_quad = false;
+        if self.has_atlas_texture {
+            let frame = ((anim_time * 8.0) as usize) % 4;
+            let atlas_key = format!("{}_walk_{}", enemy.type_id, frame);
+            drew_quad = self.draw_atlas_quad(
+                &atlas_key,
+                x,
+                draw_y,
+                size * 2.2,
+                size * 2.2,
+                flip_x,
+                elem_col,
+            );
+        }
+        if !drew_quad {
+            self.render_enemy_procedural_archetype(
+                enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+            );
+        }
 
         // 7. Boss Crown Overlay if Boss
         if is_boss {
@@ -265,36 +284,55 @@ impl WebGl2Renderer {
         let arch = get_enemy_archetype(&enemy.type_id);
         match arch {
             EnemyArchetype::Dragon => {
-                self.render_enemy_dragon(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_dragon(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::Serpent => {
-                self.render_enemy_serpent(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_serpent(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::AvianBat => {
-                self.render_enemy_avian_bat(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_avian_bat(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::Arachnid => {
-                self.render_enemy_arachnid(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_arachnid(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::TurtleBeast => {
-                self.render_enemy_turtle_beast(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_turtle_beast(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::SlimeCrystal => {
-                self.render_enemy_slime_crystal(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_slime_crystal(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::Colossus => {
-                self.render_enemy_colossus(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_colossus(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::WraithReaper => {
-                self.render_enemy_wraith_reaper(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_wraith_reaper(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::Siren => {
-                self.render_enemy_siren(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_siren(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
             EnemyArchetype::Humanoid => {
-                self.render_enemy_humanoid(enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss);
+                self.render_enemy_humanoid(
+                    enemy, x, draw_y, size, dir, anim_time, elem_col, sec_col, is_boss,
+                );
             }
         }
     }
 }
-

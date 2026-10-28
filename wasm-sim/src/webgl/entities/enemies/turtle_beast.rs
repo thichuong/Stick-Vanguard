@@ -36,7 +36,14 @@ impl WebGl2Renderer {
             for &side in &[-1.0_f32, 1.0_f32] {
                 let eye_stem_x = x + dir * (s * 0.2) + side * 5.0;
                 let eye_stem_y = body_y - s * 0.35;
-                self.draw_line(eye_stem_x, body_y - s * 0.2, eye_stem_x, eye_stem_y, 2.2, elem_col);
+                self.draw_line(
+                    eye_stem_x,
+                    body_y - s * 0.2,
+                    eye_stem_x,
+                    eye_stem_y,
+                    2.2,
+                    elem_col,
+                );
                 self.draw_circle(eye_stem_x, eye_stem_y, 2.4, 8, [0.15, 0.2, 0.25, 1.0]);
                 self.draw_circle(eye_stem_x, eye_stem_y, 1.2, 6, [0.99, 0.92, 0.35, 1.0]);
             }
@@ -70,9 +77,23 @@ impl WebGl2Renderer {
                 let gait = (anim_time * 12.0 + leg_i as f32 * 2.0).sin() * 4.0;
                 let lx = x - s * 0.3 + (leg_i as f32) * (s * 0.28);
                 // Upper leg
-                self.draw_line(lx, body_y, lx - dir * 4.0, body_y + s * 0.45 + gait, 2.2, elem_col);
+                self.draw_line(
+                    lx,
+                    body_y,
+                    lx - dir * 4.0,
+                    body_y + s * 0.45 + gait,
+                    2.2,
+                    elem_col,
+                );
                 // Lower leg
-                self.draw_line(lx, body_y, lx + dir * 4.0, body_y - s * 0.45 - gait, 2.2, elem_col);
+                self.draw_line(
+                    lx,
+                    body_y,
+                    lx + dir * 4.0,
+                    body_y - s * 0.45 - gait,
+                    2.2,
+                    elem_col,
+                );
             }
         } else if is_leviathan {
             // --- Plague Leviathan (Giant Armored Sea Behemoth) ---
@@ -101,7 +122,13 @@ impl WebGl2Renderer {
             let jaw_x = x + dir * (s * 0.7);
             let jaw_y = body_y;
             self.draw_circle(jaw_x, jaw_y, s * 0.3, 12, elem_col);
-            self.draw_circle(jaw_x + dir * 3.0, jaw_y - 2.0, 2.2, 6, [0.95, 0.2, 0.2, 1.0]);
+            self.draw_circle(
+                jaw_x + dir * 3.0,
+                jaw_y - 2.0,
+                2.2,
+                6,
+                [0.95, 0.2, 0.2, 1.0],
+            );
 
             // Razor teeth
             self.draw_triangle(
@@ -125,17 +152,44 @@ impl WebGl2Renderer {
 
             // Hexagonal shell plates & mossy markings
             self.draw_ellipse(x, body_y, shell_w * 0.55, shell_h * 0.55, 12, sec_col);
-            self.draw_line(x - shell_w * 0.6, body_y, x + shell_w * 0.6, body_y, 1.8, sec_col);
-            self.draw_line(x, body_y - shell_h * 0.6, x, body_y + shell_h * 0.6, 1.8, sec_col);
+            self.draw_line(
+                x - shell_w * 0.6,
+                body_y,
+                x + shell_w * 0.6,
+                body_y,
+                1.8,
+                sec_col,
+            );
+            self.draw_line(
+                x,
+                body_y - shell_h * 0.6,
+                x,
+                body_y + shell_h * 0.6,
+                1.8,
+                sec_col,
+            );
 
             // 2. Extending wrinkly neck & bobbing head
             let neck_bob = (anim_time * 6.0).sin() * 3.5;
             let head_x = x + dir * (shell_w + 6.0 + neck_bob);
             let head_y = body_y - 2.0;
 
-            self.draw_line(x + dir * (shell_w * 0.6), body_y, head_x, head_y, 3.2, elem_col);
+            self.draw_line(
+                x + dir * (shell_w * 0.6),
+                body_y,
+                head_x,
+                head_y,
+                3.2,
+                elem_col,
+            );
             self.draw_circle(head_x, head_y, 5.5, 10, elem_col);
-            self.draw_circle(head_x + dir * 2.0, head_y - 1.2, 1.6, 6, [0.08, 0.12, 0.18, 1.0]);
+            self.draw_circle(
+                head_x + dir * 2.0,
+                head_y - 1.2,
+                1.6,
+                6,
+                [0.08, 0.12, 0.18, 1.0],
+            );
 
             // 3. 4 Paddling flippers / club feet
             let paddle = (anim_time * 7.5).sin() * 5.0;
@@ -157,4 +211,3 @@ impl WebGl2Renderer {
         }
     }
 }
-

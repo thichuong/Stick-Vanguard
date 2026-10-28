@@ -38,8 +38,17 @@ impl WebGl2Renderer {
 
         // Spine lines
         self.draw_line(body_x, body_y, tail_base_x, tail_base_y, 3.2, elem_col);
-        self.draw_line(tail_base_x, tail_base_y, tail_mid_x, tail_mid_y, 2.6, elem_col);
-        self.draw_line(tail_mid_x, tail_mid_y, tail_tip_x, tail_tip_y, 2.2, elem_col);
+        self.draw_line(
+            tail_base_x,
+            tail_base_y,
+            tail_mid_x,
+            tail_mid_y,
+            2.6,
+            elem_col,
+        );
+        self.draw_line(
+            tail_mid_x, tail_mid_y, tail_tip_x, tail_tip_y, 2.2, elem_col,
+        );
 
         // Dorsal spikes on tail
         self.draw_triangle(
@@ -117,7 +126,14 @@ impl WebGl2Renderer {
         // Horns sweeping backwards
         let horn_top_x = head_x - dir * (s * 0.55);
         let horn_top_y = head_y - s * 0.5;
-        self.draw_line(head_x, head_y - s * 0.2, horn_top_x, horn_top_y, 2.8, sec_col);
+        self.draw_line(
+            head_x,
+            head_y - s * 0.2,
+            horn_top_x,
+            horn_top_y,
+            2.8,
+            sec_col,
+        );
         if is_boss {
             // Secondary horned crown for dark dragon boss
             self.draw_line(
@@ -183,8 +199,12 @@ impl WebGl2Renderer {
                 let mut mem_col = sec_col;
                 mem_col[3] = 0.38;
 
-                self.draw_triangle(w_root_x, w_root_y, elbow_x, elbow_y, web_mid_x, web_mid_y, mem_col);
-                self.draw_triangle(elbow_x, elbow_y, tip_x, tip_y, web_mid_x, web_mid_y, mem_col);
+                self.draw_triangle(
+                    w_root_x, w_root_y, elbow_x, elbow_y, web_mid_x, web_mid_y, mem_col,
+                );
+                self.draw_triangle(
+                    elbow_x, elbow_y, tip_x, tip_y, web_mid_x, web_mid_y, mem_col,
+                );
 
                 // Finger struts
                 self.draw_line(elbow_x, elbow_y, web_mid_x, web_mid_y, 1.5, sec_col);
@@ -206,12 +226,25 @@ impl WebGl2Renderer {
 
             // Front raptor leg
             self.draw_line(hip_f_x, hip_f_y, foot_f_x, foot_f_y, 2.6, elem_col);
-            self.draw_line(foot_f_x, foot_f_y, foot_f_x + dir * 5.0, foot_f_y, 2.0, sec_col);
+            self.draw_line(
+                foot_f_x,
+                foot_f_y,
+                foot_f_x + dir * 5.0,
+                foot_f_y,
+                2.0,
+                sec_col,
+            );
 
             // Rear raptor leg
             self.draw_line(hip_r_x, hip_r_y, foot_r_x, foot_r_y, 2.6, elem_col);
-            self.draw_line(foot_r_x, foot_r_y, foot_r_x + dir * 5.0, foot_r_y, 2.0, sec_col);
+            self.draw_line(
+                foot_r_x,
+                foot_r_y,
+                foot_r_x + dir * 5.0,
+                foot_r_y,
+                2.0,
+                sec_col,
+            );
         }
     }
 }
-

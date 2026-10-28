@@ -30,7 +30,13 @@ impl WebGl2Renderer {
 
         // Head
         self.draw_circle(x, head_y, head_r, 12, elem_col);
-        self.draw_circle(x + dir * (head_r * 0.4), head_y - 1.0, 1.8, 6, [0.38, 0.85, 0.98, 1.0]);
+        self.draw_circle(
+            x + dir * (head_r * 0.4),
+            head_y - 1.0,
+            1.8,
+            6,
+            [0.38, 0.85, 0.98, 1.0],
+        );
 
         // Coral Tiara / Royal Pearl Crown
         self.draw_triangle(
@@ -93,7 +99,14 @@ impl WebGl2Renderer {
         let staff_bot_y = spine_bot_y + s * 0.35;
 
         // Staff line
-        self.draw_line(staff_x, staff_top_y, staff_x, staff_bot_y, 2.2, [0.99, 0.92, 0.35, 1.0]);
+        self.draw_line(
+            staff_x,
+            staff_top_y,
+            staff_x,
+            staff_bot_y,
+            2.2,
+            [0.99, 0.92, 0.35, 1.0],
+        );
 
         if is_priestess {
             // Tidal Scepter Pearl
@@ -101,9 +114,30 @@ impl WebGl2Renderer {
             self.draw_ring(staff_x, staff_top_y, 6.0, 1.4, 10, [0.38, 0.85, 0.98, 0.8]);
         } else {
             // Storm Trident prongs
-            self.draw_line(staff_x - 4.5, staff_top_y + 6.0, staff_x - 4.5, staff_top_y - 4.0, 1.8, [0.99, 0.92, 0.35, 1.0]);
-            self.draw_line(staff_x + 4.5, staff_top_y + 6.0, staff_x + 4.5, staff_top_y - 4.0, 1.8, [0.99, 0.92, 0.35, 1.0]);
-            self.draw_line(staff_x, staff_top_y, staff_x, staff_top_y - 7.0, 2.0, [0.99, 0.92, 0.35, 1.0]);
+            self.draw_line(
+                staff_x - 4.5,
+                staff_top_y + 6.0,
+                staff_x - 4.5,
+                staff_top_y - 4.0,
+                1.8,
+                [0.99, 0.92, 0.35, 1.0],
+            );
+            self.draw_line(
+                staff_x + 4.5,
+                staff_top_y + 6.0,
+                staff_x + 4.5,
+                staff_top_y - 4.0,
+                1.8,
+                [0.99, 0.92, 0.35, 1.0],
+            );
+            self.draw_line(
+                staff_x,
+                staff_top_y,
+                staff_x,
+                staff_top_y - 7.0,
+                2.0,
+                [0.99, 0.92, 0.35, 1.0],
+            );
 
             // Lightning spark on trident for Tempest Leviathan
             if is_tempest {
@@ -126,4 +160,3 @@ impl WebGl2Renderer {
         );
     }
 }
-
