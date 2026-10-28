@@ -1514,6 +1514,14 @@ function __wbg_get_imports() {
         __wbg_drawArrays_bf7ab4697366347f: function(arg0, arg1, arg2, arg3) {
             arg0.drawArrays(arg1 >>> 0, arg2, arg3);
         },
+        __wbg_drawingBufferHeight_ea3847ac7695ee2b: function(arg0) {
+            const ret = arg0.drawingBufferHeight;
+            return ret;
+        },
+        __wbg_drawingBufferWidth_fa21a6417b049018: function(arg0) {
+            const ret = arg0.drawingBufferWidth;
+            return ret;
+        },
         __wbg_enableVertexAttribArray_9009c7e37857a8ac: function(arg0, arg1) {
             arg0.enableVertexAttribArray(arg1 >>> 0);
         },

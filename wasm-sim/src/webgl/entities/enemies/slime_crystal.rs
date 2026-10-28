@@ -127,8 +127,8 @@ impl WebGl2Renderer {
             let body_y = draw_y + s * 0.1 - bounce_cycle * 9.0;
 
             // 1. Gelatinous Slime Droplet Body
-            self.draw_ellipse(x, body_y, rx, ry, 16, elem_col);
-            self.draw_ring(x, body_y, rx, 2.0, 16, sec_col);
+            self.draw_ellipse(x, body_y, rx, ry, 28, elem_col);
+            self.draw_ring(x, body_y, rx, 2.0, 28, sec_col);
 
             // Droplet peak on top
             let peak_y = body_y - ry * 1.25;
@@ -144,20 +144,20 @@ impl WebGl2Renderer {
 
             // 2. Inner Glowing Hot Molten Core
             let core_r = (rx * 0.38).min(ry * 0.45);
-            self.draw_circle(x, body_y - ry * 0.15, core_r, 12, [1.0, 0.95, 0.45, 0.95]);
+            self.draw_circle(x, body_y - ry * 0.15, core_r, 24, [1.0, 0.95, 0.45, 0.95]);
             self.draw_circle(
                 x,
                 body_y - ry * 0.15,
                 core_r * 0.5,
-                8,
+                16,
                 [1.0, 1.0, 1.0, 0.95],
             );
 
             // 3. Expressive Angry Stick Eyes
             let eye_x = x + dir * (rx * 0.32);
             let eye_y = body_y - ry * 0.35;
-            self.draw_circle(eye_x, eye_y, 2.4, 8, [0.08, 0.12, 0.18, 1.0]);
-            self.draw_circle(eye_x, eye_y, 1.0, 6, [1.0, 0.9, 0.2, 1.0]);
+            self.draw_circle(eye_x, eye_y, 2.4, 16, [0.08, 0.12, 0.18, 1.0]);
+            self.draw_circle(eye_x, eye_y, 1.0, 12, [1.0, 0.9, 0.2, 1.0]);
             // Angry brow
             self.draw_line(
                 eye_x - dir * 3.5,

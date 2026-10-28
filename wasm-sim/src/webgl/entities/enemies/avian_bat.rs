@@ -30,12 +30,12 @@ impl WebGl2Renderer {
 
         if is_drone {
             // --- Mechanical EMP Drone ---
-            self.draw_circle(x, cy, s * 0.38, 14, elem_col);
-            self.draw_ring(x, cy, s * 0.38, 2.0, 14, [0.38, 0.85, 0.98, 0.9]);
+            self.draw_circle(x, cy, s * 0.38, 24, elem_col);
+            self.draw_ring(x, cy, s * 0.38, 2.0, 24, [0.38, 0.85, 0.98, 0.9]);
 
             // Central pulsing electro scanner lens
             let pulse = (anim_time * 10.0).sin() * 0.2 + 0.8;
-            self.draw_circle(x, cy, s * 0.18 * pulse, 10, [0.15, 0.95, 1.0, 1.0]);
+            self.draw_circle(x, cy, s * 0.18 * pulse, 20, [0.15, 0.95, 1.0, 1.0]);
 
             // Rotating twin rotor arms
             let rot = anim_time * 18.0;
@@ -52,7 +52,7 @@ impl WebGl2Renderer {
                     1.8,
                     sec_col,
                 );
-                self.draw_circle(arm_x, cy - 4.0, 2.2, 8, [0.95, 0.95, 0.95, 1.0]);
+                self.draw_circle(arm_x, cy - 4.0, 2.2, 16, [0.95, 0.95, 0.95, 1.0]);
             }
             // Antennas
             self.draw_line(x - 3.0, cy - s * 0.35, x - 5.0, cy - s * 0.65, 1.5, sec_col);
@@ -103,11 +103,11 @@ impl WebGl2Renderer {
             }
 
             // Divine floating Halo
-            self.draw_ellipse(x, cy - s * 0.85, 7.5, 3.0, 14, [0.99, 0.92, 0.35, 0.95]);
+            self.draw_ellipse(x, cy - s * 0.85, 7.5, 3.0, 24, [0.99, 0.92, 0.35, 0.95]);
 
             // Slender stick body & white sacred tunic
             let head_y = cy - s * 0.55;
-            self.draw_circle(x, head_y, s * 0.24, 12, elem_col);
+            self.draw_circle(x, head_y, s * 0.24, 24, elem_col);
             self.draw_line(x, head_y + s * 0.2, x, cy + s * 0.45, 2.6, elem_col);
 
             // Sacred golden lance / spear of light
@@ -135,7 +135,7 @@ impl WebGl2Renderer {
 
             // Head & Body
             let head_y = cy - s * 0.45;
-            self.draw_circle(x, head_y, s * 0.22, 12, elem_col);
+            self.draw_circle(x, head_y, s * 0.22, 24, elem_col);
             self.draw_line(x, head_y + s * 0.18, x, cy + s * 0.35, 2.2, elem_col);
             // Dainty bent legs
             self.draw_line(
@@ -149,7 +149,7 @@ impl WebGl2Renderer {
 
             if is_celestial {
                 // Golden halo for Celestial Fairy
-                self.draw_ellipse(x, head_y - 6.0, 6.0, 2.2, 12, [0.99, 0.92, 0.35, 0.95]);
+                self.draw_ellipse(x, head_y - 6.0, 6.0, 2.2, 24, [0.99, 0.92, 0.35, 0.95]);
             }
 
             // 4 Translucent Shimmering Wings (Dragonfly / Butterfly style)
@@ -160,14 +160,14 @@ impl WebGl2Renderer {
                 // Upper wing
                 let uw_cx = x + side * (s * 0.65);
                 let uw_cy = cy - s * 0.35 + wing_flap * 4.0 * side;
-                self.draw_ellipse(uw_cx, uw_cy, s * 0.65, s * 0.28, 12, wing_fill);
-                self.draw_ring(uw_cx, uw_cy, s * 0.65, 1.4, 12, sec_col);
+                self.draw_ellipse(uw_cx, uw_cy, s * 0.65, s * 0.28, 24, wing_fill);
+                self.draw_ring(uw_cx, uw_cy, s * 0.65, 1.4, 24, sec_col);
 
                 // Lower wing
                 let lw_cx = x + side * (s * 0.45);
                 let lw_cy = cy + s * 0.05 - wing_flap * 3.0 * side;
-                self.draw_ellipse(lw_cx, lw_cy, s * 0.45, s * 0.2, 10, wing_fill);
-                self.draw_ring(lw_cx, lw_cy, s * 0.45, 1.2, 10, sec_col);
+                self.draw_ellipse(lw_cx, lw_cy, s * 0.45, s * 0.2, 20, wing_fill);
+                self.draw_ring(lw_cx, lw_cy, s * 0.45, 1.2, 20, sec_col);
             }
 
             // Magic Wand with star gem
@@ -180,19 +180,19 @@ impl WebGl2Renderer {
                 1.6,
                 [0.99, 0.92, 0.35, 1.0],
             );
-            self.draw_circle(wand_x, cy - s * 0.1, 3.0, 8, [1.0, 1.0, 1.0, 1.0]);
+            self.draw_circle(wand_x, cy - s * 0.1, 3.0, 16, [1.0, 1.0, 1.0, 1.0]);
         } else {
             // --- Toxic Bat & Winged Gargoyle ---
             let wing_flap = (anim_time * 13.0).sin() * 16.0;
 
             // Hunched Torso
             let body_y = cy;
-            self.draw_circle(x, body_y, s * 0.35, 12, elem_col);
+            self.draw_circle(x, body_y, s * 0.35, 24, elem_col);
 
             // Bat Head with pointed devil ears
             let head_x = x + dir * 3.0;
             let head_y = body_y - s * 0.32;
-            self.draw_circle(head_x, head_y, s * 0.24, 10, elem_col);
+            self.draw_circle(head_x, head_y, s * 0.24, 20, elem_col);
 
             // Pointed Ears
             self.draw_triangle(

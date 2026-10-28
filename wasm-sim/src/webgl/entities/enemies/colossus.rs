@@ -89,30 +89,30 @@ impl WebGl2Renderer {
 
         if is_chrono {
             // Chrono gear rune
-            self.draw_circle(x, core_y, 7.0 * core_pulse, 12, [0.38, 0.85, 0.98, 0.95]);
+            self.draw_circle(x, core_y, 7.0 * core_pulse, 24, [0.38, 0.85, 0.98, 0.95]);
             self.draw_ring(
                 x,
                 core_y,
                 7.0 * core_pulse,
                 1.8,
-                12,
+                24,
                 [0.99, 0.92, 0.35, 1.0],
             );
         } else if is_inferno {
             // Blazing magma core
-            self.draw_circle(x, core_y, 7.5 * core_pulse, 12, [0.98, 0.45, 0.08, 0.95]);
-            self.draw_circle(x, core_y, 3.5, 8, [1.0, 0.95, 0.35, 1.0]);
+            self.draw_circle(x, core_y, 7.5 * core_pulse, 24, [0.98, 0.45, 0.08, 0.95]);
+            self.draw_circle(x, core_y, 3.5, 16, [1.0, 0.95, 0.35, 1.0]);
         } else {
             // Elemental stone plate core
-            self.draw_rect(x - 5.0, core_y - 5.0, 10.0, 10.0, sec_col);
-            self.draw_circle(x, core_y, 2.5, 8, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_rounded_rect(x - 5.0, core_y - 5.0, 10.0, 10.0, 2.0, sec_col);
+            self.draw_circle(x, core_y, 2.5, 16, [1.0, 1.0, 1.0, 0.95]);
         }
 
         // 3. Compact Armored Head / Helm
         let head_y = torso_top - s * 0.22;
         let head_r = s * 0.24;
-        self.draw_circle(x, head_y, head_r, 12, elem_col);
-        self.draw_ring(x, head_y, head_r, 2.0, 12, sec_col);
+        self.draw_circle(x, head_y, head_r, 28, elem_col);
+        self.draw_ring(x, head_y, head_r, 2.0, 28, sec_col);
 
         // Visor slit with glowing eyes
         let visor_w = head_r * 0.65;
@@ -131,8 +131,8 @@ impl WebGl2Renderer {
             let sp_y = torso_top + 2.0;
 
             // Shoulder boulder
-            self.draw_circle(sp_x, sp_y, s * 0.22, 10, elem_col);
-            self.draw_ring(sp_x, sp_y, s * 0.22, 1.8, 10, sec_col);
+            self.draw_circle(sp_x, sp_y, s * 0.22, 20, elem_col);
+            self.draw_ring(sp_x, sp_y, s * 0.22, 1.8, 20, sec_col);
 
             if is_ice {
                 // Jagged ice spikes protruding from shoulders
@@ -147,7 +147,7 @@ impl WebGl2Renderer {
                 );
             } else if is_iron {
                 // Steel armor rivets
-                self.draw_circle(sp_x, sp_y, 3.0, 6, [0.85, 0.9, 0.95, 1.0]);
+                self.draw_circle(sp_x, sp_y, 3.0, 16, [0.85, 0.9, 0.95, 1.0]);
             } else if is_treant {
                 // Mossy leafy branches
                 self.draw_line(
@@ -232,7 +232,7 @@ impl WebGl2Renderer {
             4.5,
             elem_col,
         );
-        self.draw_circle(arm_r_fist_x, arm_r_fist_y, s * 0.2, 10, sec_col);
+        self.draw_circle(arm_r_fist_x, arm_r_fist_y, s * 0.2, 20, sec_col);
 
         // Front punch arm
         let arm_f_root_x = x + dir * shoulder_w;
@@ -246,6 +246,6 @@ impl WebGl2Renderer {
             5.0,
             elem_col,
         );
-        self.draw_circle(arm_f_fist_x, arm_f_fist_y, s * 0.24, 10, sec_col);
+        self.draw_circle(arm_f_fist_x, arm_f_fist_y, s * 0.24, 20, sec_col);
     }
 }

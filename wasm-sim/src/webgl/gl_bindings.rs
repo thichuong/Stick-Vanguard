@@ -15,6 +15,12 @@ extern "C" {
     #[wasm_bindgen(method, js_name = viewport)]
     pub fn viewport(this: &JsWebGl2Context, x: i32, y: i32, width: i32, height: i32);
 
+    #[wasm_bindgen(method, getter, js_name = drawingBufferWidth)]
+    pub fn drawing_buffer_width(this: &JsWebGl2Context) -> i32;
+
+    #[wasm_bindgen(method, getter, js_name = drawingBufferHeight)]
+    pub fn drawing_buffer_height(this: &JsWebGl2Context) -> i32;
+
     #[wasm_bindgen(method, js_name = clearColor)]
     pub fn clear_color(this: &JsWebGl2Context, r: f32, g: f32, b: f32, a: f32);
 

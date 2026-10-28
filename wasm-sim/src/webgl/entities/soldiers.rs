@@ -19,13 +19,13 @@ impl WebGl2Renderer {
 
         if s.state == SoldierState::DEAD {
             let ratio = 1.0 - (s.respawn_timer / s.respawn_delay.max(0.1)).clamp(0.0, 1.0);
-            self.draw_ring(x, y, 9.0, 2.0, 14, [0.58, 0.64, 0.72, 0.5]);
-            self.draw_circle(x, y, 9.0 * ratio, 14, [0.22, 0.74, 0.97, 0.35]);
+            self.draw_ring(x, y, 9.0, 2.0, 24, [0.58, 0.64, 0.72, 0.5]);
+            self.draw_circle(x, y, 9.0 * ratio, 24, [0.22, 0.74, 0.97, 0.35]);
             return;
         }
 
         // Shadow
-        self.draw_ellipse(x, y + 4.0, 9.0, 4.5, 12, [0.0, 0.0, 0.0, 0.35]);
+        self.draw_ellipse(x, y + 4.0, 9.0, 4.5, 24, [0.0, 0.0, 0.0, 0.35]);
 
         let is_spirit = s.is_spirit.unwrap_or(false);
         let body_alpha = if is_spirit {
@@ -61,13 +61,20 @@ impl WebGl2Renderer {
             }
         }
 
-        // Health bar
+        // Health bar (pill capsule rounded shape)
         let hp_ratio = (s.hp / s.max_hp.max(1.0)).clamp(0.0, 1.0);
         let bw = 24.0;
         let bx = x - bw * 0.5;
         let by = y - 25.0;
-        self.draw_rect(bx, by, bw, 3.5, [0.06, 0.09, 0.16, 0.85]);
-        self.draw_rect(bx, by, bw * hp_ratio, 3.5, [0.13, 0.77, 0.37, 0.95]);
+        self.draw_rounded_rect(bx, by, bw, 3.5, 1.75, [0.06, 0.09, 0.16, 0.85]);
+        self.draw_rounded_rect(
+            bx,
+            by,
+            (bw * hp_ratio).max(1.0),
+            3.5,
+            1.75,
+            [0.13, 0.77, 0.37, 0.95],
+        );
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -96,7 +103,7 @@ impl WebGl2Renderer {
         // Ghostly summoning ring / aura for Spirit Dragon
         if is_spirit {
             let aura_col = [0.51, 0.55, 0.97, 0.5 + (anim_time * 6.0).sin() * 0.2];
-            self.draw_ring(x, y, 18.0, 1.8, 18, aura_col);
+            self.draw_ring(x, y, 18.0, 1.8, 32, aura_col);
         }
 
         // Flight & Tail flap animation
@@ -122,7 +129,7 @@ impl WebGl2Renderer {
         // Tier 4A: Divine Golden Dragon (Halo & 4 Wings)
         if tier == 4 && branch == Some(TowerBranch::A) {
             let halo_col = [0.99, 0.94, 0.54, 0.85];
-            self.draw_ring(x - cos_a * 6.0, y - sin_a * 6.0, 15.0, 2.0, 18, halo_col);
+            self.draw_ring(x - cos_a * 6.0, y - sin_a * 6.0, 15.0, 2.0, 32, halo_col);
             let rear_flap = (anim_time * flap_speed + 0.8).sin() * 6.0;
             let (rw1_a, rw1_b) = rot(-8.0, -15.0 - rear_flap);
             let (rw2_a, rw2_b) = rot(-8.0, 15.0 + rear_flap);
@@ -197,7 +204,7 @@ impl WebGl2Renderer {
         let (head_x, head_y) = rot(body_rx * 1.5, 0.0);
         self.draw_line(neck_x, neck_y, head_x, head_y, 3.5, elem_col);
         let head_r = if tier >= 3 { 5.2 } else { 4.0 };
-        self.draw_circle(head_x, head_y, head_r, 12, elem_col);
+        self.draw_circle(head_x, head_y, head_r, 24, elem_col);
 
         // Horns
         let horn_len = if tier >= 3 { 9.5 } else { 6.0 };
@@ -217,8 +224,8 @@ impl WebGl2Renderer {
         let eye_col = [1.0, 0.95, 0.3, 0.95];
         let (eye1_x, eye1_y) = rot(body_rx * 1.6, -1.8);
         let (eye2_x, eye2_y) = rot(body_rx * 1.6, 1.8);
-        self.draw_circle(eye1_x, eye1_y, 1.3, 6, eye_col);
-        self.draw_circle(eye2_x, eye2_y, 1.3, 6, eye_col);
+        self.draw_circle(eye1_x, eye1_y, 1.3, 12, eye_col);
+        self.draw_circle(eye2_x, eye2_y, 1.3, 12, eye_col);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -241,26 +248,26 @@ impl WebGl2Renderer {
         // Spirit glow
         if is_spirit {
             let aura_col = [0.51, 0.55, 0.97, 0.45 + (anim_time * 5.0).sin() * 0.2];
-            self.draw_ring(x, y, 14.0, 1.5, 14, aura_col);
+            self.draw_ring(x, y, 14.0, 1.5, 24, aura_col);
         }
 
         // Tier 4A: Celestial Queen Crown & Holy Halo
         if tier == 4 && branch == Some(TowerBranch::A) {
             let halo_col = [0.99, 0.94, 0.54, 0.85];
-            self.draw_ring(x, y - 4.0, 15.0, 1.8, 16, halo_col);
+            self.draw_ring(x, y - 4.0, 15.0, 1.8, 24, halo_col);
             let scepter_top_y = y - 10.0;
             self.draw_line(x + 8.0, y + 4.0, x + 8.0, scepter_top_y, 1.8, halo_col);
-            self.draw_circle(x + 8.0, scepter_top_y, 2.5, 8, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_circle(x + 8.0, scepter_top_y, 2.5, 16, [1.0, 1.0, 1.0, 0.95]);
         }
 
         // Tier 4B: Twilight Tempest - Orbiting Barrier Orbs & Arcane Circle
         if tier == 4 && branch == Some(TowerBranch::B) {
-            self.draw_ring(x, base_y + 2.0, 11.0, 1.2, 12, sec_col);
+            self.draw_ring(x, base_y + 2.0, 11.0, 1.2, 24, sec_col);
             for i in 0..3 {
                 let ang = anim_time * 4.0 + (i as f32) * (PI * 2.0 / 3.0);
                 let ox = x + ang.cos() * 12.0;
                 let oy = y + ang.sin() * 6.0;
-                self.draw_circle(ox, oy, 2.2, 8, sec_col);
+                self.draw_circle(ox, oy, 2.2, 16, sec_col);
             }
         }
 
@@ -311,8 +318,8 @@ impl WebGl2Renderer {
 
         // Core Glowing Body
         let body_r = if tier >= 3 { 5.5 } else { 4.5 };
-        self.draw_circle(x, y, body_r, 14, elem_col);
-        self.draw_circle(x, y, body_r * 0.5, 10, [1.0, 1.0, 1.0, 0.9]);
+        self.draw_circle(x, y, body_r, 24, elem_col);
+        self.draw_circle(x, y, body_r * 0.5, 20, [1.0, 1.0, 1.0, 0.9]);
 
         // Tier 2+ Petal Skirt
         if tier >= 2 {
@@ -341,7 +348,7 @@ impl WebGl2Renderer {
         if tier >= 2 && branch != Some(TowerBranch::B) {
             let spark_x = x + (anim_time * 3.0).cos() * 9.0;
             let spark_y = y + (anim_time * 3.0).sin() * 5.0;
-            self.draw_circle(spark_x, spark_y, 1.8, 6, [1.0, 1.0, 1.0, 0.85]);
+            self.draw_circle(spark_x, spark_y, 1.8, 16, [1.0, 1.0, 1.0, 0.85]);
         }
     }
 
@@ -378,7 +385,7 @@ impl WebGl2Renderer {
         // 1. Runic Summoning Ring for Heroic Spirit
         if is_spirit {
             let spirit_aura = [0.51, 0.55, 0.97, 0.6 + (anim_time * 5.0).sin() * 0.2];
-            self.draw_ring(x, y + 4.0, 13.0, 1.5, 16, spirit_aura);
+            self.draw_ring(x, y + 4.0, 13.0, 1.5, 32, spirit_aura);
             self.draw_line(x - 15.0, y + 4.0, x - 11.0, y + 4.0, 1.5, spirit_aura);
             self.draw_line(x + 11.0, y + 4.0, x + 15.0, y + 4.0, 1.5, spirit_aura);
         }
@@ -401,7 +408,7 @@ impl WebGl2Renderer {
         // 3. Tier 4A Paladin Holy Halo & Light Wings
         if tier == 4 && branch == Some(TowerBranch::A) {
             let halo_col = [0.99, 0.94, 0.54, 0.9];
-            self.draw_ellipse(x, y - 23.0, 6.5, 2.5, 12, halo_col);
+            self.draw_ellipse(x, y - 23.0, 6.5, 2.5, 24, halo_col);
             let wing_aura = [0.99, 0.94, 0.54, 0.45];
             self.draw_triangle(
                 x,
@@ -425,7 +432,7 @@ impl WebGl2Renderer {
 
         let head_y = y - 15.0;
         let head_r = if tier >= 3 { 5.0 } else { 4.5 };
-        self.draw_circle(x, head_y, head_r, 12, body_color);
+        self.draw_circle(x, head_y, head_r, 28, body_color);
 
         // Spine
         self.draw_line(
@@ -507,11 +514,12 @@ impl WebGl2Renderer {
                 let shield_x = x - dir * 6.5;
                 let shield_y = y - 6.0;
                 if tier == 4 && branch == Some(TowerBranch::A) {
-                    self.draw_rect(
+                    self.draw_rounded_rect(
                         shield_x - 3.5,
                         shield_y - 5.0,
                         7.0,
                         10.0,
+                        2.0,
                         [0.99, 0.94, 0.54, 0.95],
                     );
                     self.draw_line(
@@ -531,7 +539,7 @@ impl WebGl2Renderer {
                         [1.0, 1.0, 1.0, 1.0],
                     );
                 } else if tier == 4 && branch == Some(TowerBranch::B) {
-                    self.draw_circle(shield_x, shield_y, 5.0, 12, [0.78, 0.45, 0.18, 1.0]);
+                    self.draw_circle(shield_x, shield_y, 5.0, 24, [0.78, 0.45, 0.18, 1.0]);
                     self.draw_line(
                         shield_x - 2.0,
                         shield_y + 2.0,
@@ -549,16 +557,17 @@ impl WebGl2Renderer {
                         [0.95, 0.85, 0.3, 1.0],
                     );
                 } else if tier == 3 {
-                    self.draw_rect(
+                    self.draw_rounded_rect(
                         shield_x - 3.0,
                         shield_y - 5.0,
                         6.0,
                         9.0,
+                        1.5,
                         [0.38, 0.44, 0.52, 1.0],
                     );
-                    self.draw_ring(shield_x, shield_y, 3.5, 1.2, 8, sec_col);
+                    self.draw_ring(shield_x, shield_y, 3.5, 1.2, 16, sec_col);
                 } else {
-                    self.draw_circle(shield_x, shield_y, 4.0, 10, [0.45, 0.5, 0.58, 1.0]);
+                    self.draw_circle(shield_x, shield_y, 4.0, 20, [0.45, 0.5, 0.58, 1.0]);
                 }
             }
 

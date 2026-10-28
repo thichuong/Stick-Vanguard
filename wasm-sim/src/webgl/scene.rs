@@ -126,17 +126,25 @@ impl WebGl2Renderer {
             self.draw_ring(
                 gs.x,
                 gs.y,
-                22.0 + pulse,
-                2.0,
-                20,
-                [0.937, 0.267, 0.267, 0.4],
+                24.0 + pulse,
+                1.5,
+                48,
+                [0.937, 0.267, 0.267, 0.25],
             );
-            self.draw_circle(gs.x, gs.y, 18.0, 20, parse_hex_color("#ef4444", 1.0));
+            self.draw_ring(
+                gs.x,
+                gs.y,
+                21.0 + pulse * 0.5,
+                2.0,
+                48,
+                [0.937, 0.267, 0.267, 0.5],
+            );
+            self.draw_circle(gs.x, gs.y, 18.0, 48, parse_hex_color("#ef4444", 1.0));
             // Procedural Skull Icon
-            self.draw_circle(gs.x, gs.y - 2.0, 7.5, 14, [1.0, 1.0, 1.0, 0.95]);
-            self.draw_rect(gs.x - 3.5, gs.y + 3.0, 7.0, 4.0, [1.0, 1.0, 1.0, 0.95]);
-            self.draw_circle(gs.x - 2.5, gs.y - 1.5, 2.0, 10, [0.15, 0.15, 0.2, 1.0]);
-            self.draw_circle(gs.x + 2.5, gs.y - 1.5, 2.0, 10, [0.15, 0.15, 0.2, 1.0]);
+            self.draw_circle(gs.x, gs.y - 2.0, 7.5, 24, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_rounded_rect(gs.x - 3.5, gs.y + 3.0, 7.0, 4.0, 1.2, [1.0, 1.0, 1.0, 0.95]);
+            self.draw_circle(gs.x - 2.5, gs.y - 1.5, 2.0, 16, [0.15, 0.15, 0.2, 1.0]);
+            self.draw_circle(gs.x + 2.5, gs.y - 1.5, 2.0, 16, [0.15, 0.15, 0.2, 1.0]);
             self.draw_line(
                 gs.x,
                 gs.y + 1.0,
@@ -152,8 +160,16 @@ impl WebGl2Renderer {
             .enumerate()
         {
             let pulse = (anim_time * 3.5 + idx as f32).sin() * 2.5;
-            self.draw_ring(ws.x, ws.y, 21.0 + pulse, 2.0, 20, [0.22, 0.74, 0.97, 0.45]);
-            self.draw_circle(ws.x, ws.y, 17.0, 20, parse_hex_color("#0284c7", 1.0));
+            self.draw_ring(ws.x, ws.y, 24.0 + pulse, 1.5, 48, [0.22, 0.74, 0.97, 0.25]);
+            self.draw_ring(
+                ws.x,
+                ws.y,
+                21.0 + pulse * 0.5,
+                2.0,
+                48,
+                [0.22, 0.74, 0.97, 0.6],
+            );
+            self.draw_circle(ws.x, ws.y, 17.0, 48, parse_hex_color("#0284c7", 1.0));
             // Procedural Water Waves Icon
             let wave_col = [1.0, 1.0, 1.0, 0.95];
             self.draw_line(
@@ -211,35 +227,43 @@ impl WebGl2Renderer {
             self.draw_ring(
                 base.x,
                 base.y,
+                base.radius + pulse + 4.0,
+                1.5,
+                64,
+                [0.23, 0.51, 0.96, 0.2],
+            );
+            self.draw_ring(
+                base.x,
+                base.y,
                 base.radius + pulse,
                 2.5,
-                28,
-                [0.23, 0.51, 0.96, 0.35],
+                64,
+                [0.23, 0.51, 0.96, 0.45],
             );
-            self.draw_circle(base.x, base.y, 28.0, 24, parse_hex_color("#1e3a8a", 1.0));
+            self.draw_circle(base.x, base.y, 28.0, 48, parse_hex_color("#1e3a8a", 1.0));
             self.draw_ring(
                 base.x,
                 base.y,
                 28.0,
                 3.0,
-                24,
+                48,
                 parse_hex_color("#60a5fa", 1.0),
             );
-            self.draw_circle(base.x, base.y, 16.0, 20, parse_hex_color("#3b82f6", 1.0));
+            self.draw_circle(base.x, base.y, 16.0, 36, parse_hex_color("#3b82f6", 1.0));
             // Procedural Castle Keep Icon
             let castle_col = [1.0, 1.0, 1.0, 0.95];
             self.draw_rect(base.x - 8.0, base.y - 2.0, 16.0, 10.0, castle_col);
             self.draw_rect(base.x - 8.0, base.y - 7.0, 4.0, 5.0, castle_col);
             self.draw_rect(base.x - 2.0, base.y - 7.0, 4.0, 5.0, castle_col);
             self.draw_rect(base.x + 4.0, base.y - 7.0, 4.0, 5.0, castle_col);
-            self.draw_rect(
+            self.draw_rounded_rect(
                 base.x - 2.5,
                 base.y + 2.0,
                 5.0,
                 6.0,
+                2.0,
                 [0.12, 0.23, 0.54, 1.0],
             );
-            self.draw_circle(base.x, base.y + 2.0, 2.5, 10, [0.12, 0.23, 0.54, 1.0]);
         }
 
         // 6. Placement Preview Cursor
@@ -264,12 +288,12 @@ impl WebGl2Renderer {
                             mx,
                             my,
                             bp.range,
-                            36,
+                            72,
                             [preview_col[0], preview_col[1], preview_col[2], 0.08],
                         );
-                        self.draw_ring(mx, my, bp.range, 1.5, 36, preview_col);
+                        self.draw_ring(mx, my, bp.range, 1.8, 72, preview_col);
                     }
-                    self.draw_circle(mx, my, 18.0, 20, preview_col);
+                    self.draw_circle(mx, my, 18.0, 36, preview_col);
                 }
             }
         } else if let Some(ref pt) = state.selected_build_point {
@@ -279,8 +303,8 @@ impl WebGl2Renderer {
             } else {
                 [0.22, 0.74, 0.97, 0.85]
             };
-            self.draw_ring(pt.x, pt.y, 22.0, 2.0, 24, col);
-            self.draw_circle(pt.x, pt.y, 4.0, 10, col);
+            self.draw_ring(pt.x, pt.y, 22.0, 2.0, 48, col);
+            self.draw_circle(pt.x, pt.y, 4.5, 20, col);
 
             if let Some(hover_type) = state.hovered_build_tower_type {
                 let bp_key = if hover_type.is_trap() {
@@ -290,21 +314,15 @@ impl WebGl2Renderer {
                 };
                 if let Some(bp) = registry.towers.get(&bp_key) {
                     if bp.range > 0.0 {
-                        self.draw_circle(
-                            pt.x,
-                            pt.y,
-                            bp.range,
-                            36,
-                            [col[0], col[1], col[2], 0.08],
-                        );
-                        self.draw_ring(pt.x, pt.y, bp.range, 1.5, 36, col);
+                        self.draw_circle(pt.x, pt.y, bp.range, 72, [col[0], col[1], col[2], 0.08]);
+                        self.draw_ring(pt.x, pt.y, bp.range, 1.8, 72, col);
                     }
                 }
             }
         } else if state.is_setting_rally_point {
             if let Some(ref sel_id) = state.selected_tower_id {
                 if let Some(t) = state.towers.iter().find(|t| &t.id == sel_id) {
-                    self.draw_ring(t.x, t.y, t.range, 2.0, 36, [0.918, 0.702, 0.031, 0.65]);
+                    self.draw_ring(t.x, t.y, t.range, 2.0, 72, [0.918, 0.702, 0.031, 0.65]);
                 }
             }
         }
@@ -318,19 +336,19 @@ impl WebGl2Renderer {
                 && tower.branch == Some(TowerBranch::A)
             {
                 let c = element_color_rgba(registry, tower.element, 0.12);
-                self.draw_circle(tower.x, tower.y, tower.range, 36, c);
+                self.draw_circle(tower.x, tower.y, tower.range, 72, c);
                 let ring_c = element_color_rgba(registry, tower.element, 0.45);
-                self.draw_ring(tower.x, tower.y, tower.range, 1.8, 36, ring_c);
+                self.draw_ring(tower.x, tower.y, tower.range, 1.8, 72, ring_c);
             }
 
             if is_selected {
-                self.draw_circle(tower.x, tower.y, tower.range, 36, [1.0, 1.0, 1.0, 0.05]);
+                self.draw_circle(tower.x, tower.y, tower.range, 72, [1.0, 1.0, 1.0, 0.05]);
                 self.draw_ring(
                     tower.x,
                     tower.y,
                     tower.range,
-                    1.5,
-                    36,
+                    1.6,
+                    72,
                     [1.0, 1.0, 1.0, 0.38],
                 );
 
@@ -348,7 +366,8 @@ impl WebGl2Renderer {
                                 0.0,
                                 [0.918, 0.702, 0.031, 0.75],
                             );
-                            self.draw_circle(rp.x, rp.y, 6.0, 12, [0.918, 0.702, 0.031, 0.85]);
+                            self.draw_ring(rp.x, rp.y, 8.5, 1.5, 24, [0.918, 0.702, 0.031, 0.45]);
+                            self.draw_circle(rp.x, rp.y, 6.0, 24, [0.918, 0.702, 0.031, 0.85]);
                         }
                     }
                 }
@@ -398,7 +417,7 @@ impl WebGl2Renderer {
         // 10. Projectiles
         for p in &state.projectiles {
             let px = p.prev_x.map(|px| px + (p.x - px) * alpha).unwrap_or(p.x);
-            let py = p.prev_y.map(|py| py + (py - py) * alpha).unwrap_or(p.y);
+            let py = p.prev_y.map(|py| py + (p.y - py) * alpha).unwrap_or(p.y);
             let disp_elem = p
                 .damage_payload
                 .secondary_element
@@ -415,50 +434,83 @@ impl WebGl2Renderer {
                 let rad = 7.0;
                 let mut halo = c;
                 halo[3] = 0.35;
-                self.draw_circle(px, py, rad * 1.6, 12, halo);
-                self.draw_circle(px, py, rad, 10, c);
-                self.draw_circle(px, py, rad * 0.55, 8, [1.0, 0.94, 0.55, 0.95]);
+                self.draw_circle(px, py, rad * 1.6, 24, halo);
+                self.draw_circle(px, py, rad, 20, c);
+                self.draw_circle(px, py, rad * 0.55, 16, [1.0, 0.94, 0.55, 0.95]);
             } else if is_fairy_shot {
                 // Starlight fey missile with radiant fairy aura & glowing white-pink core
                 let rad = 5.0;
                 let fairy_color = element_color_rgba(registry, ElementType::FAIRY, 0.40);
-                self.draw_circle(px, py, rad * 1.6, 10, fairy_color);
-                self.draw_circle(px, py, rad, 8, c);
-                self.draw_circle(px, py, rad * 0.5, 6, [1.0, 1.0, 1.0, 0.95]);
+                self.draw_circle(px, py, rad * 1.6, 20, fairy_color);
+                self.draw_circle(px, py, rad, 16, c);
+                self.draw_circle(px, py, rad * 0.5, 12, [1.0, 1.0, 1.0, 0.95]);
             } else if is_soldier_javelin {
                 // Sleek javelin / throwing arrow with sharp front core
                 let rad = 4.0;
                 let mut glow = c;
                 glow[3] = 0.45;
-                self.draw_circle(px, py, rad * 1.35, 8, glow);
-                self.draw_circle(px, py, rad, 8, c);
-                self.draw_circle(px, py, rad * 0.45, 6, [1.0, 1.0, 1.0, 0.9]);
+                self.draw_circle(px, py, rad * 1.35, 16, glow);
+                self.draw_circle(px, py, rad, 16, c);
+                self.draw_circle(px, py, rad * 0.45, 12, [1.0, 1.0, 1.0, 0.9]);
             } else {
                 let rad = if p.is_parabolic { 6.0 } else { 4.0 };
-                self.draw_circle(px, py, rad, 10, c);
-                self.draw_circle(px, py, rad * 0.5, 8, [1.0, 1.0, 1.0, 0.9]);
+                let mut glow = c;
+                glow[3] = 0.35;
+                self.draw_circle(px, py, rad * 1.4, 20, glow);
+                self.draw_circle(px, py, rad, 16, c);
+                self.draw_circle(px, py, rad * 0.5, 12, [1.0, 1.0, 1.0, 0.9]);
             }
         }
 
-        // 11. Particles (Fast Quad / Diamond for size <= 3.5, LUT Circle for larger)
+        // 11. Particles (Fast Quad / Diamond for size <= 3.0, LUT Circle for larger)
         for pt in &state.particles {
             let px = pt.prev_x.map(|px| px + (pt.x - px) * alpha).unwrap_or(pt.x);
             let py = pt.prev_y.map(|py| py + (pt.y - py) * alpha).unwrap_or(pt.y);
             let ratio = (pt.life_time / pt.max_life_time.max(0.01)).clamp(0.0, 1.0);
             let c = parse_hex_color(&pt.color, ratio);
             let r = pt.size * ratio.max(0.4);
-            if r <= 3.5 {
+            if r <= 3.0 {
                 self.color_vertices.reserve(36);
                 self.color_vertices.extend_from_slice(&[
-                    px, py - r, c[0], c[1], c[2], c[3],
-                    px + r, py, c[0], c[1], c[2], c[3],
-                    px, py + r, c[0], c[1], c[2], c[3],
-                    px, py - r, c[0], c[1], c[2], c[3],
-                    px, py + r, c[0], c[1], c[2], c[3],
-                    px - r, py, c[0], c[1], c[2], c[3],
+                    px,
+                    py - r,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
+                    px + r,
+                    py,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
+                    px,
+                    py + r,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
+                    px,
+                    py - r,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
+                    px,
+                    py + r,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
+                    px - r,
+                    py,
+                    c[0],
+                    c[1],
+                    c[2],
+                    c[3],
                 ]);
             } else {
-                self.draw_circle(px, py, r, 8, c);
+                self.draw_circle(px, py, r, 16, c);
             }
         }
     }

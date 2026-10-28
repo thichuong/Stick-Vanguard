@@ -5,8 +5,8 @@ use crate::config::{
 };
 use crate::rules::SimpleRng;
 use crate::types::{
-    BuildCursorTarget, ElementType, EnemyEntity, EnemyState, FloatingText, MovementType, Particle, ParticleShape,
-    PlacementType, ProjectileEntity, SoldierCombatMode, SoldierEntity, SoldierState,
+    BuildCursorTarget, ElementType, EnemyEntity, EnemyState, FloatingText, MovementType, Particle,
+    ParticleShape, PlacementType, ProjectileEntity, SoldierCombatMode, SoldierEntity, SoldierState,
     SummonUnitArchetype, TargetingFilter, TowerBranch, TowerEntity, TowerSlot, TowerType, Vector2D,
 };
 use serde::{Deserialize, Serialize};
@@ -1584,7 +1584,8 @@ impl RustGameState {
         candidate_indices
             .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
         let altar_idx = candidate_indices[0].0;
-        let chance = override_chance.unwrap_or_else(|| self.towers[altar_idx].resurrect_chance.unwrap_or(0.3));
+        let chance = override_chance
+            .unwrap_or_else(|| self.towers[altar_idx].resurrect_chance.unwrap_or(0.3));
 
         if rng.next_f32() >= chance {
             return false;

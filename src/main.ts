@@ -150,8 +150,27 @@ class GameApp {
         w = stageH * targetRatio;
       }
 
-      wrapper.style.width = `${Math.floor(w)}px`;
-      wrapper.style.height = `${Math.floor(h)}px`;
+      const targetW = Math.floor(w);
+      const targetH = Math.floor(h);
+
+      wrapper.style.width = `${targetW}px`;
+      wrapper.style.height = `${targetH}px`;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const physicalW = Math.round(targetW * dpr);
+      const physicalH = Math.round(targetH * dpr);
+
+      if (this.canvas.width !== physicalW || this.canvas.height !== physicalH) {
+        this.canvas.width = physicalW;
+        this.canvas.height = physicalH;
+      }
+
+      if (this.overlayCanvas) {
+        if (this.overlayCanvas.width !== physicalW || this.overlayCanvas.height !== physicalH) {
+          this.overlayCanvas.width = physicalW;
+          this.overlayCanvas.height = physicalH;
+        }
+      }
 
       this.uiManager?.handleResize();
     };
@@ -206,8 +225,8 @@ class GameApp {
   private bindCanvasEvents(): void {
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const scaleX = this.canvas.width / rect.width;
-      const scaleY = this.canvas.height / rect.height;
+      const scaleX = 1000 / rect.width;
+      const scaleY = 650 / rect.height;
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
       this.state.mousePos = { x: mouseX, y: mouseY };
@@ -236,8 +255,8 @@ class GameApp {
 
     this.canvas.addEventListener('click', (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const scaleX = this.canvas.width / rect.width;
-      const scaleY = this.canvas.height / rect.height;
+      const scaleX = 1000 / rect.width;
+      const scaleY = 650 / rect.height;
       const clickX = (e.clientX - rect.left) * scaleX;
       const clickY = (e.clientY - rect.top) * scaleY;
 
@@ -366,7 +385,12 @@ class GameApp {
         // Overlay canvas: UI HUD floating combat texts (Range rings & placement previews are rendered on WebGL2)
         if (this.overlayCtx && this.overlayCanvas) {
           this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+          const scaleX = this.overlayCanvas.width / 1000;
+          const scaleY = this.overlayCanvas.height / 650;
+          this.overlayCtx.save();
+          this.overlayCtx.scale(scaleX, scaleY);
           TowerRenderer.renderFloatingTexts(this.overlayCtx, step.floatingTexts as any);
+          this.overlayCtx.restore();
         }
 
         this.uiManager.updateHUD(

@@ -42,7 +42,7 @@ impl WebGl2Renderer {
 
         // 1. Head & Special Headgear
         let head_cx = x + lean_x;
-        self.draw_circle(head_cx, head_y, head_r, 12, elem_col);
+        self.draw_circle(head_cx, head_y, head_r, 28, elem_col);
 
         // Eyes
         let eye_col = if is_imp {
@@ -56,7 +56,7 @@ impl WebGl2Renderer {
             head_cx + dir * (head_r * 0.4),
             head_y - 1.0,
             1.6,
-            6,
+            12,
             eye_col,
         );
 
@@ -77,7 +77,7 @@ impl WebGl2Renderer {
                 head_cx,
                 head_y - head_r * 0.5,
                 head_r * 0.8,
-                10,
+                20,
                 [0.94, 0.2, 0.2, 0.4],
             );
         } else if is_imp {
@@ -114,7 +114,7 @@ impl WebGl2Renderer {
                 head_cx + 4.0,
                 head_y - head_r - 9.0,
                 3.2,
-                8,
+                16,
                 [0.2, 0.75, 0.25, 0.95],
             );
         } else if is_vanguard || is_paladin {
@@ -134,7 +134,7 @@ impl WebGl2Renderer {
                     head_y - head_r - 4.0,
                     5.0,
                     2.0,
-                    10,
+                    24,
                     [0.99, 0.92, 0.35, 0.95],
                 );
             }
@@ -233,12 +233,12 @@ impl WebGl2Renderer {
                 2.2,
                 [0.35, 0.3, 0.25, 1.0],
             );
-            self.draw_circle(weapon_hand_x, weapon_hand_y - 18.0, 4.5, 10, sec_col);
+            self.draw_circle(weapon_hand_x, weapon_hand_y - 18.0, 4.5, 20, sec_col);
             self.draw_circle(
                 weapon_hand_x,
                 weapon_hand_y - 18.0,
                 2.0,
-                6,
+                12,
                 [0.95, 0.5, 1.0, 1.0],
             );
         } else if is_imp {
@@ -297,8 +297,8 @@ impl WebGl2Renderer {
             // Shield on back arm
             let shield_x = x - dir * (s * 0.25);
             let shield_y = shoulder_y + 4.0;
-            self.draw_circle(shield_x, shield_y, s * 0.24, 10, sec_col);
-            self.draw_ring(shield_x, shield_y, s * 0.24, 1.8, 10, elem_col);
+            self.draw_circle(shield_x, shield_y, s * 0.24, 24, sec_col);
+            self.draw_ring(shield_x, shield_y, s * 0.24, 1.8, 24, elem_col);
         } else if is_saboteur {
             // Dual Void Daggers
             self.draw_line(
@@ -331,7 +331,7 @@ impl WebGl2Renderer {
                 weapon_hand_x,
                 weapon_hand_y - 16.0,
                 3.5,
-                8,
+                16,
                 [0.2, 0.85, 0.3, 0.95],
             );
         }

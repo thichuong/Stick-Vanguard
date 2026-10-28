@@ -106,7 +106,7 @@ impl WebGl2Renderer {
             y + 4.0,
             size * 0.7 * shadow_scale,
             size * 0.35 * shadow_scale,
-            12,
+            24,
             [0.0, 0.0, 0.0, 0.35],
         );
 
@@ -118,7 +118,7 @@ impl WebGl2Renderer {
                 y + 2.0,
                 size * 0.8 + ripple * 8.0,
                 1.4,
-                14,
+                28,
                 [0.38, 0.74, 0.98, 0.6],
             );
         }
@@ -143,10 +143,10 @@ impl WebGl2Renderer {
         // 4. Boss & Elite Auras
         if is_boss {
             let boss_aura = [0.95, 0.75, 0.1, 0.45 + (anim_time * 4.0).sin() * 0.2];
-            self.draw_ring(x, y + 2.0, size * 1.25, 2.2, 22, boss_aura);
+            self.draw_ring(x, y + 2.0, size * 1.25, 2.2, 48, boss_aura);
         } else if is_elite {
             let elite_aura = [0.85, 0.35, 0.95, 0.4 + (anim_time * 5.0).sin() * 0.15];
-            self.draw_ring(x, y + 2.0, size * 1.05, 1.8, 18, elite_aura);
+            self.draw_ring(x, y + 2.0, size * 1.05, 1.8, 36, elite_aura);
         }
 
         // 5. Dual Element Ring / Shield Aura
@@ -156,7 +156,7 @@ impl WebGl2Renderer {
                 draw_y - size * 0.2,
                 size * 0.9 + (anim_time * 6.0).sin() * 2.0,
                 1.6,
-                18,
+                36,
                 [sec_col[0], sec_col[1], sec_col[2], 0.45],
             );
         }
@@ -168,7 +168,7 @@ impl WebGl2Renderer {
             } else {
                 [0.886, 0.910, 0.941, 0.85]
             };
-            self.draw_ring(x, draw_y - size * 0.2, size * 1.05, 2.2, 20, sc);
+            self.draw_ring(x, draw_y - size * 0.2, size * 1.05, 2.2, 48, sc);
         }
 
         // 6. Draw Body (Modular WebGL2 Procedural Archetypes)
@@ -223,7 +223,7 @@ impl WebGl2Renderer {
         let bx = x - bar_w * 0.5;
         let by = draw_y - size - 12.0;
 
-        self.draw_rect(bx, by, bar_w, bar_h, [0.06, 0.09, 0.16, 0.88]);
+        self.draw_rounded_rect(bx, by, bar_w, bar_h, bar_h * 0.5, [0.06, 0.09, 0.16, 0.88]);
         let hp_ratio = (enemy.hp / enemy.max_hp.max(1.0)).clamp(0.0, 1.0);
         let hp_col = if hp_ratio > 0.5 {
             [0.133, 0.773, 0.369, 0.95]
@@ -232,22 +232,43 @@ impl WebGl2Renderer {
         } else {
             [0.937, 0.267, 0.267, 0.95]
         };
-        self.draw_rect(bx, by, bar_w * hp_ratio, bar_h, hp_col);
+        self.draw_rounded_rect(
+            bx,
+            by,
+            (bar_w * hp_ratio).max(1.0),
+            bar_h,
+            bar_h * 0.5,
+            hp_col,
+        );
 
-        // Armor shield bar (silver)
+        // Armor shield bar (silver, rounded pill)
         if let Some(armor_s) = enemy.armor_shield {
             if armor_s > 0.0 {
                 let max_as = enemy.max_armor_shield.unwrap_or(armor_s).max(1.0);
                 let as_ratio = (armor_s / max_as).clamp(0.0, 1.0);
-                self.draw_rect(bx, by - 3.0, bar_w * as_ratio, 2.0, [0.85, 0.9, 0.95, 0.9]);
+                self.draw_rounded_rect(
+                    bx,
+                    by - 3.0,
+                    (bar_w * as_ratio).max(1.0),
+                    2.0,
+                    1.0,
+                    [0.85, 0.9, 0.95, 0.9],
+                );
             }
         }
-        // Magic shield bar (purple)
+        // Magic shield bar (purple, rounded pill)
         if let Some(magic_s) = enemy.magic_shield {
             if magic_s > 0.0 {
                 let max_ms = enemy.max_magic_shield.unwrap_or(magic_s).max(1.0);
                 let ms_ratio = (magic_s / max_ms).clamp(0.0, 1.0);
-                self.draw_rect(bx, by - 3.0, bar_w * ms_ratio, 2.0, [0.75, 0.52, 0.99, 0.9]);
+                self.draw_rounded_rect(
+                    bx,
+                    by - 3.0,
+                    (bar_w * ms_ratio).max(1.0),
+                    2.0,
+                    1.0,
+                    [0.75, 0.52, 0.99, 0.9],
+                );
             }
         }
     }

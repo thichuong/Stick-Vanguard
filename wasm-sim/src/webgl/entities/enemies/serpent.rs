@@ -47,10 +47,10 @@ impl WebGl2Renderer {
             // Segment link
             let col = if i % 2 == 0 { elem_col } else { sec_col };
             self.draw_line(x1, y1, x2, y2, (r1 + r2) * 0.95, col);
-            self.draw_circle(x2, y2, r2, 10, col);
+            self.draw_circle(x2, y2, r2, 20, col);
         }
         if let Some(&(hx, hy, hr)) = seg_points.first() {
-            self.draw_circle(hx, hy, hr, 12, elem_col);
+            self.draw_circle(hx, hy, hr, 24, elem_col);
         }
 
         // 3. Eel dorsal lightning fin & electric spikes
@@ -105,7 +105,7 @@ impl WebGl2Renderer {
                 hy + head_w * 0.45,
                 elem_col,
             );
-            self.draw_circle(hx, hy, head_w * 0.38, 10, elem_col);
+            self.draw_circle(hx, hy, head_w * 0.38, 20, elem_col);
 
             // Void horns for Hydra heads
             if is_hydra {
@@ -125,7 +125,7 @@ impl WebGl2Renderer {
             } else {
                 [0.99, 0.94, 0.35, 1.0]
             };
-            self.draw_circle(hx + dir * 2.0, hy - 2.0, 1.8, 6, eye_col);
+            self.draw_circle(hx + dir * 2.0, hy - 2.0, 1.8, 12, eye_col);
 
             // Flicking red forked tongue
             let tongue_cycle = ((anim_time * 14.0 + (idx as f32) * 1.5).sin()).max(0.0);

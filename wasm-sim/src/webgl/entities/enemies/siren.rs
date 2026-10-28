@@ -29,12 +29,12 @@ impl WebGl2Renderer {
         let head_r = s * 0.25;
 
         // Head
-        self.draw_circle(x, head_y, head_r, 12, elem_col);
+        self.draw_circle(x, head_y, head_r, 24, elem_col);
         self.draw_circle(
             x + dir * (head_r * 0.4),
             head_y - 1.0,
             1.8,
-            6,
+            12,
             [0.38, 0.85, 0.98, 1.0],
         );
 
@@ -48,7 +48,7 @@ impl WebGl2Renderer {
             head_y - head_r,
             sec_col,
         );
-        self.draw_circle(x, head_y - head_r - 6.0, 1.8, 6, [1.0, 1.0, 1.0, 1.0]);
+        self.draw_circle(x, head_y - head_r - 6.0, 1.8, 12, [1.0, 1.0, 1.0, 1.0]);
 
         // Flowing aquatic hair
         self.draw_line(
@@ -110,8 +110,8 @@ impl WebGl2Renderer {
 
         if is_priestess {
             // Tidal Scepter Pearl
-            self.draw_circle(staff_x, staff_top_y, 4.0, 10, [0.75, 0.95, 1.0, 1.0]);
-            self.draw_ring(staff_x, staff_top_y, 6.0, 1.4, 10, [0.38, 0.85, 0.98, 0.8]);
+            self.draw_circle(staff_x, staff_top_y, 4.0, 24, [0.75, 0.95, 1.0, 1.0]);
+            self.draw_ring(staff_x, staff_top_y, 6.0, 1.4, 24, [0.38, 0.85, 0.98, 0.8]);
         } else {
             // Storm Trident prongs
             self.draw_line(
@@ -141,7 +141,7 @@ impl WebGl2Renderer {
 
             // Lightning spark on trident for Tempest Leviathan
             if is_tempest {
-                self.draw_circle(staff_x, staff_top_y - 7.0, 3.0, 8, [0.38, 0.9, 1.0, 0.95]);
+                self.draw_circle(staff_x, staff_top_y - 7.0, 3.0, 16, [0.38, 0.9, 1.0, 0.95]);
             }
         }
 

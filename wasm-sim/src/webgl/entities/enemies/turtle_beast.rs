@@ -26,8 +26,8 @@ impl WebGl2Renderer {
             let body_y = draw_y - s * 0.15;
 
             // Wide carapace with spiky lateral rims
-            self.draw_ellipse(x, body_y, s * 0.65, s * 0.45, 14, elem_col);
-            self.draw_ring(x, body_y, s * 0.65, 2.0, 14, sec_col);
+            self.draw_ellipse(x, body_y, s * 0.65, s * 0.45, 24, elem_col);
+            self.draw_ring(x, body_y, s * 0.65, 2.0, 24, sec_col);
 
             // Carapace dorsal ridges
             self.draw_line(x - s * 0.35, body_y, x + s * 0.35, body_y, 2.0, sec_col);
@@ -44,8 +44,8 @@ impl WebGl2Renderer {
                     2.2,
                     elem_col,
                 );
-                self.draw_circle(eye_stem_x, eye_stem_y, 2.4, 8, [0.15, 0.2, 0.25, 1.0]);
-                self.draw_circle(eye_stem_x, eye_stem_y, 1.2, 6, [0.99, 0.92, 0.35, 1.0]);
+                self.draw_circle(eye_stem_x, eye_stem_y, 2.4, 16, [0.15, 0.2, 0.25, 1.0]);
+                self.draw_circle(eye_stem_x, eye_stem_y, 1.2, 12, [0.99, 0.92, 0.35, 1.0]);
             }
 
             // Giant crushing pincer claws
@@ -100,8 +100,8 @@ impl WebGl2Renderer {
             let body_y = draw_y - s * 0.1;
 
             // Heavy armored body
-            self.draw_ellipse(x, body_y, s * 0.78, s * 0.48, 16, elem_col);
-            self.draw_ring(x, body_y, s * 0.78, 2.4, 16, sec_col);
+            self.draw_ellipse(x, body_y, s * 0.78, s * 0.48, 28, elem_col);
+            self.draw_ring(x, body_y, s * 0.78, 2.4, 28, sec_col);
 
             // Toxic dorsal spikes
             for i in -2..=2 {
@@ -121,12 +121,12 @@ impl WebGl2Renderer {
             // Massive gaping jaws
             let jaw_x = x + dir * (s * 0.7);
             let jaw_y = body_y;
-            self.draw_circle(jaw_x, jaw_y, s * 0.3, 12, elem_col);
+            self.draw_circle(jaw_x, jaw_y, s * 0.3, 24, elem_col);
             self.draw_circle(
                 jaw_x + dir * 3.0,
                 jaw_y - 2.0,
                 2.2,
-                6,
+                12,
                 [0.95, 0.2, 0.2, 1.0],
             );
 
@@ -147,11 +147,11 @@ impl WebGl2Renderer {
             // 1. Hexagonal Domed Shell
             let shell_w = s * 0.72;
             let shell_h = s * 0.52;
-            self.draw_ellipse(x, body_y, shell_w, shell_h, 16, elem_col);
-            self.draw_ring(x, body_y, shell_w, 2.2, 16, sec_col);
+            self.draw_ellipse(x, body_y, shell_w, shell_h, 28, elem_col);
+            self.draw_ring(x, body_y, shell_w, 2.2, 28, sec_col);
 
             // Hexagonal shell plates & mossy markings
-            self.draw_ellipse(x, body_y, shell_w * 0.55, shell_h * 0.55, 12, sec_col);
+            self.draw_ellipse(x, body_y, shell_w * 0.55, shell_h * 0.55, 24, sec_col);
             self.draw_line(
                 x - shell_w * 0.6,
                 body_y,
@@ -182,12 +182,12 @@ impl WebGl2Renderer {
                 3.2,
                 elem_col,
             );
-            self.draw_circle(head_x, head_y, 5.5, 10, elem_col);
+            self.draw_circle(head_x, head_y, 5.5, 24, elem_col);
             self.draw_circle(
                 head_x + dir * 2.0,
                 head_y - 1.2,
                 1.6,
-                6,
+                12,
                 [0.08, 0.12, 0.18, 1.0],
             );
 

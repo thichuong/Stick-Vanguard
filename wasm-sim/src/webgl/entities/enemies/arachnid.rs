@@ -23,12 +23,12 @@ impl WebGl2Renderer {
         // 1. Poison Abdomen (bulbous rear sack)
         let abd_x = x - dir * (s * 0.42);
         let abd_y = body_y - s * 0.1;
-        self.draw_ellipse(abd_x, abd_y, s * 0.52, s * 0.38, 14, elem_col);
-        self.draw_ring(abd_x, abd_y, s * 0.52, 1.8, 14, sec_col);
+        self.draw_ellipse(abd_x, abd_y, s * 0.52, s * 0.38, 24, elem_col);
+        self.draw_ring(abd_x, abd_y, s * 0.52, 1.8, 24, sec_col);
 
         // Fluorescent poison hourglass / warning skull marking
         let mark_pulse = (anim_time * 6.0).sin() * 0.15 + 0.85;
-        self.draw_circle(abd_x, abd_y, 3.2 * mark_pulse, 8, [0.55, 0.95, 0.15, 0.95]);
+        self.draw_circle(abd_x, abd_y, 3.2 * mark_pulse, 16, [0.55, 0.95, 0.15, 0.95]);
         self.draw_triangle(
             abd_x - 3.0,
             abd_y - 4.0,
@@ -51,7 +51,7 @@ impl WebGl2Renderer {
         // 2. Cephalothorax (front head/thorax)
         let head_x = x + dir * (s * 0.28);
         let head_y = body_y - s * 0.05;
-        self.draw_circle(head_x, head_y, s * 0.28, 12, elem_col);
+        self.draw_circle(head_x, head_y, s * 0.28, 24, elem_col);
 
         // Cluster of 4 predatory red eyes
         for &(ox, oy) in &[
@@ -60,7 +60,7 @@ impl WebGl2Renderer {
             (dir * 4.5, 1.5),
             (dir * 3.0, 3.5),
         ] {
-            self.draw_circle(head_x + ox, head_y + oy, 1.4, 6, [0.96, 0.2, 0.2, 1.0]);
+            self.draw_circle(head_x + ox, head_y + oy, 1.4, 12, [0.96, 0.2, 0.2, 1.0]);
         }
 
         // Chelicerae & Dripping Poison Fangs
@@ -85,7 +85,7 @@ impl WebGl2Renderer {
             [0.96, 0.2, 0.2, 1.0],
         );
         // Venom droplets
-        self.draw_circle(fang_bot_x, head_y, 1.8, 6, [0.45, 0.95, 0.1, 0.95]);
+        self.draw_circle(fang_bot_x, head_y, 1.8, 12, [0.45, 0.95, 0.1, 0.95]);
 
         // 3. 8 Multi-jointed Spider Legs (4 per side with realistic alternating crawl gait)
         let leg_count = 4;

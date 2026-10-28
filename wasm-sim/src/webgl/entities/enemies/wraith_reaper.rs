@@ -65,8 +65,8 @@ impl WebGl2Renderer {
         // 2. Deep Shadow Hood & Piercing Soul Eyes
         let head_y = hood_top_y + s * 0.18;
         let head_r = s * 0.26;
-        self.draw_circle(x, head_y, head_r, 12, [0.06, 0.08, 0.14, 0.95]);
-        self.draw_ring(x, head_y, head_r, 1.8, 12, sec_col);
+        self.draw_circle(x, head_y, head_r, 24, [0.06, 0.08, 0.14, 0.95]);
+        self.draw_ring(x, head_y, head_r, 1.8, 24, sec_col);
 
         // Soul Flame Eyes
         let eye_col = if is_banshee {
@@ -76,12 +76,12 @@ impl WebGl2Renderer {
         } else {
             [0.85, 0.95, 0.25, 1.0]
         };
-        self.draw_circle(x + dir * (head_r * 0.4), head_y - 1.5, 2.2, 6, eye_col);
+        self.draw_circle(x + dir * (head_r * 0.4), head_y - 1.5, 2.2, 12, eye_col);
 
         // 3. Hex Degrader Curse Seal
         if is_degrader {
             let rot = anim_time * 3.0;
-            self.draw_ring(x, hood_top_y - 8.0, 7.0, 1.6, 6, [0.85, 0.35, 0.95, 0.95]);
+            self.draw_ring(x, hood_top_y - 8.0, 7.0, 1.6, 24, [0.85, 0.35, 0.95, 0.95]);
             self.draw_line(
                 x + rot.cos() * 7.0,
                 hood_top_y - 8.0 + rot.sin() * 7.0,
@@ -161,8 +161,8 @@ impl WebGl2Renderer {
                     let w_ang = anim_time * 3.5 + (i as f32) * 2.094;
                     let wx = x + w_ang.cos() * (s * 0.9);
                     let wy = cy + w_ang.sin() * (s * 0.5);
-                    self.draw_circle(wx, wy, 3.2, 8, [0.38, 0.85, 0.98, 0.95]);
-                    self.draw_circle(wx, wy, 1.6, 6, [1.0, 1.0, 1.0, 1.0]);
+                    self.draw_circle(wx, wy, 3.2, 16, [0.38, 0.85, 0.98, 0.95]);
+                    self.draw_circle(wx, wy, 1.6, 12, [1.0, 1.0, 1.0, 1.0]);
                 }
             }
         }

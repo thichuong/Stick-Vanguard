@@ -229,7 +229,11 @@ impl WebGl2Renderer {
             let Some(ref gl) = self.gl else {
                 return;
             };
-            gl.viewport(0, 0, self.width as i32, self.height as i32);
+            let buf_w = gl.drawing_buffer_width();
+            let buf_h = gl.drawing_buffer_height();
+            let vp_w = if buf_w > 0 { buf_w } else { self.width as i32 };
+            let vp_h = if buf_h > 0 { buf_h } else { self.height as i32 };
+            gl.viewport(0, 0, vp_w, vp_h);
             gl.clear_color(0.06, 0.09, 0.16, 1.0);
             gl.clear(GL_COLOR_BUFFER_BIT);
 

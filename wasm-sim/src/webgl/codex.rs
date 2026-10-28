@@ -47,7 +47,7 @@ impl WebGl2Renderer {
         // 1. Ambient radial element glow
         let elem_color_hex = registry.get_element_color(bp.elemental_profile.primary_element);
         let glow_col = parse_hex_color(elem_color_hex, 0.22);
-        self.draw_circle(cx, cy - 20.0, 60.0, 24, glow_col);
+        self.draw_circle(cx, cy - 20.0, 60.0, 48, glow_col);
 
         // 2. Floor pedestal line
         let floor_col = if is_swimmer {
@@ -167,7 +167,7 @@ impl WebGl2Renderer {
 
         let elem_hex = registry.get_element_color(elem);
         let glow_col = parse_hex_color(elem_hex, 0.25);
-        self.draw_circle(cx, cy - 16.0, 52.0, 22, glow_col);
+        self.draw_circle(cx, cy - 16.0, 52.0, 48, glow_col);
 
         let floor_col = parse_hex_color("#475569", 0.45);
         self.draw_line(cx - 65.0, cy + 8.0, cx + 65.0, cy + 8.0, 1.5, floor_col);

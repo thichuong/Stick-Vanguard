@@ -1179,9 +1179,8 @@ pub fn engine_set_mouse_pos(x: f32, y: f32) {
 pub fn engine_set_active_placement_type(tower_type_str: Option<String>) {
     CTX.with(|c| {
         let mut ctx = c.borrow_mut();
-        ctx.state.active_placement_type = tower_type_str.and_then(|s| {
-            serde_json::from_value(serde_json::Value::String(s)).ok()
-        });
+        ctx.state.active_placement_type =
+            tower_type_str.and_then(|s| serde_json::from_value(serde_json::Value::String(s)).ok());
     });
 }
 
@@ -1189,9 +1188,8 @@ pub fn engine_set_active_placement_type(tower_type_str: Option<String>) {
 pub fn engine_set_hovered_build_tower_type(tower_type_str: Option<String>) {
     CTX.with(|c| {
         let mut ctx = c.borrow_mut();
-        ctx.state.hovered_build_tower_type = tower_type_str.and_then(|s| {
-            serde_json::from_value(serde_json::Value::String(s)).ok()
-        });
+        ctx.state.hovered_build_tower_type =
+            tower_type_str.and_then(|s| serde_json::from_value(serde_json::Value::String(s)).ok());
     });
 }
 
@@ -1219,9 +1217,7 @@ pub fn engine_get_soldiers_json() -> String {
 
 #[wasm_bindgen]
 pub fn engine_get_full_state_snapshot() -> String {
-    CTX.with(|c| {
-        serde_json::to_string(&c.borrow().state).unwrap_or_default()
-    })
+    CTX.with(|c| serde_json::to_string(&c.borrow().state).unwrap_or_default())
 }
 
 #[wasm_bindgen]
@@ -1364,7 +1360,12 @@ pub fn engine_validate_placement(x: f32, y: f32, tower_type_str: &str) -> String
 }
 
 #[wasm_bindgen]
-pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str, skip_validation: Option<bool>) -> String {
+pub fn engine_build_tower_at(
+    x: f32,
+    y: f32,
+    tower_type_str: &str,
+    skip_validation: Option<bool>,
+) -> String {
     let parsed_type: Result<TowerType, _> =
         serde_json::from_value(serde_json::Value::String(tower_type_str.to_string()));
     if let Ok(tower_type) = parsed_type {
@@ -1376,7 +1377,14 @@ pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str, skip_validati
                 ref mut audio,
                 ..
             } = *ctx;
-            let ok = state.build_tower_at(registry, audio, x, y, tower_type, skip_validation.unwrap_or(false));
+            let ok = state.build_tower_at(
+                registry,
+                audio,
+                x,
+                y,
+                tower_type,
+                skip_validation.unwrap_or(false),
+            );
             serde_json::json!({
                 "ok": ok,
                 "state": state
@@ -2394,7 +2402,11 @@ mod tests {
         ctx.renderer
             .build_scene(&ctx.registry, &ctx.state, 0.0, 1.0);
         let v_len = ctx.renderer.color_vertices.len();
-        assert!(v_len > 1000, "Expected color vertices for map + tower + soldier + enemy, got {}", v_len);
+        assert!(
+            v_len > 1000,
+            "Expected color vertices for map + tower + soldier + enemy, got {}",
+            v_len
+        );
     }
 
     #[test]
@@ -2761,14 +2773,22 @@ mod tests {
         let mut state = crate::state::RustGameState::default();
         let mut spatial = crate::spatial::SpatialGrid::new(1000.0, 650.0);
         let mut nav = crate::navigation::NavigationSystem::new();
-        nav.ground_paths.push(crate::navigation::PathLane::from_vectors(&[
-            crate::types::Vector2D { x: 0.0, y: 200.0 },
-            crate::types::Vector2D { x: 1000.0, y: 200.0 },
-        ]));
-        nav.air_paths.push(crate::navigation::PathLane::from_vectors(&[
-            crate::types::Vector2D { x: 0.0, y: 200.0 },
-            crate::types::Vector2D { x: 1000.0, y: 200.0 },
-        ]));
+        nav.ground_paths
+            .push(crate::navigation::PathLane::from_vectors(&[
+                crate::types::Vector2D { x: 0.0, y: 200.0 },
+                crate::types::Vector2D {
+                    x: 1000.0,
+                    y: 200.0,
+                },
+            ]));
+        nav.air_paths
+            .push(crate::navigation::PathLane::from_vectors(&[
+                crate::types::Vector2D { x: 0.0, y: 200.0 },
+                crate::types::Vector2D {
+                    x: 1000.0,
+                    y: 200.0,
+                },
+            ]));
         let mut wave = crate::wave::WaveSystem::new(10);
         let mut audio = crate::audio::RustSoundSystem::default();
         let mut rng = crate::rules::SimpleRng::new(12345);
@@ -2837,16 +2857,37 @@ mod tests {
         );
 
         assert_eq!(state.enemies[0].state, crate::types::EnemyState::ENGAGED);
-        assert_eq!(state.enemies[0].engaged_by_soldier_id.as_deref(), Some("summon-1"));
+        assert_eq!(
+            state.enemies[0].engaged_by_soldier_id.as_deref(),
+            Some("summon-1")
+        );
         assert_eq!(state.enemies[1].state, crate::types::EnemyState::ENGAGED);
-        assert_eq!(state.enemies[1].engaged_by_soldier_id.as_deref(), Some("summon-1"));
+        assert_eq!(
+            state.enemies[1].engaged_by_soldier_id.as_deref(),
+            Some("summon-1")
+        );
 
         // While engaged, enemies cannot move during tick
         let prev_dist_0 = state.enemies[0].path_distance;
         let prev_dist_1 = state.enemies[1].path_distance;
-        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
-        assert_eq!(state.enemies[0].path_distance, prev_dist_0, "Blocked enemy must not move");
-        assert_eq!(state.enemies[1].path_distance, prev_dist_1, "Blocked flying enemy must not move");
+        sim.tick(
+            &registry,
+            &mut state,
+            &nav,
+            &mut wave,
+            &mut spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
+        assert_eq!(
+            state.enemies[0].path_distance, prev_dist_0,
+            "Blocked enemy must not move"
+        );
+        assert_eq!(
+            state.enemies[1].path_distance, prev_dist_1,
+            "Blocked flying enemy must not move"
+        );
 
         // 4. Now the summon is destroyed / killed
         state.soldiers[0].hp = 0.0;
@@ -2854,15 +2895,44 @@ mod tests {
         state.disengage_enemies_blocked_by_soldier("summon-1");
 
         // 5. Tick simulation - both enemies must be released and move again!
-        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
+        sim.tick(
+            &registry,
+            &mut state,
+            &nav,
+            &mut wave,
+            &mut spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
 
-        assert_eq!(state.enemies[0].engaged_by_soldier_id, None, "Ground enemy engagement must be cleared");
-        assert_eq!(state.enemies[0].state, crate::types::EnemyState::WALKING, "Ground enemy state must return to WALKING");
-        assert!(state.enemies[0].path_distance > prev_dist_0, "Ground enemy must resume moving along path");
+        assert_eq!(
+            state.enemies[0].engaged_by_soldier_id, None,
+            "Ground enemy engagement must be cleared"
+        );
+        assert_eq!(
+            state.enemies[0].state,
+            crate::types::EnemyState::WALKING,
+            "Ground enemy state must return to WALKING"
+        );
+        assert!(
+            state.enemies[0].path_distance > prev_dist_0,
+            "Ground enemy must resume moving along path"
+        );
 
-        assert_eq!(state.enemies[1].engaged_by_soldier_id, None, "Flying enemy engagement must be cleared");
-        assert_eq!(state.enemies[1].state, crate::types::EnemyState::FLYING, "Flying enemy state must return to FLYING");
-        assert!(state.enemies[1].path_distance > prev_dist_1, "Flying enemy must resume moving along path");
+        assert_eq!(
+            state.enemies[1].engaged_by_soldier_id, None,
+            "Flying enemy engagement must be cleared"
+        );
+        assert_eq!(
+            state.enemies[1].state,
+            crate::types::EnemyState::FLYING,
+            "Flying enemy state must return to FLYING"
+        );
+        assert!(
+            state.enemies[1].path_distance > prev_dist_1,
+            "Flying enemy must resume moving along path"
+        );
 
         // 6. Test automatic reconciliation during simulation tick when soldier is removed/killed
         state.soldiers.clear(); // Soldier removed completely (e.g. spirit deleted or tower sold)
@@ -2870,10 +2940,29 @@ mod tests {
         state.enemies[0].state = crate::types::EnemyState::ENGAGED;
         let dist_before_auto = state.enemies[0].path_distance;
 
-        sim.tick(&registry, &mut state, &nav, &mut wave, &mut spatial, &mut audio, &mut rng, 0.016);
+        sim.tick(
+            &registry,
+            &mut state,
+            &nav,
+            &mut wave,
+            &mut spatial,
+            &mut audio,
+            &mut rng,
+            0.016,
+        );
 
-        assert_eq!(state.enemies[0].engaged_by_soldier_id, None, "Orphaned engagement must be auto-cleared");
-        assert_eq!(state.enemies[0].state, crate::types::EnemyState::WALKING, "Orphaned state must return to WALKING");
-        assert!(state.enemies[0].path_distance > dist_before_auto, "Auto-reconciled enemy must move");
+        assert_eq!(
+            state.enemies[0].engaged_by_soldier_id, None,
+            "Orphaned engagement must be auto-cleared"
+        );
+        assert_eq!(
+            state.enemies[0].state,
+            crate::types::EnemyState::WALKING,
+            "Orphaned state must return to WALKING"
+        );
+        assert!(
+            state.enemies[0].path_distance > dist_before_auto,
+            "Auto-reconciled enemy must move"
+        );
     }
 }

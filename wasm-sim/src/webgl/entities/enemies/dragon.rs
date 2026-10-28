@@ -151,7 +151,7 @@ impl WebGl2Renderer {
             head_x + dir * (s * 0.12),
             head_y - 2.0,
             if is_boss { 2.8 } else { 2.0 },
-            8,
+            16,
             [0.99, 0.94, 0.35, 1.0],
         );
 
