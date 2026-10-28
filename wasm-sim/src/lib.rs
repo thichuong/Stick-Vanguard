@@ -993,6 +993,7 @@ pub fn engine_step_and_render(raw_dt: f32) -> String {
             "alpha": alpha,
             "floatingTexts": &state.floating_texts,
             "soldiers": &state.soldiers,
+            "towers": &state.towers,
         }))
         .unwrap_or_default()
     })
@@ -1166,6 +1167,78 @@ pub fn engine_set_selected_tower(tower_id: Option<String>, is_setting_rally: boo
 }
 
 #[wasm_bindgen]
+pub fn engine_set_mouse_pos(x: f32, y: f32) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.mouse_pos.x = x;
+        ctx.state.mouse_pos.y = y;
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_set_active_placement_type(tower_type_str: Option<String>) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.active_placement_type = tower_type_str.and_then(|s| {
+            serde_json::from_value(serde_json::Value::String(s)).ok()
+        });
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_set_hovered_build_tower_type(tower_type_str: Option<String>) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.hovered_build_tower_type = tower_type_str.and_then(|s| {
+            serde_json::from_value(serde_json::Value::String(s)).ok()
+        });
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_set_selected_build_point(json: Option<String>) {
+    CTX.with(|c| {
+        let mut ctx = c.borrow_mut();
+        ctx.state.selected_build_point = json.and_then(|j| serde_json::from_str(&j).ok());
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_get_towers_json() -> String {
+    CTX.with(|c| {
+        serde_json::to_string(&c.borrow().state.towers).unwrap_or_else(|_| "[]".to_string())
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_get_soldiers_json() -> String {
+    CTX.with(|c| {
+        serde_json::to_string(&c.borrow().state.soldiers).unwrap_or_else(|_| "[]".to_string())
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_get_full_state_snapshot() -> String {
+    CTX.with(|c| {
+        serde_json::to_string(&c.borrow().state).unwrap_or_default()
+    })
+}
+
+#[wasm_bindgen]
+pub fn engine_set_gold(gold: i32) {
+    CTX.with(|c| {
+        c.borrow_mut().state.gold = gold;
+    });
+}
+
+#[wasm_bindgen]
+pub fn engine_set_lives(lives: i32) {
+    CTX.with(|c| {
+        c.borrow_mut().state.lives = lives;
+    });
+}
+
+#[wasm_bindgen]
 pub fn audio_init() {
     CTX.with(|c| c.borrow_mut().audio.init());
 }
@@ -1291,7 +1364,7 @@ pub fn engine_validate_placement(x: f32, y: f32, tower_type_str: &str) -> String
 }
 
 #[wasm_bindgen]
-pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str) -> String {
+pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str, skip_validation: Option<bool>) -> String {
     let parsed_type: Result<TowerType, _> =
         serde_json::from_value(serde_json::Value::String(tower_type_str.to_string()));
     if let Ok(tower_type) = parsed_type {
@@ -1303,7 +1376,7 @@ pub fn engine_build_tower_at(x: f32, y: f32, tower_type_str: &str) -> String {
                 ref mut audio,
                 ..
             } = *ctx;
-            let ok = state.build_tower_at(registry, audio, x, y, tower_type);
+            let ok = state.build_tower_at(registry, audio, x, y, tower_type, skip_validation.unwrap_or(false));
             serde_json::json!({
                 "ok": ok,
                 "state": state
@@ -1480,6 +1553,29 @@ pub fn engine_handle_soldier_death(soldier_id: &str) -> String {
         state.handle_soldier_death(registry, audio, rng, soldier_id);
         serde_json::to_string(state).unwrap_or_default()
     })
+}
+
+#[wasm_bindgen]
+pub fn engine_try_spawn_heroic_spirit(soldier_json: &str, override_chance: Option<f32>) -> String {
+    if let Ok(soldier) = serde_json::from_str::<SoldierEntity>(soldier_json) {
+        CTX.with(|c| {
+            let mut ctx = c.borrow_mut();
+            let EngineContext {
+                ref mut state,
+                ref mut audio,
+                ref mut rng,
+                ..
+            } = *ctx;
+            let ok = state.try_spawn_heroic_spirit(audio, rng, &soldier, override_chance);
+            serde_json::json!({
+                "ok": ok,
+                "state": state
+            })
+            .to_string()
+        })
+    } else {
+        serde_json::json!({ "ok": false }).to_string()
+    }
 }
 
 // =========================================================================

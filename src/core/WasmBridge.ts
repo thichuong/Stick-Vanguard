@@ -2,10 +2,12 @@ import initWasm, * as wasmOps from '../wasm/wasm_sim.js';
 import {
   EnemyEntity,
   SoldierEntity,
+  TowerEntity,
   TowerType,
   TowerBranch,
   PlacementType,
-  SoldierCombatMode
+  SoldierCombatMode,
+  BuildCursorTarget
 } from '../types/entities.types.js';
 import { NavigationSystem } from '../systems/NavigationSystem.js';
 import { ElementType, NavigationMode } from '../types/elements.types.js';
@@ -47,6 +49,7 @@ export interface StepRenderOutput {
     size: number;
   }>;
   soldiers?: SoldierEntity[];
+  towers?: TowerEntity[];
 }
 
 export class WasmBridge {
@@ -337,6 +340,69 @@ export class WasmBridge {
     wasmOps.engine_set_selected_tower(towerId || undefined, isSettingRally);
   }
 
+  public setMousePos(x: number, y: number): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_mouse_pos(x, y);
+  }
+
+  public setActivePlacementType(type: TowerType | null): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_active_placement_type(type || undefined);
+  }
+
+  public setHoveredBuildTowerType(type: TowerType | null): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_hovered_build_tower_type(type || undefined);
+  }
+
+  public setSelectedBuildPoint(pt: BuildCursorTarget | null): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_selected_build_point(pt ? JSON.stringify(pt) : undefined);
+  }
+
+  public getTowers(): TowerEntity[] {
+    if (!this.isReady) return [];
+    const json = wasmOps.engine_get_towers_json();
+    if (!json) return [];
+    try {
+      return JSON.parse(json) as TowerEntity[];
+    } catch {
+      return [];
+    }
+  }
+
+  public getSoldiers(): SoldierEntity[] {
+    if (!this.isReady) return [];
+    const json = wasmOps.engine_get_soldiers_json();
+    if (!json) return [];
+    try {
+      return JSON.parse(json) as SoldierEntity[];
+    } catch {
+      return [];
+    }
+  }
+
+  public getFullStateSnapshot(): any {
+    if (!this.isReady) return null;
+    const json = wasmOps.engine_get_full_state_snapshot();
+    if (!json) return null;
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }
+
+  public setGold(gold: number): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_gold(gold);
+  }
+
+  public setLives(lives: number): void {
+    if (!this.isReady) return;
+    wasmOps.engine_set_lives(lives);
+  }
+
   public initAudio(): void {
     if (!this.isReady) return;
     wasmOps.audio_init();
@@ -380,10 +446,11 @@ export class WasmBridge {
   public buildTowerAt(
     x: number,
     y: number,
-    towerType: TowerType
+    towerType: TowerType,
+    skipValidation: boolean = false
   ): { ok: boolean; state?: any } {
     if (!this.isReady) return { ok: false };
-    const resStr = wasmOps.engine_build_tower_at(x, y, towerType);
+    const resStr = wasmOps.engine_build_tower_at(x, y, towerType, skipValidation);
     try {
       return JSON.parse(resStr);
     } catch {
@@ -483,6 +550,16 @@ export class WasmBridge {
   public handleSoldierDeath(soldierId: string): { ok: boolean; state?: any } {
     if (!this.isReady) return { ok: false };
     const resStr = wasmOps.engine_handle_soldier_death(soldierId);
+    try {
+      return { ok: true, state: JSON.parse(resStr) };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  public trySpawnHeroicSpirit(deadSoldier: SoldierEntity, overrideChance?: number): { ok: boolean; state?: any } {
+    if (!this.isReady) return { ok: false };
+    const resStr = wasmOps.engine_try_spawn_heroic_spirit(JSON.stringify(deadSoldier), overrideChance);
     try {
       return JSON.parse(resStr);
     } catch {

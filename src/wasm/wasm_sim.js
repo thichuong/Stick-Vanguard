@@ -228,15 +228,16 @@ export function engine_build_tower(slot_id, tower_type_str) {
  * @param {number} x
  * @param {number} y
  * @param {string} tower_type_str
+ * @param {boolean | null} [skip_validation]
  * @returns {string}
  */
-export function engine_build_tower_at(x, y, tower_type_str) {
+export function engine_build_tower_at(x, y, tower_type_str, skip_validation) {
     let deferred2_0;
     let deferred2_1;
     try {
         const ptr0 = passStringToWasm0(tower_type_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.engine_build_tower_at(x, y, ptr0, len0);
+        const ret = wasm.engine_build_tower_at(x, y, ptr0, len0, isLikeNone(skip_validation) ? 0xFFFFFF : skip_validation ? 1 : 0);
         deferred2_0 = ret[0];
         deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -281,11 +282,43 @@ export function engine_downgrade_or_destroy_tower(tower_id) {
 }
 
 /**
+ * @returns {string}
+ */
+export function engine_get_full_state_snapshot() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.engine_get_full_state_snapshot();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
  * @returns {number}
  */
 export function engine_get_interpolation_alpha() {
     const ret = wasm.engine_get_interpolation_alpha();
     return ret;
+}
+
+/**
+ * @returns {string}
+ */
+export function engine_get_soldiers_json() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.engine_get_soldiers_json();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
 }
 
 /**
@@ -320,6 +353,22 @@ export function engine_get_tower_info(tower_id) {
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @returns {string}
+ */
+export function engine_get_towers_json() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.engine_get_towers_json();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
 }
 
@@ -394,6 +443,15 @@ export function engine_sell_tower(tower_id) {
 }
 
 /**
+ * @param {string | null} [tower_type_str]
+ */
+export function engine_set_active_placement_type(tower_type_str) {
+    var ptr0 = isLikeNone(tower_type_str) ? 0 : passStringToWasm0(tower_type_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = WASM_VECTOR_LEN;
+    wasm.engine_set_active_placement_type(ptr0, len0);
+}
+
+/**
  * @param {string} tower_id
  * @param {string} mode_str
  * @returns {string}
@@ -427,6 +485,29 @@ export function engine_set_game_settings(custom_waves, gold_mult, dmg_mult, spee
 }
 
 /**
+ * @param {number} gold
+ */
+export function engine_set_gold(gold) {
+    wasm.engine_set_gold(gold);
+}
+
+/**
+ * @param {string | null} [tower_type_str]
+ */
+export function engine_set_hovered_build_tower_type(tower_type_str) {
+    var ptr0 = isLikeNone(tower_type_str) ? 0 : passStringToWasm0(tower_type_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = WASM_VECTOR_LEN;
+    wasm.engine_set_hovered_build_tower_type(ptr0, len0);
+}
+
+/**
+ * @param {number} lives
+ */
+export function engine_set_lives(lives) {
+    wasm.engine_set_lives(lives);
+}
+
+/**
  * @param {string} map_id
  * @returns {string}
  */
@@ -443,6 +524,14 @@ export function engine_set_map(map_id) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
+}
+
+/**
+ * @param {number} x
+ * @param {number} y
+ */
+export function engine_set_mouse_pos(x, y) {
+    wasm.engine_set_mouse_pos(x, y);
 }
 
 /**
@@ -464,6 +553,15 @@ export function engine_set_rally_point(tower_id, x, y) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
+}
+
+/**
+ * @param {string | null} [json]
+ */
+export function engine_set_selected_build_point(json) {
+    var ptr0 = isLikeNone(json) ? 0 : passStringToWasm0(json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = WASM_VECTOR_LEN;
+    wasm.engine_set_selected_build_point(ptr0, len0);
 }
 
 /**
@@ -574,6 +672,26 @@ export function engine_tick(dt) {
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
+ * @param {string} soldier_json
+ * @param {number | null} [override_chance]
+ * @returns {string}
+ */
+export function engine_try_spawn_heroic_spirit(soldier_json, override_chance) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(soldier_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.engine_try_spawn_heroic_spirit(ptr0, len0, isLikeNone(override_chance) ? Number.MAX_SAFE_INTEGER : Math.fround(override_chance));
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
 }
 

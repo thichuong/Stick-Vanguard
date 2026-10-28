@@ -88,7 +88,6 @@ class GameApp {
           this.state.gameSpeed,
           this.state.isPaused
         );
-        bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
         if (this.gl) {
           this.webglReady = bridge.initWebGlRenderer(this.gl);
         }
@@ -125,7 +124,6 @@ class GameApp {
       bridge.resetEngine();
       bridge.setMap(this.state.currentMapId);
       bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
-      bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
     }
     MapRenderer.clearCache();
 
@@ -201,7 +199,6 @@ class GameApp {
       bridge.resetEngine();
       bridge.setMap(this.state.currentMapId);
       bridge.setGameSettings(keepWaves, keepGoldMult, keepDmgMult, keepSpeed, this.state.isPaused);
-      bridge.syncTowersAndSoldiers(this.state.towers, this.state.soldiers, this.state.gold, this.state.lives);
     }
     MapRenderer.clearCache();
   }
@@ -214,6 +211,7 @@ class GameApp {
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
       this.state.mousePos = { x: mouseX, y: mouseY };
+      WasmBridge.getInstance().setMousePos(mouseX, mouseY);
 
       let foundTower: string | null = null;
       for (const tower of this.state.towers) {
@@ -356,54 +354,18 @@ class GameApp {
         this.state.isPaused
       );
       bridge.setSelectedTower(this.state.selectedTowerId, this.state.isSettingRallyPoint);
+      bridge.setMousePos(this.state.mousePos.x, this.state.mousePos.y);
+      bridge.setActivePlacementType(this.state.activePlacementType);
+      bridge.setHoveredBuildTowerType(this.state.hoveredBuildTowerType);
+      bridge.setSelectedBuildPoint(this.state.selectedBuildPoint);
 
       const step = bridge.stepAndRender(rawDt);
       if (step) {
-        this.state.gold = step.gold;
-        this.state.lives = step.lives;
-        this.state.isGameOver = step.isGameOver;
-        this.state.isVictory = step.isVictory;
+        this.state.applyStepSnapshot(step);
 
-        if (step.soldiers) {
-          const rustSoldierIds = new Set(step.soldiers.map((s) => s.id));
-          // Remove dead spirits that have been removed from Rust simulation
-          this.state.soldiers = this.state.soldiers.filter(
-            (s) => !s.isSpirit || rustSoldierIds.has(s.id)
-          );
-
-          for (const sUpdate of step.soldiers) {
-            const soldier = this.state.soldiers.find((s) => s.id === sUpdate.id);
-            if (soldier) {
-              soldier.hp = sUpdate.hp;
-              soldier.maxHp = sUpdate.maxHp;
-              soldier.state = sUpdate.state;
-              soldier.respawnTimer = sUpdate.respawnTimer;
-              soldier.x = sUpdate.x;
-              soldier.y = sUpdate.y;
-              if (sUpdate.damage !== undefined) soldier.damage = sUpdate.damage;
-              if (sUpdate.armor !== undefined) soldier.armor = sUpdate.armor;
-              if (sUpdate.magicResist !== undefined) soldier.magicResist = sUpdate.magicResist;
-              if (sUpdate.attackCooldown !== undefined) soldier.attackCooldown = sUpdate.attackCooldown;
-              if (sUpdate.buffedElements) soldier.buffedElements = sUpdate.buffedElements;
-            } else {
-              this.state.soldiers.push(sUpdate);
-            }
-          }
-
-          // Ensure tower.soldierIds remains in sync for HEROIC_ALTAR
-          for (const tower of this.state.towers) {
-            if (tower.type === 'HEROIC_ALTAR') {
-              tower.soldierIds = this.state.soldiers
-                .filter((s) => s.towerId === tower.id)
-                .map((s) => s.id);
-            }
-          }
-        }
-
-        // Overlay canvas: UI HUD feedback (range rings) & floating combat texts
+        // Overlay canvas: UI HUD floating combat texts (Range rings & placement previews are rendered on WebGL2)
         if (this.overlayCtx && this.overlayCanvas) {
           this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
-          MapRenderer.renderPlacementFeedback(this.overlayCtx, this.state, step.animTime);
           TowerRenderer.renderFloatingTexts(this.overlayCtx, step.floatingTexts as any);
         }
 

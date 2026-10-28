@@ -185,6 +185,16 @@ pub enum PlacementType {
     WaterTrap,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuildCursorTarget {
+    pub x: f32,
+    pub y: f32,
+    pub terrain: String,
+    pub valid_for: String,
+    pub placement: PlacementType,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TowerCategory {
     DEFENSE,

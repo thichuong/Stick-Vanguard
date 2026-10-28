@@ -272,6 +272,35 @@ impl WebGl2Renderer {
                     self.draw_circle(mx, my, 18.0, 20, preview_col);
                 }
             }
+        } else if let Some(ref pt) = state.selected_build_point {
+            let is_trap = pt.valid_for == "TRAP";
+            let col = if is_trap {
+                [0.96, 0.62, 0.12, 0.85]
+            } else {
+                [0.22, 0.74, 0.97, 0.85]
+            };
+            self.draw_ring(pt.x, pt.y, 22.0, 2.0, 24, col);
+            self.draw_circle(pt.x, pt.y, 4.0, 10, col);
+
+            if let Some(hover_type) = state.hovered_build_tower_type {
+                let bp_key = if hover_type.is_trap() {
+                    hover_type.as_str().to_string()
+                } else {
+                    format!("{}_1", hover_type.as_str())
+                };
+                if let Some(bp) = registry.towers.get(&bp_key) {
+                    if bp.range > 0.0 {
+                        self.draw_circle(
+                            pt.x,
+                            pt.y,
+                            bp.range,
+                            36,
+                            [col[0], col[1], col[2], 0.08],
+                        );
+                        self.draw_ring(pt.x, pt.y, bp.range, 1.5, 36, col);
+                    }
+                }
+            }
         } else if state.is_setting_rally_point {
             if let Some(ref sel_id) = state.selected_tower_id {
                 if let Some(t) = state.towers.iter().find(|t| &t.id == sel_id) {

@@ -61,17 +61,23 @@ export function engine_add_floating_text(text: string, x: number, y: number, col
 
 export function engine_build_tower(slot_id: string, tower_type_str: string): string;
 
-export function engine_build_tower_at(x: number, y: number, tower_type_str: string): string;
+export function engine_build_tower_at(x: number, y: number, tower_type_str: string, skip_validation?: boolean | null): string;
 
 export function engine_call_wave_early(): string;
 
 export function engine_downgrade_or_destroy_tower(tower_id: string): string;
 
+export function engine_get_full_state_snapshot(): string;
+
 export function engine_get_interpolation_alpha(): number;
+
+export function engine_get_soldiers_json(): string;
 
 export function engine_get_state_json(): string;
 
 export function engine_get_tower_info(tower_id: string): string;
+
+export function engine_get_towers_json(): string;
 
 export function engine_get_wave_status_json(): string;
 
@@ -81,13 +87,25 @@ export function engine_reset(): string;
 
 export function engine_sell_tower(tower_id: string): string;
 
+export function engine_set_active_placement_type(tower_type_str?: string | null): void;
+
 export function engine_set_barracks_mode(tower_id: string, mode_str: string): string;
 
 export function engine_set_game_settings(custom_waves: number, gold_mult: number, dmg_mult: number, speed: number, paused: boolean): void;
 
+export function engine_set_gold(gold: number): void;
+
+export function engine_set_hovered_build_tower_type(tower_type_str?: string | null): void;
+
+export function engine_set_lives(lives: number): void;
+
 export function engine_set_map(map_id: string): string;
 
+export function engine_set_mouse_pos(x: number, y: number): void;
+
 export function engine_set_rally_point(tower_id: string, x: number, y: number): string;
+
+export function engine_set_selected_build_point(json?: string | null): void;
 
 export function engine_set_selected_tower(tower_id: string | null | undefined, is_setting_rally: boolean): void;
 
@@ -102,6 +120,8 @@ export function engine_step_and_render(raw_dt: number): string;
 export function engine_sync_towers_and_soldiers(towers_json: string, soldiers_json: string, gold?: number | null, lives?: number | null): boolean;
 
 export function engine_tick(dt: number): string;
+
+export function engine_try_spawn_heroic_spirit(soldier_json: string, override_chance?: number | null): string;
 
 export function engine_update(raw_dt: number): string;
 
@@ -227,19 +247,25 @@ export interface InitOutput {
     readonly combat_find_unengaged_enemy_near: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly engine_add_floating_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly engine_build_tower: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly engine_build_tower_at: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly engine_build_tower_at: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly engine_call_wave_early: () => [number, number];
     readonly engine_downgrade_or_destroy_tower: (a: number, b: number) => [number, number];
+    readonly engine_get_full_state_snapshot: () => [number, number];
+    readonly engine_get_soldiers_json: () => [number, number];
     readonly engine_get_state_json: () => [number, number];
     readonly engine_get_tower_info: (a: number, b: number) => [number, number];
+    readonly engine_get_towers_json: () => [number, number];
     readonly engine_get_wave_status_json: () => [number, number];
     readonly engine_handle_soldier_death: (a: number, b: number) => [number, number];
     readonly engine_reset: () => [number, number];
     readonly engine_sell_tower: (a: number, b: number) => [number, number];
+    readonly engine_set_active_placement_type: (a: number, b: number) => void;
     readonly engine_set_barracks_mode: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_set_game_settings: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly engine_set_hovered_build_tower_type: (a: number, b: number) => void;
     readonly engine_set_map: (a: number, b: number) => [number, number];
     readonly engine_set_rally_point: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly engine_set_selected_build_point: (a: number, b: number) => void;
     readonly engine_set_selected_tower: (a: number, b: number, c: number) => void;
     readonly engine_set_state_json: (a: number, b: number) => number;
     readonly engine_set_tower_element: (a: number, b: number, c: number, d: number, e: number) => [number, number];
@@ -247,6 +273,7 @@ export interface InitOutput {
     readonly engine_step_and_render: (a: number) => [number, number];
     readonly engine_sync_towers_and_soldiers: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly engine_tick: (a: number) => [number, number];
+    readonly engine_try_spawn_heroic_spirit: (a: number, b: number, c: number) => [number, number];
     readonly engine_update: (a: number) => [number, number];
     readonly engine_upgrade_tower: (a: number, b: number, c: number, d: number) => [number, number];
     readonly engine_validate_placement: (a: number, b: number, c: number, d: number) => [number, number];
@@ -290,6 +317,8 @@ export interface InitOutput {
     readonly wave_create_enemy: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly wave_generate_config: (a: number, b: number, c: number) => [number, number];
     readonly init_world: (a: number, b: number) => void;
+    readonly engine_set_gold: (a: number) => void;
+    readonly engine_set_lives: (a: number) => void;
     readonly engine_get_interpolation_alpha: () => number;
     readonly audio_set_volume: (a: number) => void;
     readonly query_radius: (a: number, b: number, c: number) => number;
@@ -304,6 +333,7 @@ export interface InitOutput {
     readonly find_best_target_in_range: (a: number, b: number, c: number, d: number) => number;
     readonly update_enemy_status: (a: number, b: number, c: number, d: number) => void;
     readonly render_webgl_frame: () => void;
+    readonly engine_set_mouse_pos: (a: number, b: number) => void;
     readonly spawn_enemy: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;

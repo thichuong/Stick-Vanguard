@@ -5,7 +5,7 @@ use crate::config::{
 };
 use crate::rules::SimpleRng;
 use crate::types::{
-    ElementType, EnemyEntity, EnemyState, FloatingText, MovementType, Particle, ParticleShape,
+    BuildCursorTarget, ElementType, EnemyEntity, EnemyState, FloatingText, MovementType, Particle, ParticleShape,
     PlacementType, ProjectileEntity, SoldierCombatMode, SoldierEntity, SoldierState,
     SummonUnitArchetype, TargetingFilter, TowerBranch, TowerEntity, TowerSlot, TowerType, Vector2D,
 };
@@ -52,10 +52,12 @@ pub struct RustGameState {
 
     pub selected_slot_id: Option<String>,
     pub selected_tower_id: Option<String>,
+    pub selected_build_point: Option<BuildCursorTarget>,
     pub is_setting_rally_point: bool,
     pub active_placement_type: Option<TowerType>,
     pub hovered_slot_id: Option<String>,
     pub hovered_tower_id: Option<String>,
+    pub hovered_build_tower_type: Option<TowerType>,
     pub mouse_pos: Vector2D,
 
     #[serde(default)]
@@ -102,10 +104,12 @@ impl RustGameState {
             particles: Vec::new(),
             selected_slot_id: None,
             selected_tower_id: None,
+            selected_build_point: None,
             is_setting_rally_point: false,
             active_placement_type: None,
             hovered_slot_id: None,
             hovered_tower_id: None,
+            hovered_build_tower_type: None,
             mouse_pos: Vector2D { x: 0.0, y: 0.0 },
             tower_id_counter: 0,
             soldier_id_counter: 0,
@@ -138,10 +142,12 @@ impl RustGameState {
         self.is_victory = false;
         self.selected_slot_id = None;
         self.selected_tower_id = None;
+        self.selected_build_point = None;
         self.is_setting_rally_point = false;
         self.active_placement_type = None;
         self.hovered_slot_id = None;
         self.hovered_tower_id = None;
+        self.hovered_build_tower_type = None;
 
         self.tower_slots = vec![
             TowerSlot {
@@ -301,6 +307,7 @@ impl RustGameState {
         x: f32,
         y: f32,
         tower_type: TowerType,
+        skip_validation: bool,
     ) -> bool {
         let type_str = tower_type.as_str();
         let bp_key = if tower_type.is_trap() {
@@ -313,15 +320,25 @@ impl RustGameState {
             return false;
         };
 
-        let validation = self.validate_placement(x, y, type_str);
-        if !validation.valid {
-            audio.play_error();
-            let reason = validation
-                .reason
-                .unwrap_or_else(|| "Vị trí không hợp lệ!".to_string());
-            self.add_floating_text(&reason, x, y - 10.0, "#ef4444", 13.0);
-            return false;
-        }
+        let default_placement = if tower_type.is_trap() {
+            PlacementType::PathTrap
+        } else {
+            PlacementType::ROADSIDE
+        };
+        let placement = if !skip_validation {
+            let validation = self.validate_placement(x, y, type_str);
+            if !validation.valid {
+                audio.play_error();
+                let reason = validation
+                    .reason
+                    .unwrap_or_else(|| "Vị trí không hợp lệ!".to_string());
+                self.add_floating_text(&reason, x, y - 10.0, "#ef4444", 13.0);
+                return false;
+            }
+            validation.placement
+        } else {
+            default_placement
+        };
 
         if self.gold < bp.cost as i32 {
             audio.play_error();
@@ -573,7 +590,7 @@ impl RustGameState {
                 None
             },
             targeting_filter: bp.targeting_filter,
-            placement: validation.placement,
+            placement,
             cost: bp.cost,
             total_invested: bp.cost,
             rally_point,
@@ -620,7 +637,7 @@ impl RustGameState {
         let sx = self.tower_slots[slot_idx].x;
         let sy = self.tower_slots[slot_idx].y;
 
-        let built = self.build_tower_at(registry, audio, sx, sy, tower_type);
+        let built = self.build_tower_at(registry, audio, sx, sy, tower_type, true);
         if built {
             let tid = self.selected_tower_id.clone();
             self.tower_slots[slot_idx].current_tower_id = tid.clone();
@@ -1467,7 +1484,7 @@ impl RustGameState {
         let dead_snapshot = self.soldiers[s_idx].clone();
 
         if !dead_snapshot.is_spirit.unwrap_or(false) {
-            self.try_spawn_heroic_spirit(audio, rng, &dead_snapshot);
+            self.try_spawn_heroic_spirit(audio, rng, &dead_snapshot, None);
         }
 
         if dead_snapshot.is_spirit.unwrap_or(false) {
@@ -1538,6 +1555,7 @@ impl RustGameState {
         audio: &mut RustSoundSystem,
         rng: &mut SimpleRng,
         dead_soldier: &SoldierEntity,
+        override_chance: Option<f32>,
     ) -> bool {
         if dead_soldier.is_spirit.unwrap_or(false) {
             return false;
@@ -1566,7 +1584,7 @@ impl RustGameState {
         candidate_indices
             .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
         let altar_idx = candidate_indices[0].0;
-        let chance = self.towers[altar_idx].resurrect_chance.unwrap_or(0.3);
+        let chance = override_chance.unwrap_or_else(|| self.towers[altar_idx].resurrect_chance.unwrap_or(0.3));
 
         if rng.next_f32() >= chance {
             return false;
